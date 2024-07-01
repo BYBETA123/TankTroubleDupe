@@ -238,7 +238,7 @@ while running:
     bullet_sprites.update()
 
 
-    screen.fill((255, 0, 00))
+    screen.fill((255, 0, 0))
     all_sprites.draw(screen)
     bullet_sprites.draw(screen)
     pygame.display.flip()
