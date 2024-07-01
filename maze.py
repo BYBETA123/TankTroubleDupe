@@ -3,8 +3,8 @@ import random
 #Classes
 tileSize = 50
 weightTrue = 0.27
-rowamount = 14
-colamount = 8
+rowAmount = 14
+colAmount = 8
 
 
 class Tile:
@@ -29,11 +29,11 @@ class Tile:
         # No inputs are needed
         # The output will be an updated list of neighbours
         #
-        neighbours = [self.index - colamount, self.index + 1, self.index + colamount, self.index - 1]
+        neighbours = [self.index - colAmount, self.index + 1, self.index + colAmount, self.index - 1]
         #Check if there are any invalid neighbours
         newlist = []
         for idx, neighbour in enumerate(neighbours):
-            if neighbour < 1 or neighbour > rowamount*colamount:
+            if neighbour < 1 or neighbour > rowAmount*colAmount:
                 #We do not want this
                 pass
             elif self.border[idx] == True:
@@ -52,16 +52,16 @@ class Tile:
         border = [False, False, False, False] # Start with everything false
         #Sides
         # Top Row
-        if localIndex in range(1, colamount+1):
+        if localIndex in range(1, colAmount+1):
             border[0] = True
         # Right Row
-        if localIndex in range(colamount, rowamount*colamount+1, colamount):
+        if localIndex in range(colAmount, rowAmount*colAmount+1, colAmount):
             border[1] = True
         # Bottom Row
-        if localIndex in range(99, rowamount*colamount + 1):
+        if localIndex in range(99, rowAmount*colAmount + 1):
             border[2] = True
         #Left Row
-        if localIndex in range(1, rowamount*colamount, colamount):
+        if localIndex in range(1, rowAmount*colAmount, colAmount):
             border[3] = True
 
         if self.spawn:
@@ -134,9 +134,9 @@ def tileGen():
                 return False
             
             #Extracting the row/col
-            # print("Rowamount: ", rowamount, "Colamount: ", colamount)
-            row1, col1 = choices[0]//colamount, choices[0]%colamount
-            row2, col2 = option//colamount, option%colamount
+            # print("rowAmount: ", rowAmount, "colAmount: ", colAmount)
+            row1, col1 = choices[0]//colAmount, choices[0]%colAmount
+            row2, col2 = option//colAmount, option%colAmount
 
             if abs(col1-col2) < columnOffset:
                 print("Column Check Failed, ", col1, col2, "Difference: ", abs(col1-col2), "Offset: ", columnOffset)
@@ -146,13 +146,13 @@ def tileGen():
                 return False
             #If they are edge cases, try the other side
             if col1 == 0:
-                col1 = rowamount
+                col1 = rowAmount
             if col2 == 0:
-                col2 = rowamount
+                col2 = rowAmount
             if row1 == 0:
-                row1 = colamount
+                row1 = colAmount
             if row2 == 0:
-                row2 = colamount
+                row2 = colAmount
 
             #Sanity check with edge cases
             if abs(col1-col2) < columnOffset:
@@ -174,7 +174,7 @@ def tileGen():
 
         #Setting up the BFS
         visitedQueue = []
-        tracking = [False for i in range(rowamount*colamount+1)]
+        tracking = [False for i in range(rowAmount*colAmount+1)]
         queue = [choices[0]]
         visitedQueue.append(choices[0])
         tracking[choices[0]] = True
@@ -196,25 +196,25 @@ def tileGen():
     while not validMaze: # While our maze isn't valid
         tileList = []
         index = 1
-        choice = [i for i in range(1,rowamount*colamount+1)] # Make all the choices
+        choice = [i for i in range(1,rowAmount*colAmount+1)] # Make all the choices
         choices = []
         option = random.choice(choice) # Select the spawn zones
         failsafe = 0
         while len(choices) < 2 and failsafe < 10: # We only 2 spawns
             if validateChoice(option, choices):
                 choices.append(option)
-                tempchoice = choices.copy()
+                tempChoice = choices.copy()
                 #Remove close choices that are invalid so that we can choose a valid one more easily
                 for i in range(2, len(choice)):
-                    row1, col1 = choices[0]//colamount, choices[0]%colamount
-                    row2, col2 = i//colamount, i%colamount
+                    row1, col1 = choices[0]//colAmount, choices[0]%colAmount
+                    row2, col2 = i//colAmount, i%colAmount
                     if abs(col1-col2) >= 6 and abs(row1-row2) >= 3:
-                        tempchoice.append(i)
-            option = random.choice(tempchoice) # Try again
+                        tempChoice.append(i)
+            option = random.choice(tempChoice) # Try again
             failsafe += 1
         if failsafe == 10: # In case we are running for too long
-            print("Failsafe activated")
-            choices = [1,rowamount*colamount]
+            print("failsafe activated")
+            choices = [1,rowAmount*colAmount]
         for j in range(mazeY, mazeHeight + 1, tileSize): # Assign the tiles and spawns once everything is found
             for i in range(mazeX, mazeWidth + 1, tileSize):
                 if index in choices:
@@ -234,7 +234,7 @@ def tileGen():
         neighboringTiles = tile.getNeighbours()
         #Write a list of the neighbors which need to be double bordered
         doubleBorder = []
-        allNeighbours = [tile.getIndex() - colamount, tile.getIndex() + 1, tile.getIndex() + colamount, tile.getIndex() - 1]
+        allNeighbours = [tile.getIndex() - colAmount, tile.getIndex() + 1, tile.getIndex() + colAmount, tile.getIndex() - 1]
 
         for i in range(len(allNeighbours)):
             if allNeighbours[i] not in neighboringTiles:
@@ -243,7 +243,7 @@ def tileGen():
                 doubleBorder.append(None)
         #Validate the data
         for i in range(len(doubleBorder)):
-            if doubleBorder[i] is not None and (doubleBorder[i] < 1 or doubleBorder[i] > rowamount*colamount):
+            if doubleBorder[i] is not None and (doubleBorder[i] < 1 or doubleBorder[i] > rowAmount*colAmount):
                 doubleBorder[i] = None
         #Can be optimised out?
         for i in range(len(doubleBorder)):
@@ -279,8 +279,8 @@ mazeWidth = windowWidth - mazeX*2 # We want it to span most of the screen
 mazeHeight = windowHeight - mazeY*8
 
 
-rowamount = mazeHeight//tileSize # Assigning the amount of rows
-colamount = mazeWidth//tileSize # Assigning the amount of columns
+rowAmount = mazeHeight//tileSize # Assigning the amount of rows
+colAmount = mazeWidth//tileSize # Assigning the amount of columns
 
 
 eventFlag = False # This flag is just for debugging purposes
