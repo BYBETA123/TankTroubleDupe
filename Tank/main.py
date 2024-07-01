@@ -15,8 +15,12 @@ pygame.init()
 
 #Tank Turret Movement
 
-#Anti-clockwise - left arrow
-#Clockwise - right arrow
+#Anti-clockwise - z
+#Clockwise - x
+
+#Shoot
+
+#Fire - Spacebar
 
 
 
