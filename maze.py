@@ -2,6 +2,11 @@ import pygame
 import random
 #Classes
 tileSize = 50
+weightTrue = 0.27
+rowamount = 14
+colamount = 8
+
+
 class Tile:
     # border = [False, False, False, False]
     #Border format is [Top, Right, Bottom, Left]
@@ -16,6 +21,12 @@ class Tile:
             self.color = GREEN
         # self.border = [random.choice([True, False]), random.choice([True, False]), random.choice([True, False]), random.choice([True, False])]
         self.border = self.borderControl()
+        self.neighbours = self.neighbourCheck()
+
+    def neighbourCheck(self):
+        #This function will return a list of the indexes of the neighbours
+        neighbours = [self.index - rowamount, self.index +1, self.index + rowamount, self.index -1]
+        return neighbours
 
     def borderControl(self):
         localIndex = self.index
@@ -27,34 +38,42 @@ class Tile:
             if localIndex == 1: # Top Left
                 border[0] = True
                 border[3] = True
-            elif localIndex == 14: # Top Right
+            elif localIndex == rowamount: # Top Right
                 border[0] = True
                 border[1] = True
             elif localIndex == 99: # Bottom Left
                 border[2] = True
                 border[3] = True
-            elif localIndex == 112: # Bottom Right
+            elif localIndex == rowamount*colamount: # Bottom Right
                 border[1] = True
                 border[2] = True
 
         #Sides
         # Top Row
-        if localIndex in range(2, 14):
+        if localIndex in range(2, rowamount):
             border[0] = True
         # Right Row
-        if localIndex in range(14, 112, 14):
+        if localIndex in range(rowamount, rowamount*colamount, rowamount):
             border[1] = True
         # Bottom Row
-        if localIndex in range(100, 112):
+        if localIndex in range(100, rowamount*colamount):
             border[2] = True
         #Left Row
-        if localIndex in range(1, 112, 14):
+        if localIndex in range(1, rowamount*colamount, rowamount):
             border[3] = True
 
 
         for i in range(len(border)):
             if not border[i]:
-                border[i] = random.choice([True, False])
+                # border[i] = random.choices([True, False])
+                border[i] = random.choices([True, False], weights = (weightTrue, 1-weightTrue))[0]
+        #If the tile is surrounded by walls then it should be black
+        true_count = 0
+        for b in border:
+            if b:
+                true_count += 1
+        if true_count == 4:
+            self.color = BLACK
 
         return border
 
@@ -82,7 +101,6 @@ class Tile:
         #Draw the index
         self.drawText(screen)
 
-
 #Functions
 def TileGen():
 
@@ -90,7 +108,7 @@ def TileGen():
         #Make sure the spawns are far away from each other
         columnOffset = 6 # Max = 14
         rowOffset = 3 # Max = 8
-
+        print("Choices: ", choices, "Option: ", option)
         if len(choices)>0: # We have elements in the list
             #We need to check how close it is to the other spawn
             if option in choices:
@@ -98,23 +116,36 @@ def TileGen():
                 return False
             
             #Extracting the row/col
-
-            row1, col1 = choices[0]//14, choices[0]%14
-            print("Row1: ", row1, "Col1: ", col1)
-            row2, col2 = option//14, option%14
-            print("Row2: ", row2, "Col: ", col2)
-
-            if col1 == 0:
-                col1 = 14
-            if col2 == 0:
-                col2 = 14
+            # print("Rowamount: ", rowamount, "Colamount: ", colamount)
+            row1, col1 = choices[0]//colamount, choices[0]%colamount
+            row2, col2 = option//colamount, option%colamount
 
             if abs(col1-col2) < columnOffset:
-                print("Column Check Failed")
+                print("Column Check Failed, ", col1, col2, "Difference: ", abs(col1-col2), "Offset: ", columnOffset)
                 return False
             if abs(row1-row2) < rowOffset:
-                print("Row Check Failed")
+                print("Row Check Failed, ", row1, row2, "Difference: ", abs(row1-row2), "Offset: ", rowOffset)
                 return False
+
+            if col1 == 0:
+                col1 = rowamount
+            if col2 == 0:
+                col2 = rowamount
+            if row1 == 0:
+                row1 = colamount
+            if row2 == 0:
+                row2 = colamount
+
+
+            if abs(col1-col2) < columnOffset:
+                print("Column Check Failed, ", col1, col2, "Difference: ", abs(col1-col2), "Offset: ", columnOffset)
+                return False
+            if abs(row1-row2) < rowOffset:
+                print("Row Check Failed, ", row1, row2, "Difference: ", abs(row1-row2), "Offset: ", rowOffset)
+                return False
+            print("Passed both checks")
+            print("Column Check Passed, ", col1, col2, "Difference: ", abs(col1-col2), "Offset: ", columnOffset)
+            print("Row Check Passed, ", row1, row2, "Difference: ", abs(row1-row2), "Offset: ", rowOffset)
             return True # If we pass both checks then there is no other concern
         else:
             return True
@@ -123,16 +154,33 @@ def TileGen():
     tileList = []
     index = 1
 
-    choice = [i for i in range(1,113)] # Make all the choices
+    choice = [i for i in range(1,rowamount*colamount+1)] # Make all the choices
     choices = []
     option = random.choice(choice) # Select the spawn zones
-    while len(choices) < 2: # We only 2 spawns
-        print("Option: ", option)
+    failsafe = 0
+    print("Function called")
+    while len(choices) < 2 and failsafe < 10: # We only 2 spawns
         if ValidateChoice(option, choices):
             choices.append(option)
-        option = random.choice(choice)
-    
-    print(choices)
+            tempchoice = choices.copy()
+            #Remove close choices that are invalid
+            print("The amount of choices are", len(choice))
+            for i in range(2, len(choice)):
+                row1, col1 = choices[0]//colamount, choices[0]%colamount
+                row2, col2 = i//colamount, i%colamount
+                if abs(col1-col2) < 6:
+                    pass
+                elif abs(row1-row2) < 3:
+                    pass
+                else:
+                    tempchoice.append(i)
+        option = random.choice(tempchoice) # Try again
+        failsafe += 1
+    if failsafe == 10:
+        print("Failsafe activated")
+        choices = [1,rowamount*colamount]
+    print("Choices: ", choices)
+
     for j in range(mazeY, mazeHeight + 1, tileSize):
         for i in range(mazeX, mazeWidth + 1, tileSize):
             if index in choices:
@@ -170,6 +218,11 @@ mazeY = 25
 mazeWidth = windowWidth - mazeX*2 # We want it to span most of the screen
 mazeHeight = windowHeight - mazeY*8
 
+
+rowamount = mazeHeight//tileSize # Assigning the amount of rows
+colamount = mazeWidth//tileSize # Assigning the amount of columns
+
+
 eventFlag = False # This flag is just for debugging purposes
 
 barWidth = 150
@@ -203,7 +256,7 @@ while not done:
             if event.key == pygame.K_d:
                 p2Score -= 5
             if event.key == pygame.K_i:
-                print("The current mouse position is: ",mouse)
+                print("The current mouse position is: ", mouse)
             if event.key == pygame.K_o:
                 pass
             if event.key == pygame.K_j:
