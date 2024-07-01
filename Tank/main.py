@@ -108,6 +108,10 @@ class Gun(pygame.sprite.Sprite):
             self.rotation_speed = 2
         elif keys[self.controls['rotate_right']]:
             self.rotation_speed = -2
+        elif  keys[self.controls['left']]:
+            self.rotation_speed = 4
+        elif keys[self.controls['right']]:
+            self.rotation_speed = -4
         else:
             self.rotation_speed = 0
 
