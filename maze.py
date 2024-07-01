@@ -12,11 +12,13 @@ class Tile:
     #Border format is [Top, Right, Bottom, Left]
     border = [True, True, True, True]
     borderWidth = 2
+    spawn = False
     def __init__(self, index, x, y, color, spawn = False):
         self.index = index
         self.x = x
         self.y = y
         self.color = color
+        self.spawn = spawn
         if spawn:
             self.color = GREEN
         # self.border = [random.choice([True, False]), random.choice([True, False]), random.choice([True, False]), random.choice([True, False])]
@@ -25,43 +27,40 @@ class Tile:
 
     def neighbourCheck(self):
         #This function will return a list of the indexes of the neighbours
-        neighbours = [self.index - rowamount, self.index +1, self.index + rowamount, self.index -1]
-        return neighbours
+        neighbours = [self.index - colamount, self.index + 1, self.index + colamount, self.index - 1]
+        #Check if there are any invalid neighbours
+        newlist = []
+        for idx, neighbour in enumerate(neighbours):
+            if neighbour < 1 or neighbour > rowamount*colamount:
+                #We do not want this
+                pass
+            elif self.border[idx] == True:
+                #We do not want this
+                pass
+            else:
+                newlist.append(neighbour)
+        return newlist
 
     def borderControl(self):
         localIndex = self.index
         border = [False, False, False, False] # Start with everything false
-
-        #Corners
-        Corners = [1, 14, 99, 112] # list of the corner indexes
-        if localIndex in Corners:
-            if localIndex == 1: # Top Left
-                border[0] = True
-                border[3] = True
-            elif localIndex == rowamount: # Top Right
-                border[0] = True
-                border[1] = True
-            elif localIndex == 99: # Bottom Left
-                border[2] = True
-                border[3] = True
-            elif localIndex == rowamount*colamount: # Bottom Right
-                border[1] = True
-                border[2] = True
-
         #Sides
         # Top Row
-        if localIndex in range(2, rowamount):
+        if localIndex in range(1, colamount+1):
             border[0] = True
         # Right Row
-        if localIndex in range(rowamount, rowamount*colamount, rowamount):
+        if localIndex in range(colamount, rowamount*colamount+1, colamount):
             border[1] = True
         # Bottom Row
-        if localIndex in range(100, rowamount*colamount):
+        if localIndex in range(99, rowamount*colamount + 1):
             border[2] = True
         #Left Row
-        if localIndex in range(1, rowamount*colamount, rowamount):
+        if localIndex in range(1, rowamount*colamount, colamount):
             border[3] = True
 
+        if self.spawn:
+            #If the tile is a spawn then its border should be handled carefully
+            return border
 
         for i in range(len(border)):
             if not border[i]:
@@ -108,11 +107,9 @@ def TileGen():
         #Make sure the spawns are far away from each other
         columnOffset = 6 # Max = 14
         rowOffset = 3 # Max = 8
-        print("Choices: ", choices, "Option: ", option)
         if len(choices)>0: # We have elements in the list
             #We need to check how close it is to the other spawn
             if option in choices:
-                print("Option already in choices")
                 return False
             
             #Extracting the row/col
@@ -126,7 +123,7 @@ def TileGen():
             if abs(row1-row2) < rowOffset:
                 print("Row Check Failed, ", row1, row2, "Difference: ", abs(row1-row2), "Offset: ", rowOffset)
                 return False
-
+            #If they are edge cases, try the other side
             if col1 == 0:
                 col1 = rowamount
             if col2 == 0:
@@ -136,60 +133,74 @@ def TileGen():
             if row2 == 0:
                 row2 = colamount
 
-
+            #Sanity check with edge cases
             if abs(col1-col2) < columnOffset:
                 print("Column Check Failed, ", col1, col2, "Difference: ", abs(col1-col2), "Offset: ", columnOffset)
                 return False
             if abs(row1-row2) < rowOffset:
                 print("Row Check Failed, ", row1, row2, "Difference: ", abs(row1-row2), "Offset: ", rowOffset)
                 return False
-            print("Passed both checks")
-            print("Column Check Passed, ", col1, col2, "Difference: ", abs(col1-col2), "Offset: ", columnOffset)
-            print("Row Check Passed, ", row1, row2, "Difference: ", abs(row1-row2), "Offset: ", rowOffset)
             return True # If we pass both checks then there is no other concern
         else:
             return True
 
+    def BreathFirstSearch(tileList, choices):
 
-    tileList = []
-    index = 1
+        visitedQueue = []
+        tracking = [False for i in range(rowamount*colamount+1)]
+        queue = [choices[0]]
+        visitedQueue.append(choices[0])
+        tracking[choices[0]] = True
+        while len(queue) > 0:
+            current = queue.pop(0)
+            for neighbour in tileList[current-1].neighbours:
+                if not tracking[neighbour]:
+                    queue.append(neighbour)
+                    visitedQueue.append(neighbour)
+                    tracking[neighbour] = True
 
-    choice = [i for i in range(1,rowamount*colamount+1)] # Make all the choices
-    choices = []
-    option = random.choice(choice) # Select the spawn zones
-    failsafe = 0
-    print("Function called")
-    while len(choices) < 2 and failsafe < 10: # We only 2 spawns
-        if ValidateChoice(option, choices):
-            choices.append(option)
-            tempchoice = choices.copy()
-            #Remove close choices that are invalid
-            print("The amount of choices are", len(choice))
-            for i in range(2, len(choice)):
-                row1, col1 = choices[0]//colamount, choices[0]%colamount
-                row2, col2 = i//colamount, i%colamount
-                if abs(col1-col2) < 6:
-                    pass
-                elif abs(row1-row2) < 3:
-                    pass
+        if choices[1] in visitedQueue:
+            return True
+        else:
+            return False
+
+
+    validMaze = False
+    while not validMaze:
+        tileList = []
+        index = 1
+        choice = [i for i in range(1,rowamount*colamount+1)] # Make all the choices
+        choices = []
+        option = random.choice(choice) # Select the spawn zones
+        failsafe = 0
+        while len(choices) < 2 and failsafe < 10: # We only 2 spawns
+            if ValidateChoice(option, choices):
+                choices.append(option)
+                tempchoice = choices.copy()
+                #Remove close choices that are invalid so that we can choose a valid one more easily
+                for i in range(2, len(choice)):
+                    row1, col1 = choices[0]//colamount, choices[0]%colamount
+                    row2, col2 = i//colamount, i%colamount
+                    if abs(col1-col2) >= 6 and abs(row1-row2) >= 3:
+                        tempchoice.append(i)
+            option = random.choice(tempchoice) # Try again
+            failsafe += 1
+        if failsafe == 10: # In case we are running for to long
+            print("Failsafe activated")
+            choices = [1,rowamount*colamount]
+        for j in range(mazeY, mazeHeight + 1, tileSize):
+            for i in range(mazeX, mazeWidth + 1, tileSize):
+                if index in choices:
+                    spawn = True
                 else:
-                    tempchoice.append(i)
-        option = random.choice(tempchoice) # Try again
-        failsafe += 1
-    if failsafe == 10:
-        print("Failsafe activated")
-        choices = [1,rowamount*colamount]
-    print("Choices: ", choices)
+                    spawn = False
 
-    for j in range(mazeY, mazeHeight + 1, tileSize):
-        for i in range(mazeX, mazeWidth + 1, tileSize):
-            if index in choices:
-                spawn = True
-            else:
-                spawn = False
+                tileList.append(Tile(index, i,j,RED, spawn))
+                index += 1
 
-            tileList.append(Tile(index, i,j,RED, spawn))
-            index += 1
+        #Validate the tileList
+        validMaze = BreathFirstSearch(tileList, choices)
+
     return tileList
 
 #Constants
