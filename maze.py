@@ -21,7 +21,6 @@ class Tile:
         self.spawn = spawn
         if spawn:
             self.color = GREEN
-        # self.border = [random.choice([True, False]), random.choice([True, False]), random.choice([True, False]), random.choice([True, False])]
         self.border = self.borderControl()
         self.neighbours = self.neighbourCheck()
 
@@ -77,9 +76,6 @@ class Tile:
         return border
 
 
-
-
-
     def drawText(self, screen):
         font = pygame.font.SysFont('Calibri', 25, True, False)
         text = font.render(str(self.index), True, BLACK)
@@ -99,6 +95,15 @@ class Tile:
 
         #Draw the index
         self.drawText(screen)
+
+    def getNeighbours(self):
+        return self.neighbours
+
+    def getIndex(self):
+        return self.index
+
+    def setBorder(self, borderidx):
+        self.border[borderidx] = True
 
 #Functions
 def TileGen():
@@ -145,21 +150,21 @@ def TileGen():
             return True
 
     def BreathFirstSearch(tileList, choices):
-
+        #Setting up the BFS
         visitedQueue = []
         tracking = [False for i in range(rowamount*colamount+1)]
         queue = [choices[0]]
         visitedQueue.append(choices[0])
         tracking[choices[0]] = True
-        while len(queue) > 0:
+        while len(queue) > 0: # While there are still elements to check
             current = queue.pop(0)
-            for neighbour in tileList[current-1].neighbours:
+            for neighbour in tileList[current-1].getNeighbours():
                 if not tracking[neighbour]:
                     queue.append(neighbour)
                     visitedQueue.append(neighbour)
                     tracking[neighbour] = True
 
-        if choices[1] in visitedQueue:
+        if choices[1] in visitedQueue: # If the second spawn is reachable
             return True
         else:
             return False
@@ -201,7 +206,43 @@ def TileGen():
         #Validate the tileList
         validMaze = BreathFirstSearch(tileList, choices)
 
+
+    #Now that we have a valid maze, update all the neighbors so that the walls are double bordered
+
+    for tile in tileList:
+        neighboringTiles = tile.getNeighbours()
+        print(tile.getIndex(), neighboringTiles)
+        #Write a list of the neighbors which need to be double bordered
+        doubleBorder = []
+        allNeighbours = [tile.getIndex() - colamount, tile.getIndex() + 1, tile.getIndex() + colamount, tile.getIndex() - 1]
+
+        for i in range(len(allNeighbours)):
+            if allNeighbours[i] not in neighboringTiles:
+                doubleBorder.append(allNeighbours[i])
+            else:
+                doubleBorder.append(None)
+        #Validate the data
+       
+        for i in range(len(doubleBorder)):
+            if doubleBorder[i] is not None and (doubleBorder[i] < 1 or doubleBorder[i] > rowamount*colamount):
+                doubleBorder[i] = None
+
+        print(tile.getIndex(), doubleBorder, allNeighbours)
+
+
+        for i in range(len(doubleBorder)):
+            if doubleBorder[i] is not None:
+                tileList[doubleBorder[i]-1].setBorder(i)
+
     return tileList
+
+
+
+
+
+
+
+
 
 #Constants
 done = False
