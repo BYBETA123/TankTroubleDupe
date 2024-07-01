@@ -25,7 +25,10 @@ class Tile:
         self.neighbours = self.neighbourCheck()
 
     def neighbourCheck(self):
-        #This function will return a list of the indexes of the neighbours
+        #This function will return a list of the indexes of the neighbours based on the current list of border
+        # No inputs are needed
+        # The output will be an updated list of neighbours
+        #
         neighbours = [self.index - colamount, self.index + 1, self.index + colamount, self.index - 1]
         #Check if there are any invalid neighbours
         newlist = []
@@ -41,6 +44,10 @@ class Tile:
         return newlist
 
     def borderControl(self):
+        # This function checks and validates the borders for the tile
+        # No inputs
+        # Outputs: A list of boolean values representing whether the border is present
+        #
         localIndex = self.index
         border = [False, False, False, False] # Start with everything false
         #Sides
@@ -108,8 +115,19 @@ class Tile:
 
 #Functions
 def TileGen():
+    # This function is responsible for generating the tiles for the maze
+    # Inputs: No inputs
+    # Outputs: A list of tiles that make up the maze
+    #
+
+
 
     def ValidateChoice(option, choices):
+        # This function validates whether or not a spawn location is valid with some arbitrary parameters
+        # Inputs: option: the current proposed spawn location
+        # Inputs: choices: the current list of spawn locations
+        # Outputs: True if the spawn location is valid, False otherwise
+
         #Make sure the spawns are far away from each other
         columnOffset = 6 # Max = 14
         rowOffset = 3 # Max = 8
@@ -151,6 +169,12 @@ def TileGen():
             return True
 
     def BreathFirstSearch(tileList, choices):
+        # This function will search the maze in a breath first manner to see if we can reach the second spawn
+        # Inputs: tileList: The current list of tiles
+        # Inputs: Choices: The locations of both spawns
+        # Outputs: True if the second spawn is reachable, False otherwise
+
+
         #Setting up the BFS
         visitedQueue = []
         tracking = [False for i in range(rowamount*colamount+1)]
@@ -172,7 +196,7 @@ def TileGen():
 
 
     validMaze = False
-    while not validMaze:
+    while not validMaze: # While our maze isn't valid
         tileList = []
         index = 1
         choice = [i for i in range(1,rowamount*colamount+1)] # Make all the choices
@@ -191,10 +215,10 @@ def TileGen():
                         tempchoice.append(i)
             option = random.choice(tempchoice) # Try again
             failsafe += 1
-        if failsafe == 10: # In case we are running for to long
+        if failsafe == 10: # In case we are running for too long
             print("Failsafe activated")
             choices = [1,rowamount*colamount]
-        for j in range(mazeY, mazeHeight + 1, tileSize):
+        for j in range(mazeY, mazeHeight + 1, tileSize): # Assign the tiles and spawns once everything is found
             for i in range(mazeX, mazeWidth + 1, tileSize):
                 if index in choices:
                     spawn = True
@@ -224,20 +248,12 @@ def TileGen():
         for i in range(len(doubleBorder)):
             if doubleBorder[i] is not None and (doubleBorder[i] < 1 or doubleBorder[i] > rowamount*colamount):
                 doubleBorder[i] = None
-        #Can be optimised out
+        #Can be optimised out?
         for i in range(len(doubleBorder)):
             if doubleBorder[i] is not None:
                 tileList[doubleBorder[i]-1].setBorder(i)
 
     return tileList
-
-
-
-
-
-
-
-
 
 #Constants
 done = False
