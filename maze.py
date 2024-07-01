@@ -1,11 +1,59 @@
 import pygame
 import random
 import math
+import time
 import os
 #Classes
 
+class SpeedTimer():
+    def __init__(self, note="No note provided"):
+        self.startTime = None
+        self.endTime = None
+        self.note = note
+        self.filename = "speedtimer.txt"
+        self.split = None
+        # Wipe the file
+        f = open(self.filename, "w")
+        f.close()
+
+    def start(self):  # Starts the timer
+        self.writeToFile("Timer started")
+        self.startTime = time.time()
+        self.split = self.startTime
+
+    def stop(self):  # Stops the timer
+        self.endTime = time.time()
+        self.writeToFile("Timer stopped")
+
+    def elapsed(self):  # Calculates the elapsed time
+        if self.startTime is None:
+            return 0
+        elif self.endTime is None:
+            return time.time() - self.startTime
+        else:
+            return self.endTime - self.startTime
+
+    def split_time(self):  # Splits the time
+        self.split = time.time()
+        self.writeToFile("Split time")
+
+    def peek(self, note=""):  # Prints the elapsed time
+        self.writeToFile(f"Peek: {note} : {time.time() - self.split :.4f}")
+        self.split = time.time()
+
+    def logTime(self):  # Log the time briefly (most helpful for small timing debugging)
+        self.writeToFile("Time logged")
+
+    def writeToFile(self, message = "There is no message here"):  # Write the message to the file
+        starting_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.startTime))
+        current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+        elapsed_time = self.elapsed()
+        with open(self.filename, "a") as f:
+            f.write(f"{starting_time} : {current_time} - {elapsed_time:.4f} - Note: {self.note} - {message}\n")
+
 # Tank sprite class
 class Tank(pygame.sprite.Sprite):
+    prin = True
     def __init__(self, x, y, controls):
         super().__init__()
         try:
@@ -31,6 +79,46 @@ class Tank(pygame.sprite.Sprite):
         self.speed = 0
         self.rotationSpeed = 0
         self.controls = controls
+
+    def fixMovement(self, dx, dy):
+        # This function checks if the tank is moving out of the maze and corrects it
+        # Inputs: dx, dy: The change in x and y coordinates
+        # Outputs: The corrected x and y coordinates
+
+        #The tank is stracking the bottom left corner
+
+
+
+        if self.prin:
+            print(self.rect.x, self.rect.y)
+            tankx, tanky = self.originalTankImage.get_size()
+            print(tankx, tanky)
+            print(self.rect.x +tankx, self.rect.y + tanky)
+            self.prin = False
+        tempX = self.rect.x + dx
+        tempY = self.rect.y - dy
+
+
+        #Maze coords
+        mazeCoors = [mazeX, mazeY, mazeX + mazeWidth, mazeY + mazeHeight]
+        #Tank coords
+        tankCoors = [tempX, tempY, tempX + self.originalTankImage.get_size()[0], tempY + self.originalTankImage.get_size()[1]]
+
+
+        if tempX < mazeX:
+            tempX = mazeX
+        if tempY < mazeY:
+            tempY = mazeY
+        if tempX > mazeWidth + mazeX - self.originalTankImage.get_size()[0]:
+            tempX = mazeWidth + mazeX - self.originalTankImage.get_size()[0]
+        if tempY > mazeHeight + mazeY - self.originalTankImage.get_size()[0]:
+            tempY = mazeHeight + mazeY - self.originalTankImage.get_size()[0]
+        
+
+
+
+
+        return tempX, tempY
 
     def update(self):
         keys = pygame.key.get_pressed()
@@ -58,9 +146,9 @@ class Tank(pygame.sprite.Sprite):
         angleRad = math.radians(self.angle)
         dx = math.cos(angleRad) * self.speed
         dy = math.sin(angleRad) * self.speed
-
-        self.rect.x += dx
-        self.rect.y -= dy
+        # self.rect.x += dx
+        # self.rect.y -= dy
+        self.rect.x, self.rect.y = self.fixMovement(dx,dy)
 
 class Gun(pygame.sprite.Sprite):
     def __init__(self, tank, controls):
@@ -528,11 +616,13 @@ tank2 = Tank(300, 375, controlsTank2)
 gun1 = Gun(tank1, controlsTank1)
 gun2 = Gun(tank2, controlsTank2)
 
+#Speed timer
+# global speedTimer
+# speedTimer = SpeedTimer()
+
 allSprites = pygame.sprite.Group()
 allSprites.add(tank1, gun1, tank2, gun2)
 bulletSprites = pygame.sprite.Group()
-
-
 
 #Main loop
 while not done:
@@ -621,11 +711,14 @@ while not done:
 
     for tile in tileList:
         tile.draw(screen)
+
+    #Anything below here will be drawn on top of the maze
+
     allSprites.update()
     bulletSprites.update()
     allSprites.draw(screen)
     bulletSprites.draw(screen)
-    pygame.time.Clock().tick(240)
+    pygame.time.Clock().tick(120)
 
     pygame.display.flip()# Update the screen
 
