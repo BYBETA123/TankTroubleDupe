@@ -104,6 +104,7 @@ class Tile:
 
     def setBorder(self, borderidx):
         self.border[borderidx] = True
+        self.neighbours = self.neighbourCheck() # Update the neighbours list
 
 #Functions
 def TileGen():
@@ -208,10 +209,8 @@ def TileGen():
 
 
     #Now that we have a valid maze, update all the neighbors so that the walls are double bordered
-
     for tile in tileList:
         neighboringTiles = tile.getNeighbours()
-        print(tile.getIndex(), neighboringTiles)
         #Write a list of the neighbors which need to be double bordered
         doubleBorder = []
         allNeighbours = [tile.getIndex() - colamount, tile.getIndex() + 1, tile.getIndex() + colamount, tile.getIndex() - 1]
@@ -222,14 +221,10 @@ def TileGen():
             else:
                 doubleBorder.append(None)
         #Validate the data
-       
         for i in range(len(doubleBorder)):
             if doubleBorder[i] is not None and (doubleBorder[i] < 1 or doubleBorder[i] > rowamount*colamount):
                 doubleBorder[i] = None
-
-        print(tile.getIndex(), doubleBorder, allNeighbours)
-
-
+        #Can be optimised out
         for i in range(len(doubleBorder)):
             if doubleBorder[i] is not None:
                 tileList[doubleBorder[i]-1].setBorder(i)
