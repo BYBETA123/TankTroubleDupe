@@ -1,8 +1,150 @@
 import pygame
+import random
+#Classes
+tileSize = 50
+class Tile:
+    # border = [False, False, False, False]
+    #Border format is [Top, Right, Bottom, Left]
+    border = [True, True, True, True]
+    borderWidth = 2
+    def __init__(self, index, x, y, color, spawn = False):
+        self.index = index
+        self.x = x
+        self.y = y
+        self.color = color
+        if spawn:
+            self.color = GREEN
+        # self.border = [random.choice([True, False]), random.choice([True, False]), random.choice([True, False]), random.choice([True, False])]
+        self.border = self.borderControl()
+
+    def borderControl(self):
+        localIndex = self.index
+        border = [False, False, False, False] # Start with everything false
+
+        #Corners
+        Corners = [1, 14, 99, 112] # list of the corner indexes
+        if localIndex in Corners:
+            if localIndex == 1: # Top Left
+                border[0] = True
+                border[3] = True
+            elif localIndex == 14: # Top Right
+                border[0] = True
+                border[1] = True
+            elif localIndex == 99: # Bottom Left
+                border[2] = True
+                border[3] = True
+            elif localIndex == 112: # Bottom Right
+                border[1] = True
+                border[2] = True
+
+        #Sides
+        # Top Row
+        if localIndex in range(2, 14):
+            border[0] = True
+        # Right Row
+        if localIndex in range(14, 112, 14):
+            border[1] = True
+        # Bottom Row
+        if localIndex in range(100, 112):
+            border[2] = True
+        #Left Row
+        if localIndex in range(1, 112, 14):
+            border[3] = True
+
+
+        for i in range(len(border)):
+            if not border[i]:
+                border[i] = random.choice([True, False])
+
+        return border
+
+
+
+
+
+    def drawText(self, screen):
+        font = pygame.font.SysFont('Calibri', 25, True, False)
+        text = font.render(str(self.index), True, BLACK)
+        screen.blit(text, [self.x + tileSize/2 - text.get_width()/2, self.y + tileSize/2 - text.get_height()/2])
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, self.color, [self.x, self.y, tileSize, tileSize])
+        #Draw the border
+        if self.border[0]:
+            pygame.draw.line(screen, BLACK, [self.x, self.y], [self.x+tileSize, self.y], self.borderWidth)
+        if self.border[1]:
+            pygame.draw.line(screen, BLACK, [self.x + tileSize, self.y], [self.x+tileSize, self.y+tileSize], self.borderWidth)
+        if self.border[2]:
+            pygame.draw.line(screen, BLACK, [self.x, self.y + tileSize], [self.x+tileSize, self.y+tileSize], self.borderWidth)
+        if self.border[3]:
+            pygame.draw.line(screen, BLACK, [self.x, self.y], [self.x, self.y+tileSize], self.borderWidth)
+
+        #Draw the index
+        self.drawText(screen)
 
 
 #Functions
+def TileGen():
 
+    def ValidateChoice(option, choices):
+        #Make sure the spawns are far away from each other
+        columnOffset = 6 # Max = 14
+        rowOffset = 3 # Max = 8
+
+        if len(choices)>0: # We have elements in the list
+            #We need to check how close it is to the other spawn
+            if option in choices:
+                print("Option already in choices")
+                return False
+            
+            #Extracting the row/col
+
+            row1, col1 = choices[0]//14, choices[0]%14
+            print("Row1: ", row1, "Col1: ", col1)
+            row2, col2 = option//14, option%14
+            print("Row2: ", row2, "Col: ", col2)
+
+            if abs(col1-col2) < columnOffset:
+                print("Column Check Failed")
+                return False
+            if abs(row1-row2) < rowOffset:
+                print("Row Check Failed")
+                return False
+
+            # if abs(choices[0] - option) < HorizontalOffset:
+            #     print("Horizontal Check Failed")
+            #     return False
+            # if abs(choices[0] - option) < VerticalOffset:
+            #     print("Vertical Check Failed")
+            #     return False
+            return True # If we pass both checks then there is no other concern
+        else:
+            return True
+
+
+    tileList = []
+    index = 1
+
+    choice = [i for i in range(1,113)] # Make all the choices
+    choices = []
+    option = random.choice(choice) # Select the spawn zones
+    while len(choices) < 2: # We only 2 spawns
+        print("Option: ", option)
+        if ValidateChoice(option, choices):
+            choices.append(option)
+        option = random.choice(choice)
+    
+    print(choices)
+    for j in range(mazeY, mazeHeight + 1, tileSize):
+        for i in range(mazeX, mazeWidth + 1, tileSize):
+            if index in choices:
+                spawn = True
+            else:
+                spawn = False
+
+            tileList.append(Tile(index, i,j,RED, spawn))
+            index += 1
+    return tileList
 
 #Constants
 done = False
@@ -18,8 +160,8 @@ GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 
 # Keeping track of score
-p1Score = 90
-p2Score = 90
+p1Score = 0
+p2Score = 0
 
 p1NameIndent = 25
 p2NameIndent = windowWidth - 25
@@ -35,17 +177,16 @@ eventFlag = False # This flag is just for debugging purposes
 barWidth = 150
 barHeight = 20
 
-
-
 #Start the game setup
 pygame.init()
-
-
+pygame.display.set_caption("TankTroubleDupe") # Name the window
 #Keeping the mouse and its location
 mouse = pygame.mouse.get_pos()
 
 #Setting up the window
 screen = pygame.display.set_mode((windowWidth,windowHeight))
+
+tileList = TileGen()
 
 #Main loop
 while not done:
@@ -71,7 +212,10 @@ while not done:
                 pass
             if event.key == pygame.K_k:
                 pass
-    
+            if event.key == pygame.K_n:
+                tileList = TileGen()
+
+
     mouse = pygame.mouse.get_pos() #Update the position
 
     screen.fill(GREY) # This is the first line when drawing a new frame
@@ -98,10 +242,6 @@ while not done:
 
     #Misc Text
     text3 = fontScore.render("-",True,WHITE)
-    
-    
-
-
 
     #Visualing player 1
     screen.blit(textp1,[windowWidth/2 - textp1.get_width()-text3.get_width()/2, 0.8*windowHeight]) # This is the score on the left
@@ -129,6 +269,10 @@ while not done:
 
     # Draw the border
     pygame.draw.rect(screen, BLACK, [mazeX, mazeY, mazeWidth,mazeHeight], 1) # The maze border
+
+
+    for tile in tileList:
+        tile.draw(screen)
 
     pygame.display.flip()# Update the screen
 
