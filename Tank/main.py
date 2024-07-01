@@ -4,6 +4,22 @@ import os
 # Initialize Pygame
 pygame.init()
 
+#Controls
+
+#Tank Hull Movement
+
+#Anti-clockwise - left arrow
+#Clockwise - right arrow
+#UP - up arrow
+#DOWN - down arrow
+
+#Tank Turret Movement
+
+#Anti-clockwise - left arrow
+#Clockwise - right arrow
+
+
+
 # Screen dimensions
 WIDTH, HEIGHT = 800, 600
 
