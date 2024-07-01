@@ -114,15 +114,12 @@ class Tile:
         self.neighbours = self.neighbourCheck() # Update the neighbours list
 
 #Functions
-def TileGen():
+def tileGen():
     # This function is responsible for generating the tiles for the maze
     # Inputs: No inputs
     # Outputs: A list of tiles that make up the maze
     #
-
-
-
-    def ValidateChoice(option, choices):
+    def validateChoice(option, choices):
         # This function validates whether or not a spawn location is valid with some arbitrary parameters
         # Inputs: option: the current proposed spawn location
         # Inputs: choices: the current list of spawn locations
@@ -168,7 +165,7 @@ def TileGen():
         else:
             return True
 
-    def BreathFirstSearch(tileList, choices):
+    def breathFirstSearch(tileList, choices):
         # This function will search the maze in a breath first manner to see if we can reach the second spawn
         # Inputs: tileList: The current list of tiles
         # Inputs: Choices: The locations of both spawns
@@ -204,7 +201,7 @@ def TileGen():
         option = random.choice(choice) # Select the spawn zones
         failsafe = 0
         while len(choices) < 2 and failsafe < 10: # We only 2 spawns
-            if ValidateChoice(option, choices):
+            if validateChoice(option, choices):
                 choices.append(option)
                 tempchoice = choices.copy()
                 #Remove close choices that are invalid so that we can choose a valid one more easily
@@ -229,7 +226,7 @@ def TileGen():
                 index += 1
 
         #Validate the tileList
-        validMaze = BreathFirstSearch(tileList, choices)
+        validMaze = breathFirstSearch(tileList, choices)
 
 
     #Now that we have a valid maze, update all the neighbors so that the walls are double bordered
@@ -300,7 +297,7 @@ mouse = pygame.mouse.get_pos()
 #Setting up the window
 screen = pygame.display.set_mode((windowWidth,windowHeight))
 
-tileList = TileGen()
+tileList = tileGen()
 
 #Main loop
 while not done:
@@ -327,7 +324,7 @@ while not done:
             if event.key == pygame.K_k:
                 pass
             if event.key == pygame.K_n:
-                tileList = TileGen()
+                tileList = tileGen()
 
 
     mouse = pygame.mouse.get_pos() #Update the position
