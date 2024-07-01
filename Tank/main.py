@@ -55,7 +55,7 @@ class Tank(pygame.sprite.Sprite):
             print(f"Original tank image size: {self.original_tank_image.get_size()}")
 
             # Scale the tank image to a smaller size
-            self.tank_image = pygame.transform.scale(self.original_tank_image, (10, 5))
+            self.tank_image = self.original_tank_image
             print(f"Scaled tank image size: {self.tank_image.get_size()}")
         except pygame.error as e:
             print(f"Failed to load image: {e}")
@@ -74,20 +74,20 @@ class Tank(pygame.sprite.Sprite):
         keys = pygame.key.get_pressed()
 
         if keys[pygame.K_UP]:
-            self.speed = 5
+            self.speed = 3
             
         elif keys[pygame.K_DOWN]:
-            self.speed = -2
+            self.speed = -3
             
         else:
             self.speed = 0
             
 
         if keys[pygame.K_LEFT]:
-            self.rotation_speed = 2
+            self.rotation_speed = 4
             
         elif keys[pygame.K_RIGHT]:
-            self.rotation_speed = -2
+            self.rotation_speed = -4
             
 
         else:
@@ -113,13 +113,13 @@ class Gun(pygame.sprite.Sprite):
         current_dir = os.path.dirname(__file__)
         gun_path = os.path.join(current_dir, 'gun.png')
         self.original_gun_image = pygame.image.load(gun_path).convert_alpha()
-        self.gun_image = pygame.transform.scale(self.original_gun_image, (20, 80))
+        self.gun_image = self.original_gun_image
         self.image = self.gun_image
         self.rect = self.gun_image.get_rect(center=tank.rect.center)
         self.angle = 0
         self.rotation_speed = 0
         self.tank = tank
-        self.gun_length = 40
+        self.gun_length = -17
         self.gun_rotation_direction = 0
         self.tip_offset = 30
 
@@ -188,7 +188,7 @@ class Bullet(pygame.sprite.Sprite):
             
         bullet_path = os.path.join(current_dir, 'bullet.png')
         self.original_bullet_image = pygame.image.load(bullet_path).convert_alpha()
-        self.bullet_image = pygame.transform.scale(self.original_bullet_image, (20,20))
+        self.bullet_image = self.original_bullet_image
         self.image = self.bullet_image
         self.angle = angle
         self.speed = 10
