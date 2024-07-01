@@ -104,19 +104,17 @@ def TileGen():
             row2, col2 = option//14, option%14
             print("Row2: ", row2, "Col: ", col2)
 
+            if col1 == 0:
+                col1 = 14
+            if col2 == 0:
+                col2 = 14
+
             if abs(col1-col2) < columnOffset:
                 print("Column Check Failed")
                 return False
             if abs(row1-row2) < rowOffset:
                 print("Row Check Failed")
                 return False
-
-            # if abs(choices[0] - option) < HorizontalOffset:
-            #     print("Horizontal Check Failed")
-            #     return False
-            # if abs(choices[0] - option) < VerticalOffset:
-            #     print("Vertical Check Failed")
-            #     return False
             return True # If we pass both checks then there is no other concern
         else:
             return True
