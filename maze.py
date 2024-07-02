@@ -106,9 +106,6 @@ class Tank(pygame.sprite.Sprite):
         if tile.border[3] and tempX - self.originalTankImage.get_size()[0]/2 < tile.x: #If the left border is present
             tempX = tile.x + self.originalTankImage.get_size()[0]/2
 
-
-
-
         self.rect.centerx = int(tempX)
         self.rect.centery = int(tempY)
         return tempX, tempY
@@ -343,7 +340,7 @@ class Tile:
         if spawn:
             self.color = GREEN
         self.border = self.borderControl()
-        self.neighbours = self.neighbourCheck()
+        self.neighbours, self.bordering = self.neighbourCheck()
 
     def neighbourCheck(self):
         #This function will return a list of the indexes of the neighbours based on the current list of border
@@ -353,16 +350,17 @@ class Tile:
         neighbours = [self.index - colAmount, self.index + 1, self.index + colAmount, self.index - 1]
         #Check if there are any invalid neighbours
         newlist = []
+        oldlist = [-1, -1, -1, -1]
         for idx, neighbour in enumerate(neighbours):
             if neighbour < 1 or neighbour > rowAmount*colAmount:
                 #We do not want this
                 pass
             elif self.border[idx] == True:
                 #We do not want this
-                pass
+                oldlist[idx] = neighbour
             else:
                 newlist.append(neighbour)
-        return newlist
+        return newlist, oldlist
 
     def borderControl(self):
         # This function checks and validates the borders for the tile
@@ -422,12 +420,15 @@ class Tile:
     def getIndex(self):
         return self.index
 
+    def getBordering(self):
+        return self.bordering
+
     def setColor(self):
         self.color = WHITE
 
-    def setBorder(self, borderidx):
-        self.border[borderidx] = True
-        self.neighbours = self.neighbourCheck() # Update the neighbours list
+    def setBorder(self, borderidx, value = True):
+        self.border[borderidx] = value
+        self.neighbours, self.bordering = self.neighbourCheck() # Update the neighbours list
 
 #Functions
 def tileGen():
@@ -507,7 +508,6 @@ def tileGen():
         else:
             return False
 
-
     validMaze = False
     while not validMaze: # While our maze isn't valid
         tileList = []
@@ -541,11 +541,19 @@ def tileGen():
                 tileList.append(Tile(index, i,j,RED, spawn))
                 index += 1
 
+        #We need to make sure that all the borders are bordered on both sides
+        for idx, tile in enumerate(tileList):
+            bordering = tile.getBordering()
+            for border in bordering:
+                if border != -1:
+                    tileList[border-1].setBorder((bordering.index(border)+2)%4, tile.border[bordering.index(border)])
+
         #Validate the tileList
         validMaze = breathFirstSearch(tileList, choices, 0) and breathFirstSearch(tileList, choices, 1)
-        global spawnpoint
-        spawnpoint = []
-        spawnpoint = choices
+    global spawnpoint
+    spawnpoint = []
+    spawnpoint = choices
+
     return tileList
 
 
@@ -595,7 +603,7 @@ done = False
 windowWidth = 800
 windowHeight = 600
 tileSize = 50
-weightTrue = 0.33
+weightTrue = 0.16
 rowAmount = 14
 colAmount = 8
 #Colors
@@ -712,17 +720,15 @@ while not done:
             if event.key == pygame.K_i:
                 print("The current mouse position is: ", mouse)
             if event.key == pygame.K_o:
-                pass
+                weightTrue += 0.01
+                print("The current weightTrue is: ", weightTrue)
             if event.key == pygame.K_p:
-                pass
+                weightTrue -= 0.01
+                print("The current weightTrue is: ", weightTrue)
             if event.key == pygame.K_l:
                 pass
             if event.key == pygame.K_k:
                 pass
-
-            # if event.key == pygame.K_k:
-            #     print(get_edges(tank1.corners))
-            #     print(get_edges(tank2.corners))
             if event.key == pygame.K_n:
                 tileList = tileGen()
                 spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
