@@ -61,7 +61,6 @@ class Tank(pygame.sprite.Sprite):
         tempX = self.x + dx
         tempY = self.y - dy
 
-
         #We are outside of the maze
         if tempX <= mazeX + self.originalTankImage.get_size()[0]/2:
             tempX = mazeX + self.originalTankImage.get_size()[0]/2
@@ -72,7 +71,6 @@ class Tank(pygame.sprite.Sprite):
         if tempY > mazeHeight + mazeY - self.originalTankImage.get_size()[0]/2:
             tempY = mazeHeight + mazeY - self.originalTankImage.get_size()[0]/2
 
-        global resetFlag
         if sat_collision(tank1, tank2):
             if self.name == "Player1":
                 #If there is a collision here, move the other tank
@@ -88,9 +86,31 @@ class Tank(pygame.sprite.Sprite):
                     tempY = self.y + dy
             else:
                 print("Error: Invalid tank name")
+
+        #Check for collision with walls
+        #We are going to calculate the row and column
+        row = math.ceil((self.getCenter()[1] - mazeY)/tileSize)
+        col = math.ceil((self.getCenter()[0] - mazeX)/tileSize)
+        #Find the file at the exact index
+        index = (row-1)*colAmount + col
+
+        #Check if the tank is colliding with the walls
+        global resetFlag #PLEASE REMOVE
+        tile = tileList[index-1]
+        if tile.border[0] and tempY - self.originalTankImage.get_size()[1] <= tile.y: #If the top border is present
+            tempY = tile.y + self.originalTankImage.get_size()[1]
+        if tile.border[1] and tempX + self.originalTankImage.get_size()[0]/2 >= tile.x + tileSize: #If the right border is present
+            tempX = tile.x + tileSize - self.originalTankImage.get_size()[0]/2
+        if tile.border[2] and tempY + self.originalTankImage.get_size()[1] > tile.y + tileSize: #If the bottom border is present
+            tempY = tile.y + tileSize - self.originalTankImage.get_size()[1]
+        if tile.border[3] and tempX - self.originalTankImage.get_size()[0]/2 < tile.x: #If the left border is present
+            tempX = tile.x + self.originalTankImage.get_size()[0]/2
+
+
+
+
         self.rect.centerx = int(tempX)
         self.rect.centery = int(tempY)
-
         return tempX, tempY
 
     def update(self):
@@ -393,7 +413,6 @@ class Tile:
             pygame.draw.line(screen, BLACK, [self.x, self.y + tileSize], [self.x+tileSize, self.y+tileSize], self.borderWidth)
         if self.border[3]:
             pygame.draw.line(screen, BLACK, [self.x, self.y], [self.x, self.y+tileSize], self.borderWidth)
-
         #Draw the index
         # self.drawText(screen)
 
@@ -402,6 +421,9 @@ class Tile:
 
     def getIndex(self):
         return self.index
+
+    def setColor(self):
+        self.color = WHITE
 
     def setBorder(self, borderidx):
         self.border[borderidx] = True
@@ -628,27 +650,27 @@ controlsTank1 = {
     'fire': pygame.K_j
 }
 
-# # Controls for the second tank
-# controlsTank2 = {
-#     'up': pygame.K_UP,
-#     'down': pygame.K_DOWN,
-#     'left': pygame.K_LEFT,
-#     'right': pygame.K_RIGHT,
-#     'rotate_left': pygame.K_COMMA,
-#     'rotate_right': pygame.K_PERIOD,
-#     'fire': pygame.K_SLASH
-# }
-
 # Controls for the second tank
 controlsTank2 = {
     'up': pygame.K_UP,
     'down': pygame.K_DOWN,
     'left': pygame.K_LEFT,
     'right': pygame.K_RIGHT,
-    'rotate_left': pygame.K_z,
-    'rotate_right': pygame.K_x,
-    'fire': pygame.K_SPACE
+    'rotate_left': pygame.K_COMMA,
+    'rotate_right': pygame.K_PERIOD,
+    'fire': pygame.K_SLASH
 }
+
+# # Controls for the second tank
+# controlsTank2 = {
+#     'up': pygame.K_UP,
+#     'down': pygame.K_DOWN,
+#     'left': pygame.K_LEFT,
+#     'right': pygame.K_RIGHT,
+#     'rotate_left': pygame.K_z,
+#     'rotate_right': pygame.K_x,
+#     'fire': pygame.K_SPACE
+# }
 
 spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
 spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
@@ -690,17 +712,13 @@ while not done:
             if event.key == pygame.K_i:
                 print("The current mouse position is: ", mouse)
             if event.key == pygame.K_o:
-                tankSpeed -= 0.01
-                print("The current speed is: ", tankSpeed)
+                pass
             if event.key == pygame.K_p:
-                tankSpeed += 0.01
-                print("The current speed is: ", tankSpeed)
+                pass
             if event.key == pygame.K_l:
-                turretSpeed -= 0.01
-                print("The current turret speed is: ", turretSpeed)
+                pass
             if event.key == pygame.K_k:
-                turretSpeed += 0.01
-                print("The current turret speed is: ", turretSpeed)
+                pass
 
             # if event.key == pygame.K_k:
             #     print(get_edges(tank1.corners))
