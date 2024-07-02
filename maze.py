@@ -36,6 +36,8 @@ class Tank(pygame.sprite.Sprite):
         self.width, self.height = self.originalTankImage.get_size()
         self.x = float(self.rect.centerx)
         self.y = float(self.rect.centery)
+        self.health = 100
+        self.maxHealth = 100
         self.updateCorners()
 
     def updateCorners(self):
@@ -72,13 +74,13 @@ class Tank(pygame.sprite.Sprite):
             tempY = mazeHeight + mazeY - self.originalTankImage.get_size()[0]/2
 
         if sat_collision(tank1, tank2):
-            if self.name == "Plwasd1":
+            if self.name == p1TankName:
                 #If there is a collision here, move the other tank
                     #This player is being pushed
                     tank2.setCoords(tank2.x + dx, tank2.y - dy)
                     tempX = self.x - dx
                     tempY = self.y + dy
-            elif self.name == "Plarro2":
+            elif self.name == p2TankName:
                 #If there is a collision here, move the other tank
                     #This player is being pushed
                     tank1.setCoords(tank1.x + dx, tank1.y - dy)
@@ -95,7 +97,6 @@ class Tank(pygame.sprite.Sprite):
         index = (row-1)*colAmount + col
 
         #Check if the tank is colliding with the walls
-        global resetFlag #PLEASE REMOVE
         tile = tileList[index-1]
         if tile.border[0] and tempY - self.originalTankImage.get_size()[1] <= tile.y: #If the top border is present
             tempY = tile.y + self.originalTankImage.get_size()[1]
@@ -138,6 +139,43 @@ class Tank(pygame.sprite.Sprite):
         dy = math.sin(angleRad) * self.speed
         self.x, self.y = self.fixMovement(dx,dy)
 
+    def getHealth(self):
+        return self.health, self.maxHealth
+
+    def damage(self, damage):
+        self.health -= damage
+        global tank1Health, tank2Health
+        if self.name == p1TankName:
+            print("Damage: ", tank1Health)
+            tank1Health -= damage
+        elif self.name == p2TankName:
+            print("Damage Updated: ", tank2Health)
+            tank2Health -= damage
+        else:
+            print("Error: Invalid tank name")
+
+
+        if self.health <= 0:
+            if self.name == p1TankName:
+                gun1.setCooldown()
+                gun1.kill()
+                # tank1.wipeCorners()
+                tank1.setCentre(2000, 2000)
+                self.kill()
+                allSprites.remove(gun1)
+                allSprites.remove(self)
+            elif self.name == p2TankName:
+                gun2.setCooldown()
+                global gun2Cooldown
+                gun2Cooldown = 300
+                gun2.kill()
+                # tank2.wipeCorners()
+                tank2.setCentre(1000, 1000)
+                self.kill()
+                allSprites.remove(gun2)
+                allSprites.remove(self)
+            else:
+                print("Error: Invalid tank name")
 
     def getCoords(self):
         return [self.rect.x, self.rect.y, self.rect.x + self.originalTankImage.get_size()[0], self.rect.y + self.originalTankImage.get_size()[1]]
@@ -149,12 +187,13 @@ class Tank(pygame.sprite.Sprite):
         return self.rect.center
     
     def setCoords(self, newx, newy):
-        # self.center = (newx, newy)
         self.x, self.y = newx, newy
 
+    def setCentre(self, x, y):
+        self.rect.center = (x, y)
 
 class Gun(pygame.sprite.Sprite):
-    def __init__(self, tank, controls):
+    def __init__(self, tank, controls, name):
         """
         Initializes the Gun class.
 
@@ -180,7 +219,7 @@ class Gun(pygame.sprite.Sprite):
         self.gunRotationDirection = 0
         self.tipOffSet = 30
         self.controls = controls
-
+        self.name = name
         self.originalGunLength = self.gunLength
         self.gunBackStartTime = 0
         self.gunBackDuration = 200
@@ -258,12 +297,25 @@ class Gun(pygame.sprite.Sprite):
         self.image = rotatedGunImage
         self.rect = self.image.get_rect(center=(gunEndX, gunEndY))
 
+        if self.name == p1GunName:
+            global gun1Cooldown
+            gun1Cooldown = self.shootCooldown
+        elif self.name == p2GunName:
+            global gun2Cooldown
+            gun2Cooldown = self.shootCooldown
+        else:
+            print("Error: Invalid gun name")
+
         if self.shootCooldown > 0:
             self.shootCooldown -= pygame.time.get_ticks() - self.lastUpdateTime
         else:
+            self.shootCooldown = 0
             self.canShoot = True
 
         self.lastUpdateTime = pygame.time.get_ticks()
+
+    def setCooldown(self):
+        self.shootCooldown = 0
 
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y, angle, gunLength, tipOffSet):
@@ -303,7 +355,7 @@ class Bullet(pygame.sprite.Sprite):
         self.y = self.rect.centery
         self.bounce = 5 #Abitrary number but the amount of bounces before the bullet is removed
         self.corners = [(self.rect.x, self.rect.y), (self.rect.x + self.rect.width, self.rect.y), (self.rect.x + self.rect.width, self.rect.y + self.rect.height), (self.rect.x, self.rect.y + self.rect.height)]
-
+        self.damage = 100
     def update(self):
         """
         Updates the bullet's position based on its speed and direction.
@@ -341,14 +393,30 @@ class Bullet(pygame.sprite.Sprite):
         if tank1Collision or tank2Collision:
             global p1Score, p2Score
             if tank1Collision: #If we hit tank1 then give p2 a point
-                p2Score += 1
-                tank1.kill()
-                gun1.kill()
+                tank1.damage(self.damage)
+                bulletSprites.remove(self)
             else:
-                p1Score += 1
-                tank2.kill()
-                gun2.kill()
-            self.kill()
+                tank2.damage(self.damage)
+                bulletSprites.remove(self)
+            global tank1Dead, tank2Dead
+            if tank1.getHealth()[0] <= 0:
+                self.kill()
+                gun1.setCooldown()
+                #The tank is dead
+                if not tank1Dead:
+                    print("Player 2 Wins")
+                    p2Score += 1
+                    tank1Dead = True
+            if tank2.getHealth()[0] <= 0:
+                self.kill()
+                gun2.setCooldown()
+                if not tank2Dead:
+                    print("Player 1 Wins")
+                    p1Score += 1
+                    tank2Dead = True
+                #The tank is dead
+
+
             global gameOverFlag
             gameOverFlag = True #The game is over
             return
@@ -743,11 +811,30 @@ controlsTank2 = {
 spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
 spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
 
+global tank1Health, tank2Health
+tank1Health = 100
+tank2Health = 100
+
+p1TankName = "Plwasd1"
+p2TankName = "Plarro2"
+
+p1GunName = "Gun1"
+p2GunName = "Gun2"
+
+global gun1Cooldown, gun2Cooldown
+gun1Cooldown = 0
+gun2Cooldown = 0
+
+global tank1Dead, tank2Dead
+tank1Dead = False
+tank2Dead = False
+
+
 # Create two tank instances with different controls
-tank1 = Tank(spawnTank1[0], spawnTank1[1], controlsTank1, "Plwasd1")
-tank2 = Tank(spawnTank2[0], spawnTank2[1], controlsTank2, "Plarro2")
-gun1 = Gun(tank1, controlsTank1)
-gun2 = Gun(tank2, controlsTank2)
+tank1 = Tank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
+tank2 = Tank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName)
+gun1 = Gun(tank1, controlsTank1, p1GunName)
+gun2 = Gun(tank2, controlsTank2, p2GunName)
 
 allSprites = pygame.sprite.Group()
 allSprites.add(tank1, gun1, tank2, gun2)
@@ -761,10 +848,13 @@ tankSpeed = 0.5
 rotationalSpeed = 2
 turretSpeed = 0.8
 bulletSpeed = 0.5
+
 global gameOverFlag
 gameOverFlag = False
 start_time = 0
 cooldownTimer = False
+
+
 
 lastlen = len(bulletSprites)
 #Main loop
@@ -821,7 +911,7 @@ while not done:
         gameOverFlag = False
         cooldownTimer = True
     if cooldownTimer:
-        if time.time() - start_time >= 3:
+        if time.time() - start_time >= 30:
             #Reset the game
             gameOverFlag = False
             cooldownTimer = False
@@ -836,15 +926,19 @@ while not done:
             tank2.setCoords(spawnTank2[0], spawnTank2[1])
             start_time = 0
             gameOverFlag = False
-            tank1 = Tank(spawnTank1[0], spawnTank1[1], controlsTank1, "Plwasd1")
-            tank2 = Tank(spawnTank2[0], spawnTank2[1], controlsTank2, "Plarro2")
-            gun1 = Gun(tank1, controlsTank1)
-            gun2 = Gun(tank2, controlsTank2)
-
+            tank1 = Tank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
+            tank2 = Tank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName)
+            gun1 = Gun(tank1, controlsTank1, p1GunName)
+            gun2 = Gun(tank2, controlsTank2, p2GunName)
+            tank1Health = 100
+            tank2Health = 100
             allSprites = pygame.sprite.Group()
             allSprites.add(tank1, gun1, tank2, gun2)
             bulletSprites = pygame.sprite.Group()
-
+            tank1Dead = False
+            tank2Dead = False
+            gun1Cooldown = 0
+            gun2Cooldown = gun2.setCooldown()
 
     #Making the string for score
     p1ScoreText = str(p1Score)
@@ -869,20 +963,20 @@ while not done:
     screen.blit(textp1Name,[p1NameIndent, 0.783*windowHeight]) # This is the name on the left
     #Health bars outline
     #Health bar
-    pygame.draw.rect(screen, RED, [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth*((100-p1Score)/100), barHeight]) # Bar
+    pygame.draw.rect(screen, RED, [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth*((tank1Health)/100), barHeight]) # Bar
     pygame.draw.rect(screen, BLACK, [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth, barHeight], 2) # Outline
     #Reload bars
-    pygame.draw.rect(screen, BLUE, [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + 25, barWidth, barHeight]) # The 25 is to space from the health bar
+    pygame.draw.rect(screen, BLUE, [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + 25, barWidth*((300-gun1Cooldown)/300), barHeight]) # The 25 is to space from the health bar
     pygame.draw.rect(screen, BLACK, [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + 25, barWidth, barHeight], 2) # Outline
     #Visualising player 2
-    screen.blit(textp2,[windowWidth/2 + text3.get_width()*1.5, 0.8*windowHeight]) # This is the score on the right
+    screen.blit(textp2,[windowWidth/2 + text3.get_width()*1.5, 0.8*windowHeight]) # This is the score on the right 
     screen.blit(textp2Name,[p2NameIndent - textp2Name.get_width(), 0.783*windowHeight]) # This is the name on the left
     #Health bars
     pygame.draw.rect(screen, RED, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth, barHeight])
-    pygame.draw.rect(screen, GREY, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth*(1-(100-p2Score)/100), barHeight])
+    pygame.draw.rect(screen, GREY, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth*((100-tank2Health)/100), barHeight])
     pygame.draw.rect(screen, BLACK, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth, barHeight], 2)
     #Reload bars
-    pygame.draw.rect(screen, BLUE, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + 25, barWidth, barHeight]) # The 25 is to space from the health bar
+    pygame.draw.rect(screen, BLUE, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + 25, barWidth*((300-gun2Cooldown)/300), barHeight]) # The 25 is to space from the health bar
     pygame.draw.rect(screen, BLACK, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + 25, barWidth, barHeight], 2) # Outline
 
     # Misc text and other little pieces
@@ -900,8 +994,8 @@ while not done:
     #Update the location of the corners
     tank1.updateCorners()
     tank2.updateCorners()
-    # pygame.draw.polygon(screen, GREEN, tank1.getCorners(), 2) #Hit box outline
-    # pygame.draw.polygon(screen, GREEN, tank2.getCorners(), 2) #Hit box outline
+    pygame.draw.polygon(screen, GREEN, tank1.getCorners(), 2) #Hit box outline
+    pygame.draw.polygon(screen, GREEN, tank2.getCorners(), 2) #Hit box outline
     allSprites.update()
     bulletSprites.update()
     allSprites.draw(screen)
