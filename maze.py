@@ -34,10 +34,9 @@ class Tank(pygame.sprite.Sprite):
         self.controls = controls
         self.center = (x, y)
         self.width, self.height = self.originalTankImage.get_size()
-        self.updateCorners()
-
         self.x = float(self.rect.centerx)
         self.y = float(self.rect.centery)
+        self.updateCorners()
 
     def updateCorners(self):
         cx, cy = self.rect.center
@@ -96,18 +95,18 @@ class Tank(pygame.sprite.Sprite):
 
     def update(self):
         keys = pygame.key.get_pressed()
-        
+        global tankSpeed
         if keys[self.controls['up']]:
-            self.speed = 1
+            self.speed = tankSpeed
         elif keys[self.controls['down']]:
-            self.speed = -1
+            self.speed = -tankSpeed
         else:
             self.speed = 0
 
         if keys[self.controls['left']]:
-            self.rotationSpeed = 4
+            self.rotationSpeed = rotationalSpeed
         elif keys[self.controls['right']]:
-            self.rotationSpeed = -4
+            self.rotationSpeed = -rotationalSpeed
         else:
             self.rotationSpeed = 0
 
@@ -120,10 +119,6 @@ class Tank(pygame.sprite.Sprite):
         angleRad = math.radians(self.angle)
         dx = math.cos(angleRad) * self.speed
         dy = math.sin(angleRad) * self.speed
-        # self.x += dx
-        # self.y -= dy
-        # self.rect.centerx = int(self.x)
-        # self.rect.centery = int(self.y)
         self.x, self.y = self.fixMovement(dx,dy)
 
 
@@ -164,7 +159,7 @@ class Gun(pygame.sprite.Sprite):
         self.angle = 0
         self.rotationSpeed = 0
         self.tank = tank
-        self.gunLength = -21
+        self.gunLength = -24
         self.gunRotationDirection = 0
         self.tipOffSet = 30
         self.controls = controls
@@ -202,17 +197,17 @@ class Gun(pygame.sprite.Sprite):
         #Checks what keys are pressed, and changes speed accordingly
         #If tank hull moves left or right, the gun will also move simultaneously
         #with the tank hull at the same speed and direction.
+        global turretSpeed, rotationalSpeed
         if keys[self.controls['rotate_left']]:
-            self.rotationSpeed = 2
+            self.rotationSpeed = turretSpeed
         elif keys[self.controls['rotate_right']]:
-            self.rotationSpeed = -2
+            self.rotationSpeed = -turretSpeed
         elif  keys[self.controls['left']]:
-            self.rotationSpeed = 4
+            self.rotationSpeed = rotationalSpeed
         elif keys[self.controls['right']]:
-            self.rotationSpeed = -4
+            self.rotationSpeed = -rotationalSpeed
         else:
             self.rotationSpeed = 0
-
         self.angle += self.rotationSpeed
         self.angle %= 360
         
@@ -378,13 +373,6 @@ class Tile:
             if not border[i]:
                 # border[i] = random.choices([True, False])
                 border[i] = random.choices([True, False], weights = (weightTrue, 1-weightTrue))[0]
-        #If the tile is surrounded by walls then it should be black
-        true_count = 0
-        for b in border:
-            if b:
-                true_count += 1
-        if true_count == 4:
-            self.color = BLACK
 
         return border
 
@@ -480,7 +468,7 @@ def tileGen():
 
         #Setting up the BFS
         visitedQueue = []
-        tracking = [False for i in range(rowAmount*colAmount+1)]
+        tracking = [False for _ in range(rowAmount*colAmount+1)]
         queue = [choices[0]]
         visitedQueue.append(choices[0])
         tracking[choices[0]] = True
@@ -639,15 +627,26 @@ controlsTank1 = {
     'fire': pygame.K_j
 }
 
+# # Controls for the second tank
+# controlsTank2 = {
+#     'up': pygame.K_UP,
+#     'down': pygame.K_DOWN,
+#     'left': pygame.K_LEFT,
+#     'right': pygame.K_RIGHT,
+#     'rotate_left': pygame.K_COMMA,
+#     'rotate_right': pygame.K_PERIOD,
+#     'fire': pygame.K_SLASH
+# }
+
 # Controls for the second tank
 controlsTank2 = {
     'up': pygame.K_UP,
     'down': pygame.K_DOWN,
     'left': pygame.K_LEFT,
     'right': pygame.K_RIGHT,
-    'rotate_left': pygame.K_COMMA,
-    'rotate_right': pygame.K_PERIOD,
-    'fire': pygame.K_SLASH
+    'rotate_left': pygame.K_z,
+    'rotate_right': pygame.K_x,
+    'fire': pygame.K_SPACE
 }
 
 spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
@@ -666,6 +665,10 @@ bulletSprites = pygame.sprite.Group()
 
 bg = GREY
 resetFlag = True
+global tankSpeed, rotationalSpeed, turretSpeed
+tankSpeed = 0.5
+rotationalSpeed = 2
+turretSpeed = 0.8
 
 #Main loop
 while not done:
@@ -686,14 +689,21 @@ while not done:
             if event.key == pygame.K_i:
                 print("The current mouse position is: ", mouse)
             if event.key == pygame.K_o:
-                weightTrue += 0.01
-                print("The current weight is: ", weightTrue)
-            if event.key == pygame.K_j:
-                weightTrue -= 0.01
-                print("The current weight is: ", weightTrue)
+                tankSpeed -= 0.01
+                print("The current speed is: ", tankSpeed)
+            if event.key == pygame.K_p:
+                tankSpeed += 0.01
+                print("The current speed is: ", tankSpeed)
+            if event.key == pygame.K_l:
+                turretSpeed -= 0.01
+                print("The current turret speed is: ", turretSpeed)
             if event.key == pygame.K_k:
-                print(get_edges(tank1.corners))
-                print(get_edges(tank2.corners))
+                turretSpeed += 0.01
+                print("The current turret speed is: ", turretSpeed)
+
+            # if event.key == pygame.K_k:
+            #     print(get_edges(tank1.corners))
+            #     print(get_edges(tank2.corners))
             if event.key == pygame.K_n:
                 tileList = tileGen()
                 spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
