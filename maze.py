@@ -59,8 +59,8 @@ class Tank(pygame.sprite.Sprite):
         # Inputs: dx, dy: The change in x and y coordinates
         # Outputs: The corrected x and y coordinates
 
-        tempX = self.rect.x + dx
-        tempY = self.rect.y - dy
+        tempX = self.x + dx
+        tempY = self.y - dy
 
 
         #We are outside of the maze
@@ -78,18 +78,19 @@ class Tank(pygame.sprite.Sprite):
             if self.name == "Player1":
                 #If there is a collision here, move the other tank
                     #This player is being pushed
-                    tank2.setCoords(tank2.rect.x + dx, tank2.rect.y - dy)
-                    tempX = self.rect.x - dx
-                    tempY = self.rect.y + dy
+                    # tank2.setCoords(tank2.x + dx, tank2.y - dy)
+                    tempX = self.x - dx
+                    tempY = self.y + dy
             elif self.name == "Player2":
                 #If there is a collision here, move the other tank
                     #This player is being pushed
-                    tank1.setCoords(tank1.rect.x + dx, tank1.rect.y - dy)
-                    tempX = self.rect.x - dx
-                    tempY = self.rect.y + dy
+                    tank1.setCoords(tank1.x + dx, tank1.y - dy)
+                    tempX = self.x - dx
+                    tempY = self.y + dy
             else:
                 print("Error: Invalid tank name")
-
+        self.rect.centerx = int(tempX)
+        self.rect.centery = int(tempY)
         return tempX, tempY
 
     def update(self):
@@ -118,11 +119,11 @@ class Tank(pygame.sprite.Sprite):
         angleRad = math.radians(self.angle)
         dx = math.cos(angleRad) * self.speed
         dy = math.sin(angleRad) * self.speed
-        self.x += dx
-        self.y -= dy
-        self.rect.centerx = int(self.x)
-        self.rect.centery = int(self.y)
-        self.rect.x, self.rect.y = self.fixMovement(dx,dy)
+        # self.x += dx
+        # self.y -= dy
+        # self.rect.centerx = int(self.x)
+        # self.rect.centery = int(self.y)
+        self.x, self.y = self.fixMovement(dx,dy)
 
 
     def getCoords(self):
@@ -136,8 +137,7 @@ class Tank(pygame.sprite.Sprite):
     
     def setCoords(self, newx, newy):
         # self.center = (newx, newy)
-        self.rect.x, self.rect.y = newx, newy
-        # self.rect.center = self.center
+        self.x, self.y = newx, newy
 
 
 class Gun(pygame.sprite.Sprite):
@@ -766,13 +766,14 @@ while not done:
     #Update the location of the corners
     tank1.updateCorners()
     tank2.updateCorners()
-
+    pygame.draw.polygon(screen, GREEN, tank1.getCorners(), 2)
+    pygame.draw.polygon(screen, GREEN, tank2.getCorners(), 2)
     allSprites.update()
     bulletSprites.update()
     allSprites.draw(screen)
     bulletSprites.draw(screen)
 
-    pygame.time.Clock().tick(120)
+    pygame.time.Clock().tick(240)
 
     pygame.display.flip()# Update the screen
 
