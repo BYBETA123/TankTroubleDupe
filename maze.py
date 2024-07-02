@@ -164,7 +164,7 @@ class Gun(pygame.sprite.Sprite):
         self.angle = 0
         self.rotationSpeed = 0
         self.tank = tank
-        self.gunLength = -21
+        self.gunLength = -24
         self.gunRotationDirection = 0
         self.tipOffSet = 30
         self.controls = controls
@@ -577,6 +577,7 @@ def sat_collision(rect1, rect2):
             if not overlap(proj1, proj2):
                 return False
     return True
+
 
 
 #Constants
