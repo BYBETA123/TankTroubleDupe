@@ -18,13 +18,10 @@ pygame.display.set_caption("Tank Movement")
 screenWidth, screenHeight = pygame.display.get_surface().get_size()
 
 # Tank sprite class
-<<<<<<< HEAD
-=======
 import pygame
 import os
 import math
 
->>>>>>> 2a47df1a7d3ab3544beff01cc5225e1634e1af5c
 class Tank(pygame.sprite.Sprite):
     def __init__(self, x, y, controls):
         super().__init__()
@@ -88,13 +85,10 @@ class Tank(pygame.sprite.Sprite):
         self.rect.centery = int(self.y)
 
 
-<<<<<<< HEAD
-=======
 import pygame
 import os
 import math
 
->>>>>>> 2a47df1a7d3ab3544beff01cc5225e1634e1af5c
 class Gun(pygame.sprite.Sprite):
     def __init__(self, tank, controls):
         """
@@ -118,11 +112,7 @@ class Gun(pygame.sprite.Sprite):
         self.angle = 0
         self.rotationSpeed = 0
         self.tank = tank
-<<<<<<< HEAD
-        self.gunLength = -21
-=======
         self.gunLength = -17
->>>>>>> 2a47df1a7d3ab3544beff01cc5225e1634e1af5c
         self.gunRotationDirection = 0
         self.tipOffSet = 30
         self.controls = controls
