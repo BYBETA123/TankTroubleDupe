@@ -338,18 +338,20 @@ class Bullet(pygame.sprite.Sprite):
         #If we hit a tank
         tank1Collision = sat_collision(self, tank1)
         tank2Collision = sat_collision(self, tank2)
-        # if tank1Collision or tank2Collision:
-        #     global p1Score, p2Score
-        #     if tank1Collision: #If we hit tank1 then give p2 a point
-        #         p2Score += 1
-        #         tank1.kill()
-        #         gun1.kill()
-        #     else:
-        #         p1Score += 1
-        #         tank2.kill()
-        #         gun2.kill()
-        #     self.kill()
-            # return
+        if tank1Collision or tank2Collision:
+            global p1Score, p2Score
+            if tank1Collision: #If we hit tank1 then give p2 a point
+                p2Score += 1
+                tank1.kill()
+                gun1.kill()
+            else:
+                p1Score += 1
+                tank2.kill()
+                gun2.kill()
+            self.kill()
+            global gameOverFlag
+            gameOverFlag = True #The game is over
+            return
 
         tile = tileList[index-1]
         wallCollision = False
@@ -759,6 +761,10 @@ tankSpeed = 0.5
 rotationalSpeed = 2
 turretSpeed = 0.8
 bulletSpeed = 0.5
+global gameOverFlag
+gameOverFlag = False
+start_time = 0
+cooldownTimer = False
 
 lastlen = len(bulletSprites)
 #Main loop
@@ -807,6 +813,38 @@ while not done:
     screen.fill(bg) # This is the first line when drawing a new frame
 
     # Draw the score
+
+
+    if gameOverFlag:
+        #The game is over
+        start_time = time.time() #Start a 5s timer
+        gameOverFlag = False
+        cooldownTimer = True
+    if cooldownTimer:
+        if time.time() - start_time >= 3:
+            #Reset the game
+            gameOverFlag = False
+            cooldownTimer = False
+            for sprite in allSprites:
+                sprite.kill()
+            for sprite in bulletSprites:
+                sprite.kill()
+            tileList = tileGen()
+            spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
+            spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
+            tank1.setCoords(spawnTank1[0], spawnTank1[1])
+            tank2.setCoords(spawnTank2[0], spawnTank2[1])
+            start_time = 0
+            gameOverFlag = False
+            tank1 = Tank(spawnTank1[0], spawnTank1[1], controlsTank1, "Plwasd1")
+            tank2 = Tank(spawnTank2[0], spawnTank2[1], controlsTank2, "Plarro2")
+            gun1 = Gun(tank1, controlsTank1)
+            gun2 = Gun(tank2, controlsTank2)
+
+            allSprites = pygame.sprite.Group()
+            allSprites.add(tank1, gun1, tank2, gun2)
+            bulletSprites = pygame.sprite.Group()
+
 
     #Making the string for score
     p1ScoreText = str(p1Score)
