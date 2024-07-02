@@ -129,8 +129,9 @@ class Tank(pygame.sprite.Sprite):
         return self.rect.center
     
     def setCoords(self, newx, newy):
-        self.center = (newx, newy)
-        self.rect.center = self.center
+        # self.center = (newx, newy)
+        self.rect.x, self.rect.y = newx, newy
+        # self.rect.center = self.center
 
 
 class Gun(pygame.sprite.Sprite):
