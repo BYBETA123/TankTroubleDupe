@@ -64,21 +64,21 @@ class Tank(pygame.sprite.Sprite):
 
 
         #We are outside of the maze
-        if tempX < mazeX:
-            tempX = mazeX
-        if tempY < mazeY:
-            tempY = mazeY
-        if tempX > mazeWidth + mazeX - self.originalTankImage.get_size()[0]:
-            tempX = mazeWidth + mazeX - self.originalTankImage.get_size()[0]
-        if tempY > mazeHeight + mazeY - self.originalTankImage.get_size()[0]:
-            tempY = mazeHeight + mazeY - self.originalTankImage.get_size()[0]
+        if tempX <= mazeX + self.originalTankImage.get_size()[0]/2:
+            tempX = mazeX + self.originalTankImage.get_size()[0]/2
+        if tempY <= mazeY + self.originalTankImage.get_size()[0]/2:
+            tempY = mazeY + self.originalTankImage.get_size()[0]/2
+        if tempX > mazeWidth + mazeX - self.originalTankImage.get_size()[0]/2:
+            tempX = mazeWidth + mazeX - self.originalTankImage.get_size()[0]/2
+        if tempY > mazeHeight + mazeY - self.originalTankImage.get_size()[0]/2:
+            tempY = mazeHeight + mazeY - self.originalTankImage.get_size()[0]/2
 
         global resetFlag
         if sat_collision(tank1, tank2):
             if self.name == "Player1":
                 #If there is a collision here, move the other tank
                     #This player is being pushed
-                    # tank2.setCoords(tank2.x + dx, tank2.y - dy)
+                    tank2.setCoords(tank2.x + dx, tank2.y - dy)
                     tempX = self.x - dx
                     tempY = self.y + dy
             elif self.name == "Player2":
@@ -91,6 +91,7 @@ class Tank(pygame.sprite.Sprite):
                 print("Error: Invalid tank name")
         self.rect.centerx = int(tempX)
         self.rect.centery = int(tempY)
+
         return tempX, tempY
 
     def update(self):
@@ -766,8 +767,8 @@ while not done:
     #Update the location of the corners
     tank1.updateCorners()
     tank2.updateCorners()
-    pygame.draw.polygon(screen, GREEN, tank1.getCorners(), 2)
-    pygame.draw.polygon(screen, GREEN, tank2.getCorners(), 2)
+    # pygame.draw.polygon(screen, GREEN, tank1.getCorners(), 2) #Hit box outline
+    # pygame.draw.polygon(screen, GREEN, tank2.getCorners(), 2) #Hit box outline
     allSprites.update()
     bulletSprites.update()
     allSprites.draw(screen)
