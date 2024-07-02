@@ -459,7 +459,7 @@ def tileGen():
         else:
             return True
 
-    def breathFirstSearch(tileList, choices):
+    def breathFirstSearch(tileList, choices, option):
         # This function will search the maze in a breath first manner to see if we can reach the second spawn
         # Inputs: tileList: The current list of tiles
         # Inputs: Choices: The locations of both spawns
@@ -469,9 +469,9 @@ def tileGen():
         #Setting up the BFS
         visitedQueue = []
         tracking = [False for _ in range(rowAmount*colAmount+1)]
-        queue = [choices[0]]
-        visitedQueue.append(choices[0])
-        tracking[choices[0]] = True
+        queue = [choices[option]]
+        visitedQueue.append(choices[option])
+        tracking[choices[option]] = True
         while len(queue) > 0: # While there are still elements to check
             current = queue.pop(0)
             for neighbour in tileList[current-1].getNeighbours():
@@ -480,7 +480,7 @@ def tileGen():
                     visitedQueue.append(neighbour)
                     tracking[neighbour] = True
 
-        if choices[1] in visitedQueue: # If the second spawn is reachable
+        if choices[(option +1) % 2] in visitedQueue: # If the second spawn is reachable
             return True
         else:
             return False
@@ -520,7 +520,7 @@ def tileGen():
                 index += 1
 
         #Validate the tileList
-        validMaze = breathFirstSearch(tileList, choices)
+        validMaze = breathFirstSearch(tileList, choices, 0) and breathFirstSearch(tileList, choices, 1)
         global spawnpoint
         spawnpoint = []
         spawnpoint = choices
