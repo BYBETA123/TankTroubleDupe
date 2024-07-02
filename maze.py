@@ -186,7 +186,7 @@ class Gun(pygame.sprite.Sprite):
         self.gunBackDuration = 200
         self.canShoot = True
         self.shootCooldown = 0
-        self.cooldownDuration = 3000
+        self.cooldownDuration = 300
         self.lastUpdateTime = pygame.time.get_ticks()
 
         # Initialize the gun's floating-point position
@@ -291,16 +291,17 @@ class Bullet(pygame.sprite.Sprite):
         self.bulletImage = self.originalBulletImage
         self.image = self.bulletImage
         self.angle = angle
-        self.speed = 2
+        self.speed = bulletSpeed
 
         angleRad = math.radians(self.angle)
 
-        dx = (gunLength + tipOffSet - 32) * math.cos(angleRad)
-        dy = -(gunLength + tipOffSet - 32) * math.sin(angleRad)
+        dx = (gunLength + tipOffSet) * math.cos(angleRad)
+        dy = -(gunLength + tipOffSet) * math.sin(angleRad)
 
         self.rect = self.bulletImage.get_rect(center=(x + dx, y + dy))
         self.x = self.rect.centerx
         self.y = self.rect.centery
+        self.bounce = 5 #Abitrary number but the amount of bounces before the bullet is removed
 
     def update(self):
         """
@@ -319,11 +320,45 @@ class Bullet(pygame.sprite.Sprite):
         angleRad = math.radians(self.angle)
         dx = self.speed * math.cos(angleRad)
         dy = -self.speed * math.sin(angleRad)
-        self.x += dx
-        self.y += dy
-        
-        self.rect.x = int(self.x)
-        self.rect.y = int(self.y)
+        tempX = self.x + dx
+        tempY = self.y + dy
+        #Check for collision with walls
+        #We are going to calculate the row and column
+        row = math.ceil((self.getCenter()[1] - mazeY)/tileSize)
+        col = math.ceil((self.getCenter()[0] - mazeX)/tileSize)
+        #Find the file at the exact index
+        index = (row-1)*colAmount + col
+
+        tile = tileList[index-1]
+        wallCollision = False
+        if tile.border[0] and tempY - self.originalBulletImage.get_size()[1] <= tile.y: #If the top border is present
+            wallCollision = True
+            self.angle = 180 - self.angle
+        if tile.border[1] and tempX + self.originalBulletImage.get_size()[1] >= tile.x + tileSize: #If the right border is present
+            wallCollision = True
+            self.angle = 360 - self.angle
+        if tile.border[2] and tempY + self.originalBulletImage.get_size()[1] >= tile.y + tileSize: #If the bottom border is present
+            wallCollision = True
+            self.angle = 180 - self.angle
+        if tile.border[3] and tempX - self.originalBulletImage.get_size()[1] <= tile.x: #If the left border is present
+            wallCollision = True
+            self.angle = 360 - self.angle
+        if wallCollision:
+            self.bounce -= 1
+            self.speed *= -1
+            if self.bounce == 0:
+                self.kill() # delete the bullet
+
+
+        self.rect.x = int(tempX)
+        self.rect.y = int(tempY)
+        self.x = tempX
+        self.y = tempY
+
+
+    def getCenter(self):
+        return (self.x, self.y)
+
 
 class Tile:
     # border = [False, False, False, False]
@@ -542,7 +577,7 @@ def tileGen():
                 index += 1
 
         #We need to make sure that all the borders are bordered on both sides
-        for idx, tile in enumerate(tileList):
+        for tile in tileList:
             bordering = tile.getBordering()
             for border in bordering:
                 if border != -1:
@@ -696,11 +731,13 @@ bulletSprites = pygame.sprite.Group()
 
 bg = GREY
 resetFlag = True
-global tankSpeed, rotationalSpeed, turretSpeed
+global tankSpeed, rotationalSpeed, turretSpeed, bulletSpeed
 tankSpeed = 0.5
 rotationalSpeed = 2
 turretSpeed = 0.8
+bulletSpeed = 0.5
 
+lastlen = len(bulletSprites)
 #Main loop
 while not done:
     for event in pygame.event.get():
@@ -726,9 +763,11 @@ while not done:
                 weightTrue -= 0.01
                 print("The current weightTrue is: ", weightTrue)
             if event.key == pygame.K_l:
-                pass
+                bulletSpeed += 0.1
+                print("The current bulletSpeed is: ", bulletSpeed)
             if event.key == pygame.K_k:
-                pass
+                bulletSpeed -= 0.1
+                print("The current bulletSpeed is: ", bulletSpeed)
             if event.key == pygame.K_n:
                 tileList = tileGen()
                 spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
