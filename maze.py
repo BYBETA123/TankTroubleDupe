@@ -13,8 +13,7 @@ class Tank(pygame.sprite.Sprite):
         try:
             # Load the tank image
             currentDir = os.path.dirname(__file__)
-            
-            tank_path = os.path.join(currentDir,'Sprites','tank1.png')
+            tank_path = os.path.join(currentDir, 'Sprites', 'tank1.png')
             self.originalTankImage = pygame.image.load(tank_path).convert_alpha()
             print(f"Original tank image size: {self.originalTankImage.get_size()}")
 
@@ -36,6 +35,9 @@ class Tank(pygame.sprite.Sprite):
         self.center = (x, y)
         self.width, self.height = self.originalTankImage.get_size()
         self.updateCorners()
+
+        self.x = float(self.rect.centerx)
+        self.y = float(self.rect.centery)
 
     def updateCorners(self):
         cx, cy = self.rect.center
@@ -111,11 +113,15 @@ class Tank(pygame.sprite.Sprite):
         self.angle %= 360
 
         self.image = pygame.transform.rotate(self.originalTankImage, self.angle)
-        self.rect = self.image.get_rect(center=self.rect.center)
+        self.rect = self.image.get_rect(center=(self.x, self.y))
 
         angleRad = math.radians(self.angle)
         dx = math.cos(angleRad) * self.speed
         dy = math.sin(angleRad) * self.speed
+        self.x += dx
+        self.y -= dy
+        self.rect.centerx = int(self.x)
+        self.rect.centery = int(self.y)
         self.rect.x, self.rect.y = self.fixMovement(dx,dy)
 
 
@@ -157,7 +163,7 @@ class Gun(pygame.sprite.Sprite):
         self.angle = 0
         self.rotationSpeed = 0
         self.tank = tank
-        self.gunLength = -17
+        self.gunLength = -21
         self.gunRotationDirection = 0
         self.tipOffSet = 30
         self.controls = controls
@@ -169,6 +175,10 @@ class Gun(pygame.sprite.Sprite):
         self.shootCooldown = 0
         self.cooldownDuration = 3000
         self.lastUpdateTime = pygame.time.get_ticks()
+
+        # Initialize the gun's floating-point position
+        self.x = float(self.rect.centerx)
+        self.y = float(self.rect.centery)
 
     def update(self):
         """
@@ -268,7 +278,7 @@ class Bullet(pygame.sprite.Sprite):
         self.bulletImage = self.originalBulletImage
         self.image = self.bulletImage
         self.angle = angle
-        self.speed = 10
+        self.speed = 2
 
         angleRad = math.radians(self.angle)
 
@@ -276,8 +286,8 @@ class Bullet(pygame.sprite.Sprite):
         dy = -(gunLength + tipOffSet - 32) * math.sin(angleRad)
 
         self.rect = self.bulletImage.get_rect(center=(x + dx, y + dy))
-        self.startX = self.rect.centerx
-        self.startY = self.rect.centery
+        self.x = self.rect.centerx
+        self.y = self.rect.centery
 
     def update(self):
         """
@@ -296,8 +306,11 @@ class Bullet(pygame.sprite.Sprite):
         angleRad = math.radians(self.angle)
         dx = self.speed * math.cos(angleRad)
         dy = -self.speed * math.sin(angleRad)
-        self.rect.x += dx
-        self.rect.y += dy
+        self.x += dx
+        self.y += dy
+        
+        self.rect.x = int(self.x)
+        self.rect.y = int(self.y)
 
 class Tile:
     # border = [False, False, False, False]
