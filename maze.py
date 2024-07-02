@@ -5,56 +5,10 @@ import time
 import os
 #Classes
 
-class SpeedTimer():
-    def __init__(self, note="No note provided"):
-        self.startTime = None
-        self.endTime = None
-        self.note = note
-        self.filename = "speedtimer.txt"
-        self.split = None
-        # Wipe the file
-        f = open(self.filename, "w")
-        f.close()
-
-    def start(self):  # Starts the timer
-        self.writeToFile("Timer started")
-        self.startTime = time.time()
-        self.split = self.startTime
-
-    def stop(self):  # Stops the timer
-        self.endTime = time.time()
-        self.writeToFile("Timer stopped")
-
-    def elapsed(self):  # Calculates the elapsed time
-        if self.startTime is None:
-            return 0
-        elif self.endTime is None:
-            return time.time() - self.startTime
-        else:
-            return self.endTime - self.startTime
-
-    def split_time(self):  # Splits the time
-        self.split = time.time()
-        self.writeToFile("Split time")
-
-    def peek(self, note=""):  # Prints the elapsed time
-        self.writeToFile(f"Peek: {note} : {time.time() - self.split :.4f}")
-        self.split = time.time()
-
-    def logTime(self):  # Log the time briefly (most helpful for small timing debugging)
-        self.writeToFile("Time logged")
-
-    def writeToFile(self, message = "There is no message here"):  # Write the message to the file
-        starting_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.startTime))
-        current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-        elapsed_time = self.elapsed()
-        with open(self.filename, "a") as f:
-            f.write(f"{starting_time} : {current_time} - {elapsed_time:.4f} - Note: {self.note} - {message}\n")
-
 # Tank sprite class
 class Tank(pygame.sprite.Sprite):
     prin = True
-    def __init__(self, x, y, controls):
+    def __init__(self, x, y, controls, name = "Default"):
         super().__init__()
         try:
             # Load the tank image
@@ -74,37 +28,40 @@ class Tank(pygame.sprite.Sprite):
 
         self.image = self.tankImage
         self.rect = self.tankImage.get_rect(center=(x, y))
-        
+        self.name = name
         self.angle = 0
         self.speed = 0
         self.rotationSpeed = 0
         self.controls = controls
+        self.center = (x, y)
+        self.width, self.height = self.originalTankImage.get_size()
+        self.updateCorners()
+
+    def updateCorners(self):
+        cx, cy = self.rect.center
+        w, h = self.width / 2, self.height / 2
+        rad = math.radians(self.angle)
+        rad = math.pi * 2 - rad
+        cos_a = math.cos(rad)
+        sin_a = math.sin(rad)
+
+        self.corners = [
+            (cx + cos_a * -w - sin_a * -h, cy + sin_a * -w + cos_a * -h),
+            (cx + cos_a * w - sin_a * -h, cy + sin_a * w + cos_a * -h),
+            (cx + cos_a * w - sin_a * h, cy + sin_a * w + cos_a * h),
+            (cx + cos_a * -w - sin_a * h, cy + sin_a * -w + cos_a * h),
+        ]
 
     def fixMovement(self, dx, dy):
         # This function checks if the tank is moving out of the maze and corrects it
         # Inputs: dx, dy: The change in x and y coordinates
         # Outputs: The corrected x and y coordinates
 
-        #The tank is stracking the bottom left corner
-
-
-
-        if self.prin:
-            print(self.rect.x, self.rect.y)
-            tankx, tanky = self.originalTankImage.get_size()
-            print(tankx, tanky)
-            print(self.rect.x +tankx, self.rect.y + tanky)
-            self.prin = False
         tempX = self.rect.x + dx
         tempY = self.rect.y - dy
 
 
-        #Maze coords
-        mazeCoors = [mazeX, mazeY, mazeX + mazeWidth, mazeY + mazeHeight]
-        #Tank coords
-        tankCoors = [tempX, tempY, tempX + self.originalTankImage.get_size()[0], tempY + self.originalTankImage.get_size()[1]]
-
-
+        #We are outside of the maze
         if tempX < mazeX:
             tempX = mazeX
         if tempY < mazeY:
@@ -113,10 +70,36 @@ class Tank(pygame.sprite.Sprite):
             tempX = mazeWidth + mazeX - self.originalTankImage.get_size()[0]
         if tempY > mazeHeight + mazeY - self.originalTankImage.get_size()[0]:
             tempY = mazeHeight + mazeY - self.originalTankImage.get_size()[0]
-        
 
+        global resetFlag
+        if sat_collision(tank1, tank2):
+            if self.name == "Player1":
+                #If there is a collision here, move the other tank
+                if dx != 0 or dy != 0:
+                    # if resetFlag:
+                    #     print("Player 1 is not moving")
+                    #This player is being pushed
+                    tank2.setCoords(tank2.rect.x + dx, tank2.rect.y - dy)
+                    tempX = self.rect.x - dx
+                    tempY = self.rect.y + dy
+            elif self.name == "Player2":
+                #If there is a collision here, move the other tank
+                if dx != 0 or dy != 0:
+                    # if not resetFlag:
+                        # print("Player 2 is not moving")
+                    #This player is being pushed
+                    tank1.setCoords(tank1.rect.x + dx, tank1.rect.y - dy)
+                    tempX = self.rect.x - dx
+                    tempY = self.rect.y + dy
+            else:
+                print("Error: Invalid tank name")
+            #Change the bg when there is a collision
 
-
+        #     global bg
+        #     bg = BLUE
+        # else:
+        #     resetFlag = True
+        #     bg = GREY
 
         return tempX, tempY
 
@@ -146,9 +129,21 @@ class Tank(pygame.sprite.Sprite):
         angleRad = math.radians(self.angle)
         dx = math.cos(angleRad) * self.speed
         dy = math.sin(angleRad) * self.speed
-        # self.rect.x += dx
-        # self.rect.y -= dy
         self.rect.x, self.rect.y = self.fixMovement(dx,dy)
+
+
+    def getCoords(self):
+        return [self.rect.x, self.rect.y, self.rect.x + self.originalTankImage.get_size()[0], self.rect.y + self.originalTankImage.get_size()[1]]
+
+    def getCorners(self):
+        return self.corners
+    
+    def getCenter(self):
+        return self.rect.center
+    
+    def setCoords(self, x, y):
+        self.rect.x = x
+        self.rect.y = y
 
 class Gun(pygame.sprite.Sprite):
     def __init__(self, tank, controls):
@@ -538,6 +533,47 @@ def tileGen():
 
     return tileList
 
+
+# Helper functions for SAT
+def get_edges(corners):
+    edges = []
+    for i in range(len(corners)):
+        edge = (corners[i][0] - corners[i - 1][0], corners[i][1] - corners[i - 1][1])
+        edges.append(edge)
+    return edges
+
+def get_perpendicular_vector(edge):
+    return (-edge[1], edge[0])
+
+def dot_product(v1, v2):
+    return v1[0] * v2[0] + v1[1] * v2[1]
+
+def project_polygon(corners, axis):
+    min_proj = dot_product(corners[0], axis)
+    max_proj = min_proj
+    for corner in corners[1:]:
+        projection = dot_product(corner, axis)
+        if projection < min_proj:
+            min_proj = projection
+        if projection > max_proj:
+            max_proj = projection
+    return min_proj, max_proj
+
+def overlap(proj1, proj2):
+    return proj1[0] < proj2[1] and proj2[0] < proj1[1]
+
+def sat_collision(rect1, rect2):
+    for rect in [rect1, rect2]:
+        edges = get_edges(rect.corners)
+        for edge in edges:
+            axis = get_perpendicular_vector(edge)
+            proj1 = project_polygon(rect1.corners, axis)
+            proj2 = project_polygon(rect2.corners, axis)
+            if not overlap(proj1, proj2):
+                return False
+    return True
+
+
 #Constants
 done = False
 windowWidth = 800
@@ -611,18 +647,18 @@ controlsTank2 = {
 }
 
 # Create two tank instances with different controls
-tank1 = Tank(375, 300, controlsTank1)
-tank2 = Tank(300, 375, controlsTank2)
+tank1 = Tank(375, 375, controlsTank1, "Player1")
+tank2 = Tank(300, 375, controlsTank2, "Player2")
 gun1 = Gun(tank1, controlsTank1)
 gun2 = Gun(tank2, controlsTank2)
-
-#Speed timer
-# global speedTimer
-# speedTimer = SpeedTimer()
 
 allSprites = pygame.sprite.Group()
 allSprites.add(tank1, gun1, tank2, gun2)
 bulletSprites = pygame.sprite.Group()
+
+
+bg = GREY
+resetFlag = True
 
 #Main loop
 while not done:
@@ -633,13 +669,13 @@ while not done:
             if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
                 done = True
             if event.key == pygame.K_w:
-                p1Score += 5
+                pass
             if event.key == pygame.K_e:
-                p2Score += 5
+                pass
             if event.key == pygame.K_s:
-                p1Score -= 5
+                pass
             if event.key == pygame.K_d:
-                p2Score -= 5
+                pass
             if event.key == pygame.K_i:
                 print("The current mouse position is: ", mouse)
             if event.key == pygame.K_o:
@@ -649,14 +685,15 @@ while not done:
                 weightTrue -= 0.01
                 print("The current weight is: ", weightTrue)
             if event.key == pygame.K_k:
-                pass
+                print(get_edges(tank1.corners))
+                print(get_edges(tank2.corners))
             if event.key == pygame.K_n:
                 tileList = tileGen()
 
 
     mouse = pygame.mouse.get_pos() #Update the position
 
-    screen.fill(GREY) # This is the first line when drawing a new frame
+    screen.fill(bg) # This is the first line when drawing a new frame
 
     # Draw the score
 
@@ -714,10 +751,15 @@ while not done:
 
     #Anything below here will be drawn on top of the maze
 
+    #Update the location of the corners
+    tank1.updateCorners()
+    tank2.updateCorners()
+
     allSprites.update()
     bulletSprites.update()
     allSprites.draw(screen)
     bulletSprites.draw(screen)
+
     pygame.time.Clock().tick(120)
 
     pygame.display.flip()# Update the screen
