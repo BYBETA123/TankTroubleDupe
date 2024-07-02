@@ -75,31 +75,18 @@ class Tank(pygame.sprite.Sprite):
         if sat_collision(tank1, tank2):
             if self.name == "Player1":
                 #If there is a collision here, move the other tank
-                if dx != 0 or dy != 0:
-                    # if resetFlag:
-                    #     print("Player 1 is not moving")
                     #This player is being pushed
                     tank2.setCoords(tank2.rect.x + dx, tank2.rect.y - dy)
                     tempX = self.rect.x - dx
                     tempY = self.rect.y + dy
             elif self.name == "Player2":
                 #If there is a collision here, move the other tank
-                if dx != 0 or dy != 0:
-                    # if not resetFlag:
-                        # print("Player 2 is not moving")
                     #This player is being pushed
                     tank1.setCoords(tank1.rect.x + dx, tank1.rect.y - dy)
                     tempX = self.rect.x - dx
                     tempY = self.rect.y + dy
             else:
                 print("Error: Invalid tank name")
-            #Change the bg when there is a collision
-
-        #     global bg
-        #     bg = BLUE
-        # else:
-        #     resetFlag = True
-        #     bg = GREY
 
         return tempX, tempY
 
@@ -142,8 +129,8 @@ class Tank(pygame.sprite.Sprite):
         return self.rect.center
     
     def setCoords(self, x, y):
-        self.rect.x = x
-        self.rect.y = y
+        self.rect.x, self.rect.y = x,y
+
 
 class Gun(pygame.sprite.Sprite):
     def __init__(self, tank, controls):
@@ -689,7 +676,8 @@ while not done:
                 print(get_edges(tank2.corners))
             if event.key == pygame.K_n:
                 tileList = tileGen()
-
+            if event.key == pygame.K_0:
+                tileList = tileGen()
 
     mouse = pygame.mouse.get_pos() #Update the position
 
@@ -708,12 +696,9 @@ while not done:
     textp1 = fontScore.render(p1ScoreText, True, WHITE)
     textp1Name = fontName.render("Player 1", True, WHITE)
 
-
     # Player 2 Text
     textp2 = fontScore.render(p2ScoreText, True, WHITE)
     textp2Name = fontName.render("Player 2", True, WHITE)
-
-
 
     #Misc Text
     text3 = fontScore.render("-",True,WHITE)
