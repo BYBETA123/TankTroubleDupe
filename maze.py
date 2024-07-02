@@ -128,8 +128,9 @@ class Tank(pygame.sprite.Sprite):
     def getCenter(self):
         return self.rect.center
     
-    def setCoords(self, x, y):
-        self.rect.x, self.rect.y = x,y
+    def setCoords(self, newx, newy):
+        self.center = (newx, newy)
+        self.rect.center = self.center
 
 
 class Gun(pygame.sprite.Sprite):
@@ -517,7 +518,9 @@ def tileGen():
 
         #Validate the tileList
         validMaze = breathFirstSearch(tileList, choices)
-
+        global spawnpoint
+        spawnpoint = []
+        spawnpoint = choices
     return tileList
 
 
@@ -610,7 +613,6 @@ mouse = pygame.mouse.get_pos()
 screen = pygame.display.set_mode((windowWidth,windowHeight))
 
 tileList = tileGen()
-
 # Controls for the first tank
 controlsTank1 = {
     'up': pygame.K_w,
@@ -633,9 +635,12 @@ controlsTank2 = {
     'fire': pygame.K_SLASH
 }
 
+spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
+spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
+
 # Create two tank instances with different controls
-tank1 = Tank(375, 375, controlsTank1, "Player1")
-tank2 = Tank(300, 375, controlsTank2, "Player2")
+tank1 = Tank(spawnTank1[0], spawnTank1[1], controlsTank1, "Player1")
+tank2 = Tank(spawnTank2[0], spawnTank2[1], controlsTank2, "Player2")
 gun1 = Gun(tank1, controlsTank1)
 gun2 = Gun(tank2, controlsTank2)
 
@@ -676,8 +681,16 @@ while not done:
                 print(get_edges(tank2.corners))
             if event.key == pygame.K_n:
                 tileList = tileGen()
+                spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
+                spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
+                tank1.setCoords(spawnTank1[0], spawnTank1[1])
+                tank2.setCoords(spawnTank2[0], spawnTank2[1])
             if event.key == pygame.K_0:
                 tileList = tileGen()
+                spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
+                spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
+                tank1.setCoords(spawnTank1[0], spawnTank1[1])
+                tank2.setCoords(spawnTank2[0], spawnTank2[1])
 
     mouse = pygame.mouse.get_pos() #Update the position
 
