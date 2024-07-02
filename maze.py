@@ -72,13 +72,13 @@ class Tank(pygame.sprite.Sprite):
             tempY = mazeHeight + mazeY - self.originalTankImage.get_size()[0]/2
 
         if sat_collision(tank1, tank2):
-            if self.name == "Player1":
+            if self.name == "Plwasd1":
                 #If there is a collision here, move the other tank
                     #This player is being pushed
                     tank2.setCoords(tank2.x + dx, tank2.y - dy)
                     tempX = self.x - dx
                     tempY = self.y + dy
-            elif self.name == "Player2":
+            elif self.name == "Plarro2":
                 #If there is a collision here, move the other tank
                     #This player is being pushed
                     tank1.setCoords(tank1.x + dx, tank1.y - dy)
@@ -302,6 +302,7 @@ class Bullet(pygame.sprite.Sprite):
         self.x = self.rect.centerx
         self.y = self.rect.centery
         self.bounce = 5 #Abitrary number but the amount of bounces before the bullet is removed
+        self.corners = [(self.rect.x, self.rect.y), (self.rect.x + self.rect.width, self.rect.y), (self.rect.x + self.rect.width, self.rect.y + self.rect.height), (self.rect.x, self.rect.y + self.rect.height)]
 
     def update(self):
         """
@@ -329,6 +330,27 @@ class Bullet(pygame.sprite.Sprite):
         #Find the file at the exact index
         index = (row-1)*colAmount + col
 
+        #If we are outside of the maze, delete the bullet
+        if tempX <= mazeX or tempY <= mazeY or tempX >= mazeWidth + mazeX or tempY >= mazeHeight + mazeY:
+            self.kill()
+            return
+        
+        #If we hit a tank
+        tank1Collision = sat_collision(self, tank1)
+        tank2Collision = sat_collision(self, tank2)
+        # if tank1Collision or tank2Collision:
+        #     global p1Score, p2Score
+        #     if tank1Collision: #If we hit tank1 then give p2 a point
+        #         p2Score += 1
+        #         tank1.kill()
+        #         gun1.kill()
+        #     else:
+        #         p1Score += 1
+        #         tank2.kill()
+        #         gun2.kill()
+        #     self.kill()
+            # return
+
         tile = tileList[index-1]
         wallCollision = False
         if tile.border[0] and tempY - self.originalBulletImage.get_size()[1] <= tile.y: #If the top border is present
@@ -348,16 +370,17 @@ class Bullet(pygame.sprite.Sprite):
             self.speed *= -1
             if self.bounce == 0:
                 self.kill() # delete the bullet
-
-
+        self.updateCorners()
         self.rect.x = int(tempX)
         self.rect.y = int(tempY)
         self.x = tempX
         self.y = tempY
 
-
     def getCenter(self):
         return (self.x, self.y)
+
+    def updateCorners(self):
+        self.corners = [(self.rect.x, self.rect.y), (self.rect.x + self.rect.width, self.rect.y), (self.rect.x + self.rect.width, self.rect.y + self.rect.height), (self.rect.x, self.rect.y + self.rect.height)]
 
 
 class Tile:
@@ -719,8 +742,8 @@ spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-
 spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
 
 # Create two tank instances with different controls
-tank1 = Tank(spawnTank1[0], spawnTank1[1], controlsTank1, "Player1")
-tank2 = Tank(spawnTank2[0], spawnTank2[1], controlsTank2, "Player2")
+tank1 = Tank(spawnTank1[0], spawnTank1[1], controlsTank1, "Plwasd1")
+tank2 = Tank(spawnTank2[0], spawnTank2[1], controlsTank2, "Plarro2")
 gun1 = Gun(tank1, controlsTank1)
 gun2 = Gun(tank2, controlsTank2)
 
@@ -763,11 +786,9 @@ while not done:
                 weightTrue -= 0.01
                 print("The current weightTrue is: ", weightTrue)
             if event.key == pygame.K_l:
-                bulletSpeed += 0.1
-                print("The current bulletSpeed is: ", bulletSpeed)
+                pass
             if event.key == pygame.K_k:
-                bulletSpeed -= 0.1
-                print("The current bulletSpeed is: ", bulletSpeed)
+                pass
             if event.key == pygame.K_n:
                 tileList = tileGen()
                 spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
@@ -796,11 +817,11 @@ while not done:
     fontName = pygame.font.SysFont('Calibri', 35, True, False)
     # Player 1 Text
     textp1 = fontScore.render(p1ScoreText, True, WHITE)
-    textp1Name = fontName.render("Player 1", True, WHITE)
+    textp1Name = fontName.render(" Plwasd1", True, WHITE)
 
     # Player 2 Text
     textp2 = fontScore.render(p2ScoreText, True, WHITE)
-    textp2Name = fontName.render("Player 2", True, WHITE)
+    textp2Name = fontName.render(" Plarro2", True, WHITE)
 
     #Misc Text
     text3 = fontScore.render("-",True,WHITE)
