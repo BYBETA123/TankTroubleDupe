@@ -7,14 +7,13 @@ import os
 
 # Tank sprite class
 class Tank(pygame.sprite.Sprite):
-    prin = True
     def __init__(self, x, y, controls, name = "Default"):
         super().__init__()
         try:
             # Load the tank image
             currentDir = os.path.dirname(__file__)
-            tank_path = os.path.join(currentDir, 'Sprites', 'tank1.png')
-            self.originalTankImage = pygame.image.load(tank_path).convert_alpha()
+            tankPath = os.path.join(currentDir, 'Sprites', 'tank1.png')
+            self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
             print(f"Original tank image size: {self.originalTankImage.get_size()}")
 
             # Scale the tank image to a smaller size
@@ -25,38 +24,42 @@ class Tank(pygame.sprite.Sprite):
             pygame.quit()
             exit()
 
-        self.image = self.tankImage
-        self.rect = self.tankImage.get_rect(center=(x, y))
-        self.name = name
+        # Setting variables
         self.angle = 0
-        self.speed = 0
-        self.rotationSpeed = 0
-        self.controls = controls
         self.center = (x, y)
-        self.width, self.height = self.originalTankImage.get_size()
+        self.controls = controls
+        self.health = 100
+        self.image = self.tankImage
+        self.maxHealth = 100
+        self.name = name
+        self.rect = self.tankImage.get_rect(center=(x, y))
+        self.rotationSpeed = 0
+        self.speed = 0
+        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
         self.x = float(self.rect.centerx)
         self.y = float(self.rect.centery)
-        self.health = 100
-        self.maxHealth = 100
-        self.updateCorners()
+        self.updateCorners() #Set the corners
 
     def updateCorners(self):
+        # This function will update the corners of the tank based on the new position
+        # Inputs: None
+        # Outputs: None
         cx, cy = self.rect.center
         w, h = self.width / 2, self.height / 2
         rad = math.radians(self.angle)
         rad = math.pi * 2 - rad
-        cos_a = math.cos(rad)
-        sin_a = math.sin(rad)
+        cosA = math.cos(rad)
+        sinA = math.sin(rad)
 
         self.corners = [
-            (cx + cos_a * -w - sin_a * -h, cy + sin_a * -w + cos_a * -h),
-            (cx + cos_a * w - sin_a * -h, cy + sin_a * w + cos_a * -h),
-            (cx + cos_a * w - sin_a * h, cy + sin_a * w + cos_a * h),
-            (cx + cos_a * -w - sin_a * h, cy + sin_a * -w + cos_a * h),
-        ]
+            (cx + cosA * -w - sinA * -h, cy + sinA * -w + cosA * -h),
+            (cx + cosA * w - sinA * -h, cy + sinA * w + cosA * -h),
+            (cx + cosA * w - sinA * h, cy + sinA * w + cosA * h),
+            (cx + cosA * -w - sinA * h, cy + sinA * -w + cosA * h),
+        ] # Using trigonomety to calculate the corners
 
     def fixMovement(self, dx, dy):
-        # This function checks if the tank is moving out of the maze and corrects it
+        # This function checks if the tank is moving into illegeal locations and corrects it
         # Inputs: dx, dy: The change in x and y coordinates
         # Outputs: The corrected x and y coordinates
 
@@ -73,7 +76,7 @@ class Tank(pygame.sprite.Sprite):
         if tempY > mazeHeight + mazeY - self.originalTankImage.get_size()[0]/2:
             tempY = mazeHeight + mazeY - self.originalTankImage.get_size()[0]/2
 
-        if sat_collision(tank1, tank2):
+        if sat_collision(tank1, tank2): #If the tanks are colliding
             if self.name == p1TankName:
                 #If there is a collision here, move the other tank
                     #This player is being pushed
@@ -107,11 +110,16 @@ class Tank(pygame.sprite.Sprite):
         if tile.border[3] and tempX - self.originalTankImage.get_size()[0]/2 < tile.x: #If the left border is present
             tempX = tile.x + self.originalTankImage.get_size()[0]/2
 
+        #finalise the changes
         self.rect.centerx = int(tempX)
         self.rect.centery = int(tempY)
         return tempX, tempY
 
     def update(self):
+        # This function updates the tank's position and rotation based on the current controls
+        # Inputs: None
+        # Outputs: None
+
         keys = pygame.key.get_pressed()
         global tankSpeed
         if keys[self.controls['up']]:
@@ -137,12 +145,15 @@ class Tank(pygame.sprite.Sprite):
         angleRad = math.radians(self.angle)
         dx = math.cos(angleRad) * self.speed
         dy = math.sin(angleRad) * self.speed
-        self.x, self.y = self.fixMovement(dx,dy)
+        self.x, self.y = self.fixMovement(dx,dy) # Adjust the movement
 
     def getHealth(self):
         return self.health, self.maxHealth
 
     def damage(self, damage):
+        # This function will adjust the damage that the tank has taken
+        # Inputs: damage: The amount of damage that the tank has taken
+        # Outputs: None
         self.health -= damage
         global tank1Health, tank2Health
         if self.name == p1TankName:
@@ -154,12 +165,10 @@ class Tank(pygame.sprite.Sprite):
         else:
             print("Error: Invalid tank name")
 
-
         if self.health <= 0:
             if self.name == p1TankName:
                 gun1.setCooldown()
                 gun1.kill()
-                # tank1.wipeCorners()
                 tank1.setCentre(2000, 2000)
                 self.kill()
                 allSprites.remove(gun1)
@@ -169,7 +178,6 @@ class Tank(pygame.sprite.Sprite):
                 global gun2Cooldown
                 gun2Cooldown = 300
                 gun2.kill()
-                # tank2.wipeCorners()
                 tank2.setCentre(1000, 1000)
                 self.kill()
                 allSprites.remove(gun2)
@@ -452,7 +460,6 @@ class Bullet(pygame.sprite.Sprite):
     def updateCorners(self):
         self.corners = [(self.rect.x, self.rect.y), (self.rect.x + self.rect.width, self.rect.y), (self.rect.x + self.rect.width, self.rect.y + self.rect.height), (self.rect.x, self.rect.y + self.rect.height)]
 
-
 class Tile:
     # border = [False, False, False, False]
     #Border format is [Top, Right, Bottom, Left]
@@ -687,6 +694,9 @@ def tileGen():
 
 # Helper functions for SAT
 def get_edges(corners):
+    #This function will return the edges of the polygon
+    # Inputs: corners: The corners of the polygon
+    # Outputs: A list of edges
     edges = []
     for i in range(len(corners)):
         edge = (corners[i][0] - corners[i - 1][0], corners[i][1] - corners[i - 1][1])
@@ -694,12 +704,22 @@ def get_edges(corners):
     return edges
 
 def get_perpendicular_vector(edge):
+    #This function will return the perpendicular vector to the edge
+    # Inputs: edge: The edge of the polygon
+    # Outputs: The perpendicular vector
     return (-edge[1], edge[0])
 
 def dot_product(v1, v2):
+    #This function will return the dot product of two vectors
+    # Inputs: v1, v2: The two vectors
+    # Outputs: The dot product
     return v1[0] * v2[0] + v1[1] * v2[1]
 
 def project_polygon(corners, axis):
+    #This function will project the polygon onto the axis
+    # Inputs: corners: The corners of the polygon
+    # Inputs: axis: The axis to project onto
+    # Outputs: The projection
     min_proj = dot_product(corners[0], axis)
     max_proj = min_proj
     for corner in corners[1:]:
@@ -711,9 +731,15 @@ def project_polygon(corners, axis):
     return min_proj, max_proj
 
 def overlap(proj1, proj2):
+    #This function will check if the projections overlap
+    # Inputs: proj1, proj2: The two projections
+    # Outputs: True if they overlap, False otherwise
     return proj1[0] < proj2[1] and proj2[0] < proj1[1]
 
 def sat_collision(rect1, rect2):
+    #This function will check if two rectangles are colliding
+    # Inputs: rect1, rect2: The two rectangles
+    # Outputs: True if they are colliding, False otherwise
     for rect in [rect1, rect2]:
         edges = get_edges(rect.corners)
         for edge in edges:
@@ -731,7 +757,7 @@ done = False
 windowWidth = 800
 windowHeight = 600
 tileSize = 50
-weightTrue = 0.16
+weightTrue = 0.16 # The percentage change that side on a tile will have a border
 rowAmount = 14
 colAmount = 8
 #Colors
@@ -796,17 +822,6 @@ controlsTank2 = {
     'rotate_right': pygame.K_PERIOD,
     'fire': pygame.K_SLASH
 }
-
-# # Controls for the second tank
-# controlsTank2 = {
-#     'up': pygame.K_UP,
-#     'down': pygame.K_DOWN,
-#     'left': pygame.K_LEFT,
-#     'right': pygame.K_RIGHT,
-#     'rotate_left': pygame.K_z,
-#     'rotate_right': pygame.K_x,
-#     'fire': pygame.K_SPACE
-# }
 
 spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
 spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
@@ -901,9 +916,6 @@ while not done:
     mouse = pygame.mouse.get_pos() #Update the position
 
     screen.fill(bg) # This is the first line when drawing a new frame
-
-    # Draw the score
-
 
     if gameOverFlag:
         #The game is over
