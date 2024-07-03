@@ -667,11 +667,17 @@ class Button:
         self.height = height
         self.text = text
         self.textColor = textColor
+        self.secondaryColor = c.getRGB('WHITE')
 
     def draw(self, screen, outline=None):
         if outline:
             pygame.draw.rect(screen, outline, (self.x-2, self.y-2, self.width+4, self.height+4), 0)
-        pygame.draw.rect(screen, self.color, (self.x, self.y, self.width, self.height), 0)
+        mouse = pygame.mouse.get_pos()
+        if self.x < mouse[0] < self.x + self.width and self.y < mouse[1] < self.y + self.height:
+
+            pygame.draw.rect(screen, self.color, (self.x, self.y, self.width, self.height), 0)
+        else:
+            pygame.draw.rect(screen, self.secondaryColor, (self.x, self.y, self.width, self.height), 0)
 
         if self.text != '':
             font = pygame.font.SysFont('Ariel', 20)
@@ -679,7 +685,6 @@ class Button:
             screen.blit(text, (self.x + (self.width/2 - text.get_width()/2), self.y + (self.height/2 - text.get_height()/2)))
 
     def ButtonClick(self):
-
         self.text = 'Clicked: ' + self.text
 
     def getCorners(self):
