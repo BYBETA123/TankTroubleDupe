@@ -603,6 +603,41 @@ class Tile:
         self.border[borderidx] = value
         self.neighbours, self.bordering = self.neighbourCheck() # Update the neighbours list
 
+class Explosion(pygame.sprite.Sprite):
+    animation_cooldown = 50
+    
+    def __init__(self, x, y):
+        super().__init__()
+        self.images = []
+        SpriteSheetImage = pygame.image.load('explosion.png').convert_alpha()
+        for i in range(48):
+            self.images.append(self.get_image(SpriteSheetImage, i, 128, 128, 0.5))
+        self.index = 0
+        self.image = self.images[self.index]
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (x, y)
+        self.last_update = pygame.time.get_ticks()
+
+    def get_image(self, sheet, frame, width, height, scale):
+        image = pygame.Surface((width, height)).convert_alpha()
+        print(frame, (frame//8), (frame*width%1024), width, height)
+        image.blit(sheet, (0, 0), ((frame*width%1024), (frame//8 * width), width, height))
+        image = pygame.transform.scale(image, (width * scale, height * scale))
+        image.set_colorkey((0, 0, 0)) # Black
+        return image
+
+    def update(self):
+
+        current_time = pygame.time.get_ticks()
+        if current_time - self.last_update >= self.animation_cooldown:
+            self.last_update = current_time
+            self.index += 1
+        if self.index >= len(self.images):
+            self.kill()
+        else:
+            self.image = self.images[self.index]
+
+
 #Functions
 def tileGen():
     # This function is responsible for generating the tiles for the maze
@@ -922,11 +957,19 @@ tankDeadSFX.set_volume(0.5)
 turretRotateSFX.set_volume(0.2)
 tankMoveSFX.set_volume(0.05)
 
+
+
+explosion_group = pygame.sprite.Group()
+
 #Main loop
 while not done:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            x, y = pygame.mouse.get_pos()
+            explosion = Explosion(x, y)
+            explosion_group.add(explosion)
         elif event.type == pygame.KEYDOWN: # Any key pressed
             if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
                 done = True
@@ -1060,6 +1103,8 @@ while not done:
     # pygame.draw.polygon(screen, GREEN, tank2.getCorners(), 2) #Hit box outline
     allSprites.update()
     bulletSprites.update()
+    explosion_group.update()
+    explosion_group.draw(screen)
     allSprites.draw(screen)
     bulletSprites.draw(screen)
 
