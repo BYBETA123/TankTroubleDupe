@@ -178,6 +178,7 @@ class Tank(pygame.sprite.Sprite):
             print("Error: Invalid tank name")
 
         if self.health <= 0:
+            global explosion_group
             if self.name == p1TankName:
                 gun1.setCooldown()
                 gun1.kill()
@@ -187,7 +188,10 @@ class Tank(pygame.sprite.Sprite):
                 self.kill()
                 allSprites.remove(gun1)
                 allSprites.remove(self)
+                explosion = Explosion(self.x, self.y)
+                explosion_group.add(explosion)
             elif self.name == p2TankName:
+                explosion = Explosion(tank2.getCenter()[0], tank2.getCenter()[1])
                 gun2.setCooldown()
                 global gun2Cooldown
                 gun2Cooldown = 300
@@ -196,6 +200,7 @@ class Tank(pygame.sprite.Sprite):
                 self.kill()
                 allSprites.remove(gun2)
                 allSprites.remove(self)
+                explosion_group.add(explosion)
             else:
                 print("Error: Invalid tank name")
 
@@ -603,9 +608,7 @@ class Tile:
         self.border[borderidx] = value
         self.neighbours, self.bordering = self.neighbourCheck() # Update the neighbours list
 
-class Explosion(pygame.sprite.Sprite):
-    animation_cooldown = 50
-    
+class Explosion(pygame.sprite.Sprite):    
     def __init__(self, x, y):
         super().__init__()
         self.images = []
@@ -615,12 +618,13 @@ class Explosion(pygame.sprite.Sprite):
         self.index = 0
         self.image = self.images[self.index]
         self.rect = self.image.get_rect()
-        self.rect.topleft = (x, y)
+        self.rect.center = (x, y)
         self.last_update = pygame.time.get_ticks()
+        global animation_cool
+        self.animation_cooldown = animation_cool
 
     def get_image(self, sheet, frame, width, height, scale):
         image = pygame.Surface((width, height)).convert_alpha()
-        print(frame, (frame//8), (frame*width%1024), width, height)
         image.blit(sheet, (0, 0), ((frame*width%1024), (frame//8 * width), width, height))
         image = pygame.transform.scale(image, (width * scale, height * scale))
         image.set_colorkey((0, 0, 0)) # Black
@@ -637,6 +641,10 @@ class Explosion(pygame.sprite.Sprite):
         else:
             self.image = self.images[self.index]
 
+    def setCooldown(self, num):
+        self.animation_cooldown = num
+    def getCooldown(self):
+        return self.animation_cooldown
 
 #Functions
 def tileGen():
@@ -942,6 +950,8 @@ gameOverFlag = False
 startTime = 0
 cooldownTimer = False
 
+global animation_cool
+animation_cool = 12
 
 
 lastlen = len(bulletSprites)
@@ -958,7 +968,7 @@ turretRotateSFX.set_volume(0.2)
 tankMoveSFX.set_volume(0.05)
 
 
-
+global explosion_group
 explosion_group = pygame.sprite.Group()
 
 #Main loop
@@ -984,15 +994,15 @@ while not done:
             if event.key == pygame.K_i:
                 print("The current mouse position is: ", mouse)
             if event.key == pygame.K_o:
-                weightTrue += 0.01
-                print("The current weightTrue is: ", weightTrue)
+                animation_cool -= 1
+                print("The current animation cooldown is: ", animation_cool)
             if event.key == pygame.K_p:
-                weightTrue -= 0.01
-                print("The current weightTrue is: ", weightTrue)
+                animation_cool += 1
+                print("The current animation cooldown is: ", animation_cool)
             if event.key == pygame.K_l:
                 pass
             if event.key == pygame.K_k:
-                pass
+                pass                
             if event.key == pygame.K_n:
                 tileList = tileGen()
                 spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
@@ -1104,9 +1114,9 @@ while not done:
     allSprites.update()
     bulletSprites.update()
     explosion_group.update()
-    explosion_group.draw(screen)
     allSprites.draw(screen)
     bulletSprites.draw(screen)
+    explosion_group.draw(screen)
 
     pygame.time.Clock().tick(240)
 
