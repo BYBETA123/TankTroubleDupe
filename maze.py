@@ -39,6 +39,7 @@ class Tank(pygame.sprite.Sprite):
         self.x = float(self.rect.centerx)
         self.y = float(self.rect.centery)
         self.updateCorners() #Set the corners
+        self.soundPlaying = False
 
     def updateCorners(self):
         # This function will update the corners of the tank based on the new position
@@ -128,13 +129,24 @@ class Tank(pygame.sprite.Sprite):
             self.speed = -tankSpeed
         else:
             self.speed = 0
-
         if keys[self.controls['left']]:
             self.rotationSpeed = rotationalSpeed
         elif keys[self.controls['right']]:
             self.rotationSpeed = -rotationalSpeed
         else:
             self.rotationSpeed = 0
+
+        #This if statement checks to see if speed or rotation of speed is 0,
+        #if so it will stop playing moving sound, otherwise, sound will play
+        #indefinitely
+        if self.speed != 0 or self.rotationSpeed != 0:
+            if not self.soundPlaying:
+                tankMoveSFX.play(-1)  # Play sound indefinitely
+                self.soundPlaying = True
+        else:
+            if self.soundPlaying:
+                tankMoveSFX.stop()
+                self.soundPlaying = False
 
         self.angle += self.rotationSpeed
         self.angle %= 360
@@ -234,6 +246,7 @@ class Gun(pygame.sprite.Sprite):
         self.canShoot = True
         self.shootCooldown = 0
         self.cooldownDuration = 300
+        self.soundPlaying=False
         self.lastUpdateTime = pygame.time.get_ticks()
 
         # Initialize the gun's floating-point position
@@ -272,6 +285,25 @@ class Gun(pygame.sprite.Sprite):
             self.rotationSpeed = -rotationalSpeed
         else:
             self.rotationSpeed = 0
+
+        #This if statement checks to see if speed or rotation of speed is 0,
+        #if so it will stop playing moving sound, otherwise, sound will play
+        #indefinitely
+        if keys[self.controls['rotate_left']] or keys[self.controls['rotate_right']]:
+            if self.rotationSpeed != 0:
+                if not self.soundPlaying:
+                    turretRotateSFX.play(-1)  # Play sound indefinitely
+                    self.soundPlaying = True
+            else:
+                if self.soundPlaying:
+                    turretRotateSFX.stop()
+                    self.soundPlaying = False
+        else:
+            if self.soundPlaying:
+                turretRotateSFX.stop()
+                self.soundPlaying = False
+                
+    
         self.angle += self.rotationSpeed
         self.angle %= 360
         
@@ -877,11 +909,16 @@ cooldownTimer = False
 
 lastlen = len(bulletSprites)
 
-#Sound effects for shooting, and in the case of a tank dying.
-global tankShootSFX, tankDeadSFX
+#Sound effects for shooting, tank dying, tank moving and tank turret rotating.
+global tankShootSFX, tankDeadSFX, turretRotateSFX, tankMoveSFX
 tankShootSFX = pygame.mixer.Sound("Sounds/tank_shoot.mp3")
 tankDeadSFX = pygame.mixer.Sound("Sounds/tank_dead.mp3")
-
+turretRotateSFX = pygame.mixer.Sound("Sounds/tank_turret_rotate.mp3")
+tankMoveSFX = pygame.mixer.Sound("Sounds/tank_moving.mp3")
+tankShootSFX.set_volume(0.5)
+tankDeadSFX.set_volume(0.5)
+turretRotateSFX.set_volume(0.2)
+tankMoveSFX.set_volume(0.05)
 
 #Main loop
 while not done:
