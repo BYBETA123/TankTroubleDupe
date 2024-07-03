@@ -619,9 +619,9 @@ class Explosion(pygame.sprite.Sprite):
         self.image = self.images[self.index]
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
-        self.last_update = pygame.time.get_ticks()
-        global animation_cool
-        self.animation_cooldown = animation_cool
+        self.lastUpdate = pygame.time.get_ticks()
+        global animationCool
+        self.animationCooldown = animationCool
 
     def get_image(self, sheet, frame, width, height, scale):
         image = pygame.Surface((width, height)).convert_alpha()
@@ -633,8 +633,8 @@ class Explosion(pygame.sprite.Sprite):
     def update(self):
 
         current_time = pygame.time.get_ticks()
-        if current_time - self.last_update >= self.animation_cooldown:
-            self.last_update = current_time
+        if current_time - self.lastUpdate >= self.animationCooldown:
+            self.lastUpdate = current_time
             self.index += 1
         if self.index >= len(self.images):
             self.kill()
@@ -642,9 +642,9 @@ class Explosion(pygame.sprite.Sprite):
             self.image = self.images[self.index]
 
     def setCooldown(self, num):
-        self.animation_cooldown = num
+        self.animationCooldown = num
     def getCooldown(self):
-        return self.animation_cooldown
+        return self.animationCooldown
 
 #Functions
 def tileGen():
@@ -950,8 +950,8 @@ gameOverFlag = False
 startTime = 0
 cooldownTimer = False
 
-global animation_cool
-animation_cool = 12
+global animationCool
+animationCool = 12
 
 
 lastlen = len(bulletSprites)
@@ -994,11 +994,11 @@ while not done:
             if event.key == pygame.K_i:
                 print("The current mouse position is: ", mouse)
             if event.key == pygame.K_o:
-                animation_cool -= 1
-                print("The current animation cooldown is: ", animation_cool)
+                animationCool -= 1
+                print("The current animation cooldown is: ", animationCool)
             if event.key == pygame.K_p:
-                animation_cool += 1
-                print("The current animation cooldown is: ", animation_cool)
+                animationCool += 1
+                print("The current animation cooldown is: ", animationCool)
             if event.key == pygame.K_l:
                 pass
             if event.key == pygame.K_k:
