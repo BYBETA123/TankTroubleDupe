@@ -181,6 +181,8 @@ class Tank(pygame.sprite.Sprite):
             if self.name == p1TankName:
                 gun1.setCooldown()
                 gun1.kill()
+                global gun1Cooldown
+                gun1Cooldown = 300
                 tank1.setCentre(2000, 2000)
                 self.kill()
                 allSprites.remove(gun1)
@@ -1054,8 +1056,8 @@ while not done:
     #Update the location of the corners
     tank1.updateCorners()
     tank2.updateCorners()
-    pygame.draw.polygon(screen, GREEN, tank1.getCorners(), 2) #Hit box outline
-    pygame.draw.polygon(screen, GREEN, tank2.getCorners(), 2) #Hit box outline
+    # pygame.draw.polygon(screen, GREEN, tank1.getCorners(), 2) #Hit box outline
+    # pygame.draw.polygon(screen, GREEN, tank2.getCorners(), 2) #Hit box outline
     allSprites.update()
     bulletSprites.update()
     allSprites.draw(screen)
