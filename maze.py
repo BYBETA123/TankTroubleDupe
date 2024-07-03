@@ -3,6 +3,8 @@ import random
 import math
 import time
 import os
+from ColorDictionary import ColorDicionary
+
 #Classes
 
 # Tank sprite class
@@ -656,6 +658,32 @@ class Explosion(pygame.sprite.Sprite):
     def getCooldown(self):
         return self.animationCooldown
 
+class Button:
+    def __init__(self, color, x, y, width, height, text = '', textColor = (0, 0, 0)):
+        self.color = color
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.text = text
+        self.textColor = textColor
+
+    def draw(self, screen, outline=None):
+        if outline:
+            pygame.draw.rect(screen, outline, (self.x-2, self.y-2, self.width+4, self.height+4), 0)
+        pygame.draw.rect(screen, self.color, (self.x, self.y, self.width, self.height), 0)
+
+        if self.text != '':
+            font = pygame.font.SysFont('Ariel', 20)
+            text=font.render(self.text, 1, self.textColor)
+            screen.blit(text, (self.x + (self.width/2 - text.get_width()/2), self.y + (self.height/2 - text.get_height()/2)))
+
+    def ButtonClick(self):
+
+        self.text = 'Clicked: ' + self.text
+
+    def getCorners(self):
+        return (self.x, self.y, self.x+self.width, self.y+self.height)
 #Functions
 def tileGen():
     # This function is responsible for generating the tiles for the maze
@@ -764,7 +792,7 @@ def tileGen():
                 else:
                     spawn = False
 
-                tileList.append(Tile(index, i,j,RED, spawn))
+                tileList.append(Tile(index, i, j, LGREY, spawn))
                 index += 1
 
         #We need to make sure that all the borders are bordered on both sides
@@ -781,7 +809,6 @@ def tileGen():
     spawnpoint = choices
 
     return tileList
-
 
 # Helper functions for SAT
 def getEdges(corners):
@@ -841,7 +868,173 @@ def satCollision(rect1, rect2):
                 return False
     return True
 
+def playGame():
+    # This function controls the main execution of the game
+    # Inputs: None
+    # Outputs: None
+    # Because of the way the game is structured, these global variables can't be avoided
+    global gameOverFlag, cooldownTimer, startTime, tank1Health, tank2Health, p1Score, p2Score
+    global tank1Dead, tank2Dead, gun1Cooldown, gun2Cooldown, tileList, spawnpoint
+    global tank1, tank2, gun1, gun2, allSprites, bulletSprites
 
+    if gameOverFlag:
+        #The game is over
+        startTime = time.time() #Start a 5s timer
+        gameOverFlag = False
+        cooldownTimer = True
+    if cooldownTimer:
+        if time.time() - startTime >= 3:
+            #Reset the game
+            reset()
+
+    #UI Elements
+    
+    #Making the string for score
+    p1ScoreText = str(p1Score)
+    p2ScoreText = str(p2Score)
+    
+    #Setting up the text
+    fontScore = pygame.font.SysFont('Calibri', 100, True, False)
+    fontName = pygame.font.SysFont('Calibri', 35, True, False)
+    # Player 1 Text
+    textp1 = fontScore.render(p1ScoreText, True, WHITE)
+    textp1Name = fontName.render(" Plwasd1", True, WHITE)
+
+    # Player 2 Text
+    textp2 = fontScore.render(p2ScoreText, True, WHITE)
+    textp2Name = fontName.render(" Plarro2", True, WHITE)
+
+    #Misc Text
+    text3 = fontScore.render("-",True,WHITE)
+
+    #Visualing player 1
+    screen.blit(textp1,[windowWidth/2 - textp1.get_width()-text3.get_width()/2, 0.8*windowHeight]) # This is the score on the left
+    screen.blit(textp1Name,[p1NameIndent, 0.783*windowHeight]) # This is the name on the left
+    #Health bars outline
+    #Health bar
+    pygame.draw.rect(screen, RED, [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth*((tank1Health)/100), barHeight]) # Bar
+    pygame.draw.rect(screen, BLACK, [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth, barHeight], 2) # Outline
+    #Reload bars
+    pygame.draw.rect(screen, BLUE, [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + mazeY, barWidth*((300-gun1Cooldown)/300), barHeight]) # The 25 is to space from the health bar
+    pygame.draw.rect(screen, BLACK, [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + mazeY, barWidth, barHeight], 2) # Outline
+    #Visualising player 2
+    screen.blit(textp2,[windowWidth/2 + text3.get_width()*1.5, 0.8*windowHeight]) # This is the score on the right 
+    screen.blit(textp2Name,[p2NameIndent - textp2Name.get_width(), 0.783*windowHeight]) # This is the name on the left
+    #Health bars
+    pygame.draw.rect(screen, RED, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth, barHeight])
+    pygame.draw.rect(screen, GREY, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth*((100-tank2Health)/100), barHeight])
+    pygame.draw.rect(screen, BLACK, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth, barHeight], 2)
+    #Reload bars
+    pygame.draw.rect(screen, BLUE, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + mazeY, barWidth*((300-gun2Cooldown)/300), barHeight]) # The 25 is to space from the health bar
+    pygame.draw.rect(screen, BLACK, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + mazeY, barWidth, barHeight], 2) # Outline
+
+    # Misc text and other little pieces
+    screen.blit(text3,[windowWidth/2,0.79*windowHeight])
+
+    # Draw the border
+    pygame.draw.rect(screen, BLACK, [mazeX, mazeY, mazeWidth,mazeHeight], 1) # The maze border
+
+
+    for tile in tileList:
+        tile.draw(screen)
+
+    #Anything below here will be drawn on top of the maze and hence is game updates
+
+    #Update the location of the corners
+    tank1.updateCorners()
+    tank2.updateCorners()
+    # pygame.draw.polygon(screen, GREEN, tank1.getCorners(), 2) #Hit box outline
+    # pygame.draw.polygon(screen, GREEN, tank2.getCorners(), 2) #Hit box outline
+    allSprites.update()
+    bulletSprites.update()
+    explosionGroup.update()
+    allSprites.draw(screen)
+    bulletSprites.draw(screen)
+    explosionGroup.draw(screen)
+
+def pauseScreen():
+
+    pauseWidth = windowWidth - mazeX * 2
+    pauseHeight = windowHeight - mazeY * 2
+    pygame.draw.rect(screen, OWHITE, [mazeX, mazeY, pauseWidth, pauseHeight])
+    pygame.draw.rect(screen, c.getRGB("BLACK"), [mazeX, mazeY, pauseWidth, pauseHeight], 5)
+
+    # Return to game
+    global b1
+    b1.draw(screen, outline = True)
+
+    pass
+
+def reset():
+    # This function is to reset the board everytime we want to restart the game
+    # Inputs: None
+    # Outputs: None
+    # Because of the way it's coded, these global declarations can't be avoided
+    global gameOverFlag, cooldownTimer, startTime, tank1Health, tank2Health, p1Score, p2Score
+    global tank1Dead, tank2Dead, gun1Cooldown, gun2Cooldown, tileList, spawnpoint
+    global tank1, tank2, gun1, gun2, allSprites, bulletSprites
+    gameOverFlag = False
+    cooldownTimer = False
+    #Removee all the sprites
+    for sprite in allSprites:
+        sprite.kill()
+    for sprite in bulletSprites:
+        sprite.kill()
+    #Nautural constants
+    startTime = 0
+    gameOverFlag = False
+    tank1Health = 100
+    tank2Health = 100
+    tank1Dead = False
+    tank2Dead = False
+    gun1Cooldown = 0
+    gun2Cooldown = 0
+
+    tileList = tileGen() # Get a new board
+    spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
+    spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
+    tank1.setCoords(spawnTank1[0], spawnTank1[1])
+    tank2.setCoords(spawnTank2[0], spawnTank2[1])
+    tank1 = Tank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
+    tank2 = Tank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName)
+    gun1 = Gun(tank1, controlsTank1, p1GunName)
+    gun2 = Gun(tank2, controlsTank2, p2GunName)
+    allSprites = pygame.sprite.Group()
+    allSprites.add(tank1, gun1, tank2, gun2)
+    bulletSprites = pygame.sprite.Group()
+
+
+# global variables
+global tankSpeed, rotationalSpeed, turretSpeed, bulletSpeed
+global gameOverFlag
+global animationCool
+global explosionGroup
+resetFlag = True
+tankSpeed = 0.15
+rotationalSpeed = 0.5
+turretSpeed = 0.8
+bulletSpeed = 0.5
+gameOverFlag = False
+startTime = 0
+cooldownTimer = False
+animationCool = 12
+
+global arbitraryWidth, arbitraryHeight
+arbitraryWidth = 50
+arbitraryHeight = 50
+
+c = ColorDicionary() # All the colors we will use
+
+#Colors
+GREY = (128, 128, 128)
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+LGREY = (198, 198, 198)
+OWHITE = (255, 250, 240)
+IVORY = (255, 255, 240)
 
 #Constants
 done = False
@@ -851,14 +1044,6 @@ tileSize = 50
 weightTrue = 0.16 # The percentage change that side on a tile will have a border
 rowAmount = 14
 colAmount = 8
-#Colors
-GREY = (128, 128, 128)
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-
 # Keeping track of score
 p1Score = 0
 p2Score = 0
@@ -871,16 +1056,24 @@ mazeX = 50 # We want at least a little indent or border
 mazeY = 25
 mazeWidth = windowWidth - mazeX*2 # We want it to span most of the screen
 mazeHeight = windowHeight - mazeY*8
-
-
 rowAmount = mazeHeight//tileSize # Assigning the amount of rows
 colAmount = mazeWidth//tileSize # Assigning the amount of columns
-
-
-eventFlag = False # This flag is just for debugging purposes
-
 barWidth = 150
 barHeight = 20
+bg = GREY
+gameMode = 1 # 1 is for single player, 2 is for multiplayer
+#Changing variables
+p1TankName = "Plwasd1"
+p2TankName = "Plarro2"
+
+p1GunName = "Gun1"
+p2GunName = "Gun2"
+
+tileList = tileGen()
+
+#defining buttons in pause menu
+b1 = Button(GREEN, windowWidth/2 - 200, 0.8 * windowHeight, 400, 50, 'Return to Game')
+
 
 #Start the game setup
 pygame.init()
@@ -892,7 +1085,6 @@ mouse = pygame.mouse.get_pos()
 #Setting up the window
 screen = pygame.display.set_mode((windowWidth,windowHeight))
 
-tileList = tileGen()
 # Controls for the first tank
 controlsTank1 = {
     'up': pygame.K_w,
@@ -922,12 +1114,6 @@ global tank1Health, tank2Health
 tank1Health = 100
 tank2Health = 100
 
-p1TankName = "Plwasd1"
-p2TankName = "Plarro2"
-
-p1GunName = "Gun1"
-p2GunName = "Gun2"
-
 global gun1Cooldown, gun2Cooldown
 gun1Cooldown = 0
 gun2Cooldown = 0
@@ -948,25 +1134,6 @@ allSprites.add(tank1, gun1, tank2, gun2)
 bulletSprites = pygame.sprite.Group()
 
 
-bg = GREY
-resetFlag = True
-global tankSpeed, rotationalSpeed, turretSpeed, bulletSpeed
-tankSpeed = 0.15
-rotationalSpeed = 0.5
-turretSpeed = 0.8
-bulletSpeed = 0.5
-
-global gameOverFlag
-gameOverFlag = False
-startTime = 0
-cooldownTimer = False
-
-global animationCool
-animationCool = 12
-
-
-lastlen = len(bulletSprites)
-
 #Sound effects for shooting, tank dying, tank moving and tank turret rotating.
 global tankShootSFX, tankDeadSFX, turretRotateSFX, tankMoveSFX
 tankShootSFX = pygame.mixer.Sound("Sounds/tank_shoot.mp3")
@@ -977,20 +1144,19 @@ tankShootSFX.set_volume(0.5)
 tankDeadSFX.set_volume(0.5)
 turretRotateSFX.set_volume(0.2)
 tankMoveSFX.set_volume(0.05)
-
-
-global explosionGroup
-explosionGroup = pygame.sprite.Group()
+explosionGroup = pygame.sprite.Group() #All the explosions
 
 #Main loop
 while not done:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            x, y = pygame.mouse.get_pos()
-            explosion = Explosion(x, y)
-            explosionGroup.add(explosion)
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            mouse = pygame.mouse.get_pos()
+            if gameMode == 0:
+                #We are paused
+                if b1.getCorners()[0] <= mouse[0] <= b1.getCorners()[2] and b1.getCorners()[1] <= mouse[1] <= b1.getCorners()[3]: #If we click the button
+                    gameMode = 1 # Return to game if button was clicked
         elif event.type == pygame.KEYDOWN: # Any key pressed
             if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
                 done = True
@@ -1005,134 +1171,37 @@ while not done:
             if event.key == pygame.K_i:
                 print("The current mouse position is: ", mouse)
             if event.key == pygame.K_o:
-                turretSpeed += 0.1
-                print("The turret speed is: ", turretSpeed)
+                arbitraryWidth -= 10
+                print("The current arbitrary width is: ", arbitraryWidth)
             if event.key == pygame.K_p:
-                turretSpeed -= 0.1
-                print("The turret speed is: ", turretSpeed)
+                #Pause
+                gameMode = 0
             if event.key == pygame.K_l:
-                bulletSpeed -= 0.01
-                print("The bullet speed is: ", bulletSpeed)
+                arbitraryHeight += 10
+                print("The current arbitrary height is: ", arbitraryHeight)
             if event.key == pygame.K_k:
-                bulletSpeed += 0.01
-                print("The bullet speed is: ", bulletSpeed)
+                arbitraryHeight -= 10
+                print("The current arbitrary height is: ", arbitraryHeight)
             if event.key == pygame.K_f:
                 print("The current FPS is: ", clock.get_fps())
             if event.key == pygame.K_n:
-                tileList = tileGen()
-                spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
-                spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
-                tank1.setCoords(spawnTank1[0], spawnTank1[1])
-                tank2.setCoords(spawnTank2[0], spawnTank2[1])
+                if gameMode == 1:
+                    reset()
             if event.key == pygame.K_0:
-                tileList = tileGen()
-                spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
-                spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
-                tank1.setCoords(spawnTank1[0], spawnTank1[1])
-                tank2.setCoords(spawnTank2[0], spawnTank2[1])
+                if gameMode == 1:
+                    reset()
+                
 
     mouse = pygame.mouse.get_pos() #Update the position
 
     screen.fill(bg) # This is the first line when drawing a new frame
 
-    if gameOverFlag:
-        #The game is over
-        startTime = time.time() #Start a 5s timer
-        gameOverFlag = False
-        cooldownTimer = True
-    if cooldownTimer:
-        if time.time() - startTime >= 3:
-            #Reset the game
-            gameOverFlag = False
-            cooldownTimer = False
-            for sprite in allSprites:
-                sprite.kill()
-            for sprite in bulletSprites:
-                sprite.kill()
-            tileList = tileGen()
-            spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
-            spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
-            tank1.setCoords(spawnTank1[0], spawnTank1[1])
-            tank2.setCoords(spawnTank2[0], spawnTank2[1])
-            startTime = 0
-            gameOverFlag = False
-            tank1 = Tank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
-            tank2 = Tank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName)
-            gun1 = Gun(tank1, controlsTank1, p1GunName)
-            gun2 = Gun(tank2, controlsTank2, p2GunName)
-            tank1Health = 100
-            tank2Health = 100
-            allSprites = pygame.sprite.Group()
-            allSprites.add(tank1, gun1, tank2, gun2)
-            bulletSprites = pygame.sprite.Group()
-            tank1Dead = False
-            tank2Dead = False
-            gun1Cooldown = 0
-            gun2Cooldown = 0
-
-    #Making the string for score
-    p1ScoreText = str(p1Score)
-    p2ScoreText = str(p2Score)
-    
-    #Setting up the text
-    fontScore = pygame.font.SysFont('Calibri', 100, True, False)
-    fontName = pygame.font.SysFont('Calibri', 35, True, False)
-    # Player 1 Text
-    textp1 = fontScore.render(p1ScoreText, True, WHITE)
-    textp1Name = fontName.render(" Plwasd1", True, WHITE)
-
-    # Player 2 Text
-    textp2 = fontScore.render(p2ScoreText, True, WHITE)
-    textp2Name = fontName.render(" Plarro2", True, WHITE)
-
-    #Misc Text
-    text3 = fontScore.render("-",True,WHITE)
-
-    #Visualing player 1
-    screen.blit(textp1,[windowWidth/2 - textp1.get_width()-text3.get_width()/2, 0.8*windowHeight]) # This is the score on the left
-    screen.blit(textp1Name,[p1NameIndent, 0.783*windowHeight]) # This is the name on the left
-    #Health bars outline
-    #Health bar
-    pygame.draw.rect(screen, RED, [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth*((tank1Health)/100), barHeight]) # Bar
-    pygame.draw.rect(screen, BLACK, [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth, barHeight], 2) # Outline
-    #Reload bars
-    pygame.draw.rect(screen, BLUE, [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + 25, barWidth*((300-gun1Cooldown)/300), barHeight]) # The 25 is to space from the health bar
-    pygame.draw.rect(screen, BLACK, [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + 25, barWidth, barHeight], 2) # Outline
-    #Visualising player 2
-    screen.blit(textp2,[windowWidth/2 + text3.get_width()*1.5, 0.8*windowHeight]) # This is the score on the right 
-    screen.blit(textp2Name,[p2NameIndent - textp2Name.get_width(), 0.783*windowHeight]) # This is the name on the left
-    #Health bars
-    pygame.draw.rect(screen, RED, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth, barHeight])
-    pygame.draw.rect(screen, GREY, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth*((100-tank2Health)/100), barHeight])
-    pygame.draw.rect(screen, BLACK, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth, barHeight], 2)
-    #Reload bars
-    pygame.draw.rect(screen, BLUE, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + 25, barWidth*((300-gun2Cooldown)/300), barHeight]) # The 25 is to space from the health bar
-    pygame.draw.rect(screen, BLACK, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + 25, barWidth, barHeight], 2) # Outline
-
-    # Misc text and other little pieces
-    screen.blit(text3,[windowWidth/2,0.79*windowHeight])
-
-    # Draw the border
-    pygame.draw.rect(screen, BLACK, [mazeX, mazeY, mazeWidth,mazeHeight], 1) # The maze border
-
-
-    for tile in tileList:
-        tile.draw(screen)
-
-    #Anything below here will be drawn on top of the maze
-
-    #Update the location of the corners
-    tank1.updateCorners()
-    tank2.updateCorners()
-    # pygame.draw.polygon(screen, GREEN, tank1.getCorners(), 2) #Hit box outline
-    # pygame.draw.polygon(screen, GREEN, tank2.getCorners(), 2) #Hit box outline
-    allSprites.update()
-    bulletSprites.update()
-    explosionGroup.update()
-    allSprites.draw(screen)
-    bulletSprites.draw(screen)
-    explosionGroup.draw(screen)
-
+    if gameMode == 1:
+        playGame()
+    elif gameMode == 0:
+        pauseScreen()
+    else:
+        screen.fill(WHITE)
     clock.tick(240) # Set the FPS
 
     pygame.display.flip()# Update the screen
