@@ -288,6 +288,7 @@ class Gun(pygame.sprite.Sprite):
 
             self.canShoot = False
             self.shootCooldown = self.cooldownDuration
+            tankShootSFX.play()
 
         #Here is the bullet cooldown
         elapsedTime = pygame.time.get_ticks() - self.gunBackStartTime
@@ -400,6 +401,7 @@ class Bullet(pygame.sprite.Sprite):
         tank2Collision = satCollision(self, tank2)
         if tank1Collision or tank2Collision:
             global p1Score, p2Score
+            tankDeadSFX.play()
             if tank1Collision: #If we hit tank1 then give p2 a point
                 tank1.damage(self.damage)
                 bulletSprites.remove(self)
@@ -872,6 +874,13 @@ cooldownTimer = False
 
 
 lastlen = len(bulletSprites)
+
+#Sound effects
+global tankShootSFX, tankDeadSFX
+tankShootSFX = pygame.mixer.Sound("Sounds/tank_shoot.mp3")
+tankDeadSFX = pygame.mixer.Sound("Sounds/tank_dead.mp3")
+
+
 #Main loop
 while not done:
     for event in pygame.event.get():
@@ -988,7 +997,6 @@ while not done:
     pygame.draw.rect(screen, GREY, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth*((100-tank2Health)/100), barHeight])
     pygame.draw.rect(screen, BLACK, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth, barHeight], 2)
     #Reload bars
-    print(gun2Cooldown)
     pygame.draw.rect(screen, BLUE, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + 25, barWidth*((300-gun2Cooldown)/300), barHeight]) # The 25 is to space from the health bar
     pygame.draw.rect(screen, BLACK, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + 25, barWidth, barHeight], 2) # Outline
 
