@@ -39,6 +39,7 @@ class Tank(pygame.sprite.Sprite):
         self.x = float(self.rect.centerx)
         self.y = float(self.rect.centery)
         self.updateCorners() #Set the corners
+        self.soundPlaying = False
 
     def updateCorners(self):
         # This function will update the corners of the tank based on the new position
@@ -128,13 +129,24 @@ class Tank(pygame.sprite.Sprite):
             self.speed = -tankSpeed
         else:
             self.speed = 0
-
         if keys[self.controls['left']]:
             self.rotationSpeed = rotationalSpeed
         elif keys[self.controls['right']]:
             self.rotationSpeed = -rotationalSpeed
         else:
             self.rotationSpeed = 0
+
+        #This if statement checks to see if speed or rotation of speed is 0,
+        #if so it will stop playing moving sound, otherwise, sound will play
+        #indefinitely
+        if self.speed != 0 or self.rotationSpeed != 0:
+            if not self.soundPlaying:
+                tankMoveSFX.play(-1)  # Play sound indefinitely
+                self.soundPlaying = True
+        else:
+            if self.soundPlaying:
+                tankMoveSFX.stop()
+                self.soundPlaying = False
 
         self.angle += self.rotationSpeed
         self.angle %= 360
@@ -234,6 +246,7 @@ class Gun(pygame.sprite.Sprite):
         self.canShoot = True
         self.shootCooldown = 0
         self.cooldownDuration = 300
+        self.soundPlaying=False
         self.lastUpdateTime = pygame.time.get_ticks()
 
         # Initialize the gun's floating-point position
@@ -272,6 +285,25 @@ class Gun(pygame.sprite.Sprite):
             self.rotationSpeed = -rotationalSpeed
         else:
             self.rotationSpeed = 0
+
+        #This if statement checks to see if speed or rotation of speed is 0,
+        #if so it will stop playing moving sound, otherwise, sound will play
+        #indefinitely
+        if keys[self.controls['rotate_left']] or keys[self.controls['rotate_right']]:
+            if self.rotationSpeed != 0:
+                if not self.soundPlaying:
+                    turretRotateSFX.play(-1)  # Play sound indefinitely
+                    self.soundPlaying = True
+            else:
+                if self.soundPlaying:
+                    turretRotateSFX.stop()
+                    self.soundPlaying = False
+        else:
+            if self.soundPlaying:
+                turretRotateSFX.stop()
+                self.soundPlaying = False
+                
+    
         self.angle += self.rotationSpeed
         self.angle %= 360
         
@@ -288,6 +320,8 @@ class Gun(pygame.sprite.Sprite):
 
             self.canShoot = False
             self.shootCooldown = self.cooldownDuration
+            #If either tank shoots, play this sound effect.
+            tankShootSFX.play()
 
         #Here is the bullet cooldown
         elapsedTime = pygame.time.get_ticks() - self.gunBackStartTime
@@ -400,6 +434,8 @@ class Bullet(pygame.sprite.Sprite):
         tank2Collision = satCollision(self, tank2)
         if tank1Collision or tank2Collision:
             global p1Score, p2Score
+            #If either tank dies, play this tank dead sound effect.
+            tankDeadSFX.play()
             if tank1Collision: #If we hit tank1 then give p2 a point
                 tank1.damage(self.damage)
                 bulletSprites.remove(self)
@@ -872,6 +908,18 @@ cooldownTimer = False
 
 
 lastlen = len(bulletSprites)
+
+#Sound effects for shooting, tank dying, tank moving and tank turret rotating.
+global tankShootSFX, tankDeadSFX, turretRotateSFX, tankMoveSFX
+tankShootSFX = pygame.mixer.Sound("Sounds/tank_shoot.mp3")
+tankDeadSFX = pygame.mixer.Sound("Sounds/tank_dead.mp3")
+turretRotateSFX = pygame.mixer.Sound("Sounds/tank_turret_rotate.mp3")
+tankMoveSFX = pygame.mixer.Sound("Sounds/tank_moving.mp3")
+tankShootSFX.set_volume(0.5)
+tankDeadSFX.set_volume(0.5)
+turretRotateSFX.set_volume(0.2)
+tankMoveSFX.set_volume(0.05)
+
 #Main loop
 while not done:
     for event in pygame.event.get():
@@ -988,7 +1036,6 @@ while not done:
     pygame.draw.rect(screen, GREY, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth*((100-tank2Health)/100), barHeight])
     pygame.draw.rect(screen, BLACK, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth, barHeight], 2)
     #Reload bars
-    print(gun2Cooldown)
     pygame.draw.rect(screen, BLUE, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + 25, barWidth*((300-gun2Cooldown)/300), barHeight]) # The 25 is to space from the health bar
     pygame.draw.rect(screen, BLACK, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + 25, barWidth, barHeight], 2) # Outline
 
