@@ -720,15 +720,15 @@ def projectPolygon(corners, axis):
     # Inputs: corners: The corners of the polygon
     # Inputs: axis: The axis to project onto
     # Outputs: The projection
-    min_proj = dotProduct(corners[0], axis)
-    max_proj = min_proj
+    minProj = dotProduct(corners[0], axis)
+    maxProj = minProj
     for corner in corners[1:]:
         projection = dotProduct(corner, axis)
-        if projection < min_proj:
-            min_proj = projection
-        if projection > max_proj:
-            max_proj = projection
-    return min_proj, max_proj
+        if projection < minProj:
+            minProj = projection
+        if projection > maxProj:
+            maxProj = projection
+    return minProj, maxProj
 
 def overlap(proj1, proj2):
     #This function will check if the projections overlap
@@ -866,7 +866,7 @@ bulletSpeed = 0.5
 
 global gameOverFlag
 gameOverFlag = False
-start_time = 0
+startTime = 0
 cooldownTimer = False
 
 
@@ -919,11 +919,11 @@ while not done:
 
     if gameOverFlag:
         #The game is over
-        start_time = time.time() #Start a 5s timer
+        startTime = time.time() #Start a 5s timer
         gameOverFlag = False
         cooldownTimer = True
     if cooldownTimer:
-        if time.time() - start_time >= 3:
+        if time.time() - startTime >= 3:
             #Reset the game
             gameOverFlag = False
             cooldownTimer = False
@@ -936,7 +936,7 @@ while not done:
             spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
             tank1.setCoords(spawnTank1[0], spawnTank1[1])
             tank2.setCoords(spawnTank2[0], spawnTank2[1])
-            start_time = 0
+            startTime = 0
             gameOverFlag = False
             tank1 = Tank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
             tank2 = Tank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName)
