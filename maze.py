@@ -433,17 +433,19 @@ class Bullet(pygame.sprite.Sprite):
         tank1Collision = satCollision(self, tank1)
         tank2Collision = satCollision(self, tank2)
         if tank1Collision or tank2Collision:
-            global p1Score, p2Score
+            global p1Score, p2Score, gameOverFlag
             #If either tank dies, play this tank dead sound effect.
             tankDeadSFX.play()
             if tank1Collision: #If we hit tank1 then give p2 a point
                 tank1.damage(self.damage)
-                bulletSprites.remove(self)
+                self.kill()
+                
             else:
                 tank2.damage(self.damage)
-                bulletSprites.remove(self)
+                self.kill()
             global tank1Dead, tank2Dead
             if tank1.getHealth()[0] <= 0:
+                gameOverFlag = True #The game is over
                 self.kill()
                 gun1.setCooldown()
                 #The tank is dead
@@ -452,6 +454,7 @@ class Bullet(pygame.sprite.Sprite):
                     p2Score += 1
                     tank1Dead = True
             if tank2.getHealth()[0] <= 0:
+                gameOverFlag = True #The game is over
                 self.kill()
                 gun2.setCooldown()
                 if not tank2Dead:
@@ -461,8 +464,6 @@ class Bullet(pygame.sprite.Sprite):
                 #The tank is dead
 
 
-            global gameOverFlag
-            gameOverFlag = True #The game is over
             return
 
         tile = tileList[index-1]
