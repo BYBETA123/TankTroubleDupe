@@ -76,7 +76,7 @@ class Tank(pygame.sprite.Sprite):
         if tempY > mazeHeight + mazeY - self.originalTankImage.get_size()[0]/2:
             tempY = mazeHeight + mazeY - self.originalTankImage.get_size()[0]/2
 
-        if sat_collision(tank1, tank2): #If the tanks are colliding
+        if satCollision(tank1, tank2): #If the tanks are colliding
             if self.name == p1TankName:
                 #If there is a collision here, move the other tank
                     #This player is being pushed
@@ -396,8 +396,8 @@ class Bullet(pygame.sprite.Sprite):
             return
         
         #If we hit a tank
-        tank1Collision = sat_collision(self, tank1)
-        tank2Collision = sat_collision(self, tank2)
+        tank1Collision = satCollision(self, tank1)
+        tank2Collision = satCollision(self, tank2)
         if tank1Collision or tank2Collision:
             global p1Score, p2Score
             if tank1Collision: #If we hit tank1 then give p2 a point
@@ -693,7 +693,7 @@ def tileGen():
 
 
 # Helper functions for SAT
-def get_edges(corners):
+def getEdges(corners):
     #This function will return the edges of the polygon
     # Inputs: corners: The corners of the polygon
     # Outputs: A list of edges
@@ -703,27 +703,27 @@ def get_edges(corners):
         edges.append(edge)
     return edges
 
-def get_perpendicular_vector(edge):
+def getPerpendicularVector(edge):
     #This function will return the perpendicular vector to the edge
     # Inputs: edge: The edge of the polygon
     # Outputs: The perpendicular vector
     return (-edge[1], edge[0])
 
-def dot_product(v1, v2):
+def dotProduct(v1, v2):
     #This function will return the dot product of two vectors
     # Inputs: v1, v2: The two vectors
     # Outputs: The dot product
     return v1[0] * v2[0] + v1[1] * v2[1]
 
-def project_polygon(corners, axis):
+def projectPolygon(corners, axis):
     #This function will project the polygon onto the axis
     # Inputs: corners: The corners of the polygon
     # Inputs: axis: The axis to project onto
     # Outputs: The projection
-    min_proj = dot_product(corners[0], axis)
+    min_proj = dotProduct(corners[0], axis)
     max_proj = min_proj
     for corner in corners[1:]:
-        projection = dot_product(corner, axis)
+        projection = dotProduct(corner, axis)
         if projection < min_proj:
             min_proj = projection
         if projection > max_proj:
@@ -736,16 +736,16 @@ def overlap(proj1, proj2):
     # Outputs: True if they overlap, False otherwise
     return proj1[0] < proj2[1] and proj2[0] < proj1[1]
 
-def sat_collision(rect1, rect2):
+def satCollision(rect1, rect2):
     #This function will check if two rectangles are colliding
     # Inputs: rect1, rect2: The two rectangles
     # Outputs: True if they are colliding, False otherwise
     for rect in [rect1, rect2]:
-        edges = get_edges(rect.corners)
+        edges = getEdges(rect.corners)
         for edge in edges:
-            axis = get_perpendicular_vector(edge)
-            proj1 = project_polygon(rect1.corners, axis)
-            proj2 = project_polygon(rect2.corners, axis)
+            axis = getPerpendicularVector(edge)
+            proj1 = projectPolygon(rect1.corners, axis)
+            proj2 = projectPolygon(rect2.corners, axis)
             if not overlap(proj1, proj2):
                 return False
     return True
