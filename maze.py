@@ -519,7 +519,7 @@ class Tile:
         self.color = color
         self.spawn = spawn
         if spawn:
-            self.color = GREEN
+            self.color = c.getRGB('GREEN')
         self.border = self.borderControl()
         self.neighbours, self.bordering = self.neighbourCheck()
 
@@ -578,20 +578,20 @@ class Tile:
 
     def drawText(self, screen):
         font = pygame.font.SysFont('Calibri', 25, True, False)
-        text = font.render(str(self.index), True, BLACK)
+        text = font.render(str(self.index), True, c.getRGB("BLACK"))
         screen.blit(text, [self.x + tileSize/2 - text.get_width()/2, self.y + tileSize/2 - text.get_height()/2])
 
     def draw(self, screen):
         pygame.draw.rect(screen, self.color, [self.x, self.y, tileSize, tileSize])
         #Draw the border
         if self.border[0]:
-            pygame.draw.line(screen, BLACK, [self.x, self.y], [self.x+tileSize, self.y], self.borderWidth)
+            pygame.draw.line(screen, c.getRGB("BLACK"), [self.x, self.y], [self.x+tileSize, self.y], self.borderWidth)
         if self.border[1]:
-            pygame.draw.line(screen, BLACK, [self.x + tileSize, self.y], [self.x+tileSize, self.y+tileSize], self.borderWidth)
+            pygame.draw.line(screen, c.getRGB("BLACK"), [self.x + tileSize, self.y], [self.x+tileSize, self.y+tileSize], self.borderWidth)
         if self.border[2]:
-            pygame.draw.line(screen, BLACK, [self.x, self.y + tileSize], [self.x+tileSize, self.y+tileSize], self.borderWidth)
+            pygame.draw.line(screen, c.getRGB("BLACK"), [self.x, self.y + tileSize], [self.x+tileSize, self.y+tileSize], self.borderWidth)
         if self.border[3]:
-            pygame.draw.line(screen, BLACK, [self.x, self.y], [self.x, self.y+tileSize], self.borderWidth)
+            pygame.draw.line(screen, c.getRGB("BLACK"), [self.x, self.y], [self.x, self.y+tileSize], self.borderWidth)
         #Draw the index
         # self.drawText(screen)
 
@@ -605,7 +605,7 @@ class Tile:
         return self.bordering
 
     def setColor(self):
-        self.color = WHITE
+        self.color = c.getRGB("WHITE")
 
     def setBorder(self, borderidx, value = True):
         self.border[borderidx] = value
@@ -797,7 +797,7 @@ def tileGen():
                 else:
                     spawn = False
 
-                tileList.append(Tile(index, i, j, LGREY, spawn))
+                tileList.append(Tile(index, i, j, c.getRGB("LIGHT_GREY"), spawn))
                 index += 1
 
         #We need to make sure that all the borders are bordered on both sides
@@ -902,42 +902,42 @@ def playGame():
     fontScore = pygame.font.SysFont('Calibri', 100, True, False)
     fontName = pygame.font.SysFont('Calibri', 35, True, False)
     # Player 1 Text
-    textp1 = fontScore.render(p1ScoreText, True, WHITE)
-    textp1Name = fontName.render(" Plwasd1", True, WHITE)
+    textp1 = fontScore.render(p1ScoreText, True, c.getRGB("WHITE"))
+    textp1Name = fontName.render(" Plwasd1", True, c.getRGB("WHITE"))
 
     # Player 2 Text
-    textp2 = fontScore.render(p2ScoreText, True, WHITE)
-    textp2Name = fontName.render(" Plarro2", True, WHITE)
+    textp2 = fontScore.render(p2ScoreText, True, c.getRGB("WHITE"))
+    textp2Name = fontName.render(" Plarro2", True, c.getRGB("WHITE"))
 
     #Misc Text
-    text3 = fontScore.render("-",True,WHITE)
+    text3 = fontScore.render("-",True,c.getRGB("WHITE"))
 
     #Visualing player 1
     screen.blit(textp1,[windowWidth/2 - textp1.get_width()-text3.get_width()/2, 0.8*windowHeight]) # This is the score on the left
     screen.blit(textp1Name,[p1NameIndent, 0.783*windowHeight]) # This is the name on the left
     #Health bars outline
     #Health bar
-    pygame.draw.rect(screen, RED, [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth*((tank1Health)/100), barHeight]) # Bar
-    pygame.draw.rect(screen, BLACK, [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth, barHeight], 2) # Outline
+    pygame.draw.rect(screen, c.getRGB("RED"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth*((tank1Health)/100), barHeight]) # Bar
+    pygame.draw.rect(screen, c.getRGB("BLACK"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth, barHeight], 2) # Outline
     #Reload bars
-    pygame.draw.rect(screen, BLUE, [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + mazeY, barWidth*((300-gun1Cooldown)/300), barHeight]) # The 25 is to space from the health bar
-    pygame.draw.rect(screen, BLACK, [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + mazeY, barWidth, barHeight], 2) # Outline
+    pygame.draw.rect(screen, c.getRGB("BLUE"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + mazeY, barWidth*((300-gun1Cooldown)/300), barHeight]) # The 25 is to space from the health bar
+    pygame.draw.rect(screen, c.getRGB("BLACK"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + mazeY, barWidth, barHeight], 2) # Outline
     #Visualising player 2
     screen.blit(textp2,[windowWidth/2 + text3.get_width()*1.5, 0.8*windowHeight]) # This is the score on the right 
     screen.blit(textp2Name,[p2NameIndent - textp2Name.get_width(), 0.783*windowHeight]) # This is the name on the left
     #Health bars
-    pygame.draw.rect(screen, RED, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth, barHeight])
-    pygame.draw.rect(screen, GREY, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth*((100-tank2Health)/100), barHeight])
-    pygame.draw.rect(screen, BLACK, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth, barHeight], 2)
+    pygame.draw.rect(screen, c.getRGB("RED"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth, barHeight])
+    pygame.draw.rect(screen, c.getRGB("GREY"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth*((100-tank2Health)/100), barHeight])
+    pygame.draw.rect(screen, c.getRGB("BLACK"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth, barHeight], 2)
     #Reload bars
-    pygame.draw.rect(screen, BLUE, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + mazeY, barWidth*((300-gun2Cooldown)/300), barHeight]) # The 25 is to space from the health bar
-    pygame.draw.rect(screen, BLACK, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + mazeY, barWidth, barHeight], 2) # Outline
+    pygame.draw.rect(screen, c.getRGB("BLUE"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + mazeY, barWidth*((300-gun2Cooldown)/300), barHeight]) # The 25 is to space from the health bar
+    pygame.draw.rect(screen, c.getRGB("BLACK"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + mazeY, barWidth, barHeight], 2) # Outline
 
     # Misc text and other little pieces
     screen.blit(text3,[windowWidth/2,0.79*windowHeight])
 
     # Draw the border
-    pygame.draw.rect(screen, BLACK, [mazeX, mazeY, mazeWidth,mazeHeight], 1) # The maze border
+    pygame.draw.rect(screen, c.getRGB("BLACK"), [mazeX, mazeY, mazeWidth,mazeHeight], 1) # The maze border
 
 
     for tile in tileList:
@@ -961,7 +961,7 @@ def pauseScreen():
 
     pauseWidth = windowWidth - mazeX * 2
     pauseHeight = windowHeight - mazeY * 2
-    pygame.draw.rect(screen, OWHITE, [mazeX, mazeY, pauseWidth, pauseHeight])
+    pygame.draw.rect(screen, c.getRGB("OFF_WHITE"), [mazeX, mazeY, pauseWidth, pauseHeight])
     pygame.draw.rect(screen, c.getRGB("BLACK"), [mazeX, mazeY, pauseWidth, pauseHeight], 5)
 
     # Return to game
@@ -1028,18 +1028,8 @@ global arbitraryWidth, arbitraryHeight
 arbitraryWidth = 50
 arbitraryHeight = 50
 
-c = ColorDicionary() # All the colors we will use
-
 #Colors
-GREY = (128, 128, 128)
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLUE = (0, 0, 255)
-LGREY = (198, 198, 198)
-OWHITE = (255, 250, 240)
-IVORY = (255, 255, 240)
+c = ColorDicionary() # All the colors we will use
 
 #Constants
 done = False
@@ -1065,7 +1055,7 @@ rowAmount = mazeHeight//tileSize # Assigning the amount of rows
 colAmount = mazeWidth//tileSize # Assigning the amount of columns
 barWidth = 150
 barHeight = 20
-bg = GREY
+bg = c.getRGB('GREY')
 gameMode = 1 # 1 is for single player, 2 is for multiplayer
 #Changing variables
 p1TankName = "Plwasd1"
@@ -1077,7 +1067,7 @@ p2GunName = "Gun2"
 tileList = tileGen()
 
 #defining buttons in pause menu
-b1 = Button(GREEN, windowWidth/2 - 200, 0.8 * windowHeight, 400, 50, 'Return to Game')
+b1 = Button(c.getRGB("GREEN"), windowWidth/2 - 200, 0.8 * windowHeight, 400, 50, 'Return to Game')
 
 
 #Start the game setup
@@ -1206,7 +1196,7 @@ while not done:
     elif gameMode == 0:
         pauseScreen()
     else:
-        screen.fill(WHITE)
+        screen.fill(c.getRGB("WHITE"))
     clock.tick(240) # Set the FPS
 
     pygame.display.flip()# Update the screen
