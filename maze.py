@@ -178,7 +178,7 @@ class Tank(pygame.sprite.Sprite):
             print("Error: Invalid tank name")
 
         if self.health <= 0:
-            global explosion_group
+            global explosionGroup
             if self.name == p1TankName:
                 gun1.setCooldown()
                 gun1.kill()
@@ -189,7 +189,7 @@ class Tank(pygame.sprite.Sprite):
                 allSprites.remove(gun1)
                 allSprites.remove(self)
                 explosion = Explosion(self.x, self.y)
-                explosion_group.add(explosion)
+                explosionGroup.add(explosion)
             elif self.name == p2TankName:
                 explosion = Explosion(tank2.getCenter()[0], tank2.getCenter()[1])
                 gun2.setCooldown()
@@ -200,7 +200,7 @@ class Tank(pygame.sprite.Sprite):
                 self.kill()
                 allSprites.remove(gun2)
                 allSprites.remove(self)
-                explosion_group.add(explosion)
+                explosionGroup.add(explosion)
             else:
                 print("Error: Invalid tank name")
 
@@ -624,6 +624,13 @@ class Explosion(pygame.sprite.Sprite):
         self.animationCooldown = animationCool
 
     def get_image(self, sheet, frame, width, height, scale):
+        # This function will use the spritesheet to get the respective image from the sprite sheet
+        # Inputs: Sheet: The required sprite sheet for the animation
+        # Inputs: Frame: The frame index of the animation
+        # Inputs: Width: The width of the frame
+        # Inputs: Height: The height of the frame
+        # Inputs: Scale: The scale of which to scale the image to
+        # Outputs: The image of the frame
         image = pygame.Surface((width, height)).convert_alpha()
         image.blit(sheet, (0, 0), ((frame*width%1024), (frame//8 * width), width, height))
         image = pygame.transform.scale(image, (width * scale, height * scale))
@@ -631,10 +638,12 @@ class Explosion(pygame.sprite.Sprite):
         return image
 
     def update(self):
-
-        current_time = pygame.time.get_ticks()
-        if current_time - self.lastUpdate >= self.animationCooldown:
-            self.lastUpdate = current_time
+        # This function will update the explosion animation every frame
+        # Inputs: None
+        # Outputs: None
+        currentTime = pygame.time.get_ticks()
+        if currentTime - self.lastUpdate >= self.animationCooldown:
+            self.lastUpdate = currentTime
             self.index += 1
         if self.index >= len(self.images):
             self.kill()
@@ -968,8 +977,8 @@ turretRotateSFX.set_volume(0.2)
 tankMoveSFX.set_volume(0.05)
 
 
-global explosion_group
-explosion_group = pygame.sprite.Group()
+global explosionGroup
+explosionGroup = pygame.sprite.Group()
 
 #Main loop
 while not done:
@@ -979,7 +988,7 @@ while not done:
         if event.type == pygame.MOUSEBUTTONDOWN:
             x, y = pygame.mouse.get_pos()
             explosion = Explosion(x, y)
-            explosion_group.add(explosion)
+            explosionGroup.add(explosion)
         elif event.type == pygame.KEYDOWN: # Any key pressed
             if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
                 done = True
@@ -1113,10 +1122,10 @@ while not done:
     # pygame.draw.polygon(screen, GREEN, tank2.getCorners(), 2) #Hit box outline
     allSprites.update()
     bulletSprites.update()
-    explosion_group.update()
+    explosionGroup.update()
     allSprites.draw(screen)
     bulletSprites.draw(screen)
-    explosion_group.draw(screen)
+    explosionGroup.draw(screen)
 
     pygame.time.Clock().tick(240)
 
