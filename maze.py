@@ -885,6 +885,7 @@ barHeight = 20
 #Start the game setup
 pygame.init()
 pygame.display.set_caption("TankTroubleDupe") # Name the window
+clock = pygame.time.Clock() # Start the clock
 #Keeping the mouse and its location
 mouse = pygame.mouse.get_pos()
 
@@ -950,8 +951,8 @@ bulletSprites = pygame.sprite.Group()
 bg = GREY
 resetFlag = True
 global tankSpeed, rotationalSpeed, turretSpeed, bulletSpeed
-tankSpeed = 0.5
-rotationalSpeed = 2
+tankSpeed = 0.15
+rotationalSpeed = 0.5
 turretSpeed = 0.8
 bulletSpeed = 0.5
 
@@ -1004,15 +1005,19 @@ while not done:
             if event.key == pygame.K_i:
                 print("The current mouse position is: ", mouse)
             if event.key == pygame.K_o:
-                animationCool -= 1
-                print("The current animation cooldown is: ", animationCool)
+                turretSpeed += 0.1
+                print("The turret speed is: ", turretSpeed)
             if event.key == pygame.K_p:
-                animationCool += 1
-                print("The current animation cooldown is: ", animationCool)
+                turretSpeed -= 0.1
+                print("The turret speed is: ", turretSpeed)
             if event.key == pygame.K_l:
-                pass
+                bulletSpeed -= 0.01
+                print("The bullet speed is: ", bulletSpeed)
             if event.key == pygame.K_k:
-                pass                
+                bulletSpeed += 0.01
+                print("The bullet speed is: ", bulletSpeed)
+            if event.key == pygame.K_f:
+                print("The current FPS is: ", clock.get_fps())
             if event.key == pygame.K_n:
                 tileList = tileGen()
                 spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
@@ -1128,7 +1133,7 @@ while not done:
     bulletSprites.draw(screen)
     explosionGroup.draw(screen)
 
-    pygame.time.Clock().tick(240)
+    clock.tick(240) # Set the FPS
 
     pygame.display.flip()# Update the screen
 
