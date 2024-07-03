@@ -288,6 +288,7 @@ class Gun(pygame.sprite.Sprite):
 
             self.canShoot = False
             self.shootCooldown = self.cooldownDuration
+            #If either tank shoots, play this sound effect.
             tankShootSFX.play()
 
         #Here is the bullet cooldown
@@ -401,6 +402,7 @@ class Bullet(pygame.sprite.Sprite):
         tank2Collision = satCollision(self, tank2)
         if tank1Collision or tank2Collision:
             global p1Score, p2Score
+            #If either tank dies, play this tank dead sound effect.
             tankDeadSFX.play()
             if tank1Collision: #If we hit tank1 then give p2 a point
                 tank1.damage(self.damage)
@@ -875,7 +877,7 @@ cooldownTimer = False
 
 lastlen = len(bulletSprites)
 
-#Sound effects
+#Sound effects for shooting, and in the case of a tank dying.
 global tankShootSFX, tankDeadSFX
 tankShootSFX = pygame.mixer.Sound("Sounds/tank_shoot.mp3")
 tankDeadSFX = pygame.mixer.Sound("Sounds/tank_dead.mp3")
