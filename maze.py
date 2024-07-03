@@ -178,14 +178,20 @@ class Tank(pygame.sprite.Sprite):
             print("Error: Invalid tank name")
 
         if self.health <= 0:
+            global explosionGroup
             if self.name == p1TankName:
                 gun1.setCooldown()
                 gun1.kill()
+                global gun1Cooldown
+                gun1Cooldown = 300
                 tank1.setCentre(2000, 2000)
                 self.kill()
                 allSprites.remove(gun1)
                 allSprites.remove(self)
+                explosion = Explosion(self.x, self.y)
+                explosionGroup.add(explosion)
             elif self.name == p2TankName:
+                explosion = Explosion(tank2.getCenter()[0], tank2.getCenter()[1])
                 gun2.setCooldown()
                 global gun2Cooldown
                 gun2Cooldown = 300
@@ -194,6 +200,7 @@ class Tank(pygame.sprite.Sprite):
                 self.kill()
                 allSprites.remove(gun2)
                 allSprites.remove(self)
+                explosionGroup.add(explosion)
             else:
                 print("Error: Invalid tank name")
 
@@ -602,6 +609,53 @@ class Tile:
         self.border[borderidx] = value
         self.neighbours, self.bordering = self.neighbourCheck() # Update the neighbours list
 
+class Explosion(pygame.sprite.Sprite):    
+    def __init__(self, x, y):
+        super().__init__()
+        self.images = []
+        SpriteSheetImage = pygame.image.load('explosion.png').convert_alpha()
+        for i in range(48):
+            self.images.append(self.get_image(SpriteSheetImage, i, 128, 128, 0.5))
+        self.index = 0
+        self.image = self.images[self.index]
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+        self.lastUpdate = pygame.time.get_ticks()
+        global animationCool
+        self.animationCooldown = animationCool
+
+    def get_image(self, sheet, frame, width, height, scale):
+        # This function will use the spritesheet to get the respective image from the sprite sheet
+        # Inputs: Sheet: The required sprite sheet for the animation
+        # Inputs: Frame: The frame index of the animation
+        # Inputs: Width: The width of the frame
+        # Inputs: Height: The height of the frame
+        # Inputs: Scale: The scale of which to scale the image to
+        # Outputs: The image of the frame
+        image = pygame.Surface((width, height)).convert_alpha()
+        image.blit(sheet, (0, 0), ((frame*width%1024), (frame//8 * width), width, height))
+        image = pygame.transform.scale(image, (width * scale, height * scale))
+        image.set_colorkey((0, 0, 0)) # Black
+        return image
+
+    def update(self):
+        # This function will update the explosion animation every frame
+        # Inputs: None
+        # Outputs: None
+        currentTime = pygame.time.get_ticks()
+        if currentTime - self.lastUpdate >= self.animationCooldown:
+            self.lastUpdate = currentTime
+            self.index += 1
+        if self.index >= len(self.images):
+            self.kill()
+        else:
+            self.image = self.images[self.index]
+
+    def setCooldown(self, num):
+        self.animationCooldown = num
+    def getCooldown(self):
+        return self.animationCooldown
+
 #Functions
 def tileGen():
     # This function is responsible for generating the tiles for the maze
@@ -906,6 +960,8 @@ gameOverFlag = False
 startTime = 0
 cooldownTimer = False
 
+global animationCool
+animationCool = 12
 
 
 lastlen = len(bulletSprites)
@@ -921,11 +977,19 @@ tankDeadSFX.set_volume(0.5)
 turretRotateSFX.set_volume(0.2)
 tankMoveSFX.set_volume(0.05)
 
+
+global explosionGroup
+explosionGroup = pygame.sprite.Group()
+
 #Main loop
 while not done:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            x, y = pygame.mouse.get_pos()
+            explosion = Explosion(x, y)
+            explosionGroup.add(explosion)
         elif event.type == pygame.KEYDOWN: # Any key pressed
             if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
                 done = True
@@ -940,15 +1004,15 @@ while not done:
             if event.key == pygame.K_i:
                 print("The current mouse position is: ", mouse)
             if event.key == pygame.K_o:
-                weightTrue += 0.01
-                print("The current weightTrue is: ", weightTrue)
+                animationCool -= 1
+                print("The current animation cooldown is: ", animationCool)
             if event.key == pygame.K_p:
-                weightTrue -= 0.01
-                print("The current weightTrue is: ", weightTrue)
+                animationCool += 1
+                print("The current animation cooldown is: ", animationCool)
             if event.key == pygame.K_l:
                 pass
             if event.key == pygame.K_k:
-                pass
+                pass                
             if event.key == pygame.K_n:
                 tileList = tileGen()
                 spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
@@ -1055,12 +1119,14 @@ while not done:
     #Update the location of the corners
     tank1.updateCorners()
     tank2.updateCorners()
-    pygame.draw.polygon(screen, GREEN, tank1.getCorners(), 2) #Hit box outline
-    pygame.draw.polygon(screen, GREEN, tank2.getCorners(), 2) #Hit box outline
+    # pygame.draw.polygon(screen, GREEN, tank1.getCorners(), 2) #Hit box outline
+    # pygame.draw.polygon(screen, GREEN, tank2.getCorners(), 2) #Hit box outline
     allSprites.update()
     bulletSprites.update()
+    explosionGroup.update()
     allSprites.draw(screen)
     bulletSprites.draw(screen)
+    explosionGroup.draw(screen)
 
     pygame.time.Clock().tick(240)
 
