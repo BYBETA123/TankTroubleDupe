@@ -923,7 +923,7 @@ while not done:
         gameOverFlag = False
         cooldownTimer = True
     if cooldownTimer:
-        if time.time() - start_time >= 30:
+        if time.time() - start_time >= 3:
             #Reset the game
             gameOverFlag = False
             cooldownTimer = False
@@ -950,7 +950,7 @@ while not done:
             tank1Dead = False
             tank2Dead = False
             gun1Cooldown = 0
-            gun2Cooldown = gun2.setCooldown()
+            gun2Cooldown = 0
 
     #Making the string for score
     p1ScoreText = str(p1Score)
@@ -988,6 +988,7 @@ while not done:
     pygame.draw.rect(screen, GREY, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth*((100-tank2Health)/100), barHeight])
     pygame.draw.rect(screen, BLACK, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth, barHeight], 2)
     #Reload bars
+    print(gun2Cooldown)
     pygame.draw.rect(screen, BLUE, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + 25, barWidth*((300-gun2Cooldown)/300), barHeight]) # The 25 is to space from the health bar
     pygame.draw.rect(screen, BLACK, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + 25, barWidth, barHeight], 2) # Outline
 
