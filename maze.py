@@ -1131,19 +1131,15 @@ tankShootSFX = pygame.mixer.Sound("Sounds/tank_shoot.mp3")
 tankDeadSFX = pygame.mixer.Sound("Sounds/tank_dead.mp3")
 turretRotateSFX = pygame.mixer.Sound("Sounds/tank_turret_rotate.wav")
 tankMoveSFX = pygame.mixer.Sound("Sounds/tank_moving.mp3")
-lobbyMusic = pygame.mixer.Sound("Sounds/lobby_music.wav")
-tankShootMax = 1
-tankDeadMax = 0.5
-turretRotateMax = 0.2
-tankMoveMax = 0.05
-lobbyMusicMax = 0.2
-gameMusicMax = 0.2
-selectionMusicMax = 1
-explosionGroup = pygame.sprite.Group() #All the explosions
+tankShootSFX.set_volume(0.5)
+tankDeadSFX.set_volume(0.5)
+turretRotateSFX.set_volume(0.2)
+tankMoveSFX.set_volume(0.05)
 
-initialStartTime = pygame.time.get_ticks()
-soundPlayed = False
 
+global explosionGroup
+explosionGroup = pygame.sprite.Group()
+    
 #Main loop
 while not done:
     for event in pygame.event.get():
@@ -1171,7 +1167,7 @@ while not done:
 
         elif event.type == pygame.KEYDOWN: # Any key pressed
             if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
-                done = True
+                pass 
             if event.key == pygame.K_w:
                 pass
             if event.key == pygame.K_e:
@@ -1221,16 +1217,107 @@ while not done:
 
     screen.fill(bg) # This is the first line when drawing a new frame
 
-    if gameMode == GameMode.play:
-        playGame()
-    elif gameMode == GameMode.pause:
-        pauseScreen()
-        if pygame.mouse.get_pressed()[0]:
-            mute.updateSlider(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
-            sfx.updateSlider(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
-    else:
-        screen.fill(c.geT("WHITE"))
-    clock.tick(240) # Set the FPS
+    if gameOverFlag:
+        #The game is over
+        startTime = time.time() #Start a 5s timer
+        gameOverFlag = False
+        cooldownTimer = True
+    if cooldownTimer:
+        if time.time() - startTime >= 3:
+            #Reset the game
+            gameOverFlag = False
+            cooldownTimer = False
+            for sprite in allSprites:
+                sprite.kill()
+            for sprite in bulletSprites:
+                sprite.kill()
+            tileList = tileGen()
+            spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
+            spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
+            tank1.setCoords(spawnTank1[0], spawnTank1[1])
+            tank2.setCoords(spawnTank2[0], spawnTank2[1])
+            startTime = 0
+            gameOverFlag = False
+            tank1 = Tank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
+            tank2 = Tank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName)
+            gun1 = Gun(tank1, controlsTank1, p1GunName)
+            gun2 = Gun(tank2, controlsTank2, p2GunName)
+            tank1Health = 100
+            tank2Health = 100
+
+            
+            tank1Dead = False
+            tank2Dead = False
+            gun1Cooldown = 0
+            gun2Cooldown = 0
+    
+
+    
+
+    #Making the string for score
+    p1ScoreText = str(p1Score)
+    p2ScoreText = str(p2Score)
+    
+    #Setting up the text
+    fontScore = pygame.font.SysFont('Calibri', 100, True, False)
+    fontName = pygame.font.SysFont('Calibri', 35, True, False)
+    # Player 1 Text
+    textp1 = fontScore.render(p1ScoreText, True, WHITE)
+    textp1Name = fontName.render(" Plwasd1", True, WHITE)
+
+    # Player 2 Text
+    textp2 = fontScore.render(p2ScoreText, True, WHITE)
+    textp2Name = fontName.render(" Plarro2", True, WHITE)
+
+    #Misc Text
+    text3 = fontScore.render("-",True,WHITE)
+
+    #Visualing player 1
+    screen.blit(textp1,[windowWidth/2 - textp1.get_width()-text3.get_width()/2, 0.8*windowHeight]) # This is the score on the left
+    screen.blit(textp1Name,[p1NameIndent, 0.783*windowHeight]) # This is the name on the left
+    #Health bars outline
+    #Health bar
+    pygame.draw.rect(screen, RED, [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth*((tank1Health)/100), barHeight]) # Bar
+    pygame.draw.rect(screen, BLACK, [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth, barHeight], 2) # Outline
+    #Reload bars
+    pygame.draw.rect(screen, BLUE, [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + 25, barWidth*((300-gun1Cooldown)/300), barHeight]) # The 25 is to space from the health bar
+    pygame.draw.rect(screen, BLACK, [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + 25, barWidth, barHeight], 2) # Outline
+    #Visualising player 2
+    screen.blit(textp2,[windowWidth/2 + text3.get_width()*1.5, 0.8*windowHeight]) # This is the score on the right 
+    screen.blit(textp2Name,[p2NameIndent - textp2Name.get_width(), 0.783*windowHeight]) # This is the name on the left
+    #Health bars
+    pygame.draw.rect(screen, RED, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth, barHeight])
+    pygame.draw.rect(screen, GREY, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth*((100-tank2Health)/100), barHeight])
+    pygame.draw.rect(screen, BLACK, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth, barHeight], 2)
+    #Reload bars
+    pygame.draw.rect(screen, BLUE, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + 25, barWidth*((300-gun2Cooldown)/300), barHeight]) # The 25 is to space from the health bar
+    pygame.draw.rect(screen, BLACK, [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + 25, barWidth, barHeight], 2) # Outline
+
+    # Misc text and other little pieces
+    screen.blit(text3,[windowWidth/2,0.79*windowHeight])
+
+    # Draw the border
+    pygame.draw.rect(screen, BLACK, [mazeX, mazeY, mazeWidth,mazeHeight], 1) # The maze border
+
+
+    for tile in tileList:
+        tile.draw(screen)
+
+    #Anything below here will be drawn on top of the maze
+
+    #Update the location of the corners
+    tank1.updateCorners()
+    tank2.updateCorners()
+    # pygame.draw.polygon(screen, GREEN, tank1.getCorners(), 2) #Hit box outline
+    # pygame.draw.polygon(screen, GREEN, tank2.getCorners(), 2) #Hit box outline
+    allSprites.update()
+    bulletSprites.update()
+    explosionGroup.update()
+    allSprites.draw(screen)
+    bulletSprites.draw(screen)
+    explosionGroup.draw(screen)
+
+    pygame.time.Clock().tick(240)
 
     pygame.display.flip()# Update the screen
 
