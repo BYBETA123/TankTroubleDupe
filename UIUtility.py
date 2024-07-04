@@ -36,7 +36,7 @@ class Button:
             text=font.render(self.text, 1, self.textColor)
             screen.blit(text, (self.x + (self.width/2 - text.get_width()/2), self.y + (self.height/2 - text.get_height()/2)))
 
-    def ButtonClick(self, mouse):
+    def buttonClick(self, mouse):
         # If there is a click detected, check this button
         # Inputs: mouse: the current mouse coordinates
         # Outputs: None
