@@ -774,7 +774,7 @@ class ButtonSlider:
     def getValue(self):
         if self.clicked:
             return 0
-        return self.getPercentage()
+        return self.getPercentage()/100
 
 class GameMode(Enum):
     #This class is responsible for the game mode
@@ -1242,11 +1242,14 @@ tankShootSFX = pygame.mixer.Sound("Sounds/tank_shoot.mp3")
 tankDeadSFX = pygame.mixer.Sound("Sounds/tank_dead.mp3")
 turretRotateSFX = pygame.mixer.Sound("Sounds/tank_turret_rotate.mp3")
 tankMoveSFX = pygame.mixer.Sound("Sounds/tank_moving.mp3")
+lobbyMusic = pygame.mixer.Sound("Sounds/lobby_music.mp3")
 tankShootSFX.set_volume(0.5)
 tankDeadSFX.set_volume(0.5)
 turretRotateSFX.set_volume(0.2)
 tankMoveSFX.set_volume(0.05)
 explosionGroup = pygame.sprite.Group() #All the explosions
+
+lobbyMusic.play(-1) # Play the lobby music
 
 #Main loop
 while not done:
@@ -1311,6 +1314,7 @@ while not done:
                 if gameMode == GameMode.play:
                     reset()
                 
+    lobbyMusic.set_volume(mute.getValue())
 
     mouse = pygame.mouse.get_pos() #Update the position
 
