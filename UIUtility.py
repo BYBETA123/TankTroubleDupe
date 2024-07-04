@@ -2,7 +2,7 @@ import pygame
 
 class Button:
     buttonState = False #False = Not clicked, True = Clicked
-    def __init__(self, color = (0, 0, 0), secondaryColor = (255, 255, 255), x = 0, y = 0, width = 0, height = 0, text = '', textColor = (0, 0, 0)):
+    def __init__(self, color = (0, 0, 0), secondaryColor = (255, 255, 255), x = 0, y = 0, width = 0, height = 0, text = '', textColor = (0, 0, 0), textSize = 20):
         # This function will initialise the button class
         # Inputs: color: The color of the button
         # Inputs: secondaryColor: The color of the button when clicked
@@ -22,6 +22,7 @@ class Button:
         self.textColor = textColor
         self.secondaryColor = secondaryColor
         self.display = self.color
+        self.textSize = textSize
     def draw(self, screen, outline=None):
         # Draw the button
         # Inputs: screen: The screen to draw the button on
@@ -32,7 +33,7 @@ class Button:
             pygame.draw.rect(screen, (0, 0, 0), (self.x, self.y, self.width, self.height), 1)
 
         if self.text != '':
-            font = pygame.font.SysFont('Ariel', 20)
+            font = pygame.font.SysFont('Ariel', self.textSize)
             text=font.render(self.text, 1, self.textColor)
             screen.blit(text, (self.x + (self.width/2 - text.get_width()/2), self.y + (self.height/2 - text.get_height()/2)))
 
