@@ -1,23 +1,41 @@
 import pygame
 import os
 from UIUtility import Button
+
 pygame.init()
-#Menu and selection screen
+
+# Menu and selection screen dimensions
 windowWidth = 800
 windowHeight = 600
 
-screen = pygame.display.set_mode((windowWidth,windowHeight))
+screen = pygame.display.set_mode((windowWidth, windowHeight))
+pygame.display.set_caption('Tank Game Menu')  # Set the window title
+
 running = True
 
 clock = pygame.time.Clock()
 buttonList = []
-playButton = Button((0, 0, 0), (0, 0, 255), 150, 400, 175, 70, 'Play', (255, 255, 255), hoverColor=(100, 100, 255))
-settingsButton = Button((0, 0, 0), (0, 0, 255), 475, 400, 175, 70, 'Settings', (255, 255, 255), hoverColor=(100, 100, 255))
-quitButton = Button((0, 0, 0), (0, 0, 255), 10, 10, 130, 50, 'Quit', (255, 255, 255), hoverColor=(100, 100, 255))
+
+# Load the tank image
+currentDir = os.path.dirname(__file__)
+tankPath = os.path.join(currentDir, 'tank_menu_logo.png')
+originalTankImage = pygame.image.load(tankPath).convert_alpha()
+
+
+
+# Create buttons with specified positions and text
+playButton = Button((0, 0, 0), (0, 0, 255), 150, 400, 175, 70, 'Play', (255, 255, 255), 30, hoverColor=(100, 100, 255))
+settingsButton = Button((0, 0, 0), (0, 0, 255), 475, 400, 175, 70, 'Settings', (255, 255, 255), 30, hoverColor=(100, 100, 255))
+quitButton = Button((0, 0, 0), (0, 0, 255), 10, 10, 130, 50, 'Quit', (255, 255, 255), 25, hoverColor=(100, 100, 255))
+
 buttonList.append(playButton)
 buttonList.append(settingsButton)
 buttonList.append(quitButton)
-    
+
+# Define title text properties
+titleFont = pygame.font.SysFont('Arial', 60)
+titleText = titleFont.render('Tank Game Menu', True, (0, 0, 0))  # Render the title text
+
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -26,21 +44,26 @@ while running:
             if event.button == 1:
                 for button in buttonList:
                     if button.ButtonClick(pygame.mouse.get_pos()):
-                        print('Hello')
                         button.clicked = True
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 running = False
 
     # Clear screen with the chosen color
-    screen.fill((255, 0, 0))
+    screen.fill((255, 255, 255))
+
+    # Draw the tank image
+    screen.blit(originalTankImage, (230, 65))  # Adjust the coordinates as needed
+
+    # Draw the title text
+    screen.blit(titleText, (windowWidth // 2 - titleText.get_width() // 2, 50))  # Centered horizontally, 50 pixels from top
 
     # Handle hover effect and draw buttons
     mouse_pos = pygame.mouse.get_pos()
     for button in buttonList:
         button.update_display(mouse_pos)
         button.draw(screen, outline=True)
-    
+
     # Update display
     pygame.display.flip()
 
@@ -49,4 +72,3 @@ while running:
 
 # Quit Pygame
 pygame.quit()
-
