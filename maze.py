@@ -4,7 +4,7 @@ import math
 import time
 import os
 from ColorDictionary import ColorDicionary
-
+from enum import Enum
 #Classes
 
 # Tank sprite class
@@ -659,6 +659,7 @@ class Explosion(pygame.sprite.Sprite):
         return self.animationCooldown
 
 class Button:
+    buttonState = False #False = Not clicked, True = Clicked
     def __init__(self, color = (0, 0, 0), secondaryColor = (255, 255, 255), x = 0, y = 0, width = 0, height = 0, text = '', textColor = (0, 0, 0)):
         self.color = color
         self.x = x
@@ -668,27 +669,122 @@ class Button:
         self.text = text
         self.textColor = textColor
         self.secondaryColor = secondaryColor
-
+        self.display = self.color
     def draw(self, screen, outline=None):
+        pygame.draw.rect(screen, self.display, (self.x, self.y, self.width, self.height), 0)
         if outline:
-            pygame.draw.rect(screen, outline, (self.x-2, self.y-2, self.width+4, self.height+4), 0)
-        mouse = pygame.mouse.get_pos()
-        if self.x < mouse[0] < self.x + self.width and self.y < mouse[1] < self.y + self.height:
+            pygame.draw.rect(screen, (0, 0, 0), (self.x, self.y, self.width, self.height), 1)
 
-            pygame.draw.rect(screen, self.color, (self.x, self.y, self.width, self.height), 0)
-        else:
-            pygame.draw.rect(screen, self.secondaryColor, (self.x, self.y, self.width, self.height), 0)
 
         if self.text != '':
             font = pygame.font.SysFont('Ariel', 20)
             text=font.render(self.text, 1, self.textColor)
             screen.blit(text, (self.x + (self.width/2 - text.get_width()/2), self.y + (self.height/2 - text.get_height()/2)))
 
-    def ButtonClick(self):
-        self.text = 'Clicked: ' + self.text
+    def ButtonClick(self, mouse):
+        if not(self.x < mouse[0] < self.x + self.width and self.y < mouse[1] < self.y + self.height):
+            return # We didn't click this button
+        self.buttonState = not self.buttonState
+        if self.buttonState:
+            self.display = self.secondaryColor
+        else:
+            self.display = self.color
+        pass # Any action that needs to be processed when the button is clicked
 
     def getCorners(self):
         return (self.x, self.y, self.x+self.width, self.y+self.height)
+
+class ButtonSlider:
+     
+    carrierX = 20
+    carrierY = 10
+    carLocationX = 0
+    barY = 4
+    buttonSpacing = 50
+    clicked = False
+    def __init__(self, color = (0, 0, 0), secondaryColor = (255, 255, 255), x = 0, y = 0, buttonWidth = 0, buttonHeight = 0, width = 0, height = 0, text = '', textColor = (0, 0, 0), buttonColor = (0,0,0), buttonSecondaryColor=(0,0,0)):
+        self.color = color
+        self.x = x
+        self.y = y
+        self.buttonWidth = buttonWidth
+        self.buttonHeight = buttonHeight
+        self.width = width
+        self.height = height
+        self.secondaryColor = secondaryColor
+        self.carrierX = height//5
+        self.carrierY = height//2
+        self.carLocationX = self.x + self.width
+        self.text = text
+        self.textColor = textColor
+        self.display = self.color
+        self.buttonColor = buttonColor
+        self.buttonSecondaryColor = buttonSecondaryColor
+    def draw(self, screen, outline=None):
+
+        #Button
+        pygame.draw.rect(screen, self.display, (self.x, self.y - self.buttonHeight/2, self.buttonWidth, self.buttonHeight), 0) #Button
+
+        #Text
+        if self.text != '':
+            font = pygame.font.SysFont('Ariel', 20)
+            text=font.render(self.text, 1, self.textColor)
+            screen.blit(text, (self.x + (text.get_width()/2) - self.buttonWidth/4, self.y + (text.get_height()/2)-self.buttonHeight/4))
+
+        #Slider
+        pygame.draw.rect(screen, self.color, (self.x + self.buttonSpacing *2, self.y-self.barY, self.width, self.barY*2), 0) # Bar
+
+        pygame.draw.rect(screen, self.secondaryColor, (self.carLocationX - self.carrierX/2 + self.buttonSpacing *2, self.y - self.carrierY/2, self.carrierX, self.carrierY), 0) # Carrier
+
+        #Percentage bar
+        text = pygame.font.SysFont('Arial', 50).render(str(int(self.getPercentage())), True, (0, 0, 0))
+        screen.blit(text, (self.x + self.width + self.buttonSpacing*2.5, self.y - text.get_height()//2))
+
+        #Outlines
+        if outline:
+            pygame.draw.rect(screen, (0, 0, 255), (self.x + self.buttonSpacing*2, self.y - self.carrierY/2, self.width, self.carrierY), 1)
+
+    def ButtonClick(self):
+        print("Button clicked")
+        self.clicked = not self.clicked
+        if self.clicked:
+            self.display = self.buttonSecondaryColor
+        else:
+            self.display = self.buttonColor
+
+
+    def getCorners(self):
+        return (self.x, self.y - self.buttonHeight/2, self.x+self.buttonWidth, self.y + self.buttonHeight / 2)
+
+    def updateSlider(self, mouseX, mouseY):
+        if not(self.y - self.height/2 < mouseY < self.y + self.height/2 and self.x + self.buttonSpacing*2 < mouseX < self.x + self.width + self.buttonSpacing*2):
+            return
+        #If we are on the slier
+        if self.clicked:
+            self.ButtonClick()
+        self.carLocationX = mouseX - self.buttonSpacing*2
+
+    def getPercentage(self):
+        percentage = round(round((self.carLocationX - self.x) / (self.width), 2)*100,3)
+        return percentage
+
+    def checkButtonClick(self, mouseX, mouseY):
+        if self.x < mouseX < self.x + self.buttonWidth and self.y < mouseY + self.buttonHeight/2 < self.y + self.buttonHeight:
+            self.ButtonClick()
+
+    def getValue(self):
+        if self.clicked:
+            return 0
+        return self.getPercentage()
+
+class GameMode(Enum):
+    #This class is responsible for the game mode
+    # This class doesn't have other function as they are not needed
+    play = 1
+    pause = 0
+    home = 2
+    settings = 3
+
+
 #Functions
 def tileGen():
     # This function is responsible for generating the tiles for the maze
@@ -965,6 +1061,7 @@ def pauseScreen():
     pygame.draw.rect(screen, c.geT("BLACK"), [mazeX, mazeY, pauseWidth, pauseHeight], 5)
 
     #Buttons
+
     unPause.draw(screen, outline = True)
     home.draw(screen, outline = True)
     quitButton.draw(screen, outline = True)
@@ -1058,7 +1155,7 @@ colAmount = mazeWidth//tileSize # Assigning the amount of columns
 barWidth = 150
 barHeight = 20
 bg = c.geT('GREY')
-gameMode = 1 # 1 is for single player, 2 is for multiplayer
+gameMode = GameMode.pause # 1 is for single player, 2 is for multiplayer
 #Changing variables
 p1TankName = "Plwasd1"
 p2TankName = "Plarro2"
@@ -1076,9 +1173,8 @@ sliderY = windowHeight/8
 home = Button(c.geT("GREEN"), c.geT("WHITE"),indentFromLeft * 1.5 , indentFromRight * 1.8, tileSize, tileSize, 'Home')
 quitButton = Button(c.geT("GREEN"), c.geT("WHITE"), windowWidth - indentFromLeft * 2.5, indentFromRight * 1.8, tileSize, tileSize, 'Quit')
 unPause = Button(c.geT("GREEN"), c.geT("WHITE"), windowWidth/2 - 200, 0.8 * windowHeight, 400, tileSize, 'Return to Game')
-mute = Button(c.geT("GREEN"), c.geT("WHITE"), sliderX, sliderY*3 - tileSize, tileSize, tileSize, 'Mute')
-sfx = Button(c.geT("GREEN"), c.geT("WHITE"), sliderX, sliderY*5 - tileSize, tileSize, tileSize, 'SFX')
-
+mute = ButtonSlider(c.geT("BLACK"), c.geT("BLUE"), sliderX, sliderY*3, tileSize, tileSize, tileSize*8, tileSize*2, 'mute', c.geT("WHITE"), c.geT("BLACK"), c.geT("RED"))
+sfx = ButtonSlider(c.geT("BLACK"), c.geT("BLUE"), sliderX, sliderY*5 - tileSize, tileSize, tileSize, tileSize*8, tileSize*2, 'SFX', c.geT("WHITE"), c.geT("BLACK"), c.geT("RED"))
 
 
 #Start the game setup
@@ -1158,22 +1254,29 @@ while not done:
         if event.type == pygame.QUIT:
             done = True
         elif event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button != 1:
+                #Not left click
+                break
             mouse = pygame.mouse.get_pos()
-            if gameMode == 0:
+            if gameMode == GameMode.pause:
                 #We are paused
                 if unPause.getCorners()[0] <= mouse[0] <= unPause.getCorners()[2] and unPause.getCorners()[1] <= mouse[1] <= unPause.getCorners()[3]: #If we click the button
-                    gameMode = 1 # Return to game if button was clicked
+                    gameMode = GameMode.play # Return to game if button was clicked
                 if home.getCorners()[0] <= mouse[0] <= home.getCorners()[2] and home.getCorners()[1] <= mouse[1] <= home.getCorners()[3]:
                     print("Returnning to home")
                     print("This isn't implemented yet, choose another action")
                 if quitButton.getCorners()[0] <= mouse[0] <= quitButton.getCorners()[2] and quitButton.getCorners()[1] <= mouse[1] <= quitButton.getCorners()[3]:
+                    print("Quitting the game")
                     done = True # We quit the appplication
                 if mute.getCorners()[0] <= mouse[0] <= mute.getCorners()[2] and mute.getCorners()[1] <= mouse[1] <= mute.getCorners()[3]:
+                    mute.ButtonClick()
                     print("Mute button pressed")
                     print("This isn't implemented yet, choose another action")
                 if sfx.getCorners()[0] <= mouse[0] <= sfx.getCorners()[2] and sfx.getCorners()[1] <= mouse[1] <= sfx.getCorners()[3]:
+                    sfx.ButtonClick()
                     print("SFX button pressed")
                     print("This isn't implemented yet, choose another action")
+
         elif event.type == pygame.KEYDOWN: # Any key pressed
             if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
                 done = True
@@ -1188,27 +1291,24 @@ while not done:
             if event.key == pygame.K_i:
                 print("The current mouse position is: ", mouse)
             if event.key == pygame.K_o:
-                arbitraryWidth -= 10
-                print("The current arbitrary width is: ", arbitraryWidth)
+                pass
             if event.key == pygame.K_p:
                 #Pause
-                if gameMode == 0:
-                    gameMode = 1 # Return to game if button was clicked
-                elif gameMode == 1:
-                    gameMode = 0 # Pause the game
+                if gameMode == GameMode.pause:
+                    gameMode = GameMode.play # Return to game if button was clicked
+                elif gameMode == GameMode.play:
+                    gameMode = GameMode.pause # Pause the game
             if event.key == pygame.K_l:
-                arbitraryHeight += 10
-                print("The current arbitrary height is: ", arbitraryHeight)
+                pass
             if event.key == pygame.K_k:
-                arbitraryHeight -= 10
-                print("The current arbitrary height is: ", arbitraryHeight)
+                pass
             if event.key == pygame.K_f:
                 print("The current FPS is: ", clock.get_fps())
             if event.key == pygame.K_n:
-                if gameMode == 1:
+                if gameMode == GameMode.play:
                     reset()
             if event.key == pygame.K_0:
-                if gameMode == 1:
+                if gameMode == GameMode.play:
                     reset()
                 
 
@@ -1216,10 +1316,13 @@ while not done:
 
     screen.fill(bg) # This is the first line when drawing a new frame
 
-    if gameMode == 1:
+    if gameMode == GameMode.play:
         playGame()
-    elif gameMode == 0:
+    elif gameMode == GameMode.pause:
         pauseScreen()
+        if pygame.mouse.get_pressed()[0]:
+            mute.updateSlider(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
+            sfx.updateSlider(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
     else:
         screen.fill(c.geT("WHITE"))
     clock.tick(240) # Set the FPS
