@@ -27,12 +27,13 @@ class Button:
 
     def ButtonClick(self, mouse):
         if not(self.x < mouse[0] < self.x + self.width and self.y < mouse[1] < self.y + self.height):
-            return
+            return False
         self.buttonState = not self.buttonState
         if self.buttonState:
             self.display = self.secondaryColor
         else:
             self.display = self.color
+        return True
 
     def getCorners(self):
         return (self.x, self.y, self.x + self.width, self.y + self.height)
@@ -128,10 +129,10 @@ class ButtonSlider:
 class TextBox:
     paddingWidth, paddingHeight = 10, 10
     characterPad = 10
-    def __init__(self, x, y, font, text='Click me!', fontSize = 20):
+    def __init__(self, x, y, font, text='Click me!', fontSize = 20, textColor = (0,0,0)):
         self.font = font
         self.text = text.center(10)
-        self.text_color = (0,0,0)
+        self.text_color = textColor
         self.box_color = (0,0,255)
         self.clicked = False
         self.fontSize = fontSize
