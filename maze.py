@@ -953,8 +953,8 @@ def pauseScreen():
     unPause.draw(screen, outline = True)
     home.draw(screen, outline = True)
     quitButton.draw(screen, outline = True)
-    mute.draw(screen, outline = True)
-    sfx.draw(screen, outline = True)
+    mute.draw(screen, outline = False)
+    sfx.draw(screen, outline = False)
     pass
 
 def reset():
@@ -1137,9 +1137,12 @@ tankDeadMax = 0.5
 turretRotateMax = 0.2
 tankMoveMax = 0.05
 lobbyMusicMax = 0.2
+gameMusicMax = 0.2
+selectionMusicMax = 1
 explosionGroup = pygame.sprite.Group() #All the explosions
 
-lobbyMusic.play(-1) # Play the lobby music
+initialStartTime = pygame.time.get_ticks()
+soundPlayed = False
 
 #Main loop
 while not done:
@@ -1163,12 +1166,8 @@ while not done:
                     done = True # We quit the appplication
                 if mute.getCorners()[0] <= mouse[0] <= mute.getCorners()[2] and mute.getCorners()[1] <= mouse[1] <= mute.getCorners()[3]:
                     mute.ButtonClick()
-                    print("Mute button pressed")
-                    print("This isn't implemented yet, choose another action")
                 if sfx.getCorners()[0] <= mouse[0] <= sfx.getCorners()[2] and sfx.getCorners()[1] <= mouse[1] <= sfx.getCorners()[3]:
                     sfx.ButtonClick()
-                    print("SFX button pressed")
-                    print("This isn't implemented yet, choose another action")
 
         elif event.type == pygame.KEYDOWN: # Any key pressed
             if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
@@ -1192,11 +1191,11 @@ while not done:
                 elif gameMode == GameMode.play:
                     gameMode = GameMode.pause # Pause the game
             if event.key == pygame.K_l:
-                turretRotateMax -= 0.01
-                print("The current volume is: ", turretRotateMax)
+                lobbyMusicMax -= 0.01
+                print("The current volume is: ", lobbyMusicMax)
             if event.key == pygame.K_k:
-                turretRotateMax += 0.01
-                print("The current volume is: ", turretRotateMax)
+                lobbyMusicMax += 0.01
+                print("The current volume is: ", lobbyMusicMax)
             if event.key == pygame.K_f:
                 print("The current FPS is: ", clock.get_fps())
             if event.key == pygame.K_n:
@@ -1207,6 +1206,12 @@ while not done:
                     reset()
             if event.key == pygame.K_m:
                 mute.mute()
+
+    #Start the lobby music
+    if not soundPlayed and pygame.time.get_ticks() - initialStartTime > 2000: # Delay by 1 second
+        lobbyMusic.play(-1)
+        soundPlayed = True
+
     lobbyMusic.set_volume(mute.getValue() * lobbyMusicMax)
     tankShootSFX.set_volume(sfx.getValue() * tankShootMax)
     tankDeadSFX.set_volume(sfx.getValue() * tankDeadMax)
