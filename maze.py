@@ -980,7 +980,7 @@ tankMoveSFX.set_volume(0.05)
 
 global explosionGroup
 explosionGroup = pygame.sprite.Group()
-
+    
 #Main loop
 while not done:
     for event in pygame.event.get():
@@ -992,7 +992,7 @@ while not done:
             explosionGroup.add(explosion)
         elif event.type == pygame.KEYDOWN: # Any key pressed
             if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
-                done = True
+                pass 
             if event.key == pygame.K_w:
                 pass
             if event.key == pygame.K_e:
@@ -1057,13 +1057,15 @@ while not done:
             gun2 = Gun(tank2, controlsTank2, p2GunName)
             tank1Health = 100
             tank2Health = 100
-            allSprites = pygame.sprite.Group()
-            allSprites.add(tank1, gun1, tank2, gun2)
-            bulletSprites = pygame.sprite.Group()
+
+            
             tank1Dead = False
             tank2Dead = False
             gun1Cooldown = 0
             gun2Cooldown = 0
+    
+
+    
 
     #Making the string for score
     p1ScoreText = str(p1Score)
