@@ -21,7 +21,7 @@ class Button:
             pygame.draw.rect(screen, (0, 0, 0), (self.x, self.y, self.width, self.height), 1)
 
         if self.text != '':
-            font = pygame.font.SysFont('Ariel', self.textSize)
+            font = pygame.font.SysFont('Courier New', self.textSize)
             text = font.render(self.text, 1, self.textColor)
             screen.blit(text, (self.x + (self.width / 2 - text.get_width() / 2), self.y + (self.height / 2 - text.get_height() / 2)))
 
@@ -189,3 +189,6 @@ class TextBox:
 
     def setCharacterPad(self, characterPad):
         self.characterPad = characterPad
+
+    def setBoxColor(self, color):
+        self.box_color = color
