@@ -184,6 +184,8 @@ class Tank(pygame.sprite.Sprite):
             if self.name == p1TankName:
                 gun1.setCooldown()
                 gun1.kill()
+                tankMoveSFX.stop()
+                turretRotateSFX.stop()
                 global gun1Cooldown
                 gun1Cooldown = 300
                 tank1.setCentre(2000, 2000)
@@ -195,6 +197,8 @@ class Tank(pygame.sprite.Sprite):
             elif self.name == p2TankName:
                 explosion = Explosion(tank2.getCenter()[0], tank2.getCenter()[1])
                 gun2.setCooldown()
+                tankMoveSFX.stop()
+                turretRotateSFX.stop()
                 global gun2Cooldown
                 gun2Cooldown = 300
                 gun2.kill()
@@ -301,7 +305,7 @@ class Gun(pygame.sprite.Sprite):
         if keys[self.controls['rotate_left']] or keys[self.controls['rotate_right']]:
             if self.rotationSpeed != 0:
                 if not self.soundPlaying:
-                    turretRotateSFX.play(-1)  # Play sound indefinitely
+                    turretRotateSFX.play(loops = -1, fade_ms = 100)  # Play sound indefinitely
                     self.soundPlaying = True
             else:
                 if self.soundPlaying:
@@ -776,6 +780,11 @@ class ButtonSlider:
             return 0
         return self.getPercentage()/100
 
+    def mute(self):
+        self.clicked = True
+        self.display = self.buttonSecondaryColor
+        
+
 class GameMode(Enum):
     #This class is responsible for the game mode
     # This class doesn't have other function as they are not needed
@@ -1240,13 +1249,14 @@ bulletSprites = pygame.sprite.Group()
 global tankShootSFX, tankDeadSFX, turretRotateSFX, tankMoveSFX
 tankShootSFX = pygame.mixer.Sound("Sounds/tank_shoot.mp3")
 tankDeadSFX = pygame.mixer.Sound("Sounds/tank_dead.mp3")
-turretRotateSFX = pygame.mixer.Sound("Sounds/tank_turret_rotate.mp3")
+turretRotateSFX = pygame.mixer.Sound("Sounds/tank_turret_rotate.wav")
 tankMoveSFX = pygame.mixer.Sound("Sounds/tank_moving.mp3")
 lobbyMusic = pygame.mixer.Sound("Sounds/lobby_music.mp3")
-tankShootSFX.set_volume(0.5)
-tankDeadSFX.set_volume(0.5)
-turretRotateSFX.set_volume(0.2)
-tankMoveSFX.set_volume(0.05)
+tankShootMax = 1
+tankDeadMax = 0.5
+turretRotateMax = 0.2
+tankMoveMax = 0.05
+lobbyMusicMax = 0.2
 explosionGroup = pygame.sprite.Group() #All the explosions
 
 lobbyMusic.play(-1) # Play the lobby music
@@ -1302,9 +1312,11 @@ while not done:
                 elif gameMode == GameMode.play:
                     gameMode = GameMode.pause # Pause the game
             if event.key == pygame.K_l:
-                pass
+                turretRotateMax -= 0.01
+                print("The current volume is: ", turretRotateMax)
             if event.key == pygame.K_k:
-                pass
+                turretRotateMax += 0.01
+                print("The current volume is: ", turretRotateMax)
             if event.key == pygame.K_f:
                 print("The current FPS is: ", clock.get_fps())
             if event.key == pygame.K_n:
@@ -1313,9 +1325,13 @@ while not done:
             if event.key == pygame.K_0:
                 if gameMode == GameMode.play:
                     reset()
-                
-    lobbyMusic.set_volume(mute.getValue())
-
+            if event.key == pygame.K_m:
+                mute.mute()
+    lobbyMusic.set_volume(mute.getValue() * lobbyMusicMax)
+    tankShootSFX.set_volume(sfx.getValue() * tankShootMax)
+    tankDeadSFX.set_volume(sfx.getValue() * tankDeadMax)
+    turretRotateSFX.set_volume(sfx.getValue() * turretRotateMax)
+    tankMoveSFX.set_volume(sfx.getValue() * tankMoveMax)
     mouse = pygame.mouse.get_pos() #Update the position
 
     screen.fill(bg) # This is the first line when drawing a new frame
