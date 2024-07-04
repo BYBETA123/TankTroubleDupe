@@ -126,8 +126,8 @@ class ButtonSlider:
         self.display = self.buttonSecondaryColor
 
 class TextBox:
-    padding = 10
-
+    paddingWidth, paddingHeight = 10, 10
+    characterPad = 10
     def __init__(self, x, y, font, text='Click me!', fontSize = 20):
         self.font = font
         self.text = text.center(10)
@@ -142,7 +142,7 @@ class TextBox:
         self.text_width, self.text_height = self.text_surface.get_size()
 
         # Create a rect for the text box with some padding
-        self.rect = pygame.Rect(x, y, self.text_width + 2 * self.padding, self.text_height + 2 * self.padding)
+        self.rect = pygame.Rect(x, y, self.text_width + 2 * self.paddingWidth, self.text_height + 2 * self.paddingHeight)
 
     def draw(self, screen, outline = False):
         # Draw the text box
@@ -165,18 +165,26 @@ class TextBox:
     def getHeight(self):
         return self.rect.height
     
+    def setPaddingWidth(self, paddingWidth):
+        self.paddingWidth = paddingWidth
+
+    def setPaddingHeight(self, paddingHeight):
+        self.paddingHeight = paddingHeight
 
     def setText(self, text):
         # Pad the text to at least 10 characters
-        self.text = text.center(10)
+        self.text = text.center(self.characterPad)
         
         # Update the text surface and its dimensions
         self.text_surface = pygame.font.SysFont(self.font,self.fontSize, bold = True).render(self.text, True, self.text_color)
         self.text_width, self.text_height = self.text_surface.get_size()
         
         # Update the text box rect size
-        self.rect.width = self.text_width + 2 * self.padding
-        self.rect.height = self.text_height + 2 * self.padding
+        self.rect.width = self.text_width + 2 * self.paddingWidth
+        self.rect.height = self.text_height + 2 * self.paddingHeight
 
     def ButtonClick(self, _):
         pass
+
+    def setCharacterPad(self, characterPad):
+        self.characterPad = characterPad
