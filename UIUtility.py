@@ -124,3 +124,59 @@ class ButtonSlider:
     def mute(self):
         self.clicked = True
         self.display = self.buttonSecondaryColor
+
+class TextBox:
+    padding = 10
+
+    def __init__(self, x, y, font, text='Click me!', fontSize = 20):
+        self.font = font
+        self.text = text.center(10)
+        self.text_color = (0,0,0)
+        self.box_color = (0,0,255)
+        self.clicked = False
+        self.fontSize = fontSize
+
+        # Get the text surface and its dimensions
+        # self.text_surface = self.font.render(self.text, True, self.text_color)
+        self.text_surface = pygame.font.SysFont(self.font,fontSize, bold=True).render(self.text, True, self.text_color)
+        self.text_width, self.text_height = self.text_surface.get_size()
+
+        # Create a rect for the text box with some padding
+        self.rect = pygame.Rect(x, y, self.text_width + 2 * self.padding, self.text_height + 2 * self.padding)
+
+    def draw(self, screen, outline = False):
+        # Draw the text box
+        pygame.draw.rect(screen, self.box_color, self.rect)
+        if outline:
+            pygame.draw.rect(screen, (0,0,0), self.rect, 1)
+
+        # Center the text within the box
+        text_x = self.rect.x + (self.rect.width - self.text_width) / 2
+        text_y = self.rect.y + (self.rect.height - self.text_height) / 2
+        screen.blit(self.text_surface, (text_x, text_y))
+
+
+    def getCorners(self):
+        return [self.rect.x, self.rect.y, self.rect.x + self.rect.width, self.rect.y + self.rect.height]
+    
+    def getWidth(self):
+        return self.rect.width
+
+    def getHeight(self):
+        return self.rect.height
+    
+
+    def setText(self, text):
+        # Pad the text to at least 10 characters
+        self.text = text.center(10)
+        
+        # Update the text surface and its dimensions
+        self.text_surface = pygame.font.SysFont(self.font,self.fontSize, bold = True).render(self.text, True, self.text_color)
+        self.text_width, self.text_height = self.text_surface.get_size()
+        
+        # Update the text box rect size
+        self.rect.width = self.text_width + 2 * self.padding
+        self.rect.height = self.text_height + 2 * self.padding
+
+    def ButtonClick(self, _):
+        pass
