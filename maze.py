@@ -1444,6 +1444,10 @@ while not done:
                     gameMode = GameMode.play # Return to game if button was clicked
                 if home.getCorners()[0] <= mouse[0] <= home.getCorners()[2] and home.getCorners()[1] <= mouse[1] <= home.getCorners()[3]:
                     gameMode = GameMode.home
+                    music.stop()
+                    music = lobbyMusic
+                    musicMax = lobbyMusicMax
+                    music.play(-1)
                 if quitButton.getCorners()[0] <= mouse[0] <= quitButton.getCorners()[2] and quitButton.getCorners()[1] <= mouse[1] <= quitButton.getCorners()[3]:
                     print("Quitting the game")
                     done = True # We quit the appplication
