@@ -130,6 +130,8 @@ class TextBox:
     paddingWidth, paddingHeight = 10, 10
     characterPad = 10
     def __init__(self, x, y, font, text='Click me!', fontSize = 20, textColor = (0,0,0)):
+        self.x=x
+        self.y=y
         self.font = font
         self.text = text.center(10)
         self.text_color = textColor
@@ -168,9 +170,12 @@ class TextBox:
     
     def setPaddingWidth(self, paddingWidth):
         self.paddingWidth = paddingWidth
+        self.rect = pygame.Rect(self.x, self.y, self.text_width + 2 * self.paddingWidth, self.text_height + 2 * self.paddingHeight)
 
     def setPaddingHeight(self, paddingHeight):
         self.paddingHeight = paddingHeight
+        self.rect = pygame.Rect(self.x, self.y, self.text_width + 2 * self.paddingWidth, self.text_height + 2 * self.paddingHeight)
+
 
     def setText(self, text):
         # Pad the text to at least 10 characters
@@ -184,11 +189,19 @@ class TextBox:
         self.rect.width = self.text_width + 2 * self.paddingWidth
         self.rect.height = self.text_height + 2 * self.paddingHeight
 
-    def ButtonClick(self, _):
-        pass
+    def ButtonClick(self, mouse):
+        # Just check if we are clicked
+        if not(self.rect.x < mouse[0] < self.rect.x + self.rect.width and self.rect.y < mouse[1] < self.rect.y + self.rect.height):
+            return False
+        return True
 
     def setCharacterPad(self, characterPad):
         self.characterPad = characterPad
 
     def setBoxColor(self, color):
         self.box_color = color
+
+    def setTextSize(self, textSize):
+        self.fontSize = textSize
+        self.text_surface = pygame.font.SysFont(self.font, textSize, bold=True).render(self.text, True, self.text_color)
+        self.text_width, self.text_height = self.text_surface.get_size()
