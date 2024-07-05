@@ -11,6 +11,14 @@ class ColorDicionary:
         "LIGHT_GREY": '#C6C6C6',
         "OFF_WHITE": '#F0F0F0',
         "OWHITE": '#FFFAF0',
+        "TANK_GREEN" : '#22B14D',
+        "BURGUNDY" : '#880015',
+        "ORANGE" : '#FF7D27',
+        "YELLOW" : '#FFC90E',
+        "SKY_BLUE" : '#00A2E8',
+        "LIGHT_BROWN" : '#B97A57',
+        "DARK_LILAC" : '#A349A4',
+        "BRIGHT_PINK" : '#FF00FF'
     }
 
     def __init__(self):

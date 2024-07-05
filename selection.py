@@ -23,75 +23,13 @@ buttonPrimary = c.geT("BLACK")
 buttonSecondary = c.geT("WHITE")
 buttonText = c.geT("WHITE")
 optionText = c.geT("GREY")
-
-lArrowP1Turret = Button(buttonPrimary, buttonPrimary, tileSize, 350, tileSize, tileSize, '<', buttonText, 50)
-buttonList.append(lArrowP1Turret)
-textP1Turret = TextBox(tileSize*2, 350, font='Courier New',fontSize=26, text="Sidewinder", textColor=buttonText)
-textP1Turret.setBoxColor(optionText)
-buttonList.append(textP1Turret)
-rArrowP1Turret = Button(buttonPrimary, buttonPrimary, tileSize*2 + textP1Turret.getWidth(), 350, tileSize, tileSize, '>', buttonText, 50)
-buttonList.append(rArrowP1Turret)
-
-lArrowP1Hull = Button(buttonPrimary, buttonPrimary, tileSize, 425, tileSize, tileSize, '<', buttonText, 50)
-buttonList.append(lArrowP1Hull)
-textP1Hull = TextBox(tileSize*2, 425, font='Courier New',fontSize=26, text="Cicada", textColor=buttonText)
-textP1Hull.setBoxColor(optionText)
-buttonList.append(textP1Hull)
-rArrowP1Hull = Button(buttonPrimary, buttonPrimary, tileSize*2 + textP1Turret.getWidth(), 425, tileSize, tileSize, '>', buttonText, 50)
-buttonList.append(rArrowP1Hull)
-
-lArrowP1Colour = Button(buttonPrimary, buttonPrimary, tileSize, 500, tileSize, tileSize, '<', buttonText, 50)
-buttonList.append(lArrowP1Colour)
-textP1Colour = TextBox(tileSize*2, 500, font='Courier New',fontSize=26, text="Red", textColor=buttonText)
-textP1Colour.setBoxColor(optionText)
-buttonList.append(textP1Colour)
-rArrowP1Colour = Button(buttonPrimary, buttonPrimary, tileSize*2 + textP1Turret.getWidth(), 500, tileSize, tileSize, '>', buttonText, 50)
-buttonList.append(rArrowP1Colour)
-
-rArrowP2Turret = Button(buttonPrimary, buttonPrimary, SCREEN_WIDTH-tileSize*2, 350, tileSize, tileSize, '>', buttonText, 50)
-buttonList.append(rArrowP2Turret)
-textP2Turret = TextBox(SCREEN_WIDTH - tileSize*2 - textP1Turret.getWidth(), 350, font='Courier New',fontSize=26, text="Sidewinder", textColor=buttonText)
-textP2Turret.setBoxColor(optionText)
-buttonList.append(textP2Turret)
-lArrowP2Turret = Button(buttonPrimary, buttonPrimary, SCREEN_WIDTH - tileSize*3 - textP1Turret.getWidth(), 350, tileSize, tileSize, '<', buttonText, 50)
-buttonList.append(lArrowP2Turret)
-
-rArrowP2Hull = Button(buttonPrimary, buttonPrimary,  SCREEN_WIDTH-tileSize*2, 425, tileSize, tileSize, '>', buttonText, 50)
-buttonList.append(rArrowP2Hull)
-textP2Hull = TextBox(SCREEN_WIDTH - tileSize*2 - textP1Turret.getWidth(), 425, font='Courier New',fontSize=26, text="Cicada", textColor=buttonText)
-textP2Hull.setBoxColor(optionText)
-buttonList.append(textP2Hull)
-lArrowP2Hull = Button(buttonPrimary, buttonPrimary, SCREEN_WIDTH - tileSize*3 - textP1Turret.getWidth(), 425, tileSize, tileSize, '<', buttonText, 50)
-buttonList.append(lArrowP2Hull)
-
-rArrowP2Colour = Button(buttonPrimary, buttonPrimary,  SCREEN_WIDTH-tileSize*2, 500, tileSize, tileSize, '>', buttonText, 50)
-buttonList.append(rArrowP2Colour)
-textP3Colour = TextBox(SCREEN_WIDTH - tileSize*2 - textP1Turret.getWidth(), 500, font='Courier New',fontSize=26, text="Red", textColor=buttonText)
-textP3Colour.setBoxColor(optionText)
-buttonList.append(textP3Colour)
-lArrowP2Colour = Button(buttonPrimary, buttonPrimary, SCREEN_WIDTH - tileSize*3 - textP1Turret.getWidth(), 500, tileSize, tileSize, '<', buttonText, 50)
-buttonList.append(lArrowP2Colour)
-
-# Player names
-textP1 = TextBox(tileSize*2, tileSize*1.5, font='Courier New',fontSize=26, text="Player 1", textColor=buttonText)
-textP1.setBoxColor(c.geT("GREEN"))
-buttonList.append(textP1)
-textP2 = TextBox(SCREEN_WIDTH - tileSize*2 - textP1Turret.getWidth(), tileSize*1.5, font='Courier New',fontSize=26, text="Player 2", textColor=buttonText)
-textP2.setBoxColor(c.geT("GREEN"))
-buttonList.append(textP2)
-
-
-
-
-
-
-
-turretList = ["Sidewinder", "Avalanche", "Bucket", "Judge", "Boxer", "Huntsman", "Chamber", "Silencer", "Watcher"]
-hullList = ["Cicada", "Panther", "Gater", "Bonsai", "Fossil"]
-hullColors = []
+#Hull and turret list
+turretList = ["Sidewinder", "Avalanche", "Boxer", "Bucket", "Chamber", "Huntsman", "Silencer", "Judge", "Watcher"]
+hullList = ["Panther", "Cicada", "Gater", "Bonsai", "Fossil"]
 turretListLength = len(turretList)
 hullListLength = len(hullList)
 
+hullColors = []
 
 # Load all the images
 currentDir = os.path.dirname(__file__)
@@ -100,6 +38,9 @@ for i in range(8): # Generate all the tanks
     originalTankImage = pygame.image.load(tankPath).convert_alpha()
     tankImage = pygame.transform.scale(originalTankImage, (100, 65))
     hullColors.append(tankImage)
+
+
+ColorIndex = ["TANK_GREEN", "BURGUNDY", "ORANGE", "YELLOW", "SKY_BLUE", "LIGHT_BROWN", "DARK_LILAC", "BRIGHT_PINK"]
 
 #List indexes for player selection
 #Turret index
@@ -111,10 +52,82 @@ p2J = 0
 #Colour index
 p1K = 0
 p2K = 1
-#Other constants
-rectX = 20
-rectY = 13
 
+verticalSpacing = 75
+choicesX = 250
+
+TurretX = choicesX
+HullX = TurretX + verticalSpacing
+ColourX = HullX + verticalSpacing
+
+lArrowP1Turret = Button(buttonPrimary, buttonPrimary, tileSize, TurretX, tileSize, tileSize, '<', buttonText, 50)
+buttonList.append(lArrowP1Turret)
+textP1Turret = TextBox(tileSize*2, TurretX, font='Courier New',fontSize=26, text=turretList[0], textColor=buttonText)
+textP1Turret.setBoxColor(optionText)
+forceWidth = textP1Turret.getWidth()
+buttonList.append(textP1Turret)
+rArrowP1Turret = Button(buttonPrimary, buttonPrimary, tileSize*2 + forceWidth, TurretX, tileSize, tileSize, '>', buttonText, 50)
+buttonList.append(rArrowP1Turret)
+
+lArrowP1Hull = Button(buttonPrimary, buttonPrimary, tileSize, HullX, tileSize, tileSize, '<', buttonText, 50)
+buttonList.append(lArrowP1Hull)
+textP1Hull = TextBox(tileSize*2, HullX, font='Courier New',fontSize=26, text=hullList[0], textColor=buttonText)
+textP1Hull.setBoxColor(optionText)
+buttonList.append(textP1Hull)
+rArrowP1Hull = Button(buttonPrimary, buttonPrimary, tileSize*2 + forceWidth, HullX, tileSize, tileSize, '>', buttonText, 50)
+buttonList.append(rArrowP1Hull)
+
+lArrowP1Colour = Button(buttonPrimary, buttonPrimary, tileSize, ColourX, tileSize, tileSize, '<', buttonText, 50)
+buttonList.append(lArrowP1Colour)
+textP1Colour = TextBox(tileSize*2, ColourX, font='Courier New',fontSize=26, text="", textColor=buttonText)
+textP1Colour.setBoxColor(c.geT(ColorIndex[p1K]))
+buttonList.append(textP1Colour)
+rArrowP1Colour = Button(buttonPrimary, buttonPrimary, tileSize*2 + forceWidth, ColourX, tileSize, tileSize, '>', buttonText, 50)
+buttonList.append(rArrowP1Colour)
+
+rArrowP2Turret = Button(buttonPrimary, buttonPrimary, SCREEN_WIDTH-tileSize*2, TurretX, tileSize, tileSize, '>', buttonText, 50)
+buttonList.append(rArrowP2Turret)
+textP2Turret = TextBox(SCREEN_WIDTH - tileSize*2 - forceWidth, TurretX, font='Courier New',fontSize=26, text=turretList[0], textColor=buttonText)
+textP2Turret.setBoxColor(optionText)
+buttonList.append(textP2Turret)
+lArrowP2Turret = Button(buttonPrimary, buttonPrimary, SCREEN_WIDTH - tileSize*3 - forceWidth, TurretX, tileSize, tileSize, '<', buttonText, 50)
+buttonList.append(lArrowP2Turret)
+
+rArrowP2Hull = Button(buttonPrimary, buttonPrimary,  SCREEN_WIDTH-tileSize*2, HullX, tileSize, tileSize, '>', buttonText, 50)
+buttonList.append(rArrowP2Hull)
+textP2Hull = TextBox(SCREEN_WIDTH - tileSize*2 - forceWidth, HullX, font='Courier New',fontSize=26, text=hullList[0], textColor=buttonText)
+textP2Hull.setBoxColor(optionText)
+buttonList.append(textP2Hull)
+lArrowP2Hull = Button(buttonPrimary, buttonPrimary, SCREEN_WIDTH - tileSize*3 - forceWidth, HullX, tileSize, tileSize, '<', buttonText, 50)
+buttonList.append(lArrowP2Hull)
+
+rArrowP2Colour = Button(buttonPrimary, buttonPrimary,  SCREEN_WIDTH-tileSize*2, ColourX, tileSize, tileSize, '>', buttonText, 50)
+buttonList.append(rArrowP2Colour)
+textP2Colour = TextBox(SCREEN_WIDTH - tileSize*2 - forceWidth, ColourX, font='Courier New',fontSize=26, text="", textColor=buttonText)
+textP2Colour.setBoxColor(c.geT(ColorIndex[p2K]))
+buttonList.append(textP2Colour)
+lArrowP2Colour = Button(buttonPrimary, buttonPrimary, SCREEN_WIDTH - tileSize*3 - forceWidth, ColourX, tileSize, tileSize, '<', buttonText, 50)
+buttonList.append(lArrowP2Colour)
+
+# Player names
+textP1 = TextBox(tileSize*2, tileSize*1.5, font='Courier New',fontSize=26, text="Player 1", textColor=buttonText)
+textP1.setBoxColor(c.geT("GREEN"))
+buttonList.append(textP1)
+textP2 = TextBox(SCREEN_WIDTH - tileSize*2 - forceWidth, tileSize*1.5, font='Courier New',fontSize=26, text="Player 2", textColor=buttonText)
+textP2.setBoxColor(c.geT("GREEN"))
+buttonList.append(textP2)
+
+
+
+#Other constants
+rectX = tileSize*2 + forceWidth
+rectY = tileSize//2
+
+pygame.draw.rect(screen,(0,0,0), (tileSize, tileSize*9.25, rectX, rectY), 1)
+speedText = TextBox(tileSize, tileSize*9.25, font='Courier New',fontSize=26, text="Speed", textColor=buttonText)
+# speedText.setPaddingHeight(0)
+# speedText.
+buttonList.append(speedText)
 
 
 def checkButtons(mouse):
@@ -147,19 +160,22 @@ def checkButtons(mouse):
         p1K = (p1K - 1) % len(hullColors)
         if p1K == p2K:
             p1K = (p1K - 1) % len(hullColors)
+        textP1Colour.setBoxColor(c.geT(ColorIndex[p1K]))
     if rArrowP1Colour.ButtonClick(mouse):
         p1K = (p1K + 1) % len(hullColors)
         if p1K == p2K:
             p1K = (p1K + 1) % len(hullColors)
+        textP1Colour.setBoxColor(c.geT(ColorIndex[p1K]))
     if lArrowP2Colour.ButtonClick(mouse):
         p2K = (p2K - 1) % len(hullColors)
         if p2K == p1K:
             p2K = (p2K - 1) % len(hullColors)
+        textP2Colour.setBoxColor(c.geT(ColorIndex[p2K]))
     if rArrowP2Colour.ButtonClick(mouse):
         p2K = (p2K + 1) % len(hullColors)
         if p2K == p1K:
             p2K = (p2K + 1) % len(hullColors)
-
+        textP2Colour.setBoxColor(c.geT(ColorIndex[p2K]))
 
 while running:
     for event in pygame.event.get():
@@ -178,13 +194,9 @@ while running:
             if event.key == pygame.K_i:
                 print(pygame.mouse.get_pos(), screen.get_at(pygame.mouse.get_pos()))
             if event.key == pygame.K_UP:
-                rectY -= 13
-                rectX -= 20
-                print(rectX, rectY)
+                pass
             if event.key == pygame.K_DOWN:
-                rectY += 13
-                rectX += 20
-                print(rectX, rectY)
+                pass
             if event.key == pygame.K_LEFT:
                 pass                
             if event.key == pygame.K_RIGHT:
@@ -195,11 +207,23 @@ while running:
     for button in buttonList:
         button.draw(screen, outline = False)
     # Update display
-    # pygame.draw.rect(screen, (0, 0, 0), (pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1], rectX, rectY), 0)
+    # pygame.draw.rect(screen, (0, 0, 0), (pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1], rectX, rectY), 1)
+    multiply_constant = 9.25
+    offset = 35
+    # pygame.draw.rect(screen,(0,0,0), (tileSize, tileSize*multiply_constant, rectX, rectY), 1)
+    pygame.draw.rect(screen,(0,0,0), (tileSize, tileSize*multiply_constant+ offset, rectX, rectY), 1)
+    pygame.draw.rect(screen,(0,0,0), (tileSize, tileSize*multiply_constant+ offset*2, rectX, rectY), 1)
+    pygame.draw.rect(screen,(0,0,0), (tileSize, tileSize*multiply_constant+ offset*3, rectX, rectY), 1)
+
+    pygame.draw.rect(screen,(0,0,0), (SCREEN_WIDTH - tileSize*2 - forceWidth - tileSize, tileSize*multiply_constant, rectX, rectY), 1)
+    pygame.draw.rect(screen,(0,0,0), (SCREEN_WIDTH - tileSize*2 - forceWidth - tileSize, tileSize*multiply_constant+ offset, rectX, rectY), 1)
+    pygame.draw.rect(screen,(0,0,0), (SCREEN_WIDTH - tileSize*2 - forceWidth - tileSize, tileSize*multiply_constant+ offset*2, rectX, rectY), 1)
+    pygame.draw.rect(screen,(0,0,0), (SCREEN_WIDTH - tileSize*2 - forceWidth - tileSize, tileSize*multiply_constant+ offset*3, rectX, rectY), 1)
+
 
     #Draw the tank image
-    screen.blit(hullColors[p1K], (tileSize*2 + textP1Turret.getWidth()//2-50, 150))
-    screen.blit(hullColors[p2K], (SCREEN_WIDTH - tileSize*2 - textP1Turret.getWidth()//2-50, 150))
+    screen.blit(hullColors[p1K], (tileSize*2 + forceWidth//2-50, tileSize*3))
+    screen.blit(hullColors[p2K], (SCREEN_WIDTH - tileSize*2 - forceWidth//2-50, tileSize*3))
 
     pygame.display.flip()
     # Cap the frame rate
