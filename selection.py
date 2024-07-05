@@ -217,6 +217,10 @@ def checkButtons(mouse):
         if p2K == p1K:
             p2K = (p2K + 1) % len(hullColors)
         textP2Colour.setBoxColor(c.geT(ColorIndex[p2K]))
+    if playButton.ButtonClick(mouse):
+        print("Play")
+    if homeButton.ButtonClick(mouse):
+        print("Back")
 
 while running:
     for event in pygame.event.get():
