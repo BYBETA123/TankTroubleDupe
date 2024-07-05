@@ -5,7 +5,7 @@ import time
 import os
 from ColorDictionary import ColorDicionary
 from enum import Enum
-from UIUtility import Button, ButtonSlider
+from UIUtility import Button, ButtonSlider, TextBox
 #Classes
 
 # Tank sprite class
@@ -670,6 +670,7 @@ class GameMode(Enum):
     play = 1
     home = 2
     settings = 3
+    selection = 4
 
 #Functions
 def tileGen():
@@ -995,6 +996,40 @@ def reset():
     allSprites.add(tank1, gun1, tank2, gun2)
     bulletSprites = pygame.sprite.Group()
 
+#Game setup
+#Start the game setup
+pygame.init()
+pygame.display.set_caption("TankTroubleDupe") # Name the window
+clock = pygame.time.Clock() # Start the clock
+#Keeping the mouse and its location
+mouse = pygame.mouse.get_pos()
+
+
+#Music setup
+#Sound effects for shooting, tank dying, tank moving and tank turret rotating.
+global tankShootSFX, tankDeadSFX, turretRotateSFX, tankMoveSFX
+tankShootSFX = pygame.mixer.Sound("Sounds/tank_shoot.mp3")
+tankDeadSFX = pygame.mixer.Sound("Sounds/tank_dead.mp3")
+turretRotateSFX = pygame.mixer.Sound("Sounds/tank_turret_rotate.wav")
+tankMoveSFX = pygame.mixer.Sound("Sounds/tank_moving.mp3")
+lobbyMusic = pygame.mixer.Sound("Sounds/lobby_music.wav")
+selectionMusic = pygame.mixer.Sound("Sounds/selection_music.mp3")
+gameMusic = pygame.mixer.Sound("Sounds/game_music.mp3")
+tankShootMax = 1
+tankDeadMax = 0.5
+turretRotateMax = 0.2
+tankMoveMax = 0.05
+lobbyMusicMax = 0.2
+gameMusicMax = 0.2
+selectionMusicMax = 1
+global music, musicMax
+music = lobbyMusic
+musicMax = lobbyMusicMax
+initialStartTime = pygame.time.get_ticks()
+soundPlayed = False
+
+#Setting up the window
+
 
 # global variables
 global tankSpeed, rotationalSpeed, turretSpeed, bulletSpeed
@@ -1010,6 +1045,7 @@ gameOverFlag = False
 startTime = 0
 cooldownTimer = False
 animationCool = 12
+explosionGroup = pygame.sprite.Group() #All the explosions
 
 global arbitraryWidth, arbitraryHeight
 arbitraryWidth = 50
@@ -1022,6 +1058,7 @@ c = ColorDicionary() # All the colors we will use
 done = False
 windowWidth = 800
 windowHeight = 600
+screen = pygame.display.set_mode((windowWidth,windowHeight))
 tileSize = 50
 weightTrue = 0.16 # The percentage change that side on a tile will have a border
 rowAmount = 14
@@ -1043,7 +1080,7 @@ colAmount = mazeWidth//tileSize # Assigning the amount of columns
 barWidth = 150
 barHeight = 20
 bg = c.geT('GREY')
-gameMode = GameMode.pause # 1 is for single player, 2 is for multiplayer
+gameMode = GameMode.home
 #Changing variables
 p1TankName = "Plwasd1"
 p2TankName = "Plarro2"
@@ -1062,19 +1099,306 @@ sliderY = windowHeight/8
 home = Button(c.geT("GREEN"), c.geT("WHITE"),indentFromLeft * 1.5 , indentFromRight * 1.8, tileSize, tileSize, 'Home')
 quitButton = Button(c.geT("GREEN"), c.geT("WHITE"), windowWidth - indentFromLeft * 2.5, indentFromRight * 1.8, tileSize, tileSize, 'Quit')
 unPause = Button(c.geT("GREEN"), c.geT("WHITE"), windowWidth/2 - 200, 0.8 * windowHeight, 400, tileSize, 'Return to Game')
-mute = ButtonSlider(c.geT("BLACK"), c.geT("BLUE"), sliderX, sliderY*3, tileSize, tileSize, tileSize*8, tileSize*2, 'mute', c.geT("WHITE"), c.geT("BLACK"), c.geT("RED"))
-sfx = ButtonSlider(c.geT("BLACK"), c.geT("BLUE"), sliderX, sliderY*5 - tileSize, tileSize, tileSize, tileSize*8, tileSize*2, 'SFX', c.geT("WHITE"), c.geT("BLACK"), c.geT("RED"))
+mute = ButtonSlider(c.geT("BLACK"), c.geT("BLUE"), sliderX, sliderY*3, tileSize, tileSize, tileSize*8,
+                    tileSize*2, 'mute', c.geT("WHITE"), c.geT("BLACK"), c.geT("RED"))
+sfx = ButtonSlider(c.geT("BLACK"), c.geT("BLUE"), sliderX, sliderY*5 - tileSize, tileSize, tileSize,
+                   tileSize*8, tileSize*2, 'SFX', c.geT("WHITE"), c.geT("BLACK"), c.geT("RED"))
+
+#Selection Screen
+buttonList = []
+homeButton = Button(c.geT("BLACK"), c.geT("BLACK"), tileSize//4, tileSize//4,
+                    tileSize, tileSize, 'back', (255, 255, 255), hoverColor=(100, 100, 255))
+buttonList.append(homeButton)
+buttonPrimary = c.geT("BLACK")
+buttonSecondary = c.geT("WHITE")
+buttonText = c.geT("WHITE")
+optionText = c.geT("GREY")
+#Hull and turret list
+turretList = ["Sidewinder", "Avalanche", "Boxer", "Bucket", "Chamber", "Huntsman", "Silencer", "Judge", "Watcher"]
+hullList = ["Panther", "Cicada", "Gater", "Bonsai", "Fossil"]
+turretListLength = len(turretList)
+hullListLength = len(hullList)
+
+hullColors = []
+gunColors = []
+
+# Load all the images
+currentDir = os.path.dirname(__file__)
+for i in range(8): # Generate all the tanks
+    tankPath = os.path.join(currentDir, 'Sprites', 'tank' + str(i+1) + '.png')
+    originalTankImage = pygame.image.load(tankPath).convert_alpha()
+    tankImage = pygame.transform.scale(originalTankImage, (100, 65))
+    hullColors.append(tankImage)
+    gunPath = os.path.join(currentDir, 'Sprites', 'gun' + str(i+1) + '.png')
+    originalGunImage = pygame.image.load(gunPath).convert_alpha()
+    gunImage = pygame.transform.scale(originalGunImage, (75, 10))
+    gunColors.append(gunImage)    
 
 
-#Start the game setup
-pygame.init()
-pygame.display.set_caption("TankTroubleDupe") # Name the window
-clock = pygame.time.Clock() # Start the clock
-#Keeping the mouse and its location
-mouse = pygame.mouse.get_pos()
+ColorIndex = ["TANK_GREEN", "BURGUNDY", "ORANGE", "YELLOW", "SKY_BLUE", "LIGHT_BROWN", "DARK_LILAC", "BRIGHT_PINK"]
 
-#Setting up the window
-screen = pygame.display.set_mode((windowWidth,windowHeight))
+#List indexes for player selection
+#Turret index
+p1I = 0
+p2I = 0
+#Hull index
+p1J = 0
+p2J = 0
+#Colour index
+p1K = 0
+p2K = 1
+
+verticalSpacing = 75
+choicesX = 200
+
+TurretX = choicesX
+HullX = TurretX + verticalSpacing
+ColourX = HullX + verticalSpacing
+
+lArrowP1Turret = Button(buttonPrimary, buttonPrimary, tileSize, TurretX, tileSize, tileSize, '<', buttonText, 50)
+lArrowP1Turret.selectable(False) # Left arrow button for turret
+buttonList.append(lArrowP1Turret)
+textP1Turret = TextBox(tileSize*2, TurretX, font='Courier New',fontSize=26, text=turretList[0], textColor=buttonText)
+textP1Turret.setBoxColor(optionText) # Textbox for turret
+textP1Turret.selectable(False)
+forceWidth = textP1Turret.getWidth()
+buttonList.append(textP1Turret)
+rArrowP1Turret = Button(buttonPrimary, buttonPrimary, tileSize*2 + forceWidth, TurretX, tileSize, tileSize, '>', buttonText, 50)
+rArrowP1Turret.selectable(False) # Right arrow button for turret
+buttonList.append(rArrowP1Turret)
+
+lArrowP1Hull = Button(buttonPrimary, buttonPrimary, tileSize, HullX, tileSize, tileSize, '<', buttonText, 50)
+lArrowP1Hull.selectable(False) # Left arrow button for hull
+buttonList.append(lArrowP1Hull)
+textP1Hull = TextBox(tileSize*2, HullX, font='Courier New',fontSize=26, text=hullList[0], textColor=buttonText)
+textP1Hull.setBoxColor(optionText) # Textbox for hull
+textP1Hull.selectable(False)
+buttonList.append(textP1Hull)
+rArrowP1Hull = Button(buttonPrimary, buttonPrimary, tileSize*2 + forceWidth, HullX, tileSize, tileSize, '>', buttonText, 50)
+rArrowP1Hull.selectable(False) # Right arrow button for hull
+buttonList.append(rArrowP1Hull)
+
+lArrowP1Colour = Button(buttonPrimary, buttonPrimary, tileSize, ColourX, tileSize, tileSize, '<', buttonText, 50)
+lArrowP1Colour.selectable(False)
+buttonList.append(lArrowP1Colour) # Left arrow button for colour
+textP1Colour = TextBox(tileSize*2, ColourX, font='Courier New',fontSize=26, text="", textColor=buttonText)
+textP1Colour.setBoxColor(c.geT(ColorIndex[p1K])) # Textbox for colour
+textP1Colour.selectable(False)
+buttonList.append(textP1Colour)
+rArrowP1Colour = Button(buttonPrimary, buttonPrimary, tileSize*2 + forceWidth, ColourX, tileSize, tileSize, '>', buttonText, 50)
+rArrowP1Colour.selectable(False) # Right arrow button for colour
+buttonList.append(rArrowP1Colour)
+
+rArrowP2Turret = Button(buttonPrimary, buttonPrimary, windowWidth-tileSize*2, TurretX, tileSize, tileSize, '>', buttonText, 50)
+rArrowP2Turret.selectable(False)
+buttonList.append(rArrowP2Turret) # Right arrow button for turret
+textP2Turret = TextBox(windowWidth - tileSize*2 - forceWidth, TurretX, font='Courier New',fontSize=26, text=turretList[0], textColor=buttonText)
+textP2Turret.setBoxColor(optionText)
+textP2Turret.selectable(False)
+buttonList.append(textP2Turret)  # Textbox for turret
+lArrowP2Turret = Button(buttonPrimary, buttonPrimary, windowWidth - tileSize*3 - forceWidth, TurretX, tileSize, tileSize, '<', buttonText, 50)
+lArrowP2Turret.selectable(False)
+buttonList.append(lArrowP2Turret) # Left arrow button for turret
+
+rArrowP2Hull = Button(buttonPrimary, buttonPrimary,  windowWidth-tileSize*2, HullX, tileSize, tileSize, '>', buttonText, 50)
+rArrowP2Hull.selectable(False)
+buttonList.append(rArrowP2Hull) # Right arrow button for hull
+textP2Hull = TextBox(windowWidth - tileSize*2 - forceWidth, HullX, font='Courier New',fontSize=26, text=hullList[0], textColor=buttonText)
+textP2Hull.setBoxColor(optionText)
+textP2Hull.selectable(False) # Textbox for hull
+buttonList.append(textP2Hull)
+lArrowP2Hull = Button(buttonPrimary, buttonPrimary, windowWidth - tileSize*3 - forceWidth, HullX, tileSize, tileSize, '<', buttonText, 50)
+lArrowP2Hull.selectable(False) # Left arrow button for hull
+buttonList.append(lArrowP2Hull)
+
+rArrowP2Colour = Button(buttonPrimary, buttonPrimary,  windowWidth-tileSize*2, ColourX, tileSize, tileSize, '>', buttonText, 50)
+rArrowP2Colour.selectable(False)
+buttonList.append(rArrowP2Colour) # Right arrow button for colour
+textP2Colour = TextBox(windowWidth - tileSize*2 - forceWidth, ColourX, font='Courier New',fontSize=26, text="", textColor=buttonText)
+textP2Colour.setBoxColor(c.geT(ColorIndex[p2K]))
+textP2Colour.selectable(False) # Textbox for colour
+buttonList.append(textP2Colour)
+lArrowP2Colour = Button(buttonPrimary, buttonPrimary, windowWidth - tileSize*3 - forceWidth, ColourX, tileSize, tileSize, '<', buttonText, 50)
+lArrowP2Colour.selectable(False) # Left arrow button for colour
+buttonList.append(lArrowP2Colour)
+
+# Player names
+textP1 = TextBox(tileSize*2, tileSize*0.5, font='Courier New',fontSize=26,
+                 text="Player 1", textColor=buttonText)
+textP1.setBoxColor(c.geT("GREEN"))
+buttonList.append(textP1) # Textbox for player 1
+textP2 = TextBox(windowWidth - tileSize*2 - forceWidth, tileSize*0.5,
+                 font='Courier New',fontSize=26, text="Player 2", textColor=buttonText)
+textP2.setBoxColor(c.geT("GREEN"))
+buttonList.append(textP2)
+
+#Play button
+playButton = TextBox(windowWidth//2 - tileSize*1.75, tileSize//2,
+                     font='Courier New',fontSize=26, text="Play", textColor=buttonText)
+playButton.setBoxColor(c.geT("BLACK")) # Play button
+playButton.selectable(True)
+buttonList.append(playButton)
+
+
+multiplyConstant = 8.5
+offset = 35
+tankValue = 3
+
+#Other constants
+rectX = tileSize*2 + forceWidth
+rectY = tileSize//2
+#Player 1 Statistics 
+speedText = TextBox(tileSize, tileSize*multiplyConstant, font='Courier New',
+                    fontSize=21, text="Speed", textColor=buttonText)
+speedText.setPaddingHeight(0)
+buttonList.append(speedText)
+#Health bar
+healthText = TextBox(tileSize, tileSize*multiplyConstant + offset, font='Courier New',
+                     fontSize=21, text="Health", textColor=buttonText)
+healthText.setPaddingHeight(0)
+buttonList.append(healthText)
+#Damage bar
+damageBar = TextBox(tileSize, tileSize*multiplyConstant + offset*2, font='Courier New',
+                    fontSize=21, text="Damage", textColor=buttonText)
+damageBar.setPaddingHeight(0)
+buttonList.append(damageBar)
+#Reload bar
+reloadBar = TextBox(tileSize, tileSize*multiplyConstant + offset*3, font='Courier New',
+                    fontSize=21, text="Reload", textColor=buttonText)
+reloadBar.setPaddingHeight(0)
+buttonList.append(reloadBar)
+#Player 2 Statistics
+speedText2 = TextBox(windowWidth - tileSize*3 - forceWidth, tileSize*multiplyConstant,
+                     font='Courier New',fontSize=21, text="Speed", textColor=buttonText)
+speedText2.setPaddingHeight(0)
+buttonList.append(speedText2)
+#Health bar
+healthText2 = TextBox(windowWidth - tileSize*3 - forceWidth, tileSize*multiplyConstant + offset,
+                      font='Courier New',fontSize=21, text="Health", textColor=buttonText)
+healthText2.setPaddingHeight(0)
+buttonList.append(healthText2)
+#Damage bar
+damageBar2 = TextBox(windowWidth - tileSize*3 - forceWidth, tileSize*multiplyConstant + offset*2,
+                     font='Courier New',fontSize=21, text="Damage", textColor=buttonText)
+damageBar2.setPaddingHeight(0)
+buttonList.append(damageBar2)
+#Reload bar
+reloadBar2 = TextBox(windowWidth - tileSize*3 - forceWidth, tileSize*multiplyConstant + offset*3,
+                     font='Courier New',fontSize=21, text="Reload", textColor=buttonText)
+reloadBar2.setPaddingHeight(0)
+buttonList.append(reloadBar2)
+
+def checkButtons(mouse):
+    #This function checks all the buttons of the mouse in the selection screen
+    # Inputs: Mouse: The current location of the mouse
+    # Outputs: None
+    global p1I, p2I, p1J, p2J, p1K, p2K, gameMode
+    if lArrowP1Turret.buttonClick(mouse):
+        p1I = (p1I - 1) % turretListLength
+        textP1Turret.setText(turretList[p1I])
+    if rArrowP1Turret.buttonClick(mouse):
+        p1I = (p1I + 1) % turretListLength
+        textP1Turret.setText(turretList[p1I])
+    if lArrowP1Hull.buttonClick(mouse):
+        p1J = (p1J - 1) % hullListLength
+        textP1Hull.setText(hullList[p1J])
+    if rArrowP1Hull.buttonClick(mouse):
+        p1J = (p1J + 1) % hullListLength
+        textP1Hull.setText(hullList[p1J])
+    if lArrowP2Turret.buttonClick(mouse):
+        p2I = (p2I - 1) % turretListLength
+        textP2Turret.setText(turretList[p2I])
+    if rArrowP2Turret.buttonClick(mouse):
+        p2I = (p2I + 1) % turretListLength
+        textP2Turret.setText(turretList[p2I])
+    if lArrowP2Hull.buttonClick(mouse):
+        p2J = (p2J - 1) % hullListLength
+        textP2Hull.setText(hullList[p2J])
+    if rArrowP2Hull.buttonClick(mouse):
+        p2J = (p2J + 1) % hullListLength
+        textP2Hull.setText(hullList[p2J])
+    if lArrowP1Colour.buttonClick(mouse):
+        p1K = (p1K - 1) % len(hullColors)
+        if p1K == p2K:
+            p1K = (p1K - 1) % len(hullColors)
+        textP1Colour.setBoxColor(c.geT(ColorIndex[p1K]))
+    if rArrowP1Colour.buttonClick(mouse):
+        p1K = (p1K + 1) % len(hullColors)
+        if p1K == p2K:
+            p1K = (p1K + 1) % len(hullColors)
+        textP1Colour.setBoxColor(c.geT(ColorIndex[p1K]))
+    if lArrowP2Colour.buttonClick(mouse):
+        p2K = (p2K - 1) % len(hullColors)
+        if p2K == p1K:
+            p2K = (p2K - 1) % len(hullColors)
+        textP2Colour.setBoxColor(c.geT(ColorIndex[p2K]))
+    if rArrowP2Colour.buttonClick(mouse):
+        p2K = (p2K + 1) % len(hullColors)
+        if p2K == p1K:
+            p2K = (p2K + 1) % len(hullColors)
+        textP2Colour.setBoxColor(c.geT(ColorIndex[p2K]))
+    global music, musicMax # Handling music
+    if playButton.buttonClick(mouse):
+        #Switch the the play screen
+        print("Play")
+        gameMode=GameMode.play
+        music.stop()
+        music = gameMusic
+        musicMax = gameMusicMax
+        music.play(-1)
+    if homeButton.buttonClick(mouse):
+        #Switch back to the home screen
+        print("Back")
+        gameMode = GameMode.home
+        music.stop()
+        # global music, musicMax
+        music = lobbyMusic
+        musicMax = lobbyMusicMax
+        music.play(-1)
+
+def checkHomeButtons(mouse):
+    # This function checks all the buttons of the mouse in the home screen
+    # Inputs: Mouse: The current location of the mouse
+    # Outputs: None
+    global gameMode
+    if playButtonHome.buttonClick(mouse):
+        #Switch to the selection screen
+        gameMode = GameMode.selection
+        global music, musicMax
+        print("Selection")
+        music.stop()
+        music = selectionMusic
+        musicMax = selectionMusicMax
+        music.play(-1)
+    if settingsButton.buttonClick(mouse):
+        print("Unimplmented")
+        # gameMode = GameMode.settings
+    if quitButtonHome.buttonClick(mouse):
+        global done
+        done = True
+
+#Menu screen
+homeButtonList = []
+
+# Load the tank image
+currentDir = os.path.dirname(__file__)
+tankPath = os.path.join(currentDir, 'tank_menu_logo.png')
+originalTankImage = pygame.image.load(tankPath).convert_alpha()
+
+
+
+# Create buttons with specified positions and text
+playButtonHome = Button((0, 0, 0), (0, 0, 255), 150, 400, 175, 70, 'Play', (255, 255, 255), 30, hoverColor=(100, 100, 255))
+settingsButton = Button((0, 0, 0), (0, 0, 255), 475, 400, 175, 70, 'Settings', (255, 255, 255), 30, hoverColor=(100, 100, 255))
+quitButtonHome = Button((0, 0, 0), (0, 0, 255), 10, 10, 130, 50, 'Quit', (255, 255, 255), 25, hoverColor=(100, 100, 255))
+
+homeButtonList.append(playButtonHome)
+homeButtonList.append(settingsButton)
+homeButtonList.append(quitButtonHome)
+
+# Define title text properties
+titleFont = pygame.font.SysFont('Arial', 60)
+titleText = titleFont.render('Tank Game Menu', True, (0, 0, 0))  # Render the title text
 
 # Controls for the first tank
 controlsTank1 = {
@@ -1124,26 +1448,6 @@ allSprites = pygame.sprite.Group()
 allSprites.add(tank1, gun1, tank2, gun2)
 bulletSprites = pygame.sprite.Group()
 
-
-#Sound effects for shooting, tank dying, tank moving and tank turret rotating.
-global tankShootSFX, tankDeadSFX, turretRotateSFX, tankMoveSFX
-tankShootSFX = pygame.mixer.Sound("Sounds/tank_shoot.mp3")
-tankDeadSFX = pygame.mixer.Sound("Sounds/tank_dead.mp3")
-turretRotateSFX = pygame.mixer.Sound("Sounds/tank_turret_rotate.wav")
-tankMoveSFX = pygame.mixer.Sound("Sounds/tank_moving.mp3")
-lobbyMusic = pygame.mixer.Sound("Sounds/lobby_music.wav")
-tankShootMax = 1
-tankDeadMax = 0.5
-turretRotateMax = 0.2
-tankMoveMax = 0.05
-lobbyMusicMax = 0.2
-gameMusicMax = 0.2
-selectionMusicMax = 1
-explosionGroup = pygame.sprite.Group() #All the explosions
-
-initialStartTime = pygame.time.get_ticks()
-soundPlayed = False
-
 #Main loop
 while not done:
     for event in pygame.event.get():
@@ -1156,19 +1460,34 @@ while not done:
             mouse = pygame.mouse.get_pos()
             if gameMode == GameMode.pause:
                 #We are paused
-                if unPause.getCorners()[0] <= mouse[0] <= unPause.getCorners()[2] and unPause.getCorners()[1] <= mouse[1] <= unPause.getCorners()[3]: #If we click the button
+                if (unPause.getCorners()[0] <= mouse[0] <= unPause.getCorners()[2] and
+                    unPause.getCorners()[1] <= mouse[1] <= unPause.getCorners()[3]): #If we click the button
                     gameMode = GameMode.play # Return to game if button was clicked
-                if home.getCorners()[0] <= mouse[0] <= home.getCorners()[2] and home.getCorners()[1] <= mouse[1] <= home.getCorners()[3]:
-                    print("Returnning to home")
-                    print("This isn't implemented yet, choose another action")
-                if quitButton.getCorners()[0] <= mouse[0] <= quitButton.getCorners()[2] and quitButton.getCorners()[1] <= mouse[1] <= quitButton.getCorners()[3]:
+                if (home.getCorners()[0] <= mouse[0] <= home.getCorners()[2] and
+                    home.getCorners()[1] <= mouse[1] <= home.getCorners()[3]):
+                    gameMode = GameMode.home
+                    music.stop()
+                    music = lobbyMusic
+                    musicMax = lobbyMusicMax
+                    music.play(-1)
+                if (quitButton.getCorners()[0] <= mouse[0] <= quitButton.getCorners()[2]and
+                    quitButton.getCorners()[1] <= mouse[1] <= quitButton.getCorners()[3]):
                     print("Quitting the game")
                     done = True # We quit the appplication
-                if mute.getCorners()[0] <= mouse[0] <= mute.getCorners()[2] and mute.getCorners()[1] <= mouse[1] <= mute.getCorners()[3]:
-                    mute.ButtonClick()
-                if sfx.getCorners()[0] <= mouse[0] <= sfx.getCorners()[2] and sfx.getCorners()[1] <= mouse[1] <= sfx.getCorners()[3]:
-                    sfx.ButtonClick()
-
+                if (mute.getCorners()[0] <= mouse[0] <= mute.getCorners()[2] and
+                    mute.getCorners()[1] <= mouse[1] <= mute.getCorners()[3]):
+                    mute.buttonClick()
+                if (sfx.getCorners()[0] <= mouse[0] <= sfx.getCorners()[2] and
+                    sfx.getCorners()[1] <= mouse[1] <= sfx.getCorners()[3]):
+                    sfx.buttonClick()
+            elif gameMode == GameMode.selection:
+                textP1Turret.setText(turretList[p1I])
+                textP2Turret.setText(turretList[p2I])
+                textP1Hull.setText(hullList[p1J])
+                textP2Hull.setText(hullList[p2J])
+                checkButtons(pygame.mouse.get_pos())
+            elif gameMode == GameMode.home:
+                checkHomeButtons(pygame.mouse.get_pos())
         elif event.type == pygame.KEYDOWN: # Any key pressed
             if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
                 done = True
@@ -1209,10 +1528,10 @@ while not done:
 
     #Start the lobby music
     if not soundPlayed and pygame.time.get_ticks() - initialStartTime > 2000: # Delay by 1 second
-        lobbyMusic.play(-1)
+        music.play(-1)
         soundPlayed = True
 
-    lobbyMusic.set_volume(mute.getValue() * lobbyMusicMax)
+    music.set_volume(mute.getValue() * musicMax)
     tankShootSFX.set_volume(sfx.getValue() * tankShootMax)
     tankDeadSFX.set_volume(sfx.getValue() * tankDeadMax)
     turretRotateSFX.set_volume(sfx.getValue() * turretRotateMax)
@@ -1228,6 +1547,119 @@ while not done:
         if pygame.mouse.get_pressed()[0]:
             mute.updateSlider(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
             sfx.updateSlider(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
+    elif gameMode == GameMode.selection:
+        pygame.draw.rect(screen,(0,0,0), (tileSize, tileSize*multiplyConstant, rectX, rectY), 1)
+        for button in buttonList:
+            button.update_display(pygame.mouse.get_pos())
+            button.draw(screen, outline = False)
+        
+        barBorder = 3
+        #Blocks
+        speedBarOutline = pygame.draw.rect(screen, c.geT("BLACK"), (tileSize, tileSize*multiplyConstant, rectX, rectY),barBorder)
+        speedBar = pygame.draw.rect(screen, c.geT("GREEN"), (tileSize + speedText.getWidth(), tileSize*multiplyConstant,
+                                                             (rectX - speedText.getWidth()) * tankValue/3, rectY))
+        #Outlines
+        speedOutline = pygame.draw.rect(screen, (0,0,0), (tileSize + speedText.getWidth(), tileSize*multiplyConstant,
+                                                          rectX - speedText.getWidth(), rectY), barBorder)
+        speedBlockOutline = pygame.draw.rect(screen, (0,0,0), (tileSize + speedText.getWidth() + (rectX - speedText.getWidth())/3,
+                                                               tileSize*multiplyConstant, (rectX - speedText.getWidth())/3,rectY), barBorder)
+
+        healthBarOutline = pygame.draw.rect(screen, c.geT("BLACK"), (tileSize, tileSize*multiplyConstant + offset, rectX, rectY),barBorder)
+        healthBar = pygame.draw.rect(screen, c.geT("GREEN"), (tileSize + speedText.getWidth(), tileSize*multiplyConstant + offset,
+                                                              (rectX - speedText.getWidth()) * tankValue/3, rectY))
+        #Outlines
+        healthOutline = pygame.draw.rect(screen, (0,0,0), (tileSize + speedText.getWidth(), tileSize*multiplyConstant + offset,
+                                                           rectX - speedText.getWidth(), rectY), barBorder)
+        healthBlockOutline = pygame.draw.rect(screen, (0,0,0), (tileSize + speedText.getWidth() + (rectX - speedText.getWidth())/3,
+                                                                tileSize*multiplyConstant + offset, (rectX - speedText.getWidth())/3,rectY),
+                                                                barBorder)
+
+        damageBarOutline = pygame.draw.rect(screen, c.geT("BLACK"), (tileSize, tileSize*multiplyConstant + offset*2, rectX, rectY),barBorder)
+        damageBar = pygame.draw.rect(screen, c.geT("GREEN"), (tileSize + speedText.getWidth(), tileSize*multiplyConstant + offset*2,
+                                                              (rectX - speedText.getWidth()) * tankValue/3, rectY))
+        #Outlines
+        damageOutline = pygame.draw.rect(screen, (0,0,0), (tileSize + speedText.getWidth(), tileSize*multiplyConstant + offset*2,
+                                                           rectX - speedText.getWidth(), rectY), barBorder)
+        damageBlockOutline = pygame.draw.rect(screen, (0,0,0), (tileSize + speedText.getWidth() + (rectX - speedText.getWidth())/3,
+                                                                tileSize*multiplyConstant + offset*2, (rectX - speedText.getWidth())/3,rectY),
+                                                                barBorder)
+
+        reloadBarOutline = pygame.draw.rect(screen, c.geT("BLACK"), (tileSize, tileSize*multiplyConstant + offset*3, rectX, rectY),barBorder)
+        reloadBar = pygame.draw.rect(screen, c.geT("GREEN"), (tileSize + speedText.getWidth(), tileSize*multiplyConstant + offset*3,
+                                                              (rectX - speedText.getWidth()) * tankValue/3, rectY))
+        #Outlines
+        reloadOutline = pygame.draw.rect(screen, (0,0,0), (tileSize + speedText.getWidth(), tileSize*multiplyConstant + offset*3,
+                                                           rectX - speedText.getWidth(), rectY), barBorder)
+        reloadBlockOutline = pygame.draw.rect(screen, (0,0,0),
+                                              (tileSize + speedText.getWidth() + (rectX - speedText.getWidth())/3,
+                                               tileSize*multiplyConstant + offset*3, (rectX - speedText.getWidth())/3,rectY), barBorder)
+
+        speedBarOutline2 = pygame.draw.rect(screen, c.geT("BLACK"), (windowWidth - tileSize*3 - forceWidth, tileSize*multiplyConstant,
+                                                                     rectX, rectY),barBorder)
+        speedBar2 = pygame.draw.rect(screen, c.geT("GREEN"), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
+                                                              tileSize*multiplyConstant, (rectX - speedText.getWidth()) * tankValue/3, rectY))
+        #Outlines
+        speedOutline2 = pygame.draw.rect(screen, (0,0,0), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
+                                                           tileSize*multiplyConstant, rectX - speedText.getWidth(), rectY), barBorder)
+        speedBlockOutline2 = pygame.draw.rect(screen, (0,0,0), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth() +
+                                                                (rectX - speedText.getWidth())/3, tileSize*multiplyConstant,
+                                                                (rectX - speedText.getWidth())/3,rectY), barBorder)
+
+        healthBarOutline2 = pygame.draw.rect(screen, c.geT("BLACK"), (windowWidth - tileSize*3 - forceWidth,
+                                                                      tileSize*multiplyConstant + offset, rectX, rectY),barBorder)
+        healthBar2 = pygame.draw.rect(screen, c.geT("GREEN"), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
+                                                               tileSize*multiplyConstant + offset,
+                                                               (rectX - speedText.getWidth()) * tankValue/3, rectY))
+        #Outlines
+        healthOutline2 = pygame.draw.rect(screen, (0,0,0), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
+                                                            tileSize*multiplyConstant + offset, rectX - speedText.getWidth(), rectY), barBorder)
+        healthBlockOutline2 = pygame.draw.rect(screen, (0,0,0),
+                                               (windowWidth - tileSize*3 - forceWidth + speedText.getWidth() + (rectX - speedText.getWidth())/3,
+                                                tileSize*multiplyConstant + offset, (rectX - speedText.getWidth())/3,rectY), barBorder)
+
+        damageBarOutline2 = pygame.draw.rect(screen, c.geT("BLACK"), (windowWidth - tileSize*3 - forceWidth, tileSize*multiplyConstant + offset*2,
+                                                                      rectX, rectY),barBorder)
+        damageBar2 = pygame.draw.rect(screen, c.geT("GREEN"), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
+                                                               tileSize*multiplyConstant + offset*2, (rectX - speedText.getWidth()) * tankValue/3,
+                                                               rectY))
+        #Outlines
+        damageOutline2 = pygame.draw.rect(screen, (0,0,0), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
+                                                            tileSize*multiplyConstant + offset*2, rectX - speedText.getWidth(), rectY), barBorder)
+        damageBlockOutline2 = pygame.draw.rect(screen, (0,0,0),
+                                               (windowWidth - tileSize*3 - forceWidth + speedText.getWidth() + (rectX - speedText.getWidth())/3,
+                                                tileSize*multiplyConstant + offset*2, (rectX - speedText.getWidth())/3,rectY), barBorder)
+
+        reloadBarOutline2 = pygame.draw.rect(screen, c.geT("BLACK"), (windowWidth - tileSize*3 - forceWidth, tileSize*multiplyConstant + offset*3,
+                                                                      rectX, rectY),barBorder)
+        reloadBar2 = pygame.draw.rect(screen, c.geT("GREEN"),
+                                      (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(), tileSize*multiplyConstant + offset*3,
+                                       (rectX - speedText.getWidth()) * tankValue/3, rectY))
+        #Outlines
+        reloadOutline2 = pygame.draw.rect(screen, (0,0,0), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
+                                                            tileSize*multiplyConstant + offset*3, rectX - speedText.getWidth(), rectY), barBorder)
+        reloadBlockOutline2 = pygame.draw.rect(screen, (0,0,0),
+                                               (windowWidth - tileSize*3 - forceWidth + speedText.getWidth() + (rectX - speedText.getWidth())/3,
+                                                tileSize*multiplyConstant + offset*3, (rectX - speedText.getWidth())/3,rectY), barBorder)
+
+        #Draw the tank image
+        screen.blit(hullColors[p1K], (tileSize*2 + forceWidth//2-50, tileSize*2))
+        screen.blit(hullColors[p2K], (windowWidth - tileSize*2 - forceWidth//2-50, tileSize*2))
+        screen.blit(gunColors[p1K], (tileSize*2 + forceWidth//2, tileSize*2.5))
+        screen.blit(gunColors[p2K], (windowWidth - tileSize*2 - forceWidth//2, tileSize*2.5))
+
+    elif gameMode == GameMode.home:
+        # Draw the tank image
+        screen.blit(originalTankImage, (230, 65))  # Adjust the coordinates as needed
+
+        # Draw the title text
+        screen.blit(titleText, (windowWidth // 2 - titleText.get_width() // 2, 50))  # Centered horizontally, 50 pixels from top
+
+        # Handle hover effect and draw buttons
+        mouse_pos = pygame.mouse.get_pos()
+        for button in homeButtonList:
+            button.update_display(mouse_pos)
+            button.draw(screen, outline=True)
+
     else:
         screen.fill(c.geT("WHITE"))
     clock.tick(240) # Set the FPS
