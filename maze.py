@@ -43,6 +43,10 @@ class Tank(pygame.sprite.Sprite):
         self.y = float(self.rect.centery)
         self.updateCorners() #Set the corners
         self.soundPlaying = False
+        self.speedStatistic = 1
+        self.healthStatistic = 1
+        self.maxSpeed = 0.15
+        self.tankName = "Default"
 
     def updateCorners(self):
         # This function will update the corners of the tank based on the new position
@@ -125,11 +129,10 @@ class Tank(pygame.sprite.Sprite):
         # Outputs: None
 
         keys = pygame.key.get_pressed()
-        global tankSpeed
         if keys[self.controls['up']]:
-            self.speed = tankSpeed
+            self.speed = self.maxSpeed
         elif keys[self.controls['down']]:
-            self.speed = -tankSpeed
+            self.speed = -self.maxSpeed
         else:
             self.speed = 0
         if keys[self.controls['left']]:
@@ -226,6 +229,25 @@ class Tank(pygame.sprite.Sprite):
     def getMaxHealth(self):
         return self.maxHealth
 
+    def getHealthStatistic(self):
+        return self.healthStatistic
+    
+    def setHealthStatistic(self, value):
+        self.healthStatistic = value
+
+    def getSpeedStatistic(self):
+        return self.speedStatistic
+    
+    def setSpeedStatistic(self, value):
+        self.speedStatistic = value
+
+    def setTankName(self, tankName):
+        self.tankName = tankName
+
+    def getTankName(self):
+        return self.tankName
+
+
 class Gun(pygame.sprite.Sprite):
     def __init__(self, tank, controls, name):
         """
@@ -263,6 +285,8 @@ class Gun(pygame.sprite.Sprite):
         self.lastUpdateTime = pygame.time.get_ticks()
         self.cooldownDuration = 500
         self.damage = 700
+        self.damageStatistic = 1
+        self.reloadStatistic = 1
         # Initialize the gun's floating-point position
         self.x = float(self.rect.centerx)
         self.y = float(self.rect.centery)
@@ -373,6 +397,18 @@ class Gun(pygame.sprite.Sprite):
 
     def setCooldown(self):
         self.shootCooldown = 0
+
+    def setDamageStatistic(self, value):
+        self.damageStatistic = value
+
+    def setReloadStatistic(self, value):
+        self.reloadStatistic = value
+
+    def getDamageStatistic(self):
+        return self.damageStatistic
+
+    def getReloadStatistic(self):
+        return self.reloadStatistic
 
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y, angle, gunLength, tipOffSet):
@@ -676,6 +712,7 @@ class GameMode(Enum):
     settings = 3
     selection = 4
 
+#Turrets
 class Boxer(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
@@ -683,6 +720,56 @@ class Boxer(Gun):
         self.damage = 200
 
 
+#Hulls
+class Panther(Tank):
+    def __init__(self, x, y, controls, name):
+        super().__init__(x, y, controls, name)
+        self.maxHealth = 1800
+        self.health = self.maxHealth
+        self.speedStatistic = 3
+        self.healthStatistic = 1
+        self.maxSpeed = 0.27
+        self.setTankName("Panther")
+
+class Cicada(Tank):
+    def __init__(self, x, y, controls, name):
+        super().__init__(x, y, controls, name)
+        self.maxHealth = 2000
+        self.health = self.maxHealth
+        self.speedStatistic = 3
+        self.healthStatistic = 1
+        self.maxSpeed = 0.24
+        self.setTankName("Cicada")
+
+class Gater(Tank):
+    def __init__(self, x, y, controls, name):
+        super().__init__(x, y, controls, name)
+        self.maxHealth = 3000
+        self.health = self.maxHealth
+        self.speedStatistic = 2
+        self.healthStatistic = 2
+        self.maxSpeed = 0.18
+        self.setTankName("Gater")
+
+class Bonsai(Tank):
+    def __init__(self, x, y, controls, name):
+        super().__init__(x, y, controls, name)
+        self.maxHealth = 3250
+        self.health = self.maxHealth
+        self.speedStatistic = 2
+        self.healthStatistic = 2
+        self.maxSpeed = 0.15
+        self.setTankName("Bonsai")
+
+class Fossil(Tank):
+    def __init__(self, x, y, controls, name):
+        super().__init__(x, y, controls, name)
+        self.maxHealth = 4000
+        self.health = self.maxHealth
+        self.speedStatistic = 1
+        self.healthStatistic = 3
+        self.maxSpeed = 0.1
+        self.setTankName("Fossil")
 
 
 #Functions
@@ -1000,7 +1087,7 @@ def reset():
     tank1.setCoords(spawnTank1[0], spawnTank1[1])
     tank2.setCoords(spawnTank2[0], spawnTank2[1])
     tank1 = Tank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
-    tank2 = Tank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName)
+    tank2 = Panther(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName)
     gun1 = Boxer(tank1, controlsTank1, p1GunName)
     gun2 = Gun(tank2, controlsTank2, p2GunName)
     allSprites = pygame.sprite.Group()
@@ -1043,12 +1130,11 @@ soundPlayed = False
 
 
 # global variables
-global tankSpeed, rotationalSpeed, turretSpeed, bulletSpeed
+global rotationalSpeed, turretSpeed, bulletSpeed
 global gameOverFlag
 global animationCool
 global explosionGroup
 resetFlag = True
-tankSpeed = 0.15
 rotationalSpeed = 0.5
 turretSpeed = 0.8
 bulletSpeed = 0.5
@@ -1126,7 +1212,9 @@ buttonText = c.geT("WHITE")
 optionText = c.geT("GREY")
 #Hull and turret list
 turretList = ["Sidewinder", "Avalanche", "Boxer", "Bucket", "Chamber", "Huntsman", "Silencer", "Judge", "Watcher"]
-hullList = ["Panther", "Cicada", "Gater", "Bonsai", "Fossil"]
+# hullList = ["Panther", "Cicada", "Gater", "Bonsai", "Fossil"]
+
+hullList = [Panther(0, 0, None, "Panther"), Cicada(0, 0, None, "Cicada"), Gater(0, 0, None, "Gater"), Bonsai(0, 0, None, "Bonsai"), Fossil(0, 0, None, "Fossil")]
 turretListLength = len(turretList)
 hullListLength = len(hullList)
 
@@ -1169,7 +1257,7 @@ ColourX = HullX + verticalSpacing
 lArrowP1Turret = Button(buttonPrimary, buttonPrimary, tileSize, TurretX, tileSize, tileSize, '<', buttonText, 50)
 lArrowP1Turret.selectable(False) # Left arrow button for turret
 buttonList.append(lArrowP1Turret)
-textP1Turret = TextBox(tileSize*2, TurretX, font='Courier New',fontSize=26, text=turretList[0], textColor=buttonText)
+textP1Turret = TextBox(tileSize*2, TurretX, font='Courier New',fontSize=26, text=turretList[p1I], textColor=buttonText)
 textP1Turret.setBoxColor(optionText) # Textbox for turret
 textP1Turret.selectable(False)
 forceWidth = textP1Turret.getWidth()
@@ -1181,7 +1269,7 @@ buttonList.append(rArrowP1Turret)
 lArrowP1Hull = Button(buttonPrimary, buttonPrimary, tileSize, HullX, tileSize, tileSize, '<', buttonText, 50)
 lArrowP1Hull.selectable(False) # Left arrow button for hull
 buttonList.append(lArrowP1Hull)
-textP1Hull = TextBox(tileSize*2, HullX, font='Courier New',fontSize=26, text=hullList[0], textColor=buttonText)
+textP1Hull = TextBox(tileSize*2, HullX, font='Courier New',fontSize=26, text=hullList[p1J].getTankName(), textColor=buttonText)
 textP1Hull.setBoxColor(optionText) # Textbox for hull
 textP1Hull.selectable(False)
 buttonList.append(textP1Hull)
@@ -1203,7 +1291,7 @@ buttonList.append(rArrowP1Colour)
 rArrowP2Turret = Button(buttonPrimary, buttonPrimary, windowWidth-tileSize*2, TurretX, tileSize, tileSize, '>', buttonText, 50)
 rArrowP2Turret.selectable(False)
 buttonList.append(rArrowP2Turret) # Right arrow button for turret
-textP2Turret = TextBox(windowWidth - tileSize*2 - forceWidth, TurretX, font='Courier New',fontSize=26, text=turretList[0], textColor=buttonText)
+textP2Turret = TextBox(windowWidth - tileSize*2 - forceWidth, TurretX, font='Courier New',fontSize=26, text=turretList[p1I], textColor=buttonText)
 textP2Turret.setBoxColor(optionText)
 textP2Turret.selectable(False)
 buttonList.append(textP2Turret)  # Textbox for turret
@@ -1214,7 +1302,7 @@ buttonList.append(lArrowP2Turret) # Left arrow button for turret
 rArrowP2Hull = Button(buttonPrimary, buttonPrimary,  windowWidth-tileSize*2, HullX, tileSize, tileSize, '>', buttonText, 50)
 rArrowP2Hull.selectable(False)
 buttonList.append(rArrowP2Hull) # Right arrow button for hull
-textP2Hull = TextBox(windowWidth - tileSize*2 - forceWidth, HullX, font='Courier New',fontSize=26, text=hullList[0], textColor=buttonText)
+textP2Hull = TextBox(windowWidth - tileSize*2 - forceWidth, HullX, font='Courier New',fontSize=26, text=hullList[p1J].getTankName(), textColor=buttonText)
 textP2Hull.setBoxColor(optionText)
 textP2Hull.selectable(False) # Textbox for hull
 buttonList.append(textP2Hull)
@@ -1312,10 +1400,10 @@ def checkButtons(mouse):
         textP1Turret.setText(turretList[p1I])
     if lArrowP1Hull.buttonClick(mouse):
         p1J = (p1J - 1) % hullListLength
-        textP1Hull.setText(hullList[p1J])
+        textP1Hull.setText(hullList[p1J].getTankName())
     if rArrowP1Hull.buttonClick(mouse):
         p1J = (p1J + 1) % hullListLength
-        textP1Hull.setText(hullList[p1J])
+        textP1Hull.setText(hullList[p1J].getTankName())
     if lArrowP2Turret.buttonClick(mouse):
         p2I = (p2I - 1) % turretListLength
         textP2Turret.setText(turretList[p2I])
@@ -1324,10 +1412,10 @@ def checkButtons(mouse):
         textP2Turret.setText(turretList[p2I])
     if lArrowP2Hull.buttonClick(mouse):
         p2J = (p2J - 1) % hullListLength
-        textP2Hull.setText(hullList[p2J])
+        textP2Hull.setText(hullList[p2J].getTankName())
     if rArrowP2Hull.buttonClick(mouse):
         p2J = (p2J + 1) % hullListLength
-        textP2Hull.setText(hullList[p2J])
+        textP2Hull.setText(hullList[p2J].getTankName())
     if lArrowP1Colour.buttonClick(mouse):
         p1K = (p1K - 1) % len(hullColors)
         if p1K == p2K:
@@ -1445,9 +1533,13 @@ tank1Dead = False
 tank2Dead = False
 
 
+player1PackageTank = [spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName]
+player1PackageGun = [tank1, controlsTank1, p1GunName]
+player2Package = [spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName]
+
 # Create two tank instances with different controls
 tank1 = Tank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
-tank2 = Tank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName)
+tank2 = Panther(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName)
 gun1 = Boxer(tank1, controlsTank1, p1GunName)
 gun2 = Gun(tank2, controlsTank2, p2GunName)
 
@@ -1490,8 +1582,8 @@ while not done:
             elif gameMode == GameMode.selection:
                 textP1Turret.setText(turretList[p1I])
                 textP2Turret.setText(turretList[p2I])
-                textP1Hull.setText(hullList[p1J])
-                textP2Hull.setText(hullList[p2J])
+                textP1Hull.setText(hullList[p1J].getTankName())
+                textP2Hull.setText(hullList[p2J].getTankName())
                 checkButtons(pygame.mouse.get_pos())
             elif gameMode == GameMode.home:
                 checkHomeButtons(pygame.mouse.get_pos())
@@ -1562,7 +1654,7 @@ while not done:
         #Blocks
         speedBarOutline = pygame.draw.rect(screen, c.geT("BLACK"), (tileSize, tileSize*multiplyConstant, rectX, rectY),barBorder)
         speedBar = pygame.draw.rect(screen, c.geT("GREEN"), (tileSize + speedText.getWidth(), tileSize*multiplyConstant,
-                                                             (rectX - speedText.getWidth()) * tankValue/3, rectY))
+                                                             (rectX - speedText.getWidth()) * hullList[p1J].getSpeedStatistic()/3, rectY))
         #Outlines
         speedOutline = pygame.draw.rect(screen, (0,0,0), (tileSize + speedText.getWidth(), tileSize*multiplyConstant,
                                                           rectX - speedText.getWidth(), rectY), barBorder)
@@ -1571,7 +1663,7 @@ while not done:
 
         healthBarOutline = pygame.draw.rect(screen, c.geT("BLACK"), (tileSize, tileSize*multiplyConstant + offset, rectX, rectY),barBorder)
         healthBar = pygame.draw.rect(screen, c.geT("GREEN"), (tileSize + speedText.getWidth(), tileSize*multiplyConstant + offset,
-                                                              (rectX - speedText.getWidth()) * tankValue/3, rectY))
+                                                              (rectX - speedText.getWidth()) * hullList[p1J].getHealthStatistic()/3, rectY))
         #Outlines
         healthOutline = pygame.draw.rect(screen, (0,0,0), (tileSize + speedText.getWidth(), tileSize*multiplyConstant + offset,
                                                            rectX - speedText.getWidth(), rectY), barBorder)
@@ -1581,7 +1673,7 @@ while not done:
 
         damageBarOutline = pygame.draw.rect(screen, c.geT("BLACK"), (tileSize, tileSize*multiplyConstant + offset*2, rectX, rectY),barBorder)
         damageBar = pygame.draw.rect(screen, c.geT("GREEN"), (tileSize + speedText.getWidth(), tileSize*multiplyConstant + offset*2,
-                                                              (rectX - speedText.getWidth()) * tankValue/3, rectY))
+                                                              (rectX - speedText.getWidth()) * gun1.getDamageStatistic()/3, rectY))
         #Outlines
         damageOutline = pygame.draw.rect(screen, (0,0,0), (tileSize + speedText.getWidth(), tileSize*multiplyConstant + offset*2,
                                                            rectX - speedText.getWidth(), rectY), barBorder)
@@ -1591,7 +1683,7 @@ while not done:
 
         reloadBarOutline = pygame.draw.rect(screen, c.geT("BLACK"), (tileSize, tileSize*multiplyConstant + offset*3, rectX, rectY),barBorder)
         reloadBar = pygame.draw.rect(screen, c.geT("GREEN"), (tileSize + speedText.getWidth(), tileSize*multiplyConstant + offset*3,
-                                                              (rectX - speedText.getWidth()) * tankValue/3, rectY))
+                                                              (rectX - speedText.getWidth()) * gun1.getReloadStatistic()/3, rectY))
         #Outlines
         reloadOutline = pygame.draw.rect(screen, (0,0,0), (tileSize + speedText.getWidth(), tileSize*multiplyConstant + offset*3,
                                                            rectX - speedText.getWidth(), rectY), barBorder)
@@ -1602,7 +1694,7 @@ while not done:
         speedBarOutline2 = pygame.draw.rect(screen, c.geT("BLACK"), (windowWidth - tileSize*3 - forceWidth, tileSize*multiplyConstant,
                                                                      rectX, rectY),barBorder)
         speedBar2 = pygame.draw.rect(screen, c.geT("GREEN"), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
-                                                              tileSize*multiplyConstant, (rectX - speedText.getWidth()) * tankValue/3, rectY))
+                                                              tileSize*multiplyConstant, (rectX - speedText.getWidth()) * hullList[p2J].getSpeedStatistic()/3, rectY))
         #Outlines
         speedOutline2 = pygame.draw.rect(screen, (0,0,0), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
                                                            tileSize*multiplyConstant, rectX - speedText.getWidth(), rectY), barBorder)
@@ -1614,7 +1706,7 @@ while not done:
                                                                       tileSize*multiplyConstant + offset, rectX, rectY),barBorder)
         healthBar2 = pygame.draw.rect(screen, c.geT("GREEN"), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
                                                                tileSize*multiplyConstant + offset,
-                                                               (rectX - speedText.getWidth()) * tankValue/3, rectY))
+                                                               (rectX - speedText.getWidth()) * hullList[p2J].getHealthStatistic()/3, rectY))
         #Outlines
         healthOutline2 = pygame.draw.rect(screen, (0,0,0), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
                                                             tileSize*multiplyConstant + offset, rectX - speedText.getWidth(), rectY), barBorder)
@@ -1625,7 +1717,8 @@ while not done:
         damageBarOutline2 = pygame.draw.rect(screen, c.geT("BLACK"), (windowWidth - tileSize*3 - forceWidth, tileSize*multiplyConstant + offset*2,
                                                                       rectX, rectY),barBorder)
         damageBar2 = pygame.draw.rect(screen, c.geT("GREEN"), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
-                                                               tileSize*multiplyConstant + offset*2, (rectX - speedText.getWidth()) * tankValue/3,
+                                                               tileSize*multiplyConstant + offset*2,
+                                                               (rectX - speedText.getWidth()) * gun2.getDamageStatistic()/3,
                                                                rectY))
         #Outlines
         damageOutline2 = pygame.draw.rect(screen, (0,0,0), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
@@ -1638,7 +1731,7 @@ while not done:
                                                                       rectX, rectY),barBorder)
         reloadBar2 = pygame.draw.rect(screen, c.geT("GREEN"),
                                       (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(), tileSize*multiplyConstant + offset*3,
-                                       (rectX - speedText.getWidth()) * tankValue/3, rectY))
+                                       (rectX - speedText.getWidth()) * gun2.getReloadStatistic()/3, rectY))
         #Outlines
         reloadOutline2 = pygame.draw.rect(screen, (0,0,0), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
                                                             tileSize*multiplyConstant + offset*3, rectX - speedText.getWidth(), rectY), barBorder)
