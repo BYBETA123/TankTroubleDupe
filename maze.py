@@ -1298,7 +1298,12 @@ def checkButtons(mouse):
         textP2Colour.setBoxColor(c.geT(ColorIndex[p2K]))
     if playButton.buttonClick(mouse):
         print("Play")
+        global music, musicMax
         gameMode=GameMode.play
+        music.stop()
+        music = gameMusic
+        musicMax = gameMusicMax
+        music.play(-1)
     if homeButton.buttonClick(mouse):
         print("Back")
         gameMode = GameMode.menu
@@ -1359,6 +1364,8 @@ tankDeadSFX = pygame.mixer.Sound("Sounds/tank_dead.mp3")
 turretRotateSFX = pygame.mixer.Sound("Sounds/tank_turret_rotate.wav")
 tankMoveSFX = pygame.mixer.Sound("Sounds/tank_moving.mp3")
 lobbyMusic = pygame.mixer.Sound("Sounds/lobby_music.wav")
+selectionMusic = pygame.mixer.Sound("Sounds/selection_music.mp3")
+gameMusic = pygame.mixer.Sound("Sounds/game_music.mp3")
 tankShootMax = 1
 tankDeadMax = 0.5
 turretRotateMax = 0.2
@@ -1367,7 +1374,8 @@ lobbyMusicMax = 0.2
 gameMusicMax = 0.2
 selectionMusicMax = 1
 explosionGroup = pygame.sprite.Group() #All the explosions
-
+music = lobbyMusic
+musicMax = lobbyMusicMax
 initialStartTime = pygame.time.get_ticks()
 soundPlayed = False
 
@@ -1441,10 +1449,10 @@ while not done:
 
     #Start the lobby music
     if not soundPlayed and pygame.time.get_ticks() - initialStartTime > 2000: # Delay by 1 second
-        lobbyMusic.play(-1)
+        music.play(-1)
         soundPlayed = True
 
-    lobbyMusic.set_volume(mute.getValue() * lobbyMusicMax)
+    music.set_volume(mute.getValue() * musicMax)
     tankShootSFX.set_volume(sfx.getValue() * tankShootMax)
     tankDeadSFX.set_volume(sfx.getValue() * tankDeadMax)
     turretRotateSFX.set_volume(sfx.getValue() * turretRotateMax)
