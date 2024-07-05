@@ -31,9 +31,9 @@ class Tank(pygame.sprite.Sprite):
         self.angle = 0
         self.center = (x, y)
         self.controls = controls
-        self.health = 100
+        self.health = 3000
         self.image = self.tankImage
-        self.maxHealth = 100
+        self.maxHealth = 3000
         self.name = name
         self.rect = self.tankImage.get_rect(center=(x, y))
         self.rotationSpeed = 0
@@ -162,21 +162,15 @@ class Tank(pygame.sprite.Sprite):
         dy = math.sin(angleRad) * self.speed
         self.x, self.y = self.fixMovement(dx,dy) # Adjust the movement
 
-    def getHealth(self):
-        return self.health, self.maxHealth
-
     def damage(self, damage):
         # This function will adjust the damage that the tank has taken
         # Inputs: damage: The amount of damage that the tank has taken
         # Outputs: None
         self.health -= damage
-        global tank1Health, tank2Health
         if self.name == p1TankName:
-            print("Damage: ", tank1Health)
-            tank1Health -= damage
+            print("Damage: ", tank1.getHealth())
         elif self.name == p2TankName:
-            print("Damage Updated: ", tank2Health)
-            tank2Health -= damage
+            print("Damage Updated: ", tank2.getHealth())
         else:
             print("Error: Invalid tank name")
 
@@ -225,6 +219,12 @@ class Tank(pygame.sprite.Sprite):
 
     def setCentre(self, x, y):
         self.rect.center = (x, y)
+
+    def getHealth(self):
+        return self.health
+    
+    def getMaxHealth(self):
+        return self.maxHealth
 
 class Gun(pygame.sprite.Sprite):
     def __init__(self, tank, controls, name):
@@ -411,7 +411,7 @@ class Bullet(pygame.sprite.Sprite):
         self.y = self.rect.centery
         self.bounce = 5 #Abitrary number but the amount of bounces before the bullet is removed
         self.corners = [(self.rect.x, self.rect.y), (self.rect.x + self.rect.width, self.rect.y), (self.rect.x + self.rect.width, self.rect.y + self.rect.height), (self.rect.x, self.rect.y + self.rect.height)]
-        self.damage = 100
+        self.damage = 350
     def update(self):
         """
         Updates the bullet's position based on its speed and direction.
@@ -458,7 +458,7 @@ class Bullet(pygame.sprite.Sprite):
                 tank2.damage(self.damage)
                 self.kill()
             global tank1Dead, tank2Dead
-            if tank1.getHealth()[0] <= 0:
+            if tank1.getHealth() <= 0:
                 gameOverFlag = True #The game is over
                 self.kill()
                 gun1.setCooldown()
@@ -467,7 +467,7 @@ class Bullet(pygame.sprite.Sprite):
                     print("Player 2 Wins")
                     p2Score += 1
                     tank1Dead = True
-            if tank2.getHealth()[0] <= 0:
+            if tank2.getHealth() <= 0:
                 gameOverFlag = True #The game is over
                 self.kill()
                 gun2.setCooldown()
@@ -861,7 +861,7 @@ def playGame():
     # Inputs: None
     # Outputs: None
     # Because of the way the game is structured, these global variables can't be avoided
-    global gameOverFlag, cooldownTimer, startTime, tank1Health, tank2Health, p1Score, p2Score
+    global gameOverFlag, cooldownTimer, startTime, p1Score, p2Score
     global tank1Dead, tank2Dead, gun1Cooldown, gun2Cooldown, tileList, spawnpoint
     global tank1, tank2, gun1, gun2, allSprites, bulletSprites
 
@@ -900,7 +900,7 @@ def playGame():
     screen.blit(textp1Name,[p1NameIndent, 0.783*windowHeight]) # This is the name on the left
     #Health bars outline
     #Health bar
-    pygame.draw.rect(screen, c.geT("RED"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth*((tank1Health)/100), barHeight]) # Bar
+    pygame.draw.rect(screen, c.geT("RED"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth*((tank1.getHealth())/tank1.getMaxHealth()), barHeight]) # Bar
     pygame.draw.rect(screen, c.geT("BLACK"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth, barHeight], 2) # Outline
     #Reload bars
     pygame.draw.rect(screen, c.geT("BLUE"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + mazeY, barWidth*((300-gun1Cooldown)/300), barHeight]) # The 25 is to space from the health bar
@@ -910,7 +910,7 @@ def playGame():
     screen.blit(textp2Name,[p2NameIndent - textp2Name.get_width(), 0.783*windowHeight]) # This is the name on the left
     #Health bars
     pygame.draw.rect(screen, c.geT("RED"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth, barHeight])
-    pygame.draw.rect(screen, c.geT("GREY"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth*((100-tank2Health)/100), barHeight])
+    pygame.draw.rect(screen, c.geT("GREY"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth*((tank2.getMaxHealth()-tank2.getHealth())/tank2.getMaxHealth()), barHeight])
     pygame.draw.rect(screen, c.geT("BLACK"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth, barHeight], 2)
     #Reload bars
     pygame.draw.rect(screen, c.geT("BLUE"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + mazeY, barWidth*((300-gun2Cooldown)/300), barHeight]) # The 25 is to space from the health bar
@@ -963,7 +963,7 @@ def reset():
     # Inputs: None
     # Outputs: None
     # Because of the way it's coded, these global declarations can't be avoided
-    global gameOverFlag, cooldownTimer, startTime, tank1Health, tank2Health, p1Score, p2Score
+    global gameOverFlag, cooldownTimer, startTime, p1Score, p2Score
     global tank1Dead, tank2Dead, gun1Cooldown, gun2Cooldown, tileList, spawnpoint
     global tank1, tank2, gun1, gun2, allSprites, bulletSprites
     gameOverFlag = False
@@ -976,8 +976,6 @@ def reset():
     #Nautural constants
     startTime = 0
     gameOverFlag = False
-    tank1Health = 100
-    tank2Health = 100
     tank1Dead = False
     tank2Dead = False
     gun1Cooldown = 0
@@ -1425,10 +1423,6 @@ controlsTank2 = {
 spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
 spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
 
-global tank1Health, tank2Health
-tank1Health = 100
-tank2Health = 100
-
 global gun1Cooldown, gun2Cooldown
 gun1Cooldown = 0
 gun2Cooldown = 0
@@ -1646,7 +1640,6 @@ while not done:
         screen.blit(hullColors[p2K], (windowWidth - tileSize*2 - forceWidth//2-50, tileSize*2))
         screen.blit(gunColors[p1K], (tileSize*2 + forceWidth//2, tileSize*2.5))
         screen.blit(gunColors[p2K], (windowWidth - tileSize*2 - forceWidth//2, tileSize*2.5))
-
     elif gameMode == GameMode.home:
         # Draw the tank image
         screen.blit(originalTankImage, (230, 65))  # Adjust the coordinates as needed
@@ -1659,7 +1652,6 @@ while not done:
         for button in homeButtonList:
             button.update_display(mouse_pos)
             button.draw(screen, outline=True)
-
     else:
         screen.fill(c.geT("WHITE"))
     clock.tick(240) # Set the FPS
