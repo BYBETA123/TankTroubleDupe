@@ -14,6 +14,7 @@ class Button:
         self.display = self.color
         self.textSize = textSize
         self.hoverColor = hoverColor  # New attribute for hover color
+        self.hover = True
 
     def draw(self, screen, outline=None):
         pygame.draw.rect(screen, self.display, (self.x, self.y, self.width, self.height), 0)
@@ -25,7 +26,7 @@ class Button:
             text = font.render(self.text, 1, self.textColor)
             screen.blit(text, (self.x + (self.width / 2 - text.get_width() / 2), self.y + (self.height / 2 - text.get_height() / 2)))
 
-    def ButtonClick(self, mouse):
+    def buttonClick(self, mouse):
         if not(self.x < mouse[0] < self.x + self.width and self.y < mouse[1] < self.y + self.height):
             return False
         self.buttonState = not self.buttonState
@@ -42,13 +43,15 @@ class Button:
         return self.x <= pos[0] <= self.x + self.width and self.y <= pos[1] <= self.y + self.height
 
     def update_display(self, mouse_pos):
-        if self.is_hovered(mouse_pos):
+        if self.is_hovered(mouse_pos) and self.hover:
             self.display = self.hoverColor
         elif self.buttonState:
             self.display = self.secondaryColor
         else:
             self.display = self.color
 
+    def selectable(self, value):
+        self.hover = value
 
 class ButtonSlider:
     carrierX = 20
@@ -92,7 +95,7 @@ class ButtonSlider:
         if outline:
             pygame.draw.rect(screen, (0, 0, 255), (self.x + self.buttonSpacing * 2, self.y - self.carrierY / 2, self.width, self.carrierY), 1)
 
-    def ButtonClick(self):
+    def buttonClick(self):
         self.clicked = not self.clicked
         if self.clicked:
             self.display = self.buttonSecondaryColor
@@ -106,7 +109,7 @@ class ButtonSlider:
         if not(self.y - self.height / 2 < mouseY < self.y + self.height / 2 and self.x + self.buttonSpacing * 2 < mouseX < self.x + self.width + self.buttonSpacing * 2):
             return
         if self.clicked:
-            self.ButtonClick()
+            self.buttonClick()
         self.carLocationX = mouseX - self.buttonSpacing * 2
 
     def getPercentage(self):
@@ -115,7 +118,7 @@ class ButtonSlider:
 
     def checkButtonClick(self, mouseX, mouseY):
         if self.x < mouseX < self.x + self.buttonWidth and self.y < mouseY + self.buttonHeight / 2 < self.y + self.buttonHeight:
-            self.ButtonClick()
+            self.buttonClick()
 
     def getValue(self):
         if self.clicked:
@@ -129,6 +132,7 @@ class ButtonSlider:
 class TextBox:
     paddingWidth, paddingHeight = 10, 10
     characterPad = 10
+    hover = False # Whether or not we want to show a hover effect
     def __init__(self, x, y, font, text='Click me!', fontSize = 20, textColor = (0,0,0)):
         self.x=x
         self.y=y
@@ -149,15 +153,25 @@ class TextBox:
 
     def draw(self, screen, outline = False):
         # Draw the text box
+
+        mouse = pygame.mouse.get_pos()
+
+
         pygame.draw.rect(screen, self.box_color, self.rect)
         if outline:
             pygame.draw.rect(screen, (0,0,0), self.rect, 1)
+
+        if self.rect.x < mouse[0] < self.rect.x + self.rect.width and self.rect.y < mouse[1] < self.rect.y + self.rect.height and self.hover:
+            pygame.draw.rect(screen, (100,100,255), self.rect)
+            #We are hovering
 
         # Center the text within the box
         text_x = self.rect.x + (self.rect.width - self.text_width) / 2
         text_y = self.rect.y + (self.rect.height - self.text_height) / 2
         screen.blit(self.text_surface, (text_x, text_y))
 
+    def selectable(self, value):
+        self.hover = value
 
     def getCorners(self):
         return [self.rect.x, self.rect.y, self.rect.x + self.rect.width, self.rect.y + self.rect.height]
@@ -189,7 +203,7 @@ class TextBox:
         self.rect.width = self.text_width + 2 * self.paddingWidth
         self.rect.height = self.text_height + 2 * self.paddingHeight
 
-    def ButtonClick(self, mouse):
+    def buttonClick(self, mouse):
         # Just check if we are clicked
         if not(self.rect.x < mouse[0] < self.rect.x + self.rect.width and self.rect.y < mouse[1] < self.rect.y + self.rect.height):
             return False
@@ -205,3 +219,6 @@ class TextBox:
         self.fontSize = textSize
         self.text_surface = pygame.font.SysFont(self.font, textSize, bold=True).render(self.text, True, self.text_color)
         self.text_width, self.text_height = self.text_surface.get_size()
+
+    def update_display(self, mouse):
+        return
