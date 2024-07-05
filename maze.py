@@ -259,10 +259,10 @@ class Gun(pygame.sprite.Sprite):
         self.gunBackDuration = 200
         self.canShoot = True
         self.shootCooldown = 0
-        self.cooldownDuration = 300
         self.soundPlaying=False
         self.lastUpdateTime = pygame.time.get_ticks()
-
+        self.cooldownDuration = 500
+        self.damage = 700
         # Initialize the gun's floating-point position
         self.x = float(self.rect.centerx)
         self.y = float(self.rect.centery)
@@ -329,6 +329,7 @@ class Gun(pygame.sprite.Sprite):
             bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
             bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
             bullet = Bullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
+            bullet.setDamage(self.damage)
             allSprites.add(bullet)
             bulletSprites.add(bullet)
 
@@ -411,7 +412,7 @@ class Bullet(pygame.sprite.Sprite):
         self.y = self.rect.centery
         self.bounce = 5 #Abitrary number but the amount of bounces before the bullet is removed
         self.corners = [(self.rect.x, self.rect.y), (self.rect.x + self.rect.width, self.rect.y), (self.rect.x + self.rect.width, self.rect.y + self.rect.height), (self.rect.x, self.rect.y + self.rect.height)]
-        self.damage = 350
+        self.damage = 700
     def update(self):
         """
         Updates the bullet's position based on its speed and direction.
@@ -450,7 +451,7 @@ class Bullet(pygame.sprite.Sprite):
             global p1Score, p2Score, gameOverFlag
             #If either tank dies, play this tank dead sound effect.
             tankDeadSFX.play()
-            if tank1Collision: #If we hit tank1 then give p2 a point
+            if tank1Collision: #If we hit tank1
                 tank1.damage(self.damage)
                 self.kill()
                 
@@ -510,6 +511,9 @@ class Bullet(pygame.sprite.Sprite):
 
     def updateCorners(self):
         self.corners = [(self.rect.x, self.rect.y), (self.rect.x + self.rect.width, self.rect.y), (self.rect.x + self.rect.width, self.rect.y + self.rect.height), (self.rect.x, self.rect.y + self.rect.height)]
+
+    def setDamage(self, damage):
+        self.damage = damage
 
 class Tile:
     # border = [False, False, False, False]
@@ -671,6 +675,15 @@ class GameMode(Enum):
     home = 2
     settings = 3
     selection = 4
+
+class Boxer(Gun):
+    def __init__(self, tank, controls, name):
+        super().__init__(tank, controls, name)
+        self.cooldownDuration = 200 #200 ms
+        self.damage = 200
+
+
+
 
 #Functions
 def tileGen():
@@ -988,7 +1001,7 @@ def reset():
     tank2.setCoords(spawnTank2[0], spawnTank2[1])
     tank1 = Tank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
     tank2 = Tank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName)
-    gun1 = Gun(tank1, controlsTank1, p1GunName)
+    gun1 = Boxer(tank1, controlsTank1, p1GunName)
     gun2 = Gun(tank2, controlsTank2, p2GunName)
     allSprites = pygame.sprite.Group()
     allSprites.add(tank1, gun1, tank2, gun2)
@@ -1435,7 +1448,7 @@ tank2Dead = False
 # Create two tank instances with different controls
 tank1 = Tank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
 tank2 = Tank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName)
-gun1 = Gun(tank1, controlsTank1, p1GunName)
+gun1 = Boxer(tank1, controlsTank1, p1GunName)
 gun2 = Gun(tank2, controlsTank2, p2GunName)
 
 allSprites = pygame.sprite.Group()
@@ -1504,11 +1517,9 @@ while not done:
                 elif gameMode == GameMode.play:
                     gameMode = GameMode.pause # Pause the game
             if event.key == pygame.K_l:
-                lobbyMusicMax -= 0.01
-                print("The current volume is: ", lobbyMusicMax)
+                pass
             if event.key == pygame.K_k:
-                lobbyMusicMax += 0.01
-                print("The current volume is: ", lobbyMusicMax)
+                pass
             if event.key == pygame.K_f:
                 print("The current FPS is: ", clock.get_fps())
             if event.key == pygame.K_n:
