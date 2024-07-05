@@ -1165,9 +1165,9 @@ while not done:
                     print("Quitting the game")
                     done = True # We quit the appplication
                 if mute.getCorners()[0] <= mouse[0] <= mute.getCorners()[2] and mute.getCorners()[1] <= mouse[1] <= mute.getCorners()[3]:
-                    mute.ButtonClick()
+                    mute.buttonClick()
                 if sfx.getCorners()[0] <= mouse[0] <= sfx.getCorners()[2] and sfx.getCorners()[1] <= mouse[1] <= sfx.getCorners()[3]:
-                    sfx.ButtonClick()
+                    sfx.buttonClick()
 
         elif event.type == pygame.KEYDOWN: # Any key pressed
             if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window

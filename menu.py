@@ -43,7 +43,7 @@ while running:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
                 for button in buttonList:
-                    if button.ButtonClick(pygame.mouse.get_pos()):
+                    if button.buttonClick(pygame.mouse.get_pos()):
                         button.clicked = True
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
