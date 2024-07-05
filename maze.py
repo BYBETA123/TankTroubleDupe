@@ -997,13 +997,36 @@ def reset():
     bulletSprites = pygame.sprite.Group()
 
 #Game setup
-
 #Start the game setup
 pygame.init()
 pygame.display.set_caption("TankTroubleDupe") # Name the window
 clock = pygame.time.Clock() # Start the clock
 #Keeping the mouse and its location
 mouse = pygame.mouse.get_pos()
+
+
+#Music setup
+#Sound effects for shooting, tank dying, tank moving and tank turret rotating.
+global tankShootSFX, tankDeadSFX, turretRotateSFX, tankMoveSFX
+tankShootSFX = pygame.mixer.Sound("Sounds/tank_shoot.mp3")
+tankDeadSFX = pygame.mixer.Sound("Sounds/tank_dead.mp3")
+turretRotateSFX = pygame.mixer.Sound("Sounds/tank_turret_rotate.wav")
+tankMoveSFX = pygame.mixer.Sound("Sounds/tank_moving.mp3")
+lobbyMusic = pygame.mixer.Sound("Sounds/lobby_music.wav")
+selectionMusic = pygame.mixer.Sound("Sounds/selection_music.mp3")
+gameMusic = pygame.mixer.Sound("Sounds/game_music.mp3")
+tankShootMax = 1
+tankDeadMax = 0.5
+turretRotateMax = 0.2
+tankMoveMax = 0.05
+lobbyMusicMax = 0.2
+gameMusicMax = 0.2
+selectionMusicMax = 1
+global music, musicMax
+music = lobbyMusic
+musicMax = lobbyMusicMax
+initialStartTime = pygame.time.get_ticks()
+soundPlayed = False
 
 #Setting up the window
 
@@ -1022,6 +1045,7 @@ gameOverFlag = False
 startTime = 0
 cooldownTimer = False
 animationCool = 12
+explosionGroup = pygame.sprite.Group() #All the explosions
 
 global arbitraryWidth, arbitraryHeight
 arbitraryWidth = 50
@@ -1056,7 +1080,7 @@ colAmount = mazeWidth//tileSize # Assigning the amount of columns
 barWidth = 150
 barHeight = 20
 bg = c.geT('GREY')
-gameMode = GameMode.selection # 1 is for single player, 2 is for multiplayer
+gameMode = GameMode.home
 #Changing variables
 p1TankName = "Plwasd1"
 p2TankName = "Plarro2"
@@ -1296,17 +1320,65 @@ def checkButtons(mouse):
         if p2K == p1K:
             p2K = (p2K + 1) % len(hullColors)
         textP2Colour.setBoxColor(c.geT(ColorIndex[p2K]))
+    global music, musicMax # Handling music
     if playButton.buttonClick(mouse):
+        #Switch the the play screen
         print("Play")
-        global music, musicMax
         gameMode=GameMode.play
         music.stop()
         music = gameMusic
         musicMax = gameMusicMax
         music.play(-1)
     if homeButton.buttonClick(mouse):
+        #Switch back to the home screen
         print("Back")
-        gameMode = GameMode.menu
+        gameMode = GameMode.home
+        music.stop()
+        # global music, musicMax
+        music = lobbyMusic
+        musicMax = lobbyMusicMax
+        music.play(-1)
+
+def checkHomeButtons(mouse):
+    global gameMode
+    if playButtonHome.buttonClick(mouse):
+        #Switch to the selection screen
+        gameMode = GameMode.selection
+        global music, musicMax
+        print("Selection")
+        music.stop()
+        music = selectionMusic
+        musicMax = selectionMusicMax
+        music.play(-1)
+    if settingsButton.buttonClick(mouse):
+        print("Unimplmented")
+        # gameMode = GameMode.settings
+    if quitButtonHome.buttonClick(mouse):
+        global done
+        done = True
+
+#Menu screen
+homeButtonList = []
+
+# Load the tank image
+currentDir = os.path.dirname(__file__)
+tankPath = os.path.join(currentDir, 'tank_menu_logo.png')
+originalTankImage = pygame.image.load(tankPath).convert_alpha()
+
+
+
+# Create buttons with specified positions and text
+playButtonHome = Button((0, 0, 0), (0, 0, 255), 150, 400, 175, 70, 'Play', (255, 255, 255), 30, hoverColor=(100, 100, 255))
+settingsButton = Button((0, 0, 0), (0, 0, 255), 475, 400, 175, 70, 'Settings', (255, 255, 255), 30, hoverColor=(100, 100, 255))
+quitButtonHome = Button((0, 0, 0), (0, 0, 255), 10, 10, 130, 50, 'Quit', (255, 255, 255), 25, hoverColor=(100, 100, 255))
+
+homeButtonList.append(playButtonHome)
+homeButtonList.append(settingsButton)
+homeButtonList.append(quitButtonHome)
+
+# Define title text properties
+titleFont = pygame.font.SysFont('Arial', 60)
+titleText = titleFont.render('Tank Game Menu', True, (0, 0, 0))  # Render the title text
 
 # Controls for the first tank
 controlsTank1 = {
@@ -1356,29 +1428,6 @@ allSprites = pygame.sprite.Group()
 allSprites.add(tank1, gun1, tank2, gun2)
 bulletSprites = pygame.sprite.Group()
 
-
-#Sound effects for shooting, tank dying, tank moving and tank turret rotating.
-global tankShootSFX, tankDeadSFX, turretRotateSFX, tankMoveSFX
-tankShootSFX = pygame.mixer.Sound("Sounds/tank_shoot.mp3")
-tankDeadSFX = pygame.mixer.Sound("Sounds/tank_dead.mp3")
-turretRotateSFX = pygame.mixer.Sound("Sounds/tank_turret_rotate.wav")
-tankMoveSFX = pygame.mixer.Sound("Sounds/tank_moving.mp3")
-lobbyMusic = pygame.mixer.Sound("Sounds/lobby_music.wav")
-selectionMusic = pygame.mixer.Sound("Sounds/selection_music.mp3")
-gameMusic = pygame.mixer.Sound("Sounds/game_music.mp3")
-tankShootMax = 1
-tankDeadMax = 0.5
-turretRotateMax = 0.2
-tankMoveMax = 0.05
-lobbyMusicMax = 0.2
-gameMusicMax = 0.2
-selectionMusicMax = 1
-explosionGroup = pygame.sprite.Group() #All the explosions
-music = lobbyMusic
-musicMax = lobbyMusicMax
-initialStartTime = pygame.time.get_ticks()
-soundPlayed = False
-
 #Main loop
 while not done:
     for event in pygame.event.get():
@@ -1394,8 +1443,7 @@ while not done:
                 if unPause.getCorners()[0] <= mouse[0] <= unPause.getCorners()[2] and unPause.getCorners()[1] <= mouse[1] <= unPause.getCorners()[3]: #If we click the button
                     gameMode = GameMode.play # Return to game if button was clicked
                 if home.getCorners()[0] <= mouse[0] <= home.getCorners()[2] and home.getCorners()[1] <= mouse[1] <= home.getCorners()[3]:
-                    print("Returnning to home")
-                    print("This isn't implemented yet, choose another action")
+                    gameMode = GameMode.home
                 if quitButton.getCorners()[0] <= mouse[0] <= quitButton.getCorners()[2] and quitButton.getCorners()[1] <= mouse[1] <= quitButton.getCorners()[3]:
                     print("Quitting the game")
                     done = True # We quit the appplication
@@ -1409,6 +1457,8 @@ while not done:
                 textP1Hull.setText(hullList[p1J])
                 textP2Hull.setText(hullList[p2J])
                 checkButtons(pygame.mouse.get_pos())
+            elif gameMode == GameMode.home:
+                checkHomeButtons(pygame.mouse.get_pos())
         elif event.type == pygame.KEYDOWN: # Any key pressed
             if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
                 done = True
@@ -1529,6 +1579,19 @@ while not done:
         screen.blit(hullColors[p2K], (windowWidth - tileSize*2 - forceWidth//2-50, tileSize*2))
         screen.blit(gunColors[p1K], (tileSize*2 + forceWidth//2, tileSize*2.5))
         screen.blit(gunColors[p2K], (windowWidth - tileSize*2 - forceWidth//2, tileSize*2.5))
+
+    elif gameMode == GameMode.home:
+        # Draw the tank image
+        screen.blit(originalTankImage, (230, 65))  # Adjust the coordinates as needed
+
+        # Draw the title text
+        screen.blit(titleText, (windowWidth // 2 - titleText.get_width() // 2, 50))  # Centered horizontally, 50 pixels from top
+
+        # Handle hover effect and draw buttons
+        mouse_pos = pygame.mouse.get_pos()
+        for button in homeButtonList:
+            button.update_display(mouse_pos)
+            button.draw(screen, outline=True)
     else:
         screen.fill(c.geT("WHITE"))
     clock.tick(240) # Set the FPS

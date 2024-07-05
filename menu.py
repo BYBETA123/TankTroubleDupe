@@ -14,7 +14,7 @@ pygame.display.set_caption('Tank Game Menu')  # Set the window title
 running = True
 
 clock = pygame.time.Clock()
-buttonList = []
+homeButtonList = []
 
 # Load the tank image
 currentDir = os.path.dirname(__file__)
@@ -24,13 +24,13 @@ originalTankImage = pygame.image.load(tankPath).convert_alpha()
 
 
 # Create buttons with specified positions and text
-playButton = Button((0, 0, 0), (0, 0, 255), 150, 400, 175, 70, 'Play', (255, 255, 255), 30, hoverColor=(100, 100, 255))
+playButtonHome = Button((0, 0, 0), (0, 0, 255), 150, 400, 175, 70, 'Play', (255, 255, 255), 30, hoverColor=(100, 100, 255))
 settingsButton = Button((0, 0, 0), (0, 0, 255), 475, 400, 175, 70, 'Settings', (255, 255, 255), 30, hoverColor=(100, 100, 255))
-quitButton = Button((0, 0, 0), (0, 0, 255), 10, 10, 130, 50, 'Quit', (255, 255, 255), 25, hoverColor=(100, 100, 255))
+quitButtonHome = Button((0, 0, 0), (0, 0, 255), 10, 10, 130, 50, 'Quit', (255, 255, 255), 25, hoverColor=(100, 100, 255))
 
-buttonList.append(playButton)
-buttonList.append(settingsButton)
-buttonList.append(quitButton)
+homeButtonList.append(playButtonHome)
+homeButtonList.append(settingsButton)
+homeButtonList.append(quitButtonHome)
 
 # Define title text properties
 titleFont = pygame.font.SysFont('Arial', 60)
@@ -42,7 +42,7 @@ while running:
             running = False
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
-                for button in buttonList:
+                for button in homeButtonList:
                     if button.buttonClick(pygame.mouse.get_pos()):
                         button.clicked = True
         if event.type == pygame.KEYDOWN:
@@ -52,17 +52,7 @@ while running:
     # Clear screen with the chosen color
     screen.fill((255, 255, 255))
 
-    # Draw the tank image
-    screen.blit(originalTankImage, (230, 65))  # Adjust the coordinates as needed
 
-    # Draw the title text
-    screen.blit(titleText, (windowWidth // 2 - titleText.get_width() // 2, 50))  # Centered horizontally, 50 pixels from top
-
-    # Handle hover effect and draw buttons
-    mouse_pos = pygame.mouse.get_pos()
-    for button in buttonList:
-        button.update_display(mouse_pos)
-        button.draw(screen, outline=True)
 
     # Update display
     pygame.display.flip()
