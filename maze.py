@@ -293,10 +293,6 @@ class Gun(pygame.sprite.Sprite):
         self.damage = 700
         self.damageStatistic = 1
         self.reloadStatistic = 1
-        # self.rect = self.gunImage.get_rect(center=tank.rect.center)
-        # Initialize the gun's floating-point position
-        # self.x = float(self.rect.centerx)
-        # self.y = float(self.rect.centery)
 
     def update(self):
         """
@@ -742,7 +738,8 @@ class Boxer(Gun):
         super().__init__(tank, controls, name)
         self.cooldownDuration = 200 #200 ms
         self.damage = 200
-
+        self.setDamageStatistic(1)
+        self.setReloadStatistic(3)
 
 #Hulls
 class Panther(Tank):
