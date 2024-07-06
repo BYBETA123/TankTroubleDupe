@@ -33,12 +33,13 @@ class Tank(pygame.sprite.Sprite):
         self.center = (x, y)
         self.controls = controls
         self.health = 3000
-        self.image = self.tankImage
         self.maxHealth = 3000
         self.name = name
-        self.rect = self.tankImage.get_rect(center=(x, y))
         self.rotationSpeed = 0
+        self.rotationalSpeed = 0.5
         self.speed = 0
+        self.image = self.tankImage
+        self.rect = self.tankImage.get_rect(center=(x, y))
         self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
         self.x = float(self.rect.centerx)
         self.y = float(self.rect.centery)
@@ -109,6 +110,8 @@ class Tank(pygame.sprite.Sprite):
         index = (row-1)*colAmount + col
 
         #Check if the tank is colliding with the walls
+        if index not in range(1, rowAmount*colAmount+1): #If we are outside of the maze
+            return self.x, self.y
         tile = tileList[index-1]
         if tile.border[0] and tempY - self.originalTankImage.get_size()[1] <= tile.y: #If the top border is present
             tempY = tile.y + self.originalTankImage.get_size()[1]
@@ -137,9 +140,9 @@ class Tank(pygame.sprite.Sprite):
         else:
             self.speed = 0
         if keys[self.controls['left']]:
-            self.rotationSpeed = rotationalSpeed
+            self.rotationSpeed = self.rotationalSpeed
         elif keys[self.controls['right']]:
-            self.rotationSpeed = -rotationalSpeed
+            self.rotationSpeed = -self.rotationalSpeed
         else:
             self.rotationSpeed = 0
 
@@ -171,37 +174,7 @@ class Tank(pygame.sprite.Sprite):
         # Inputs: damage: The amount of damage that the tank has taken
         # Outputs: None
         self.health -= damage
-        if self.name == p1TankName:
-            print("Damage Tank 1: ", tank1.getHealth())
-        elif self.name == p2TankName:
-            print("Damage Tank 2: ", tank2.getHealth())
-        else:
-            print("Error: Invalid tank name")
-
-        if self.health <= 0:
-            global explosionGroup
-            if self.name == p1TankName:
-                explosion = Explosion(tank1.getCenter()[0], tank1.getCenter()[1])
-                gun1.setCooldown()
-                gun1.canShoot = False
-                tankMoveSFX.stop()
-                turretRotateSFX.stop()
-                gun1.kill()
-                tank1.setCentre(2000, 2000)
-                tank1.kill()
-                explosionGroup.add(explosion)
-            elif self.name == p2TankName:
-                explosion = Explosion(tank2.getCenter()[0], tank2.getCenter()[1])
-                gun2.setCooldown()
-                gun2.canShoot = False
-                tankMoveSFX.stop()
-                turretRotateSFX.stop()
-                gun2.kill()
-                tank2.setCentre(1000, 1000)
-                self.kill()
-                explosionGroup.add(explosion)
-            else:
-                print("Error: Invalid tank name")
+        updateTankHealth()
 
     def getCoords(self):
         return [self.rect.x, self.rect.y, self.rect.x + self.originalTankImage.get_size()[0], self.rect.y + self.originalTankImage.get_size()[1]]
@@ -217,6 +190,8 @@ class Tank(pygame.sprite.Sprite):
 
     def setCentre(self, x, y):
         self.rect.center = (x, y)
+        self.x = x
+        self.y = y
 
     def getHealth(self):
         return self.health
@@ -238,6 +213,12 @@ class Tank(pygame.sprite.Sprite):
 
     def setTankName(self, tankName):
         self.tankName = tankName
+
+    def setRotationalSpeed(self, speed):
+        self.rotationalSpeed = speed
+
+    def getRotationalSpeed(self):
+        return self.rotationalSpeed
 
     def getTankName(self):
         return self.tankName
@@ -287,6 +268,7 @@ class Gun(pygame.sprite.Sprite):
         self.damage = 700
         self.damageStatistic = 1
         self.reloadStatistic = 1
+        self.turretSpeed = 0.8
 
     def update(self):
         """
@@ -309,15 +291,14 @@ class Gun(pygame.sprite.Sprite):
         #Checks what keys are pressed, and changes speed accordingly
         #If tank hull moves left or right, the gun will also move simultaneously
         #with the tank hull at the same speed and direction.
-        global turretSpeed, rotationalSpeed
         if keys[self.controls['rotate_left']]:
-            self.rotationSpeed = turretSpeed
+            self.rotationSpeed = self.turretSpeed
         elif keys[self.controls['rotate_right']]:
-            self.rotationSpeed = -turretSpeed
+            self.rotationSpeed = -self.turretSpeed
         elif  keys[self.controls['left']]:
-            self.rotationSpeed = rotationalSpeed
+            self.rotationSpeed = self.tank.getRotationalSpeed()
         elif keys[self.controls['right']]:
-            self.rotationSpeed = -rotationalSpeed
+            self.rotationSpeed = -self.tank.getRotationalSpeed()
         else:
             self.rotationSpeed = 0
 
@@ -351,9 +332,7 @@ class Gun(pygame.sprite.Sprite):
             bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
             bullet = Bullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
             bullet.setDamage(self.damage)
-            allSprites.add(bullet)
             bulletSprites.add(bullet)
-
             self.canShoot = False
             self.shootCooldown = self.cooldownDuration
             #If either tank shoots, play this sound effect.
@@ -374,7 +353,6 @@ class Gun(pygame.sprite.Sprite):
         rotatedGunImage = pygame.transform.rotate(self.originalGunImage, self.angle)
         self.image = rotatedGunImage
         self.rect = self.image.get_rect(center=(gunEndX, gunEndY))
-
         if self.shootCooldown > 0:
             self.shootCooldown -= pygame.time.get_ticks() - self.lastUpdateTime
         else:
@@ -383,8 +361,8 @@ class Gun(pygame.sprite.Sprite):
 
         self.lastUpdateTime = pygame.time.get_ticks()
 
-    def setCooldown(self):
-        self.shootCooldown = 0
+    def setCooldown(self, value = 0):
+        self.cooldownDuration = value
 
     def getCooldown(self):
         return self.shootCooldown
@@ -409,6 +387,12 @@ class Gun(pygame.sprite.Sprite):
     
     def getDamageStatistic(self):
         return self.damageStatistic
+    
+    def setTurretSpeed(self, speed):
+        self.turretSpeed = speed
+
+    def getTurretSpeed(self):
+        return
 
     def setData(self, tank, controls, name):
         self.tank = tank
@@ -498,31 +482,9 @@ class Bullet(pygame.sprite.Sprite):
             if tank1Collision: #If we hit tank1
                 tank1.damage(self.damage)
                 self.kill()
-                
             else:
                 tank2.damage(self.damage)
                 self.kill()
-            global tank1Dead, tank2Dead
-            if tank1.getHealth() <= 0:
-                gameOverFlag = True #The game is over
-                self.kill()
-                gun1.setCooldown()
-                #The tank is dead
-                if not tank1Dead:
-                    print("Player 2 Wins")
-                    p2Score += 1
-                    tank1Dead = True
-            if tank2.getHealth() <= 0:
-                gameOverFlag = True #The game is over
-                self.kill()
-                gun2.setCooldown()
-                if not tank2Dead:
-                    print("Player 1 Wins")
-                    p1Score += 1
-                    tank2Dead = True
-                #The tank is dead
-
-
             return
 
         tile = tileList[index-1]
@@ -708,6 +670,7 @@ class Explosion(pygame.sprite.Sprite):
 
     def setCooldown(self, num):
         self.animationCooldown = num
+
     def getCooldown(self):
         return self.animationCooldown
 
@@ -1112,11 +1075,54 @@ def reset():
         sprite.kill()
     #Nautural constants
     startTime = 0
-    gameOverFlag = False
     tank1Dead = False
     tank2Dead = False
 
     setUpPlayers()
+
+def updateTankHealth():
+
+    global explosionGroup, tank1Dead, tank2Dead, gameOverFlag
+    global p1Score, p2Score
+    global allSprites, tank1, tank2, gun1, gun2
+    #Update the tank health
+    if tank1.getHealth() <= 0:
+        if not tank1Dead:
+            print("Player 2 Wins")
+            p2Score += 1
+            tank1Dead = True
+            explosionGroup.add(Explosion(tank1.getCenter()[0], tank1.getCenter()[1]))
+        tank1.setCentre(2000, 2000)
+        print("Tank 1 Dead")
+        print(allSprites.sprites())
+        gun1.kill()
+        tank1.kill()
+        if tank2.getHealth() <= 0:
+            print("Draw")
+            allSprites = pygame.sprite.Group()
+        print("Tank 1 destroyed")
+        tankMoveSFX.stop()
+        turretRotateSFX.stop()
+        gameOverFlag = True #The game is over
+    if tank2.getHealth() <= 0:
+        if not tank2Dead:
+            print("Player 1 Wins")
+            p1Score += 1
+            tank2Dead = True
+            explosionGroup.add(Explosion(tank2.getCenter()[0], tank2.getCenter()[1]))
+        tank2.setCentre(-2000, -2000)
+        print("Tank 2 Dead")
+        print(allSprites.sprites())
+        gun2.kill()
+        tank2.kill()
+        if tank1.getHealth() <= 0:
+            print("Draw")
+            allSprites = pygame.sprite.Group()
+        print("Tank 2 destroyed")
+        tankMoveSFX.stop()
+        turretRotateSFX.stop()
+        gameOverFlag = True #The game is over
+
 
 #Game setup
 #Start the game setup
@@ -1131,46 +1137,49 @@ mouse = pygame.mouse.get_pos()
 #Sound effects for shooting, tank dying, tank moving and tank turret rotating.
 global tankShootSFX, tankDeadSFX, turretRotateSFX, tankMoveSFX
 tankShootSFX = pygame.mixer.Sound("Sounds/tank_shoot.mp3")
-tankDeadSFX = pygame.mixer.Sound("Sounds/tank_dead.mp3")
-turretRotateSFX = pygame.mixer.Sound("Sounds/tank_turret_rotate.wav")
-tankMoveSFX = pygame.mixer.Sound("Sounds/tank_moving.mp3")
-lobbyMusic = pygame.mixer.Sound("Sounds/lobby_music.wav")
-selectionMusic = pygame.mixer.Sound("Sounds/selection_music.mp3")
-gameMusic = pygame.mixer.Sound("Sounds/game_music.mp3")
 tankShootMax = 1
+
+tankDeadSFX = pygame.mixer.Sound("Sounds/tank_dead.mp3")
 tankDeadMax = 0.5
+
+turretRotateSFX = pygame.mixer.Sound("Sounds/tank_turret_rotate.wav")
 turretRotateMax = 0.2
+
+tankMoveSFX = pygame.mixer.Sound("Sounds/tank_moving.mp3")
 tankMoveMax = 0.05
+
+lobbyMusic = pygame.mixer.Sound("Sounds/lobby_music.wav")
 lobbyMusicMax = 0.2
-gameMusicMax = 0.2
+
+selectionMusic = pygame.mixer.Sound("Sounds/selection_music.mp3")
 selectionMusicMax = 1
+
+gameMusic = pygame.mixer.Sound("Sounds/game_music.mp3")
+gameMusicMax = 0.2
+
 global music, musicMax
 music = lobbyMusic
 musicMax = lobbyMusicMax
+
 initialStartTime = pygame.time.get_ticks()
 soundPlayed = False
 
-#Setting up the window
-
-
 # global variables
-global rotationalSpeed, turretSpeed, bulletSpeed
-global gameOverFlag
-global animationCool
-global explosionGroup
-resetFlag = True
-rotationalSpeed = 0.5
-turretSpeed = 0.8
+global bulletSpeed
 bulletSpeed = 0.5
-gameOverFlag = False
-startTime = 0
-cooldownTimer = False
+
+global animationCool
 animationCool = 12
+
+global explosionGroup
 explosionGroup = pygame.sprite.Group() #All the explosions
 
-global arbitraryWidth, arbitraryHeight
-arbitraryWidth = 50
-arbitraryHeight = 50
+resetFlag = True
+startTime = 0
+cooldownTimer = False
+
+global gameOverFlag
+gameOverFlag = False
 
 #Colors
 c = ColorDicionary() # All the colors we will use
@@ -1201,7 +1210,7 @@ colAmount = mazeWidth//tileSize # Assigning the amount of columns
 barWidth = 150
 barHeight = 20
 bg = c.geT('GREY')
-gameMode = GameMode.selection
+gameMode = GameMode.home
 #Changing variables
 p1TankName = "Plwasd1"
 p2TankName = "Plarro2"
