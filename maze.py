@@ -977,6 +977,33 @@ def satCollision(rect1, rect2):
                 return False
     return True
 
+def setUpPlayers():
+    global tileList, spawnpoint, tank1, tank2, gun1, gun2, allSprites, bulletSprites
+    # This function sets up the players for the game including reseting the respective global veriables
+    #This function has no real dependencies on things outside of its control
+    # Inputs: None
+    # Outputs: None
+    tileList = tileGen() # Get a new board
+    spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
+    spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
+    #Updating the packages
+    player1PackageTank = [spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName]
+    player1PackageGun = [controlsTank1, p1GunName]
+    player2PackageTank = [spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName]
+    player2PackageGun = [controlsTank2, p2GunName]
+    #Setup the tanks
+    tank1 = copy.copy(hullList[p1J])
+    tank1.setData(player1PackageTank)
+    tank2 = copy.copy(hullList[p2J])
+    tank2.setData(player2PackageTank)
+    gun1 = copy.copy(turretList[p1I])
+    gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1])
+    gun2 = copy.copy(turretList[p2I])
+    gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1])
+    allSprites = pygame.sprite.Group() # Wipe the current Sprite Group
+    allSprites.add(tank1, gun1, tank2, gun2)
+    bulletSprites = pygame.sprite.Group()
+
 def playGame():
     # This function controls the main execution of the game
     # Inputs: None
@@ -1086,8 +1113,8 @@ def reset():
     # Outputs: None
     # Because of the way it's coded, these global declarations can't be avoided
     global gameOverFlag, cooldownTimer, startTime, p1Score, p2Score
-    global tank1Dead, tank2Dead, gun1Cooldown, gun2Cooldown, tileList, spawnpoint
-    global tank1, tank2, gun1, gun2, allSprites, bulletSprites
+    global tank1Dead, tank2Dead, gun1Cooldown, gun2Cooldown
+    global allSprites, bulletSprites
     gameOverFlag = False
     cooldownTimer = False
     #Removee all the sprites
@@ -1103,18 +1130,7 @@ def reset():
     gun1Cooldown = 0
     gun2Cooldown = 0
 
-    tileList = tileGen() # Get a new board
-    spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
-    spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
-    tank1.setCoords(spawnTank1[0], spawnTank1[1])
-    tank2.setCoords(spawnTank2[0], spawnTank2[1])
-    tank1 = Tank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
-    tank2 = Panther(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName)
-    gun1 = Boxer(tank1, controlsTank1, p1GunName)
-    gun2 = Gun(tank2, controlsTank2, p2GunName)
-    allSprites = pygame.sprite.Group()
-    allSprites.add(tank1, gun1, tank2, gun2)
-    bulletSprites = pygame.sprite.Group()
+    setUpPlayers()
 
 #Game setup
 #Start the game setup
@@ -1463,21 +1479,7 @@ def checkButtons(mouse):
         textP2Colour.setBoxColor(c.geT(ColorIndex[p2K]))
     global music, musicMax # Handling music
     if playButton.buttonClick(mouse):
-        global allSprites
-        #Setup the tanks
-        tank1 = copy.copy(hullList[p1J])
-        tank1.setData(player1PackageTank)
-        tank2 = copy.copy(hullList[p2J])
-
-        tank2.setData(player2PackageTank)
-        gun1 = copy.copy(turretList[p1I])
-        gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1])
-        gun2 = copy.copy(turretList[p2I])
-        gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1])
-        allSprites = pygame.sprite.Group() # Wipe the current Sprite Group
-        allSprites.add(tank1, gun1, tank2, gun2)
-
-
+        setUpPlayers()
         #Switch the the play screen
         print("Play")
         gameMode=GameMode.play
@@ -1572,20 +1574,12 @@ global tank1Dead, tank2Dead
 tank1Dead = False
 tank2Dead = False
 
-
-# Create two tank instances with different controls
-# tank1 = Tank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
-# tank2 = Panther(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName)
-# gun1 = Boxer(tank1, controlsTank1, p1GunName)
-# gun2 = Gun(tank2, controlsTank2, p2GunName)
-
 player1PackageTank = [spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName]
 player1PackageGun = [controlsTank1, p1GunName]
 player2PackageTank = [spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName]
 player2PackageGun = [controlsTank2, p2GunName]
 
 allSprites = pygame.sprite.Group()
-# allSprites.add(tank1, gun1, tank2, gun2)
 bulletSprites = pygame.sprite.Group()
 
 #Main loop
