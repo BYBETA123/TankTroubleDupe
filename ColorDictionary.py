@@ -18,7 +18,8 @@ class ColorDicionary:
         "SKY_BLUE" : '#00A2E8',
         "LIGHT_BROWN" : '#B97A57',
         "DARK_LILAC" : '#A349A4',
-        "BRIGHT_PINK" : '#FF00FF'
+        "BRIGHT_PINK" : '#FF00FF',
+        "NEON_PURPLE" : '#BC13FE',
     }
 
     def __init__(self):

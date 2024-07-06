@@ -441,6 +441,7 @@ class Bullet(pygame.sprite.Sprite):
         self.angle = angle
         self.speed = 0.5
         self.drawable = False
+        self.trail = False
         angleRad = math.radians(self.angle)
 
         dx = (gunLength + tipOffSet) * math.cos(angleRad)
@@ -449,9 +450,12 @@ class Bullet(pygame.sprite.Sprite):
         self.rect = self.bulletImage.get_rect(center=(x + dx, y + dy))
         self.x = self.rect.centerx
         self.y = self.rect.centery
+        self.trailX =  self.rect.centerx
+        self.trailY = self.rect.centery
         self.bounce = 1
         self.corners = [(self.rect.x, self.rect.y), (self.rect.x + self.rect.width, self.rect.y), (self.rect.x + self.rect.width, self.rect.y + self.rect.height), (self.rect.x, self.rect.y + self.rect.height)]
         self.damage = 700
+        self.pleaseDraw = False
     def update(self):
         """
         Updates the bullet's position based on its speed and direction.
@@ -518,10 +522,14 @@ class Bullet(pygame.sprite.Sprite):
             if self.bounce == 0:
                 self.kill() # delete the bullet
         self.updateCorners()
+
         self.rect.x = int(tempX)
         self.rect.y = int(tempY)
         self.x = tempX
         self.y = tempY
+        if abs(self.x- self.trailX) >= 1 and abs(tempY-self.trailY) >= 1:
+            self.pleaseDraw = True
+
 
     def setBulletSpeed(self, speed):
         self.speed = speed
@@ -537,6 +545,11 @@ class Bullet(pygame.sprite.Sprite):
 
     def setDamage(self, damage):
         self.damage = damage
+
+    def customDraw(self, screen):
+        if self.pleaseDraw and self.trail:
+            pygame.draw.line(screen, c.geT("NEON_PURPLE"), (self.trailX, self.trailY), (self.x, self.y), 3)
+            self.pleaseDraw = False
 
 class Tile:
     # border = [False, False, False, False]
@@ -819,6 +832,8 @@ class Silencer(Gun):
         bullet = Bullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
         bullet.setDamage(self.damage)
         bullet.setBulletSpeed(5)
+        bullet.drawable = True
+        bullet.trail = True
         bulletSprites.add(bullet)
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
