@@ -6,6 +6,7 @@ import os
 from ColorDictionary import ColorDicionary
 from enum import Enum
 from UIUtility import Button, ButtonSlider, TextBox
+import copy
 #Classes
 
 # Tank sprite class
@@ -246,7 +247,13 @@ class Tank(pygame.sprite.Sprite):
 
     def getTankName(self):
         return self.tankName
-
+    
+    def setData(self, data):
+        self.controls = data[2]
+        self.name = data[3]
+        self.rect = self.tankImage.get_rect(center=(data[0], data[1]))
+        self.x = float(self.rect.centerx)
+        self.y = float(self.rect.centery)
 
 class Gun(pygame.sprite.Sprite):
     def __init__(self, tank, controls, name):
@@ -267,7 +274,6 @@ class Gun(pygame.sprite.Sprite):
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
         self.gunImage = self.originalGunImage
         self.image = self.gunImage
-        self.rect = self.gunImage.get_rect(center=tank.rect.center)
         self.angle = 0
         self.rotationSpeed = 0
         self.tank = tank
@@ -287,9 +293,10 @@ class Gun(pygame.sprite.Sprite):
         self.damage = 700
         self.damageStatistic = 1
         self.reloadStatistic = 1
+        # self.rect = self.gunImage.get_rect(center=tank.rect.center)
         # Initialize the gun's floating-point position
-        self.x = float(self.rect.centerx)
-        self.y = float(self.rect.centery)
+        # self.x = float(self.rect.centerx)
+        # self.y = float(self.rect.centery)
 
     def update(self):
         """
@@ -409,6 +416,17 @@ class Gun(pygame.sprite.Sprite):
 
     def getReloadStatistic(self):
         return self.reloadStatistic
+    
+    def getGunName(self):
+        return self.name
+        
+    def setData(self, tank, controls, name):
+        self.tank = tank
+        self.controls = controls
+        self.name = name
+        self.rect = self.gunImage.get_rect(center=(tank.rect.center))
+        self.x = float(self.rect.centerx)
+        self.y = float(self.rect.centery)
 
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y, angle, gunLength, tipOffSet):
@@ -1000,6 +1018,7 @@ def playGame():
     screen.blit(textp1Name,[p1NameIndent, 0.783*windowHeight]) # This is the name on the left
     #Health bars outline
     #Health bar
+
     pygame.draw.rect(screen, c.geT("RED"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth*((tank1.getHealth())/tank1.getMaxHealth()), barHeight]) # Bar
     pygame.draw.rect(screen, c.geT("BLACK"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth, barHeight], 2) # Outline
     #Reload bars
@@ -1177,7 +1196,7 @@ colAmount = mazeWidth//tileSize # Assigning the amount of columns
 barWidth = 150
 barHeight = 20
 bg = c.geT('GREY')
-gameMode = GameMode.home
+gameMode = GameMode.selection
 #Changing variables
 p1TankName = "Plwasd1"
 p2TankName = "Plarro2"
@@ -1211,7 +1230,8 @@ buttonSecondary = c.geT("WHITE")
 buttonText = c.geT("WHITE")
 optionText = c.geT("GREY")
 #Hull and turret list
-turretList = ["Sidewinder", "Avalanche", "Boxer", "Bucket", "Chamber", "Huntsman", "Silencer", "Judge", "Watcher"]
+# turretList = ["Sidewinder", "Avalanche", "Boxer", "Bucket", "Chamber", "Huntsman", "Silencer", "Judge", "Watcher"]
+turretList = [Boxer(Tank(0,0,None, "Default"), None, "Boxer")]
 # hullList = ["Panther", "Cicada", "Gater", "Bonsai", "Fossil"]
 
 hullList = [Panther(0, 0, None, "Panther"), Cicada(0, 0, None, "Cicada"), Gater(0, 0, None, "Gater"), Bonsai(0, 0, None, "Bonsai"), Fossil(0, 0, None, "Fossil")]
@@ -1257,7 +1277,7 @@ ColourX = HullX + verticalSpacing
 lArrowP1Turret = Button(buttonPrimary, buttonPrimary, tileSize, TurretX, tileSize, tileSize, '<', buttonText, 50)
 lArrowP1Turret.selectable(False) # Left arrow button for turret
 buttonList.append(lArrowP1Turret)
-textP1Turret = TextBox(tileSize*2, TurretX, font='Courier New',fontSize=26, text=turretList[p1I], textColor=buttonText)
+textP1Turret = TextBox(tileSize*2, TurretX, font='Courier New',fontSize=26, text=turretList[p1I].getGunName(), textColor=buttonText)
 textP1Turret.setBoxColor(optionText) # Textbox for turret
 textP1Turret.selectable(False)
 forceWidth = textP1Turret.getWidth()
@@ -1291,7 +1311,7 @@ buttonList.append(rArrowP1Colour)
 rArrowP2Turret = Button(buttonPrimary, buttonPrimary, windowWidth-tileSize*2, TurretX, tileSize, tileSize, '>', buttonText, 50)
 rArrowP2Turret.selectable(False)
 buttonList.append(rArrowP2Turret) # Right arrow button for turret
-textP2Turret = TextBox(windowWidth - tileSize*2 - forceWidth, TurretX, font='Courier New',fontSize=26, text=turretList[p1I], textColor=buttonText)
+textP2Turret = TextBox(windowWidth - tileSize*2 - forceWidth, TurretX, font='Courier New',fontSize=26, text=turretList[p1I].getGunName(), textColor=buttonText)
 textP2Turret.setBoxColor(optionText)
 textP2Turret.selectable(False)
 buttonList.append(textP2Turret)  # Textbox for turret
@@ -1392,12 +1412,14 @@ def checkButtons(mouse):
     # Inputs: Mouse: The current location of the mouse
     # Outputs: None
     global p1I, p2I, p1J, p2J, p1K, p2K, gameMode
+    global tank1, tank2, gun1, gun2
+
     if lArrowP1Turret.buttonClick(mouse):
         p1I = (p1I - 1) % turretListLength
-        textP1Turret.setText(turretList[p1I])
+        textP1Turret.setText(turretList[p1I].getGunName())
     if rArrowP1Turret.buttonClick(mouse):
         p1I = (p1I + 1) % turretListLength
-        textP1Turret.setText(turretList[p1I])
+        textP1Turret.setText(turretList[p1I].getGunName())
     if lArrowP1Hull.buttonClick(mouse):
         p1J = (p1J - 1) % hullListLength
         textP1Hull.setText(hullList[p1J].getTankName())
@@ -1438,6 +1460,21 @@ def checkButtons(mouse):
         textP2Colour.setBoxColor(c.geT(ColorIndex[p2K]))
     global music, musicMax # Handling music
     if playButton.buttonClick(mouse):
+        global allSprites
+        #Setup the tanks
+        tank1 = copy.copy(hullList[p1J])
+        tank1.setData(player1PackageTank)
+        tank2 = copy.copy(hullList[p2J])
+
+        tank2.setData(player2PackageTank)
+        gun1 = copy.copy(turretList[p1I])
+        gun1.setData(tank1, player1PackageGun[1], player1PackageGun[2])
+        gun2 = copy.copy(turretList[p2I])
+        gun2.setData(tank2, player2PackageGun[1], player2PackageGun[2])
+        allSprites = pygame.sprite.Group() # Wipe the current Sprite Group
+        allSprites.add(tank1, gun1, tank2, gun2)
+
+
         #Switch the the play screen
         print("Play")
         gameMode=GameMode.play
@@ -1524,6 +1561,9 @@ controlsTank2 = {
 spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
 spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
 
+print(spawnTank1)
+print(spawnTank2)
+
 global gun1Cooldown, gun2Cooldown
 gun1Cooldown = 0
 gun2Cooldown = 0
@@ -1533,15 +1573,18 @@ tank1Dead = False
 tank2Dead = False
 
 
-player1PackageTank = [spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName]
-player1PackageGun = [tank1, controlsTank1, p1GunName]
-player2Package = [spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName]
+
 
 # Create two tank instances with different controls
 tank1 = Tank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
 tank2 = Panther(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName)
 gun1 = Boxer(tank1, controlsTank1, p1GunName)
 gun2 = Gun(tank2, controlsTank2, p2GunName)
+
+player1PackageTank = [spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName]
+player1PackageGun = [tank1, controlsTank1, p1GunName]
+player2PackageTank = [spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName]
+player2PackageGun = [tank2, controlsTank2, p2GunName]
 
 allSprites = pygame.sprite.Group()
 allSprites.add(tank1, gun1, tank2, gun2)
@@ -1580,8 +1623,8 @@ while not done:
                     sfx.getCorners()[1] <= mouse[1] <= sfx.getCorners()[3]):
                     sfx.buttonClick()
             elif gameMode == GameMode.selection:
-                textP1Turret.setText(turretList[p1I])
-                textP2Turret.setText(turretList[p2I])
+                textP1Turret.setText(turretList[p1I].getGunName())
+                textP2Turret.setText(turretList[p2I].getGunName())
                 textP1Hull.setText(hullList[p1J].getTankName())
                 textP2Hull.setText(hullList[p2J].getTankName())
                 checkButtons(pygame.mouse.get_pos())
