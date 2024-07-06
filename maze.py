@@ -172,39 +172,33 @@ class Tank(pygame.sprite.Sprite):
         # Outputs: None
         self.health -= damage
         if self.name == p1TankName:
-            print("Damage: ", tank1.getHealth())
+            print("Damage Tank 1: ", tank1.getHealth())
         elif self.name == p2TankName:
-            print("Damage Updated: ", tank2.getHealth())
+            print("Damage Tank 2: ", tank2.getHealth())
         else:
             print("Error: Invalid tank name")
 
         if self.health <= 0:
             global explosionGroup
             if self.name == p1TankName:
+                explosion = Explosion(tank1.getCenter()[0], tank1.getCenter()[1])
                 gun1.setCooldown()
-                gun1.kill()
+                gun1.canShoot = False
                 tankMoveSFX.stop()
                 turretRotateSFX.stop()
-                global gun1Cooldown
-                gun1Cooldown = 300
+                gun1.kill()
                 tank1.setCentre(2000, 2000)
-                self.kill()
-                allSprites.remove(gun1)
-                allSprites.remove(self)
-                explosion = Explosion(self.x, self.y)
+                tank1.kill()
                 explosionGroup.add(explosion)
             elif self.name == p2TankName:
                 explosion = Explosion(tank2.getCenter()[0], tank2.getCenter()[1])
                 gun2.setCooldown()
+                gun2.canShoot = False
                 tankMoveSFX.stop()
                 turretRotateSFX.stop()
-                global gun2Cooldown
-                gun2Cooldown = 300
                 gun2.kill()
                 tank2.setCentre(1000, 1000)
                 self.kill()
-                allSprites.remove(gun2)
-                allSprites.remove(self)
                 explosionGroup.add(explosion)
             else:
                 print("Error: Invalid tank name")
@@ -381,15 +375,6 @@ class Gun(pygame.sprite.Sprite):
         self.image = rotatedGunImage
         self.rect = self.image.get_rect(center=(gunEndX, gunEndY))
 
-        if self.name == p1GunName:
-            global gun1Cooldown
-            gun1Cooldown = self.shootCooldown
-        elif self.name == p2GunName:
-            global gun2Cooldown
-            gun2Cooldown = self.shootCooldown
-        else:
-            print("Error: Invalid gun name")
-
         if self.shootCooldown > 0:
             self.shootCooldown -= pygame.time.get_ticks() - self.lastUpdateTime
         else:
@@ -400,6 +385,9 @@ class Gun(pygame.sprite.Sprite):
 
     def setCooldown(self):
         self.shootCooldown = 0
+
+    def getCooldown(self):
+        return self.shootCooldown
 
     def setDamageStatistic(self, value):
         self.damageStatistic = value
@@ -1010,7 +998,7 @@ def playGame():
     # Outputs: None
     # Because of the way the game is structured, these global variables can't be avoided
     global gameOverFlag, cooldownTimer, startTime, p1Score, p2Score
-    global tank1Dead, tank2Dead, gun1Cooldown, gun2Cooldown, tileList, spawnpoint
+    global tank1Dead, tank2Dead, tileList, spawnpoint
     global tank1, tank2, gun1, gun2, allSprites, bulletSprites
 
     if gameOverFlag:
@@ -1052,7 +1040,7 @@ def playGame():
     pygame.draw.rect(screen, c.geT("RED"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth*((tank1.getHealth())/tank1.getMaxHealth()), barHeight]) # Bar
     pygame.draw.rect(screen, c.geT("BLACK"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth, barHeight], 2) # Outline
     #Reload bars
-    pygame.draw.rect(screen, c.geT("BLUE"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + mazeY, barWidth*((300-gun1Cooldown)/300), barHeight]) # The 25 is to space from the health bar
+    pygame.draw.rect(screen, c.geT("BLUE"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + mazeY, barWidth*((300-gun1.getCooldown())/300), barHeight]) # The 25 is to space from the health bar
     pygame.draw.rect(screen, c.geT("BLACK"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + mazeY, barWidth, barHeight], 2) # Outline
     #Visualising player 2
     screen.blit(textp2,[windowWidth/2 + text3.get_width()*1.5, 0.8*windowHeight]) # This is the score on the right 
@@ -1062,7 +1050,7 @@ def playGame():
     pygame.draw.rect(screen, c.geT("GREY"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth*((tank2.getMaxHealth()-tank2.getHealth())/tank2.getMaxHealth()), barHeight])
     pygame.draw.rect(screen, c.geT("BLACK"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth, barHeight], 2)
     #Reload bars
-    pygame.draw.rect(screen, c.geT("BLUE"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + mazeY, barWidth*((300-gun2Cooldown)/300), barHeight]) # The 25 is to space from the health bar
+    pygame.draw.rect(screen, c.geT("BLUE"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + mazeY, barWidth*((300-gun2.getCooldown())/300), barHeight]) # The 25 is to space from the health bar
     pygame.draw.rect(screen, c.geT("BLACK"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + mazeY, barWidth, barHeight], 2) # Outline
 
     # Misc text and other little pieces
@@ -1113,7 +1101,7 @@ def reset():
     # Outputs: None
     # Because of the way it's coded, these global declarations can't be avoided
     global gameOverFlag, cooldownTimer, startTime, p1Score, p2Score
-    global tank1Dead, tank2Dead, gun1Cooldown, gun2Cooldown
+    global tank1Dead, tank2Dead
     global allSprites, bulletSprites
     gameOverFlag = False
     cooldownTimer = False
@@ -1127,8 +1115,6 @@ def reset():
     gameOverFlag = False
     tank1Dead = False
     tank2Dead = False
-    gun1Cooldown = 0
-    gun2Cooldown = 0
 
     setUpPlayers()
 
@@ -1565,10 +1551,6 @@ controlsTank2 = {
 
 spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
 spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
-
-global gun1Cooldown, gun2Cooldown
-gun1Cooldown = 0
-gun2Cooldown = 0
 
 global tank1Dead, tank2Dead
 tank1Dead = False
