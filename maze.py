@@ -49,6 +49,7 @@ class Tank(pygame.sprite.Sprite):
         self.healthStatistic = 1
         self.maxSpeed = 0.15
         self.tankName = "Default"
+        self.drawable = False
 
     def updateCorners(self):
         # This function will update the corners of the tank based on the new position
@@ -193,6 +194,9 @@ class Tank(pygame.sprite.Sprite):
         self.x = x
         self.y = y
 
+    def isDrawable(self):
+        return self.drawable
+
     def getHealth(self):
         return self.health
     
@@ -269,6 +273,8 @@ class Gun(pygame.sprite.Sprite):
         self.damageStatistic = 1
         self.reloadStatistic = 1
         self.turretSpeed = 0.8
+        self.drawable = False
+
 
     def update(self):
         """
@@ -337,7 +343,6 @@ class Gun(pygame.sprite.Sprite):
             self.shootCooldown = self.cooldownDuration
             #If either tank shoots, play this sound effect.
             tankShootSFX.play()
-
         #Here is the bullet cooldown
         elapsedTime = pygame.time.get_ticks() - self.gunBackStartTime
         if elapsedTime <= self.gunBackDuration:
@@ -367,6 +372,9 @@ class Gun(pygame.sprite.Sprite):
     def getCooldown(self):
         return self.shootCooldown
 
+    def getCooldownMax(self):
+        return self.cooldownDuration
+
     def setDamageStatistic(self, value):
         self.damageStatistic = value
 
@@ -393,6 +401,9 @@ class Gun(pygame.sprite.Sprite):
 
     def getTurretSpeed(self):
         return
+
+    def isDrawable(self):
+        return self.drawable
 
     def setData(self, tank, controls, name):
         self.tank = tank
@@ -428,8 +439,8 @@ class Bullet(pygame.sprite.Sprite):
         self.bulletImage = self.originalBulletImage
         self.image = self.bulletImage
         self.angle = angle
-        self.speed = bulletSpeed
-
+        self.speed = 0.5
+        self.drawable = False
         angleRad = math.radians(self.angle)
 
         dx = (gunLength + tipOffSet) * math.cos(angleRad)
@@ -438,7 +449,7 @@ class Bullet(pygame.sprite.Sprite):
         self.rect = self.bulletImage.get_rect(center=(x + dx, y + dy))
         self.x = self.rect.centerx
         self.y = self.rect.centery
-        self.bounce = 5 #Abitrary number but the amount of bounces before the bullet is removed
+        self.bounce = 1
         self.corners = [(self.rect.x, self.rect.y), (self.rect.x + self.rect.width, self.rect.y), (self.rect.x + self.rect.width, self.rect.y + self.rect.height), (self.rect.x, self.rect.y + self.rect.height)]
         self.damage = 700
     def update(self):
@@ -511,6 +522,12 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.y = int(tempY)
         self.x = tempX
         self.y = tempY
+
+    def setBulletSpeed(self, speed):
+        self.speed = speed
+
+    def isDrawable(self):
+        return self.drawable
 
     def getCenter(self):
         return (self.x, self.y)
@@ -691,6 +708,128 @@ class Boxer(Gun):
         self.damage = 200
         self.setDamageStatistic(1)
         self.setReloadStatistic(3)
+
+class Silencer(Gun):
+
+    wind_up = 1200
+    delay = True
+    lastRegister = 0
+    def __init__(self, tank, controls, name):
+        super().__init__(tank, controls, name)
+        self.setCooldown(2400) #2400 ms
+        self.damage = 1400
+        self.setDamageStatistic(3)
+        self.setReloadStatistic(1)
+        self.drawable = True
+    def update(self):
+        """
+        Updates the gun's position, rotation, and shooting state based on the current controls and time.
+
+        Because the Silencer has a custom shot, it needs to own special update method.
+        This method checks for key presses to rotate the gun, 
+        handles shooting if the fire key is pressed, 
+        and updates the gun's visual position and rotation. 
+        It also manages the shooting cooldown.
+
+        Inputs:
+        -------
+        None
+
+        Outputs:
+        --------
+        None
+        """
+        keys = pygame.key.get_pressed()
+        #Checks what keys are pressed, and changes speed accordingly
+        #If tank hull moves left or right, the gun will also move simultaneously
+        #with the tank hull at the same speed and direction.
+        if keys[self.controls['rotate_left']]:
+            self.rotationSpeed = self.turretSpeed
+        elif keys[self.controls['rotate_right']]:
+            self.rotationSpeed = -self.turretSpeed
+        elif  keys[self.controls['left']]:
+            self.rotationSpeed = self.tank.getRotationalSpeed()
+        elif keys[self.controls['right']]:
+            self.rotationSpeed = -self.tank.getRotationalSpeed()
+        else:
+            self.rotationSpeed = 0
+
+        #This if statement checks to see if speed or rotation of speed is 0,
+        #if so it will stop playing moving sound, otherwise, sound will play
+        #indefinitely
+        if keys[self.controls['rotate_left']] or keys[self.controls['rotate_right']]:
+            if self.rotationSpeed != 0:
+                if not self.soundPlaying:
+                    turretRotateSFX.play(loops = -1, fade_ms = 100)  # Play sound indefinitely
+                    self.soundPlaying = True
+            else:
+                if self.soundPlaying:
+                    turretRotateSFX.stop()
+                    self.soundPlaying = False
+        else:
+            if self.soundPlaying:
+                turretRotateSFX.stop()
+                self.soundPlaying = False
+                
+    
+        self.angle += self.rotationSpeed
+        self.angle %= 360
+        
+        #Reload cooldown of bullet and determines the angle to fire the bullet,
+        #which is relative to the posistion of the tank gun.
+        if keys[self.controls['fire']] and self.canShoot:
+            self.lastRegister = pygame.time.get_ticks()
+            self.delay = False
+
+
+        if not self.delay:
+            wait = pygame.time.get_ticks()
+            if wait - self.lastRegister >= self.wind_up:
+                self.fire()
+                self.delay = True
+
+        #Here is the bullet cooldown
+        elapsedTime = pygame.time.get_ticks() - self.gunBackStartTime
+        if elapsedTime <= self.gunBackDuration:
+            progress = elapsedTime / self.gunBackDuration
+            self.gunLength = self.originalGunLength - 5 * progress
+        else:
+            self.gunLength = self.originalGunLength
+
+        angleRad = math.radians(self.angle)
+        gunEndX = self.tank.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(angleRad)
+        gunEndY = self.tank.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(angleRad)
+
+        rotatedGunImage = pygame.transform.rotate(self.originalGunImage, self.angle)
+        self.image = rotatedGunImage
+        self.rect = self.image.get_rect(center=(gunEndX, gunEndY))
+        if self.shootCooldown > 0:
+            self.shootCooldown -= pygame.time.get_ticks() - self.lastUpdateTime
+        else:
+            self.shootCooldown = 0
+            self.canShoot = True
+
+        self.lastUpdateTime = pygame.time.get_ticks()
+
+    def fire(self):
+        self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
+        bulletAngle = self.angle
+        bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
+        bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
+        bullet = Bullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
+        bullet.setDamage(self.damage)
+        bullet.setBulletSpeed(5)
+        bulletSprites.add(bullet)
+        self.canShoot = False
+        self.shootCooldown = self.cooldownDuration
+        #If either tank shoots, play this sound effect.
+        tankShootSFX.play()
+
+    def customDraw(self, screen):
+        #This function will draw the gun on the tank
+        # Inputs: None
+        # Outputs: None
+        pass
 
 #Hulls
 class Panther(Tank):
@@ -1003,7 +1142,7 @@ def playGame():
     pygame.draw.rect(screen, c.geT("RED"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth*((tank1.getHealth())/tank1.getMaxHealth()), barHeight]) # Bar
     pygame.draw.rect(screen, c.geT("BLACK"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth, barHeight], 2) # Outline
     #Reload bars
-    pygame.draw.rect(screen, c.geT("BLUE"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + mazeY, barWidth*((300-gun1.getCooldown())/300), barHeight]) # The 25 is to space from the health bar
+    pygame.draw.rect(screen, c.geT("BLUE"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + mazeY, barWidth*((gun1.getCooldownMax()-gun1.getCooldown())/gun1.getCooldownMax()), barHeight]) # The 25 is to space from the health bar
     pygame.draw.rect(screen, c.geT("BLACK"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + mazeY, barWidth, barHeight], 2) # Outline
     #Visualising player 2
     screen.blit(textp2,[windowWidth/2 + text3.get_width()*1.5, 0.8*windowHeight]) # This is the score on the right 
@@ -1013,7 +1152,7 @@ def playGame():
     pygame.draw.rect(screen, c.geT("GREY"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth*((tank2.getMaxHealth()-tank2.getHealth())/tank2.getMaxHealth()), barHeight])
     pygame.draw.rect(screen, c.geT("BLACK"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth, barHeight], 2)
     #Reload bars
-    pygame.draw.rect(screen, c.geT("BLUE"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + mazeY, barWidth*((300-gun2.getCooldown())/300), barHeight]) # The 25 is to space from the health bar
+    pygame.draw.rect(screen, c.geT("BLUE"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + mazeY, barWidth*((gun2.getCooldownMax()-gun2.getCooldown())/gun2.getCooldownMax()), barHeight]) # The 25 is to space from the health bar
     pygame.draw.rect(screen, c.geT("BLACK"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + mazeY, barWidth, barHeight], 2) # Outline
 
     # Misc text and other little pieces
@@ -1038,6 +1177,15 @@ def playGame():
     explosionGroup.update()
     allSprites.draw(screen)
     bulletSprites.draw(screen)
+
+    for sprite in allSprites:
+        if sprite.isDrawable():
+            sprite.customDraw(screen)
+
+    for sprite in bulletSprites:
+        if sprite.isDrawable():
+            sprite.customDraw(screen)
+
     explosionGroup.draw(screen)
 
 def pauseScreen():
@@ -1093,14 +1241,10 @@ def updateTankHealth():
             tank1Dead = True
             explosionGroup.add(Explosion(tank1.getCenter()[0], tank1.getCenter()[1]))
         tank1.setCentre(2000, 2000)
-        print("Tank 1 Dead")
-        print(allSprites.sprites())
         gun1.kill()
         tank1.kill()
         if tank2.getHealth() <= 0:
-            print("Draw")
             allSprites = pygame.sprite.Group()
-        print("Tank 1 destroyed")
         tankMoveSFX.stop()
         turretRotateSFX.stop()
         gameOverFlag = True #The game is over
@@ -1111,14 +1255,10 @@ def updateTankHealth():
             tank2Dead = True
             explosionGroup.add(Explosion(tank2.getCenter()[0], tank2.getCenter()[1]))
         tank2.setCentre(-2000, -2000)
-        print("Tank 2 Dead")
-        print(allSprites.sprites())
         gun2.kill()
         tank2.kill()
         if tank1.getHealth() <= 0:
-            print("Draw")
             allSprites = pygame.sprite.Group()
-        print("Tank 2 destroyed")
         tankMoveSFX.stop()
         turretRotateSFX.stop()
         gameOverFlag = True #The game is over
@@ -1163,10 +1303,6 @@ musicMax = lobbyMusicMax
 
 initialStartTime = pygame.time.get_ticks()
 soundPlayed = False
-
-# global variables
-global bulletSpeed
-bulletSpeed = 0.5
 
 global animationCool
 animationCool = 12
@@ -1245,7 +1381,7 @@ buttonText = c.geT("WHITE")
 optionText = c.geT("GREY")
 #Hull and turret list
 # turretList = ["Sidewinder", "Avalanche", "Boxer", "Bucket", "Chamber", "Huntsman", "Silencer", "Judge", "Watcher"]
-turretList = [Boxer(Tank(0,0,None, "Default"), None, "Boxer")]
+turretList = [Boxer(Tank(0,0,None, "Default"), None, "Boxer"), Silencer(Tank(0,0,None, "Default"), None, "Silencer")]
 # hullList = ["Panther", "Cicada", "Gater", "Bonsai", "Fossil"]
 
 hullList = [Panther(0, 0, None, "Panther"), Cicada(0, 0, None, "Cicada"), Gater(0, 0, None, "Gater"), Bonsai(0, 0, None, "Bonsai"), Fossil(0, 0, None, "Fossil")]
@@ -1442,10 +1578,10 @@ def checkButtons(mouse):
         textP1Hull.setText(hullList[p1J].getTankName())
     if lArrowP2Turret.buttonClick(mouse):
         p2I = (p2I - 1) % turretListLength
-        textP2Turret.setText(turretList[p2I])
+        textP2Turret.setText(turretList[p2I].getGunName())
     if rArrowP2Turret.buttonClick(mouse):
         p2I = (p2I + 1) % turretListLength
-        textP2Turret.setText(turretList[p2I])
+        textP2Turret.setText(turretList[p2I].getGunName())
     if lArrowP2Hull.buttonClick(mouse):
         p2J = (p2J - 1) % hullListLength
         textP2Hull.setText(hullList[p2J].getTankName())
@@ -1744,7 +1880,7 @@ while not done:
                                                                       rectX, rectY),barBorder)
         damageBar2 = pygame.draw.rect(screen, c.geT("GREEN"), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
                                                                tileSize*multiplyConstant + offset*2,
-                                                               (rectX - speedText.getWidth()) * turretList[p1I].getDamageStatistic()/3,
+                                                               (rectX - speedText.getWidth()) * turretList[p2I].getDamageStatistic()/3,
                                                                rectY))
         #Outlines
         damageOutline2 = pygame.draw.rect(screen, (0,0,0), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
@@ -1757,7 +1893,7 @@ while not done:
                                                                       rectX, rectY),barBorder)
         reloadBar2 = pygame.draw.rect(screen, c.geT("GREEN"),
                                       (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(), tileSize*multiplyConstant + offset*3,
-                                       (rectX - speedText.getWidth()) * turretList[p1I].getReloadStatistic()/3, rectY))
+                                       (rectX - speedText.getWidth()) * turretList[p2I].getReloadStatistic()/3, rectY))
         #Outlines
         reloadOutline2 = pygame.draw.rect(screen, (0,0,0), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
                                                             tileSize*multiplyConstant + offset*3, rectX - speedText.getWidth(), rectY), barBorder)
