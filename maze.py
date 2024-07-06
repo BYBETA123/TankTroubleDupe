@@ -844,7 +844,8 @@ class Silencer(Gun):
         #This function will draw the gun on the tank
         # Inputs: None
         # Outputs: None
-        pass
+        if self.wind_up - (pygame.time.get_ticks() - self.lastRegister) >= 0:
+            pygame.draw.circle(screen, c.geT("NEON_PURPLE"), (self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(self.angle)), self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(self.angle))), (pygame.time.get_ticks() - self.lastRegister)/self.wind_up * 5)
 
 #Hulls
 class Panther(Tank):
