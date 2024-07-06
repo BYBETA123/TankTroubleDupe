@@ -420,6 +420,12 @@ class Gun(pygame.sprite.Sprite):
     def getGunName(self):
         return self.name
         
+    def getReloadStatistic(self):
+        return self.reloadStatistic
+    
+    def getDamageStatistic(self):
+        return self.damageStatistic
+
     def setData(self, tank, controls, name):
         self.tank = tank
         self.controls = controls
@@ -1468,9 +1474,9 @@ def checkButtons(mouse):
 
         tank2.setData(player2PackageTank)
         gun1 = copy.copy(turretList[p1I])
-        gun1.setData(tank1, player1PackageGun[1], player1PackageGun[2])
+        gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1])
         gun2 = copy.copy(turretList[p2I])
-        gun2.setData(tank2, player2PackageGun[1], player2PackageGun[2])
+        gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1])
         allSprites = pygame.sprite.Group() # Wipe the current Sprite Group
         allSprites.add(tank1, gun1, tank2, gun2)
 
@@ -1561,9 +1567,6 @@ controlsTank2 = {
 spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
 spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
 
-print(spawnTank1)
-print(spawnTank2)
-
 global gun1Cooldown, gun2Cooldown
 gun1Cooldown = 0
 gun2Cooldown = 0
@@ -1573,21 +1576,19 @@ tank1Dead = False
 tank2Dead = False
 
 
-
-
 # Create two tank instances with different controls
-tank1 = Tank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
-tank2 = Panther(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName)
-gun1 = Boxer(tank1, controlsTank1, p1GunName)
-gun2 = Gun(tank2, controlsTank2, p2GunName)
+# tank1 = Tank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
+# tank2 = Panther(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName)
+# gun1 = Boxer(tank1, controlsTank1, p1GunName)
+# gun2 = Gun(tank2, controlsTank2, p2GunName)
 
 player1PackageTank = [spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName]
-player1PackageGun = [tank1, controlsTank1, p1GunName]
+player1PackageGun = [controlsTank1, p1GunName]
 player2PackageTank = [spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName]
-player2PackageGun = [tank2, controlsTank2, p2GunName]
+player2PackageGun = [controlsTank2, p2GunName]
 
 allSprites = pygame.sprite.Group()
-allSprites.add(tank1, gun1, tank2, gun2)
+# allSprites.add(tank1, gun1, tank2, gun2)
 bulletSprites = pygame.sprite.Group()
 
 #Main loop
@@ -1716,7 +1717,7 @@ while not done:
 
         damageBarOutline = pygame.draw.rect(screen, c.geT("BLACK"), (tileSize, tileSize*multiplyConstant + offset*2, rectX, rectY),barBorder)
         damageBar = pygame.draw.rect(screen, c.geT("GREEN"), (tileSize + speedText.getWidth(), tileSize*multiplyConstant + offset*2,
-                                                              (rectX - speedText.getWidth()) * gun1.getDamageStatistic()/3, rectY))
+                                                              (rectX - speedText.getWidth()) * turretList[p1I].getDamageStatistic()/3, rectY))
         #Outlines
         damageOutline = pygame.draw.rect(screen, (0,0,0), (tileSize + speedText.getWidth(), tileSize*multiplyConstant + offset*2,
                                                            rectX - speedText.getWidth(), rectY), barBorder)
@@ -1726,7 +1727,7 @@ while not done:
 
         reloadBarOutline = pygame.draw.rect(screen, c.geT("BLACK"), (tileSize, tileSize*multiplyConstant + offset*3, rectX, rectY),barBorder)
         reloadBar = pygame.draw.rect(screen, c.geT("GREEN"), (tileSize + speedText.getWidth(), tileSize*multiplyConstant + offset*3,
-                                                              (rectX - speedText.getWidth()) * gun1.getReloadStatistic()/3, rectY))
+                                                              (rectX - speedText.getWidth()) * turretList[p1I].getReloadStatistic()/3, rectY))
         #Outlines
         reloadOutline = pygame.draw.rect(screen, (0,0,0), (tileSize + speedText.getWidth(), tileSize*multiplyConstant + offset*3,
                                                            rectX - speedText.getWidth(), rectY), barBorder)
@@ -1761,7 +1762,7 @@ while not done:
                                                                       rectX, rectY),barBorder)
         damageBar2 = pygame.draw.rect(screen, c.geT("GREEN"), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
                                                                tileSize*multiplyConstant + offset*2,
-                                                               (rectX - speedText.getWidth()) * gun2.getDamageStatistic()/3,
+                                                               (rectX - speedText.getWidth()) * turretList[p1I].getDamageStatistic()/3,
                                                                rectY))
         #Outlines
         damageOutline2 = pygame.draw.rect(screen, (0,0,0), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
@@ -1774,7 +1775,7 @@ while not done:
                                                                       rectX, rectY),barBorder)
         reloadBar2 = pygame.draw.rect(screen, c.geT("GREEN"),
                                       (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(), tileSize*multiplyConstant + offset*3,
-                                       (rectX - speedText.getWidth()) * gun2.getReloadStatistic()/3, rectY))
+                                       (rectX - speedText.getWidth()) * turretList[p1I].getReloadStatistic()/3, rectY))
         #Outlines
         reloadOutline2 = pygame.draw.rect(screen, (0,0,0), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
                                                             tileSize*multiplyConstant + offset*3, rectX - speedText.getWidth(), rectY), barBorder)
@@ -1787,6 +1788,7 @@ while not done:
         screen.blit(hullColors[p2K], (windowWidth - tileSize*2 - forceWidth//2-50, tileSize*2))
         screen.blit(gunColors[p1K], (tileSize*2 + forceWidth//2, tileSize*2.5))
         screen.blit(gunColors[p2K], (windowWidth - tileSize*2 - forceWidth//2, tileSize*2.5))
+
     elif gameMode == GameMode.home:
         # Draw the tank image
         screen.blit(originalTankImage, (230, 65))  # Adjust the coordinates as needed
@@ -1799,6 +1801,7 @@ while not done:
         for button in homeButtonList:
             button.update_display(mouse_pos)
             button.draw(screen, outline=True)
+    
     else:
         screen.fill(c.geT("WHITE"))
     clock.tick(240) # Set the FPS
