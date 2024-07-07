@@ -234,6 +234,9 @@ class Tank(pygame.sprite.Sprite):
         self.x = float(self.rect.centerx)
         self.y = float(self.rect.centery)
 
+    def draw(self, screen):
+        screen.blit(self.image, self.rect)
+
 class Gun(pygame.sprite.Sprite):
     def __init__(self, tank, controls, name):
         """
@@ -413,6 +416,9 @@ class Gun(pygame.sprite.Sprite):
         self.x = float(self.rect.centerx)
         self.y = float(self.rect.centery)
 
+    def draw(self, screen):
+        screen.blit(self.image, self.rect)
+
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, x, y, angle, gunLength, tipOffSet):
         """
@@ -550,6 +556,96 @@ class Bullet(pygame.sprite.Sprite):
         if self.pleaseDraw and self.trail:
             pygame.draw.line(screen, c.geT("NEON_PURPLE"), (self.trailX, self.trailY), (self.x, self.y), 3)
             self.pleaseDraw = False
+
+    def draw(self, screen):
+        screen.blit(self.image, self.rect)
+
+class WatcherBullet(Bullet):
+    def __init__(self, x, y, angle, gunLength, tipOffSet):
+        super().__init__(x, y, angle, gunLength, tipOffSet)
+        self.speed = 0.2
+        self.damage = 3300
+        
+    def update(self):
+        """
+        Updates the bullet's position based on its speed and direction.
+
+        This method calculates the new position of the bullet and updates its rect attribute accordingly.
+
+        Inputs:
+        -------
+        None
+
+        Outputs:
+        --------
+        None
+        """
+        angleRad = math.radians(self.angle)
+        dx = self.speed * math.cos(angleRad)
+        dy = -self.speed * math.sin(angleRad)
+        tempX = self.x + dx
+        tempY = self.y + dy
+        #Check for collision with walls
+        #We are going to calculate the row and column
+        row = math.ceil((self.getCenter()[1] - mazeY)/tileSize)
+        col = math.ceil((self.getCenter()[0] - mazeX)/tileSize)
+        #Find the file at the exact index
+        index = (row-1)*colAmount + col
+
+        #If we are outside of the maze, delete the bullet
+        if tempX <= mazeX or tempY <= mazeY or tempX >= mazeWidth + mazeX or tempY >= mazeHeight + mazeY:
+            self.kill()
+            return
+        
+        #If we hit a tank
+        tank1Collision = satCollision(self, tank1)
+        tank2Collision = satCollision(self, tank2)
+        if tank1Collision or tank2Collision:
+            global p1Score, p2Score, gameOverFlag
+            #If either tank dies, play this tank dead sound effect.
+            # tankDeadSFX.play()
+            if tank1Collision: #If we hit tank1
+                # tank1.damage(self.damage)
+                self.kill()
+            else:
+                # tank2.damage(self.damage)
+                self.kill()
+            return
+
+        tile = tileList[index-1]
+        wallCollision = False
+        if tile.border[0] and tempY - self.originalBulletImage.get_size()[1] <= tile.y: #If the top border is present
+            wallCollision = True
+            self.angle = 180 - self.angle
+        if tile.border[1] and tempX + self.originalBulletImage.get_size()[1] >= tile.x + tileSize: #If the right border is present
+            wallCollision = True
+            self.angle = 360 - self.angle
+        if tile.border[2] and tempY + self.originalBulletImage.get_size()[1] >= tile.y + tileSize: #If the bottom border is present
+            wallCollision = True
+            self.angle = 180 - self.angle
+        if tile.border[3] and tempX - self.originalBulletImage.get_size()[1] <= tile.x: #If the left border is present
+            wallCollision = True
+            self.angle = 360 - self.angle
+        if wallCollision:
+            self.bounce -= 1
+            self.speed *= -1
+            if self.bounce == 0:
+                self.kill() # delete the bullet
+        self.updateCorners()
+
+        self.rect.x = int(tempX)
+        self.rect.y = int(tempY)
+        self.x = tempX
+        self.y = tempY
+
+    def customDraw(self, screen):
+        if self.trail:
+            pygame.draw.circle(screen, c.geT("RED"), (self.x, self.y), 1)
+            self.pleaseDraw = False
+
+    def draw(self,_):
+        return
+
 
 class Tile:
     # border = [False, False, False, False]
@@ -850,16 +946,15 @@ class Silencer(Gun):
 
 class Watcher(Gun):
 
-    wind_up = 1200
-    delay = True
-    lastRegister = 0
-
+    scoping = False
+    speed = 0.1
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(1500) #1500 ms
         self.damage = 3300
         self.setDamageStatistic(2)
         self.setReloadStatistic(2)
+        self.drawable = True
 
     def update(self):
         """
@@ -918,14 +1013,19 @@ class Watcher(Gun):
         #Reload cooldown of bullet and determines the angle to fire the bullet,
         #which is relative to the posistion of the tank gun.
         if keys[self.controls['fire']] and self.canShoot:
-            self.lastRegister = pygame.time.get_ticks()
-            self.delay = False
+            self.scoping = True
 
+        if self.scoping:
+            self.turretSpeed = 0.01
 
-        if not self.delay:
-            wait = pygame.time.get_ticks()
-            if wait - self.lastRegister >= self.wind_up:
-                self.fire()
+            if not keys[self.controls['fire']]:
+                self.scoping = False
+                self.canShoot = False
+                self.shootCooldown = self.cooldownDuration
+                #If either tank shoots, play this sound effect.
+                tankShootSFX.play()
+        else:
+            self.turretSpeed = 0.8
 
         #Here is the bullet cooldown
         elapsedTime = pygame.time.get_ticks() - self.gunBackStartTime
@@ -957,13 +1057,36 @@ class Watcher(Gun):
         bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
         bullet = Bullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
         bullet.setDamage(self.damage)
-        bullet.setBulletSpeed(1)
+        bullet.setBulletSpeed(0.1)
         bullet.drawable = True
         bulletSprites.add(bullet)
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
         #If either tank shoots, play this sound effect.
         tankShootSFX.play()
+
+    def customDraw(self, _):
+        #This function will draw the gun on the tank
+        # Inputs: None
+        # Outputs: None
+        global bg
+        if self.scoping:
+            bg = c.geT("ORANGE")
+            bulletAngle = self.angle
+            bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
+            bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
+            bullet = WatcherBullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
+            bullet.setDamage(0)
+            bullet.setBulletSpeed(25)
+            bullet.drawable = True
+            bullet.trail = True
+            bulletSprites.add(bullet)
+        else:
+            bg = c.geT("GREY")
+
+
+
+
 
 #Hulls
 class Panther(Tank):
@@ -1236,7 +1359,7 @@ def playGame():
     global gameOverFlag, cooldownTimer, startTime, p1Score, p2Score
     global tank1Dead, tank2Dead, tileList, spawnpoint
     global tank1, tank2, gun1, gun2, allSprites, bulletSprites
-
+    global excludedSprites
     if gameOverFlag:
         #The game is over
         startTime = time.time() #Start a 5s timer
@@ -1309,14 +1432,14 @@ def playGame():
     allSprites.update()
     bulletSprites.update()
     explosionGroup.update()
-    allSprites.draw(screen)
-    bulletSprites.draw(screen)
 
     for sprite in allSprites:
+        sprite.draw(screen)
         if sprite.isDrawable():
             sprite.customDraw(screen)
 
     for sprite in bulletSprites:
+        sprite.draw(screen)
         if sprite.isDrawable():
             sprite.customDraw(screen)
 
@@ -1450,6 +1573,9 @@ cooldownTimer = False
 
 global gameOverFlag
 gameOverFlag = False
+
+global excludedSprites
+excludedSprites = []
 
 #Colors
 c = ColorDicionary() # All the colors we will use
