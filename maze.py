@@ -11,6 +11,8 @@ import copy
 
 # Tank sprite class
 class Tank(pygame.sprite.Sprite):
+    topSpeed = 0
+    topRotation = 0
     def __init__(self, x, y, controls, name = "Default"):
         super().__init__()
         try:
@@ -50,6 +52,8 @@ class Tank(pygame.sprite.Sprite):
         self.maxSpeed = 0.15
         self.tankName = "Default"
         self.drawable = False
+        self.topSpeed = self.maxSpeed
+        self.topRotation = self.rotationalSpeed
 
     def updateCorners(self):
         # This function will update the corners of the tank based on the new position
@@ -221,8 +225,23 @@ class Tank(pygame.sprite.Sprite):
     def setRotationalSpeed(self, speed):
         self.rotationalSpeed = speed
 
+    def resetRotationalSpeed(self):
+        self.rotationalSpeed = self.topRotation
+
     def getRotationalSpeed(self):
         return self.rotationalSpeed
+
+    def getTopRotationalSpeed(self):
+        return self.topRotation
+
+    def setSpeed(self, speed):
+        self.maxSpeed = speed
+
+    def resetMaxSpeed(self):
+        self.maxSpeed = self.topSpeed
+
+    def getSpeed(self):
+        return self.topSpeed
 
     def getTankName(self):
         return self.tankName
@@ -238,6 +257,9 @@ class Tank(pygame.sprite.Sprite):
         screen.blit(self.image, self.rect)
 
 class Gun(pygame.sprite.Sprite):
+
+    topTurretSpeed = 0
+
     def __init__(self, tank, controls, name):
         """
         Initializes the Gun class.
@@ -277,7 +299,7 @@ class Gun(pygame.sprite.Sprite):
         self.reloadStatistic = 1
         self.turretSpeed = 0.8
         self.drawable = False
-
+        self.topTurretSpeed = self.turretSpeed
 
     def update(self):
         """
@@ -402,8 +424,14 @@ class Gun(pygame.sprite.Sprite):
     def setTurretSpeed(self, speed):
         self.turretSpeed = speed
 
+    def resetTurrtSpeed(self):
+        self.turretSpeed = self.topTurretSpeed
+
     def getTurretSpeed(self):
-        return
+        return self.topTurretSpeed
+
+    def getTank(self):
+        return self.tank
 
     def isDrawable(self):
         return self.drawable
@@ -603,12 +631,9 @@ class WatcherBullet(Bullet):
         if tank1Collision or tank2Collision:
             global p1Score, p2Score, gameOverFlag
             #If either tank dies, play this tank dead sound effect.
-            # tankDeadSFX.play()
             if tank1Collision: #If we hit tank1
-                # tank1.damage(self.damage)
                 self.kill()
             else:
-                # tank2.damage(self.damage)
                 self.kill()
             return
 
@@ -1016,16 +1041,21 @@ class Watcher(Gun):
             self.scoping = True
 
         if self.scoping:
-            self.turretSpeed = 0.01
+            self.setTurretSpeed(self.getTurretSpeed()/20)
+            self.getTank().setSpeed(self.getTank().getSpeed()/2)
+            self.getTank().setRotationalSpeed(self.getTank().getTopRotationalSpeed()/5)
 
             if not keys[self.controls['fire']]:
                 self.scoping = False
                 self.canShoot = False
                 self.shootCooldown = self.cooldownDuration
+                self.fire()
                 #If either tank shoots, play this sound effect.
                 tankShootSFX.play()
         else:
-            self.turretSpeed = 0.8
+            self.resetTurrtSpeed()
+            self.getTank().resetMaxSpeed()
+            self.getTank().resetRotationalSpeed()
 
         #Here is the bullet cooldown
         elapsedTime = pygame.time.get_ticks() - self.gunBackStartTime
@@ -1056,8 +1086,8 @@ class Watcher(Gun):
         bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
         bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
         bullet = Bullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
-        bullet.setDamage(self.damage)
-        bullet.setBulletSpeed(0.1)
+        bullet.setDamage(self.getDamage())
+        bullet.setBulletSpeed(5)
         bullet.drawable = True
         bulletSprites.add(bullet)
         self.canShoot = False
@@ -1065,13 +1095,14 @@ class Watcher(Gun):
         #If either tank shoots, play this sound effect.
         tankShootSFX.play()
 
+    def getDamage(self):
+        return self.damage
+
     def customDraw(self, _):
         #This function will draw the gun on the tank
         # Inputs: None
         # Outputs: None
-        global bg
         if self.scoping:
-            bg = c.geT("ORANGE")
             bulletAngle = self.angle
             bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
             bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
@@ -1081,8 +1112,6 @@ class Watcher(Gun):
             bullet.drawable = True
             bullet.trail = True
             bulletSprites.add(bullet)
-        else:
-            bg = c.geT("GREY")
 
 
 
@@ -1096,7 +1125,7 @@ class Panther(Tank):
         self.health = self.maxHealth
         self.speedStatistic = 3
         self.healthStatistic = 1
-        self.maxSpeed = 0.27
+        self.setSpeed(0.27)
         self.setTankName("Panther")
 
 class Cicada(Tank):
