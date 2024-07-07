@@ -791,8 +791,9 @@ class Silencer(Gun):
         #Reload cooldown of bullet and determines the angle to fire the bullet,
         #which is relative to the posistion of the tank gun.
         if keys[self.controls['fire']] and self.canShoot:
-            self.lastRegister = pygame.time.get_ticks()
-            self.delay = False
+            if self.delay:
+                self.lastRegister = pygame.time.get_ticks()
+                self.delay = False
 
 
         if not self.delay:
@@ -846,6 +847,123 @@ class Silencer(Gun):
         # Outputs: None
         if self.wind_up - (pygame.time.get_ticks() - self.lastRegister) >= 0:
             pygame.draw.circle(screen, c.geT("NEON_PURPLE"), (self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(self.angle)), self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(self.angle))), (pygame.time.get_ticks() - self.lastRegister)/self.wind_up * 5)
+
+class Watcher(Gun):
+
+    wind_up = 1200
+    delay = True
+    lastRegister = 0
+
+    def __init__(self, tank, controls, name):
+        super().__init__(tank, controls, name)
+        self.setCooldown(1500) #1500 ms
+        self.damage = 3300
+        self.setDamageStatistic(2)
+        self.setReloadStatistic(2)
+
+    def update(self):
+        """
+        Updates the gun's position, rotation, and shooting state based on the current controls and time.
+
+        Because the Silencer has a custom shot, it needs to own special update method.
+        This method checks for key presses to rotate the gun, 
+        handles shooting if the fire key is pressed, 
+        and updates the gun's visual position and rotation. 
+        It also manages the shooting cooldown.
+
+        Inputs:
+        -------
+        None
+
+        Outputs:
+        --------
+        None
+        """
+        keys = pygame.key.get_pressed()
+        #Checks what keys are pressed, and changes speed accordingly
+        #If tank hull moves left or right, the gun will also move simultaneously
+        #with the tank hull at the same speed and direction.
+        if keys[self.controls['rotate_left']]:
+            self.rotationSpeed = self.turretSpeed
+        elif keys[self.controls['rotate_right']]:
+            self.rotationSpeed = -self.turretSpeed
+        elif  keys[self.controls['left']]:
+            self.rotationSpeed = self.tank.getRotationalSpeed()
+        elif keys[self.controls['right']]:
+            self.rotationSpeed = -self.tank.getRotationalSpeed()
+        else:
+            self.rotationSpeed = 0
+
+        #This if statement checks to see if speed or rotation of speed is 0,
+        #if so it will stop playing moving sound, otherwise, sound will play
+        #indefinitely
+        if keys[self.controls['rotate_left']] or keys[self.controls['rotate_right']]:
+            if self.rotationSpeed != 0:
+                if not self.soundPlaying:
+                    turretRotateSFX.play(loops = -1, fade_ms = 100)  # Play sound indefinitely
+                    self.soundPlaying = True
+            else:
+                if self.soundPlaying:
+                    turretRotateSFX.stop()
+                    self.soundPlaying = False
+        else:
+            if self.soundPlaying:
+                turretRotateSFX.stop()
+                self.soundPlaying = False
+                
+    
+        self.angle += self.rotationSpeed
+        self.angle %= 360
+        
+        #Reload cooldown of bullet and determines the angle to fire the bullet,
+        #which is relative to the posistion of the tank gun.
+        if keys[self.controls['fire']] and self.canShoot:
+            self.lastRegister = pygame.time.get_ticks()
+            self.delay = False
+
+
+        if not self.delay:
+            wait = pygame.time.get_ticks()
+            if wait - self.lastRegister >= self.wind_up:
+                self.fire()
+
+        #Here is the bullet cooldown
+        elapsedTime = pygame.time.get_ticks() - self.gunBackStartTime
+        if elapsedTime <= self.gunBackDuration:
+            progress = elapsedTime / self.gunBackDuration
+            self.gunLength = self.originalGunLength - 5 * progress
+        else:
+            self.gunLength = self.originalGunLength
+
+        angleRad = math.radians(self.angle)
+        gunEndX = self.tank.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(angleRad)
+        gunEndY = self.tank.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(angleRad)
+
+        rotatedGunImage = pygame.transform.rotate(self.originalGunImage, self.angle)
+        self.image = rotatedGunImage
+        self.rect = self.image.get_rect(center=(gunEndX, gunEndY))
+        if self.shootCooldown > 0:
+            self.shootCooldown -= pygame.time.get_ticks() - self.lastUpdateTime
+        else:
+            self.shootCooldown = 0
+            self.canShoot = True
+
+        self.lastUpdateTime = pygame.time.get_ticks()
+
+    def fire(self):
+        self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
+        bulletAngle = self.angle
+        bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
+        bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
+        bullet = Bullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
+        bullet.setDamage(self.damage)
+        bullet.setBulletSpeed(1)
+        bullet.drawable = True
+        bulletSprites.add(bullet)
+        self.canShoot = False
+        self.shootCooldown = self.cooldownDuration
+        #If either tank shoots, play this sound effect.
+        tankShootSFX.play()
 
 #Hulls
 class Panther(Tank):
@@ -1397,7 +1515,7 @@ buttonText = c.geT("WHITE")
 optionText = c.geT("GREY")
 #Hull and turret list
 # turretList = ["Sidewinder", "Avalanche", "Boxer", "Bucket", "Chamber", "Huntsman", "Silencer", "Judge", "Watcher"]
-turretList = [Boxer(Tank(0,0,None, "Default"), None, "Boxer"), Silencer(Tank(0,0,None, "Default"), None, "Silencer")]
+turretList = [Boxer(Tank(0,0,None, "Default"), None, "Boxer"), Silencer(Tank(0,0,None, "Default"), None, "Silencer"), Watcher(Tank(0,0,None, "Default"), None, "Watcher")]
 # hullList = ["Panther", "Cicada", "Gater", "Bonsai", "Fossil"]
 
 hullList = [Panther(0, 0, None, "Panther"), Cicada(0, 0, None, "Cicada"), Gater(0, 0, None, "Gater"), Bonsai(0, 0, None, "Bonsai"), Fossil(0, 0, None, "Fossil")]
