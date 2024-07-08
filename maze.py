@@ -20,12 +20,10 @@ class Tank(pygame.sprite.Sprite):
             currentDir = os.path.dirname(__file__)
             tankPath = os.path.join(currentDir, 'Sprites', 'tank1.png')
             self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
-            print(f"Original tank image size: {self.originalTankImage.get_size()}")
 
             # Scale the tank image to a smaller size
             self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
-            print(f"Scaled tank image size: {self.tankImage.get_size()}")
-        except pygame.error as e:
+        except pygame.error as e: # In case there is an issue opening the file
             print(f"Failed to load image: {e}")
             pygame.quit()
             exit()
@@ -57,6 +55,7 @@ class Tank(pygame.sprite.Sprite):
 
     def updateCorners(self):
         # This function will update the corners of the tank based on the new position
+        # This is to make sure that the coliisions detection is accurate
         # Inputs: None
         # Outputs: None
         cx, cy = self.rect.center
@@ -65,7 +64,7 @@ class Tank(pygame.sprite.Sprite):
         rad = math.pi * 2 - rad
         cosA = math.cos(rad)
         sinA = math.sin(rad)
-
+        # assign the new corners
         self.corners = [
             (cx + cosA * -w - sinA * -h, cy + sinA * -w + cosA * -h),
             (cx + cosA * w - sinA * -h, cy + sinA * w + cosA * -h),
@@ -133,11 +132,13 @@ class Tank(pygame.sprite.Sprite):
         return tempX, tempY
 
     def update(self):
-        # This function updates the tank's position and rotation based on the current controls
+        # This function updates the tank's position and rotation based on the controls detected
+        # from the keyboard sound effects will be played as well as the sound effects
         # Inputs: None
         # Outputs: None
 
         keys = pygame.key.get_pressed()
+        #Movement keys
         if keys[self.controls['up']]:
             self.speed = self.maxSpeed
         elif keys[self.controls['down']]:
@@ -179,7 +180,7 @@ class Tank(pygame.sprite.Sprite):
         # Inputs: damage: The amount of damage that the tank has taken
         # Outputs: None
         self.health -= damage
-        updateTankHealth()
+        updateTankHealth() # Manage the healthbar outside of the code
 
     def getCoords(self):
         return [self.rect.x, self.rect.y, self.rect.x + self.originalTankImage.get_size()[0], self.rect.y + self.originalTankImage.get_size()[1]]
@@ -195,7 +196,7 @@ class Tank(pygame.sprite.Sprite):
 
     def setCentre(self, x, y):
         self.rect.center = (x, y)
-        self.x = x
+        self.x = x # Update the x and y coordinate as well
         self.y = y
 
     def isDrawable(self):
@@ -262,13 +263,16 @@ class Tank(pygame.sprite.Sprite):
         return self.tankName
     
     def setData(self, data):
+        # This function will set up the tanks that are being used
+        # Inputs: Data, all the data stored within the packages defined as global variabels
+        # Outputs: None
         self.controls = data[2]
         self.name = data[3]
         self.rect = self.tankImage.get_rect(center=(data[0], data[1]))
         self.x = float(self.rect.centerx)
         self.y = float(self.rect.centery)
 
-    def draw(self, screen):
+    def draw(self, screen): # A manual entry of the draw screen so that we can update it with anything else we may need to draw
         screen.blit(self.image, self.rect)
 
 class Gun(pygame.sprite.Sprite):
@@ -397,7 +401,12 @@ class Gun(pygame.sprite.Sprite):
         self.lastUpdateTime = pygame.time.get_ticks()
 
     def fire(self):
+        # This function completely handles the bullet generation when firing a bullet
+        # Inputs: None
+        # Outputs: None
+
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
+        # Calculating where the bullet should spawn
         bulletAngle = self.angle
         bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
         bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
@@ -410,6 +419,9 @@ class Gun(pygame.sprite.Sprite):
         tankShootSFX.play()
 
     def setCooldown(self, value = 0):
+        #This function sets the cooldown of the gun
+        #Inputs: value: The value of the cooldown
+        #Outputs: None
         self.cooldownDuration = value
 
     def getCooldown(self):
@@ -461,6 +473,11 @@ class Gun(pygame.sprite.Sprite):
         return self.drawable
 
     def setData(self, tank, controls, name):
+        # This function will set up the gun that is being used
+        # Inputs: tank: The tank object that the gun is attached to
+        #         controls: The controls that are being used to control the gun
+        #         name: The name of the gun
+        # Outputs: None
         self.tank = tank
         self.controls = controls
         self.name = name
@@ -472,6 +489,7 @@ class Gun(pygame.sprite.Sprite):
         screen.blit(self.image, self.rect)
 
 class Bullet(pygame.sprite.Sprite):
+
     def __init__(self, x, y, angle, gunLength, tipOffSet):
         """
         Initializes the Bullet class.
@@ -550,7 +568,6 @@ class Bullet(pygame.sprite.Sprite):
         tank1Collision = satCollision(self, tank1)
         tank2Collision = satCollision(self, tank2)
         if tank1Collision or tank2Collision:
-            global p1Score, p2Score, gameOverFlag
             #If either tank dies, play this tank dead sound effect.
             tankDeadSFX.play()
             if tank1Collision: #If we hit tank1
@@ -581,14 +598,13 @@ class Bullet(pygame.sprite.Sprite):
             if self.bounce == 0:
                 self.kill() # delete the bullet
         self.updateCorners()
-
+        # Store the updated values
         self.rect.x = int(tempX)
         self.rect.y = int(tempY)
         self.x = tempX
         self.y = tempY
-        if abs(self.x- self.trailX) >= 1 and abs(tempY-self.trailY) >= 1:
+        if abs(self.x- self.trailX) >= 1 and abs(tempY-self.trailY) >= 1: # Trails
             self.pleaseDraw = True
-
 
     def setBulletSpeed(self, speed):
         self.speed = speed
@@ -600,12 +616,18 @@ class Bullet(pygame.sprite.Sprite):
         return (self.x, self.y)
 
     def updateCorners(self):
+        # This function will update the corners of the tank based on the new position
+        # Inputs: None
+        # Outputs: None
         self.corners = [(self.rect.x, self.rect.y), (self.rect.x + self.rect.width, self.rect.y), (self.rect.x + self.rect.width, self.rect.y + self.rect.height), (self.rect.x, self.rect.y + self.rect.height)]
 
     def setDamage(self, damage):
         self.damage = damage
 
     def customDraw(self, screen):
+        # This function will draw the bullet on the screen and any additional features that may be needed
+        # Inputs: screen: The screen that the bullet will be drawn on
+        # Outputs: None
         if self.pleaseDraw and self.trail:
             pygame.draw.line(screen, c.geT("NEON_PURPLE"), (self.trailX, self.trailY), (self.x, self.y), 3)
             self.pleaseDraw = False
@@ -617,7 +639,7 @@ class SilencerBullet(Bullet):
     def __init__(self, x, y, angle, gunLength, tipOffSet):
         super().__init__(x, y, angle, gunLength, tipOffSet)
         self.speed = 0.4
-        self.damage = 1000
+        self.damage = 1400
     
     def update(self):
         """
@@ -653,14 +675,17 @@ class SilencerBullet(Bullet):
         #If we hit a tank
         tank1Collision = satCollision(self, tank1)
         tank2Collision = satCollision(self, tank2)
-        if tank1Collision or tank2Collision:
-            global p1Score, p2Score, gameOverFlag
-            #If either tank dies, play this tank dead sound effect.
+        #If either tank dies, play this tank dead sound effect.
+        if tank1Collision: #If we hit tank1
             tankDeadSFX.play()
-            if tank1Collision: #If we hit tank1
-                tank1.damage(self.damage)
-            else:
-                tank2.damage(self.damage)
+            print("Tank 1 hit: ", self.damage)
+            tank1.damage(self.damage)
+            self.kill() # delete the bullet
+            return
+        if tank2Collision:
+            print("Tank 2 hit: ", self.damage)
+            tank2.damage(self.damage)
+            self.kill() # delete the bullet
             return
 
         tile = tileList[index-1]
@@ -732,7 +757,6 @@ class WatcherBullet(Bullet):
         tank1Collision = satCollision(self, tank1)
         tank2Collision = satCollision(self, tank2)
         if tank1Collision or tank2Collision:
-            global p1Score, p2Score, gameOverFlag
             #If either tank dies, play this tank dead sound effect.
             if tank1Collision: #If we hit tank1
                 self.kill()
@@ -767,12 +791,15 @@ class WatcherBullet(Bullet):
         self.y = tempY
 
     def customDraw(self, screen):
+        # This function will draw the bullet on the screen and any additional features that may be needed
+        # Inputs: screen: The screen that the bullet will be drawn on
+        # Outputs: None
         if self.trail:
             pygame.draw.circle(screen, c.geT("RED"), (self.x, self.y), 1)
             self.pleaseDraw = False
 
     def draw(self,_):
-        return
+        return # We don't want to draw the bullet
 
 class ChamberBullet(Bullet):
     gunLength = -24
@@ -862,6 +889,9 @@ class ChamberBullet(Bullet):
             self.pleaseDraw = True
 
     def sizeImage(self, scale):
+        # This function will resize the image
+        # Inputs: Scale: The scale that the image will be resized to
+        # Outputs: None
         originalCenter = self.rect.center
         originalCenter = copy.copy(originalCenter)
         self.image = pygame.transform.scale(self.image, (self.image.get_width() * scale, self.image.get_height()* scale))
@@ -872,7 +902,11 @@ class ChamberBullet(Bullet):
         self.splash = value
 
     def explode(self):
+        # This function will handle the explosion of the bullet and the respective splash damage
+        # Inputs: None
+        # Outputs: None
         if self.splash:
+            #Middle radius
             splash1 = ChamberBullet(self.x, self.y, 0, 0, 0)
             splash1.sizeImage(10)
             splash1.updateCorners()
@@ -881,6 +915,7 @@ class ChamberBullet(Bullet):
             splash1.setBulletSpeed(0)
             splash1.update()
             splash1.kill()
+            # Outer radius
             splash2 = ChamberBullet(self.x, self.y, 0, 0, 0)
             splash2.sizeImage(5)
             splash2.updateCorners()
@@ -893,9 +928,11 @@ class ChamberBullet(Bullet):
         self.kill()
 
     def draw(self,screen):
-        # if self.splash:
-        screen.blit(self.image, self.rect)
-        return
+        # This function will only draw if the bullet is a splash and not a radius
+        # Inputs: screen: The screen that the bullet will be drawn on
+        # Outputs: None
+        if self.splash:
+            screen.blit(self.image, self.rect)
 
 class Tile:
     # border = [False, False, False, False]
@@ -1074,10 +1111,11 @@ class Silencer(Gun):
     wind_up = 1200
     delay = True
     lastRegister = 0
+    
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(2400) #2400 ms
-        self.setDamage(14000)
+        self.setDamage(1400)
         self.setDamageStatistic(3)
         self.setReloadStatistic(1)
         self.drawable = True
@@ -1190,8 +1228,8 @@ class Silencer(Gun):
         tankShootSFX.play()
 
     def customDraw(self, screen):
-        #This function will draw the gun on the tank
-        # Inputs: None
+        #This function will draw the gun on the tank and any additional features that may be needed
+        # Inputs: Screen - The screen that the gun will be drawn on
         # Outputs: None
         if self.wind_up - (pygame.time.get_ticks() - self.lastRegister) >= 0:
             pygame.draw.circle(screen, c.geT("NEON_PURPLE"), (self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(self.angle)), self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(self.angle))), (pygame.time.get_ticks() - self.lastRegister)/self.wind_up * 5)
@@ -1364,6 +1402,7 @@ class Chamber(Gun):
         bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
         bullet = ChamberBullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
         bullet.setDamage(self.damage)
+        bullet.setBulletSpeed(5)
         bulletSprites.add(bullet)
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
