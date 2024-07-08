@@ -1199,6 +1199,8 @@ class Silencer(Gun):
 class Watcher(Gun):
 
     scoping = False
+    scopeDamage = 700
+    scopeStartTime = 0
     speed = 0.1
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
@@ -1266,11 +1268,16 @@ class Watcher(Gun):
         #which is relative to the posistion of the tank gun.
         if keys[self.controls['fire']] and self.canShoot:
             self.scoping = True
+            self.scopeStartTime = pygame.time.get_ticks()
 
         if self.scoping:
             self.setTurretSpeed(self.getTurretSpeed()/20)
             self.getTank().setSpeed(self.getTank().getSpeed()/2)
             self.getTank().setRotationalSpeed(self.getTank().getTopRotationalSpeed()/5)
+            #Scale the damage of the bullet
+            self.scopeDamage += 20
+            if self.scopeDamage >= 3300: # Max damage
+                self.scopeDamage = 3300
 
             if not keys[self.controls['fire']]:
                 self.scoping = False
@@ -1319,11 +1326,12 @@ class Watcher(Gun):
         bulletSprites.add(bullet)
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
+        self.scopeDamage = 700 # Reset the damage
         #If either tank shoots, play this sound effect.
         tankShootSFX.play()
 
     def getDamage(self):
-        return self.damage
+        return self.scopeDamage
 
     def customDraw(self, _):
         #This function will draw the gun on the tank
