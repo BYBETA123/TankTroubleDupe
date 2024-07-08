@@ -204,6 +204,13 @@ class Tank(pygame.sprite.Sprite):
     def getHealth(self):
         return self.health
     
+    def setHealth(self, health):
+        self.health = health
+
+    def setMaxHealth(self, health):
+        self.maxHealth = health
+        self.health = health
+
     def getMaxHealth(self):
         return self.maxHealth
 
@@ -225,6 +232,10 @@ class Tank(pygame.sprite.Sprite):
     def setRotationalSpeed(self, speed):
         self.rotationalSpeed = speed
 
+    def setTopRotationalSpeed(self, speed):
+        self.topRotation = speed
+        self.rotationalSpeed = speed
+
     def resetRotationalSpeed(self):
         self.rotationalSpeed = self.topRotation
 
@@ -235,6 +246,10 @@ class Tank(pygame.sprite.Sprite):
         return self.topRotation
 
     def setSpeed(self, speed):
+        self.maxSpeed = speed
+
+    def setTopSpeed(self, speed):
+        self.topSpeed = speed
         self.maxSpeed = speed
 
     def resetMaxSpeed(self):
@@ -1121,51 +1136,51 @@ class Watcher(Gun):
 class Panther(Tank):
     def __init__(self, x, y, controls, name):
         super().__init__(x, y, controls, name)
-        self.maxHealth = 1800
-        self.health = self.maxHealth
-        self.speedStatistic = 3
-        self.healthStatistic = 1
-        self.setSpeed(0.27)
+        self.setMaxHealth(1800)
+        self.setSpeedStatistic(3)
+        self.setHealthStatistic(1)
+        self.setTopSpeed(0.3)
+        self.setTopRotationalSpeed(0.75)
         self.setTankName("Panther")
 
 class Cicada(Tank):
     def __init__(self, x, y, controls, name):
         super().__init__(x, y, controls, name)
-        self.maxHealth = 2000
-        self.health = self.maxHealth
-        self.speedStatistic = 3
-        self.healthStatistic = 1
-        self.maxSpeed = 0.24
+        self.setMaxHealth(2000)
+        self.setSpeedStatistic(3)
+        self.setHealthStatistic(1)
+        self.setTopSpeed(0.25)
+        self.setTopRotationalSpeed(0.75)
         self.setTankName("Cicada")
 
 class Gater(Tank):
     def __init__(self, x, y, controls, name):
         super().__init__(x, y, controls, name)
-        self.maxHealth = 3000
-        self.health = self.maxHealth
-        self.speedStatistic = 2
-        self.healthStatistic = 2
-        self.maxSpeed = 0.18
+        self.setMaxHealth(3000)
+        self.setSpeedStatistic(2)
+        self.setHealthStatistic(2)
+        self.setTopSpeed(0.18)
+        self.setTopRotationalSpeed(0.75)
         self.setTankName("Gater")
 
 class Bonsai(Tank):
     def __init__(self, x, y, controls, name):
         super().__init__(x, y, controls, name)
-        self.maxHealth = 3250
-        self.health = self.maxHealth
-        self.speedStatistic = 2
-        self.healthStatistic = 2
-        self.maxSpeed = 0.15
+        self.setMaxHealth(3500)
+        self.setSpeedStatistic(2)
+        self.setHealthStatistic(2)
+        self.setTopSpeed(0.12)
+        self.setTopRotationalSpeed(0.75)
         self.setTankName("Bonsai")
 
 class Fossil(Tank):
     def __init__(self, x, y, controls, name):
         super().__init__(x, y, controls, name)
-        self.maxHealth = 4000
-        self.health = self.maxHealth
-        self.speedStatistic = 1
-        self.healthStatistic = 3
-        self.maxSpeed = 0.1
+        self.setMaxHealth(4000)
+        self.setSpeedStatistic(1)
+        self.setHealthStatistic(3)
+        self.setTopSpeed(0.05)
+        self.setTopRotationalSpeed(0.75)
         self.setTankName("Fossil")
 
 
