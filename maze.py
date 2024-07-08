@@ -563,16 +563,16 @@ class Bullet(pygame.sprite.Sprite):
 
         tile = tileList[index-1]
         wallCollision = False
-        if tile.border[0] and tempY - self.originalBulletImage.get_size()[1] <= tile.y: #If the top border is present
+        if tile.border[0] and tempY - self.image.get_size()[1] <= tile.y: #If the top border is present
             wallCollision = True
             self.angle = 180 - self.angle
-        if tile.border[1] and tempX + self.originalBulletImage.get_size()[1] >= tile.x + tileSize: #If the right border is present
+        if tile.border[1] and tempX + self.image.get_size()[1] >= tile.x + tileSize: #If the right border is present
             wallCollision = True
             self.angle = 360 - self.angle
-        if tile.border[2] and tempY + self.originalBulletImage.get_size()[1] >= tile.y + tileSize: #If the bottom border is present
+        if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + tileSize: #If the bottom border is present
             wallCollision = True
             self.angle = 180 - self.angle
-        if tile.border[3] and tempX - self.originalBulletImage.get_size()[1] <= tile.x: #If the left border is present
+        if tile.border[3] and tempX - self.image.get_size()[1] <= tile.x: #If the left border is present
             wallCollision = True
             self.angle = 360 - self.angle
         if wallCollision:
@@ -774,6 +774,128 @@ class WatcherBullet(Bullet):
     def draw(self,_):
         return
 
+class ChamberBullet(Bullet):
+    gunLength = -24
+    tipOffSet = 30
+    splash = True
+    def __init__(self, x, y, angle, gunLength, tipOffSet):
+        super().__init__(x, y, angle, gunLength, tipOffSet)
+        self.speed = 0.5
+        self.damage = 1000
+        self.drawable = True
+        self.gunLength = gunLength
+        self.tipOffSet = tipOffSet
+
+    def update(self):
+        """
+        Updates the bullet's position based on its speed and direction.
+
+        This method calculates the new position of the bullet and updates its rect attribute accordingly.
+
+        Inputs:
+        -------
+        None
+
+        Outputs:
+        --------
+        None
+        """
+        angleRad = math.radians(self.angle)
+        dx = self.speed * math.cos(angleRad)
+        dy = -self.speed * math.sin(angleRad)
+        tempX = self.x + dx
+        tempY = self.y + dy
+        #Check for collision with walls
+        #We are going to calculate the row and column
+        row = math.ceil((self.getCenter()[1] - mazeY)/tileSize)
+        col = math.ceil((self.getCenter()[0] - mazeX)/tileSize)
+        #Find the file at the exact index
+        index = (row-1)*colAmount + col
+
+        #If we are outside of the maze, delete the bullet
+        if tempX <= mazeX or tempY <= mazeY or tempX >= mazeWidth + mazeX or tempY >= mazeHeight + mazeY:
+            self.explode()
+            return
+        
+        #If we hit a tank
+        tank1Collision = satCollision(self, tank1)
+        tank2Collision = satCollision(self, tank2)
+        if tank1Collision or tank2Collision:
+            global p1Score, p2Score, gameOverFlag
+            #If either tank dies, play this tank dead sound effect.
+            tankDeadSFX.play()
+            if tank1Collision: #If we hit tank1
+                tank1.damage(self.damage)
+                self.explode()
+            if tank2Collision:
+                tank2.damage(self.damage)
+                self.explode()
+            return
+
+        tile = tileList[index-1]
+        wallCollision = False
+        if tile.border[0] and tempY - self.image.get_size()[1] <= tile.y: #If the top border is present
+            wallCollision = True
+            self.angle = 180 - self.angle
+        if tile.border[1] and tempX + self.image.get_size()[1] >= tile.x + tileSize: #If the right border is present
+            wallCollision = True
+            self.angle = 360 - self.angle
+        if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + tileSize: #If the bottom border is present
+            wallCollision = True
+            self.angle = 180 - self.angle
+        if tile.border[3] and tempX - self.image.get_size()[1] <= tile.x: #If the left border is present
+            wallCollision = True
+            self.angle = 360 - self.angle
+        if wallCollision:
+            self.bounce -= 1
+            self.speed *= -1
+            if self.bounce == 0:
+                self.explode() # delete the bullet
+                return
+        self.updateCorners()
+
+        self.rect.x = int(tempX)
+        self.rect.y = int(tempY)
+        self.x = tempX
+        self.y = tempY
+        if abs(self.x- self.trailX) >= 1 and abs(tempY-self.trailY) >= 1:
+            self.pleaseDraw = True
+
+    def sizeImage(self, scale):
+        originalCenter = self.rect.center
+        originalCenter = copy.copy(originalCenter)
+        self.image = pygame.transform.scale(self.image, (self.image.get_width() * scale, self.image.get_height()* scale))
+        self.rect = self.image.get_rect()
+        self.rect.center = originalCenter
+
+    def setSplash(self, value):
+        self.splash = value
+
+    def explode(self):
+        if self.splash:
+            splash1 = ChamberBullet(self.x, self.y, 0, 0, 0)
+            splash1.sizeImage(10)
+            splash1.updateCorners()
+            splash1.setSplash(False)
+            splash1.setDamage(self.damage)
+            splash1.setBulletSpeed(0)
+            splash1.update()
+            splash1.kill()
+            splash2 = ChamberBullet(self.x, self.y, 0, 0, 0)
+            splash2.sizeImage(5)
+            splash2.updateCorners()
+            splash2.setSplash(False)
+            splash2.setDamage(self.damage)
+            splash2.setBulletSpeed(0)
+            splash2.update()
+            splash2.kill()
+
+        self.kill()
+
+    def draw(self,screen):
+        # if self.splash:
+        screen.blit(self.image, self.rect)
+        return
 
 class Tile:
     # border = [False, False, False, False]
@@ -939,7 +1061,6 @@ class GameMode(Enum):
 
 #Turrets
 class Boxer(Gun):
-    bulletSide = 1
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(200) # 200 ms
@@ -960,6 +1081,7 @@ class Silencer(Gun):
         self.setDamageStatistic(3)
         self.setReloadStatistic(1)
         self.drawable = True
+
     def update(self):
         """
         Updates the gun's position, rotation, and shooting state based on the current controls and time.
@@ -1218,9 +1340,26 @@ class Watcher(Gun):
             bullet.trail = True
             bulletSprites.add(bullet)
 
+class Chamber(Gun):
+    def __init__(self, tank, controls, name):
+        super().__init__(tank, controls, name)
+        self.setCooldown(1500) # 200 ms
+        self.setDamage(300) # Should be 900 but because of the 3 step effect it will be split into 3x 300
+        self.setDamageStatistic(2)
+        self.setReloadStatistic(2)
+        self.setGunBackDuration(500)
 
-
-
+    def fire(self):
+        self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
+        bulletAngle = self.angle
+        bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
+        bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
+        bullet = ChamberBullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
+        bullet.setDamage(self.damage)
+        bulletSprites.add(bullet)
+        self.canShoot = False
+        self.shootCooldown = self.cooldownDuration
+        #If either tank shoots, play this sound effect.
 
 #Hulls
 class Panther(Tank):
@@ -1775,7 +1914,7 @@ buttonText = c.geT("WHITE")
 optionText = c.geT("GREY")
 #Hull and turret list
 # turretList = ["Sidewinder", "Avalanche", "Boxer", "Bucket", "Chamber", "Huntsman", "Silencer", "Judge", "Watcher"]
-turretList = [Boxer(Tank(0,0,None, "Default"), None, "Boxer"), Silencer(Tank(0,0,None, "Default"), None, "Silencer"), Watcher(Tank(0,0,None, "Default"), None, "Watcher")]
+turretList = [Boxer(Tank(0,0,None, "Default"), None, "Boxer"), Silencer(Tank(0,0,None, "Default"), None, "Silencer"), Watcher(Tank(0,0,None, "Default"), None, "Watcher"), Chamber(Tank(0,0,None, "Default"), None, "Chamber")]
 # hullList = ["Panther", "Cicada", "Gater", "Bonsai", "Fossil"]
 
 hullList = [Panther(0, 0, None, "Panther"), Cicada(0, 0, None, "Cicada"), Gater(0, 0, None, "Gater"), Bonsai(0, 0, None, "Bonsai"), Fossil(0, 0, None, "Fossil")]
