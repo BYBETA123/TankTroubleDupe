@@ -418,6 +418,9 @@ class Gun(pygame.sprite.Sprite):
     def setDamageStatistic(self, value):
         self.damageStatistic = value
 
+    def setDamage(self, damage):
+        self.damage = damage
+
     def setReloadStatistic(self, value):
         self.reloadStatistic = value
 
@@ -429,7 +432,10 @@ class Gun(pygame.sprite.Sprite):
     
     def getGunName(self):
         return self.name
-        
+
+    def setGunBackDuration(self, duration):
+        self.gunBackDuration = duration
+
     def getReloadStatistic(self):
         return self.reloadStatistic
     
@@ -505,6 +511,7 @@ class Bullet(pygame.sprite.Sprite):
         self.corners = [(self.rect.x, self.rect.y), (self.rect.x + self.rect.width, self.rect.y), (self.rect.x + self.rect.width, self.rect.y + self.rect.height), (self.rect.x, self.rect.y + self.rect.height)]
         self.damage = 700
         self.pleaseDraw = False
+
     def update(self):
         """
         Updates the bullet's position based on its speed and direction.
@@ -602,6 +609,84 @@ class Bullet(pygame.sprite.Sprite):
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)
+
+class SilencerBullet(Bullet):
+    def __init__(self, x, y, angle, gunLength, tipOffSet):
+        super().__init__(x, y, angle, gunLength, tipOffSet)
+        self.speed = 0.4
+        self.damage = 1000
+    
+    def update(self):
+        """
+        Updates the bullet's position based on its speed and direction.
+
+        This method calculates the new position of the bullet and updates its rect attribute accordingly.
+
+        Inputs:
+        -------
+        None
+
+        Outputs:
+        --------
+        None
+        """
+        angleRad = math.radians(self.angle)
+        dx = self.speed * math.cos(angleRad)
+        dy = -self.speed * math.sin(angleRad)
+        tempX = self.x + dx
+        tempY = self.y + dy
+        #Check for collision with walls
+        #We are going to calculate the row and column
+        row = math.ceil((self.getCenter()[1] - mazeY)/tileSize)
+        col = math.ceil((self.getCenter()[0] - mazeX)/tileSize)
+        #Find the file at the exact index
+        index = (row-1)*colAmount + col
+
+        #If we are outside of the maze, delete the bullet
+        if tempX <= mazeX or tempY <= mazeY or tempX >= mazeWidth + mazeX or tempY >= mazeHeight + mazeY:
+            self.kill()
+            return
+        
+        #If we hit a tank
+        tank1Collision = satCollision(self, tank1)
+        tank2Collision = satCollision(self, tank2)
+        if tank1Collision or tank2Collision:
+            global p1Score, p2Score, gameOverFlag
+            #If either tank dies, play this tank dead sound effect.
+            tankDeadSFX.play()
+            if tank1Collision: #If we hit tank1
+                tank1.damage(self.damage)
+            else:
+                tank2.damage(self.damage)
+            return
+
+        tile = tileList[index-1]
+        wallCollision = False
+        if tile.border[0] and tempY - self.originalBulletImage.get_size()[1] <= tile.y: #If the top border is present
+            wallCollision = True
+            self.angle = 180 - self.angle
+        if tile.border[1] and tempX + self.originalBulletImage.get_size()[1] >= tile.x + tileSize: #If the right border is present
+            wallCollision = True
+            self.angle = 360 - self.angle
+        if tile.border[2] and tempY + self.originalBulletImage.get_size()[1] >= tile.y + tileSize: #If the bottom border is present
+            wallCollision = True
+            self.angle = 180 - self.angle
+        if tile.border[3] and tempX - self.originalBulletImage.get_size()[1] <= tile.x: #If the left border is present
+            wallCollision = True
+            self.angle = 360 - self.angle
+        if wallCollision:
+            self.bounce -= 1
+            self.speed *= -1
+            if self.bounce == 0:
+                self.kill() # delete the bullet
+        self.updateCorners()
+
+        self.rect.x = int(tempX)
+        self.rect.y = int(tempY)
+        self.x = tempX
+        self.y = tempY
+        if abs(self.x- self.trailX) >= 1 and abs(tempY-self.trailY) >= 1:
+            self.pleaseDraw = True
 
 class WatcherBullet(Bullet):
     def __init__(self, x, y, angle, gunLength, tipOffSet):
@@ -853,10 +938,11 @@ class GameMode(Enum):
 class Boxer(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
-        self.cooldownDuration = 200 #200 ms
-        self.damage = 200
+        self.setCooldown(200) # 200 ms
+        self.setDamage(200)
         self.setDamageStatistic(1)
         self.setReloadStatistic(3)
+        self.setGunBackDuration(50)
 
 class Silencer(Gun):
 
@@ -866,7 +952,7 @@ class Silencer(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(2400) #2400 ms
-        self.damage = 1400
+        self.setDamage(14000)
         self.setDamageStatistic(3)
         self.setReloadStatistic(1)
         self.drawable = True
@@ -966,7 +1052,7 @@ class Silencer(Gun):
         bulletAngle = self.angle
         bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
         bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
-        bullet = Bullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
+        bullet = SilencerBullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
         bullet.setDamage(self.damage)
         bullet.setBulletSpeed(5)
         bullet.drawable = True
@@ -991,7 +1077,7 @@ class Watcher(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(1500) #1500 ms
-        self.damage = 3300
+        self.setDamage(3300)
         self.setDamageStatistic(2)
         self.setReloadStatistic(2)
         self.drawable = True
