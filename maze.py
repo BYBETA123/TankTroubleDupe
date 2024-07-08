@@ -1675,6 +1675,21 @@ def setUpPlayers():
     allSprites.add(tank1, gun1, tank2, gun2)
     bulletSprites = pygame.sprite.Group()
 
+def constantHomeScreen():
+    screen.fill(bg) # This is the first line when drawing a new frame
+
+def constantSelectionScreen():
+    screen.fill(bg) # This is the first line when drawing a new frame
+
+def constantPlayGame():
+    screen.fill(bg) # This is the first line when drawing a new frame
+    fontName = pygame.font.SysFont('Calibri', 35, True, False)
+    textp1Name = fontName.render(" Plwasd1", True, c.geT("WHITE"))
+    textp2Name = fontName.render(" Plarro2", True, c.geT("WHITE"))
+    #Visualising player 2
+    screen.blit(textp1Name,[p1NameIndent, 0.783*windowHeight]) # This is the name on the left
+    screen.blit(textp2Name,[p2NameIndent - textp2Name.get_width(), 0.783*windowHeight]) # This is the name on the left
+
 def playGame():
     # This function controls the main execution of the game
     # Inputs: None
@@ -1702,44 +1717,26 @@ def playGame():
     
     #Setting up the text
     fontScore = pygame.font.SysFont('Calibri', 100, True, False)
-    fontName = pygame.font.SysFont('Calibri', 35, True, False)
-    # Player 1 Text
-    # textp1 = fontScore.render(p1ScoreText, True, c.geT("WHITE"))
-    # Player 2 Text
-    # textp2 = fontScore.render(p2ScoreText, True, c.geT("WHITE"))
 
     text3 = fontScore.render(p1ScoreText + " - " + p2ScoreText, True, c.geT("WHITE"))
 
-
-
-    textp1Name = fontName.render(" Plwasd1", True, c.geT("WHITE"))
-    textp2Name = fontName.render(" Plarro2", True, c.geT("WHITE"))
-
-    #Misc Text
-    # text3 = fontScore.render("-",True,c.geT("WHITE"))
-
     #Visualing player 1
-    # screen.blit(textp1,[windowWidth/2 - textp1.get_width()-text3.get_width()/2, 0.8*windowHeight]) # This is the score on the left
-    # screen.blit(textp2,[windowWidth/2 + text3.get_width()*1.5, 0.8*windowHeight]) # This is the score on the right 
-    # screen.blit(text3,[windowWidth/2,0.79*windowHeight])
     screen.blit(text3, [windowWidth/2 - text3.get_width()/2, 0.79*windowHeight])
     #Health bars outline
     #Health bar
 
-    pygame.draw.rect(screen, c.geT("RED"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth*((tank1.getHealth())/tank1.getMaxHealth()), barHeight]) # Bar
-    pygame.draw.rect(screen, c.geT("BLACK"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth, barHeight], 2) # Outline
+    pygame.draw.rect(screen, c.geT("RED"), [p1NameIndent, 0.8*windowHeight, barWidth*((tank1.getHealth())/tank1.getMaxHealth()), barHeight]) # Bar
+    pygame.draw.rect(screen, c.geT("BLACK"), [p1NameIndent, 0.8*windowHeight, barWidth, barHeight], 2) # Outline
     #Reload bars
-    pygame.draw.rect(screen, c.geT("BLUE"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + mazeY, barWidth*(1-((gun1.getCooldown())/gun1.getCooldownMax())), barHeight]) # The 25 is to space from the health bar
-    pygame.draw.rect(screen, c.geT("BLACK"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + mazeY, barWidth, barHeight], 2) # Outline
-    #Visualising player 2
-    screen.blit(textp1Name,[p1NameIndent, 0.783*windowHeight]) # This is the name on the left
-    screen.blit(textp2Name,[p2NameIndent - textp2Name.get_width(), 0.783*windowHeight]) # This is the name on the left
+    pygame.draw.rect(screen, c.geT("BLUE"), [p1NameIndent, 0.8*windowHeight + mazeY, barWidth*(1-((gun1.getCooldown())/gun1.getCooldownMax())), barHeight]) # The 25 is to space from the health bar
+    pygame.draw.rect(screen, c.geT("BLACK"), [p1NameIndent, 0.8*windowHeight + mazeY, barWidth, barHeight], 2) # Outline
+
     #Health bars
-    pygame.draw.rect(screen, c.geT("RED"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth*(((tank2.getHealth())/tank2.getMaxHealth())), barHeight])
-    pygame.draw.rect(screen, c.geT("BLACK"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth, barHeight], 2)
+    pygame.draw.rect(screen, c.geT("RED"), [p2NameIndent - barWidth, 0.8*windowHeight, barWidth*(((tank2.getHealth())/tank2.getMaxHealth())), barHeight])
+    pygame.draw.rect(screen, c.geT("BLACK"), [p2NameIndent - barWidth, 0.8*windowHeight, barWidth, barHeight], 2)
     #Reload bars
-    pygame.draw.rect(screen, c.geT("BLUE"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + mazeY, barWidth*((gun2.getCooldownMax()-gun2.getCooldown())/gun2.getCooldownMax()), barHeight]) # The 25 is to space from the health bar
-    pygame.draw.rect(screen, c.geT("BLACK"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + mazeY, barWidth, barHeight], 2) # Outline
+    pygame.draw.rect(screen, c.geT("BLUE"), [p2NameIndent - barWidth, 0.8*windowHeight + mazeY, barWidth*((gun2.getCooldownMax()-gun2.getCooldown())/gun2.getCooldownMax()), barHeight]) # The 25 is to space from the health bar
+    pygame.draw.rect(screen, c.geT("BLACK"), [p2NameIndent - barWidth, 0.8*windowHeight + mazeY, barWidth, barHeight], 2) # Outline
 
     # Misc text and other little pieces
 
@@ -1789,7 +1786,6 @@ def pauseScreen():
     quitButton.draw(screen, outline = True)
     mute.draw(screen, outline = False)
     sfx.draw(screen, outline = False)
-    pass
 
 def reset():
     # This function is to reset the board everytime we want to restart the game
@@ -2201,6 +2197,7 @@ def checkButtons(mouse):
         setUpPlayers()
         #Switch the the play screen
         print("Play")
+        constantPlayGame()
         gameMode=GameMode.play
         music.stop()
         music = gameMusic
@@ -2208,6 +2205,7 @@ def checkButtons(mouse):
         music.play(-1)
     if homeButton.buttonClick(mouse):
         #Switch back to the home screen
+        constantHomeScreen()
         print("Back")
         gameMode = GameMode.home
         music.stop()
@@ -2226,6 +2224,7 @@ def checkHomeButtons(mouse):
         gameMode = GameMode.selection
         global music, musicMax
         print("Selection")
+        constantSelectionScreen()
         music.stop()
         music = selectionMusic
         musicMax = selectionMusicMax
@@ -2297,6 +2296,8 @@ player2PackageGun = [controlsTank2, p2GunName]
 allSprites = pygame.sprite.Group()
 bulletSprites = pygame.sprite.Group()
 
+constantHomeScreen()
+
 #Main loop
 while not done:
     for event in pygame.event.get():
@@ -2311,9 +2312,11 @@ while not done:
                 #We are paused
                 if (unPause.getCorners()[0] <= mouse[0] <= unPause.getCorners()[2] and
                     unPause.getCorners()[1] <= mouse[1] <= unPause.getCorners()[3]): #If we click the button
+                    constantPlayGame()
                     gameMode = GameMode.play # Return to game if button was clicked
                 if (home.getCorners()[0] <= mouse[0] <= home.getCorners()[2] and
                     home.getCorners()[1] <= mouse[1] <= home.getCorners()[3]):
+                    constantHomeScreen()
                     gameMode = GameMode.home
                     music.stop()
                     music = lobbyMusic
@@ -2355,6 +2358,7 @@ while not done:
             if event.key == pygame.K_p:
                 #Pause
                 if gameMode == GameMode.pause:
+                    constantPlayGame()
                     gameMode = GameMode.play # Return to game if button was clicked
                 elif gameMode == GameMode.play:
                     gameMode = GameMode.pause # Pause the game
@@ -2366,9 +2370,11 @@ while not done:
                 print("The current FPS is: ", clock.get_fps())
             if event.key == pygame.K_n:
                 if gameMode == GameMode.play:
+                    constantPlayGame()
                     reset()
             if event.key == pygame.K_0:
                 if gameMode == GameMode.play:
+                    constantPlayGame()
                     reset()
             if event.key == pygame.K_m:
                 mute.mute()
@@ -2385,8 +2391,6 @@ while not done:
     tankMoveSFX.set_volume(sfx.getValue() * tankMoveMax)
     mouse = pygame.mouse.get_pos() #Update the position
 
-    screen.fill(bg) # This is the first line when drawing a new frame
-
     if gameMode == GameMode.play:
         playGame()
     elif gameMode == GameMode.pause:
@@ -2395,6 +2399,7 @@ while not done:
             mute.updateSlider(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
             sfx.updateSlider(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
     elif gameMode == GameMode.selection:
+        constantSelectionScreen()
         pygame.draw.rect(screen,(0,0,0), (tileSize, tileSize*multiplyConstant, rectX, rectY), 1)
         for button in buttonList:
             button.update_display(pygame.mouse.get_pos())
