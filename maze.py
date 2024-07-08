@@ -372,17 +372,7 @@ class Gun(pygame.sprite.Sprite):
         #Reload cooldown of bullet and determines the angle to fire the bullet,
         #which is relative to the posistion of the tank gun.
         if keys[self.controls['fire']] and self.canShoot:
-            self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
-            bulletAngle = self.angle
-            bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
-            bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
-            bullet = Bullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
-            bullet.setDamage(self.damage)
-            bulletSprites.add(bullet)
-            self.canShoot = False
-            self.shootCooldown = self.cooldownDuration
-            #If either tank shoots, play this sound effect.
-            tankShootSFX.play()
+            self.fire()
         #Here is the bullet cooldown
         elapsedTime = pygame.time.get_ticks() - self.gunBackStartTime
         if elapsedTime <= self.gunBackDuration:
@@ -405,6 +395,19 @@ class Gun(pygame.sprite.Sprite):
             self.canShoot = True
 
         self.lastUpdateTime = pygame.time.get_ticks()
+
+    def fire(self):
+        self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
+        bulletAngle = self.angle
+        bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
+        bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
+        bullet = Bullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
+        bullet.setDamage(self.damage)
+        bulletSprites.add(bullet)
+        self.canShoot = False
+        self.shootCooldown = self.cooldownDuration
+        #If either tank shoots, play this sound effect.
+        tankShootSFX.play()
 
     def setCooldown(self, value = 0):
         self.cooldownDuration = value
@@ -936,6 +939,7 @@ class GameMode(Enum):
 
 #Turrets
 class Boxer(Gun):
+    bulletSide = 1
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(200) # 200 ms
