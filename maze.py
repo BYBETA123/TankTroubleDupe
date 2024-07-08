@@ -1687,8 +1687,8 @@ def constantPlayGame():
     textp1Name = fontName.render(" Plwasd1", True, c.geT("WHITE"))
     textp2Name = fontName.render(" Plarro2", True, c.geT("WHITE"))
     #Visualising player 2
-    screen.blit(textp1Name,[p1NameIndent, 0.783*windowHeight]) # This is the name on the left
-    screen.blit(textp2Name,[p2NameIndent - textp2Name.get_width(), 0.783*windowHeight]) # This is the name on the left
+    screen.blit(textp1Name,[p1NameIndent, 0.78*windowHeight]) # This is the name on the left
+    screen.blit(textp2Name,[p2NameIndent - textp2Name.get_width(), 0.78*windowHeight]) # This is the name on the right
 
 def playGame():
     # This function controls the main execution of the game
@@ -1721,28 +1721,31 @@ def playGame():
     text3 = fontScore.render(p1ScoreText + " - " + p2ScoreText, True, c.geT("WHITE"))
 
     #Visualing player 1
-    screen.blit(text3, [windowWidth/2 - text3.get_width()/2, 0.79*windowHeight])
     #Health bars outline
     #Health bar
 
-    pygame.draw.rect(screen, c.geT("RED"), [p1NameIndent, 0.8*windowHeight, barWidth*((tank1.getHealth())/tank1.getMaxHealth()), barHeight]) # Bar
-    pygame.draw.rect(screen, c.geT("BLACK"), [p1NameIndent, 0.8*windowHeight, barWidth, barHeight], 2) # Outline
+    #I need to draw a box around the bottom portion of the screen
+    pygame.draw.rect(screen, c.geT("GREY"), [0, 0.85*windowHeight, windowWidth, windowHeight*0.15]) # The bottom bar
+
+    screen.blit(text3, [windowWidth/2 - text3.get_width()/2, 0.85*windowHeight])
+
+    pygame.draw.rect(screen, c.geT("RED"), [p1NameIndent, 0.85*windowHeight, barWidth*((tank1.getHealth())/tank1.getMaxHealth()), barHeight]) # Bar
+    pygame.draw.rect(screen, c.geT("BLACK"), [p1NameIndent, 0.85*windowHeight, barWidth, barHeight], 2) # Outline
     #Reload bars
-    pygame.draw.rect(screen, c.geT("BLUE"), [p1NameIndent, 0.8*windowHeight + mazeY, barWidth*(1-((gun1.getCooldown())/gun1.getCooldownMax())), barHeight]) # The 25 is to space from the health bar
-    pygame.draw.rect(screen, c.geT("BLACK"), [p1NameIndent, 0.8*windowHeight + mazeY, barWidth, barHeight], 2) # Outline
+    pygame.draw.rect(screen, c.geT("BLUE"), [p1NameIndent, 0.85*windowHeight + mazeY, barWidth*(1-((gun1.getCooldown())/gun1.getCooldownMax())), barHeight]) # The 25 is to space from the health bar
+    pygame.draw.rect(screen, c.geT("BLACK"), [p1NameIndent, 0.85*windowHeight + mazeY, barWidth, barHeight], 2) # Outline
 
     #Health bars
-    pygame.draw.rect(screen, c.geT("RED"), [p2NameIndent - barWidth, 0.8*windowHeight, barWidth*(((tank2.getHealth())/tank2.getMaxHealth())), barHeight])
-    pygame.draw.rect(screen, c.geT("BLACK"), [p2NameIndent - barWidth, 0.8*windowHeight, barWidth, barHeight], 2)
+    pygame.draw.rect(screen, c.geT("RED"), [p2NameIndent - barWidth, 0.85*windowHeight, barWidth*(((tank2.getHealth())/tank2.getMaxHealth())), barHeight])
+    pygame.draw.rect(screen, c.geT("BLACK"), [p2NameIndent - barWidth, 0.85*windowHeight, barWidth, barHeight], 2)
     #Reload bars
-    pygame.draw.rect(screen, c.geT("BLUE"), [p2NameIndent - barWidth, 0.8*windowHeight + mazeY, barWidth*((gun2.getCooldownMax()-gun2.getCooldown())/gun2.getCooldownMax()), barHeight]) # The 25 is to space from the health bar
-    pygame.draw.rect(screen, c.geT("BLACK"), [p2NameIndent - barWidth, 0.8*windowHeight + mazeY, barWidth, barHeight], 2) # Outline
+    pygame.draw.rect(screen, c.geT("BLUE"), [p2NameIndent - barWidth, 0.85*windowHeight + mazeY, barWidth*((gun2.getCooldownMax()-gun2.getCooldown())/gun2.getCooldownMax()), barHeight]) # The 25 is to space from the health bar
+    pygame.draw.rect(screen, c.geT("BLACK"), [p2NameIndent - barWidth, 0.85*windowHeight + mazeY, barWidth, barHeight], 2) # Outline
 
     # Misc text and other little pieces
 
     # Draw the border
     pygame.draw.rect(screen, c.geT("BLACK"), [mazeX, mazeY, mazeWidth,mazeHeight], 1) # The maze border
-
 
     for tile in tileList:
         tile.draw(screen)
@@ -2247,9 +2250,9 @@ originalTankImage = pygame.image.load(tankPath).convert_alpha()
 
 
 # Create buttons with specified positions and text
-playButtonHome = Button((0, 0, 0), (0, 0, 255), 150, 400, 175, 70, 'Play', (255, 255, 255), 30, hoverColor=(100, 100, 255))
-settingsButton = Button((0, 0, 0), (0, 0, 255), 475, 400, 175, 70, 'Settings', (255, 255, 255), 30, hoverColor=(100, 100, 255))
-quitButtonHome = Button((0, 0, 0), (0, 0, 255), 10, 10, 130, 50, 'Quit', (255, 255, 255), 25, hoverColor=(100, 100, 255))
+playButtonHome = Button(c.geT("BLACK"),c.geT("BLACK"), 150, 400, 175, 70, 'Play', (255, 255, 255), 30, hoverColor=(100, 100, 255))
+settingsButton = Button(c.geT("BLACK"), c.geT("BLACK"), 475, 400, 175, 70, 'Settings', (255, 255, 255), 30, hoverColor=(100, 100, 255))
+quitButtonHome = Button(c.geT("BLACK"), c.geT("BLACK"), 10, 10, 130, 50, 'Quit', (255, 255, 255), 25, hoverColor=(100, 100, 255))
 
 homeButtonList.append(playButtonHome)
 homeButtonList.append(settingsButton)
