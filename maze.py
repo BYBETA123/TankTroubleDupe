@@ -1398,7 +1398,7 @@ class Watcher(Gun):
         # Outputs: None
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
         # Setup bullet
-        bullet = Bullet(self.x, self.y, self.angle, self.gunLength, self.tipOffSet)
+        bullet = Bullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
         bullet.setDamage(self.getDamage())
         bullet.setBulletSpeed(5)
         bullet.setName(self.getTank().getName())
@@ -1430,7 +1430,7 @@ class Chamber(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(1500) # 200 ms
-        self.setDamage(300) # Should be 900 but because of the 3 step effect it will be split into 3x 300
+        self.setDamage(270) # Should be 900 but because of the 3 step effect it will be split into 3x 300
         self.setDamageStatistic(2)
         self.setReloadStatistic(2)
         self.setGunBackDuration(500)
