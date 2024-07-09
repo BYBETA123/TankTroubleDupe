@@ -495,6 +495,7 @@ class Bullet(pygame.sprite.Sprite):
 
     originalCollision = True
     name = "Default"
+
     def __init__(self, x, y, angle, gunLength, tipOffSet):
         """
         Initializes the Bullet class.
@@ -534,7 +535,8 @@ class Bullet(pygame.sprite.Sprite):
         self.trailX =  self.rect.centerx
         self.trailY = self.rect.centery
         self.bounce = 1
-        self.corners = [(self.rect.x, self.rect.y), (self.rect.x + self.rect.width, self.rect.y), (self.rect.x + self.rect.width, self.rect.y + self.rect.height), (self.rect.x, self.rect.y + self.rect.height)]
+        self.corners = [(self.rect.x, self.rect.y), (self.rect.x + self.rect.width, self.rect.y),
+                        (self.rect.x + self.rect.width, self.rect.y + self.rect.height), (self.rect.x, self.rect.y + self.rect.height)]
         self.damage = 700
         self.pleaseDraw = False
 
@@ -623,7 +625,8 @@ class Bullet(pygame.sprite.Sprite):
         # This function will update the corners of the tank based on the new position
         # Inputs: None
         # Outputs: None
-        self.corners = [(self.rect.x, self.rect.y), (self.rect.x + self.rect.width, self.rect.y), (self.rect.x + self.rect.width, self.rect.y + self.rect.height), (self.rect.x, self.rect.y + self.rect.height)]
+        self.corners = [(self.rect.x, self.rect.y), (self.rect.x + self.rect.width, self.rect.y),
+                        (self.rect.x + self.rect.width, self.rect.y + self.rect.height), (self.rect.x, self.rect.y + self.rect.height)]
 
     def setDamage(self, damage):
         self.damage = damage
@@ -815,9 +818,11 @@ class WatcherBullet(Bullet):
         return # We don't want to draw the bullet
 
 class ChamberBullet(Bullet):
+
     gunLength = -24
     tipOffSet = 30
     splash = True
+
     def __init__(self, x, y, angle, gunLength, tipOffSet):
         super().__init__(x, y, angle, gunLength, tipOffSet)
         self.speed = 0.5
@@ -964,6 +969,7 @@ class Tile:
     border = [True, True, True, True]
     borderWidth = 2
     spawn = False
+
     def __init__(self, index, x, y, color, spawn = False):
         self.index = index
         self.x = x
@@ -1123,6 +1129,7 @@ class GameMode(Enum):
 
 #Turrets
 class Boxer(Gun):
+
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(200) # 200 ms
@@ -1237,7 +1244,12 @@ class Silencer(Gun):
         self.lastUpdateTime = pygame.time.get_ticks()
 
     def fire(self):
+        # This function is responsible for all the firing mechanics of the gun
+        # The Bullet is custom here as it is tailored for the Silencer
+        # Inputs: None
+        # Outputs: None
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
+        #Setup bullet
         bullet = SilencerBullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
         bullet.setDamage(self.damage)
         bullet.setBulletSpeed(5)
@@ -1255,7 +1267,10 @@ class Silencer(Gun):
         # Inputs: Screen - The screen that the gun will be drawn on
         # Outputs: None
         if self.wind_up - (pygame.time.get_ticks() - self.lastRegister) >= 0:
-            pygame.draw.circle(screen, c.geT("NEON_PURPLE"), (self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(self.angle)), self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(self.angle))), (pygame.time.get_ticks() - self.lastRegister)/self.wind_up * 5)
+            pygame.draw.circle(screen, c.geT("NEON_PURPLE"),
+                               (self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(self.angle)),
+                                self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(self.angle))),
+                                (pygame.time.get_ticks() - self.lastRegister)/self.wind_up * 5)
 
 class Watcher(Gun):
 
@@ -1263,6 +1278,7 @@ class Watcher(Gun):
     scopeDamage = 700
     scopeStartTime = 0
     speed = 0.1
+
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(1500) #1500 ms
@@ -1376,11 +1392,13 @@ class Watcher(Gun):
         self.lastUpdateTime = pygame.time.get_ticks()
 
     def fire(self):
+        # This function is responsible for all the firing mechanics of the gun
+        # The Bullet is custom here as it is tailored for the Watcher
+        # Inputs: None
+        # Outputs: None
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
-        bulletAngle = self.angle
-        bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
-        bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
-        bullet = Bullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
+        # Setup bullet
+        bullet = Bullet(self.x, self.y, self.angle, self.gunLength, self.tipOffSet)
         bullet.setDamage(self.getDamage())
         bullet.setBulletSpeed(5)
         bullet.setName(self.getTank().getName())
@@ -1408,6 +1426,7 @@ class Watcher(Gun):
             bulletSprites.add(bullet)
 
 class Chamber(Gun):
+
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(1500) # 200 ms
@@ -1417,6 +1436,10 @@ class Chamber(Gun):
         self.setGunBackDuration(500)
 
     def fire(self):
+        # This function is responsible for all the firing mechanics of the gun
+        # The Bullet is custom here as it is tailored for the Chamber
+        # Inputs: None
+        # Outputs: None
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
         bullet = ChamberBullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
@@ -1429,6 +1452,7 @@ class Chamber(Gun):
 
 #Hulls
 class Panther(Tank):
+
     def __init__(self, x, y, controls, name):
         super().__init__(x, y, controls, name)
         self.setMaxHealth(1800)
@@ -1439,6 +1463,7 @@ class Panther(Tank):
         self.setTankName("Panther")
 
 class Cicada(Tank):
+
     def __init__(self, x, y, controls, name):
         super().__init__(x, y, controls, name)
         self.setMaxHealth(2000)
@@ -1449,6 +1474,7 @@ class Cicada(Tank):
         self.setTankName("Cicada")
 
 class Gater(Tank):
+
     def __init__(self, x, y, controls, name):
         super().__init__(x, y, controls, name)
         self.setMaxHealth(3000)
@@ -1459,6 +1485,7 @@ class Gater(Tank):
         self.setTankName("Gater")
 
 class Bonsai(Tank):
+
     def __init__(self, x, y, controls, name):
         super().__init__(x, y, controls, name)
         self.setMaxHealth(3500)
@@ -1469,6 +1496,7 @@ class Bonsai(Tank):
         self.setTankName("Bonsai")
 
 class Fossil(Tank):
+
     def __init__(self, x, y, controls, name):
         super().__init__(x, y, controls, name)
         self.setMaxHealth(4000)
@@ -1691,12 +1719,21 @@ def setUpPlayers():
     bulletSprites = pygame.sprite.Group()
 
 def constantHomeScreen():
+    #This funciton handles the constant elements of the home screen
+    # Inputs: None
+    # Outputs: None
     screen.fill(bg) # This is the first line when drawing a new frame
 
 def constantSelectionScreen():
+    #This function handles the constant elements of the selection screen
+    # Inputs: None
+    # Outputs: None
     screen.fill(bg) # This is the first line when drawing a new frame
 
 def constantPlayGame():
+    #This function handles the constant elements of the game screen
+    # Inputs: None
+    # Outputs: None
     screen.fill(bg) # This is the first line when drawing a new frame
     fontName = pygame.font.SysFont('Calibri', 35, True, False)
     textp1Name = fontName.render(" Plwasd1", True, c.geT("WHITE"))
@@ -1735,26 +1772,27 @@ def playGame():
 
     text3 = fontScore.render(p1ScoreText + " - " + p2ScoreText, True, c.geT("WHITE"))
 
-    #Visualing player 1
-    #Health bars outline
-    #Health bar
-
-    #I need to draw a box around the bottom portion of the screen
+    #Box around the bottom of the screen for the health and reload bars
     pygame.draw.rect(screen, c.geT("GREY"), [0, 0.85*windowHeight, windowWidth, windowHeight*0.15]) # The bottom bar
 
     screen.blit(text3, [windowWidth/2 - text3.get_width()/2, 0.85*windowHeight])
 
-    pygame.draw.rect(screen, c.geT("RED"), [p1NameIndent, 0.85*windowHeight, barWidth*((tank1.getHealth())/tank1.getMaxHealth()), barHeight]) # Bar
+    pygame.draw.rect(screen, c.geT("RED"), [p1NameIndent, 0.85*windowHeight, barWidth*((tank1.getHealth())/tank1.getMaxHealth()),
+                                            barHeight]) # Bar
     pygame.draw.rect(screen, c.geT("BLACK"), [p1NameIndent, 0.85*windowHeight, barWidth, barHeight], 2) # Outline
     #Reload bars
-    pygame.draw.rect(screen, c.geT("BLUE"), [p1NameIndent, 0.85*windowHeight + mazeY, barWidth*(1-((gun1.getCooldown())/gun1.getCooldownMax())), barHeight]) # The 25 is to space from the health bar
+    pygame.draw.rect(screen, c.geT("BLUE"), [p1NameIndent, 0.85*windowHeight + mazeY, barWidth*(1-((gun1.getCooldown())/gun1.getCooldownMax())),
+                                             barHeight]) # The 25 is to space from the health bar
     pygame.draw.rect(screen, c.geT("BLACK"), [p1NameIndent, 0.85*windowHeight + mazeY, barWidth, barHeight], 2) # Outline
 
     #Health bars
-    pygame.draw.rect(screen, c.geT("RED"), [p2NameIndent - barWidth, 0.85*windowHeight, barWidth*(((tank2.getHealth())/tank2.getMaxHealth())), barHeight])
+    pygame.draw.rect(screen, c.geT("RED"), [p2NameIndent - barWidth, 0.85*windowHeight, barWidth*(((tank2.getHealth())/tank2.getMaxHealth())),
+                                            barHeight])
     pygame.draw.rect(screen, c.geT("BLACK"), [p2NameIndent - barWidth, 0.85*windowHeight, barWidth, barHeight], 2)
     #Reload bars
-    pygame.draw.rect(screen, c.geT("BLUE"), [p2NameIndent - barWidth, 0.85*windowHeight + mazeY, barWidth*((gun2.getCooldownMax()-gun2.getCooldown())/gun2.getCooldownMax()), barHeight]) # The 25 is to space from the health bar
+    pygame.draw.rect(screen, c.geT("BLUE"), [p2NameIndent - barWidth, 0.85*windowHeight + mazeY,
+                                             barWidth*((gun2.getCooldownMax()-gun2.getCooldown())/gun2.getCooldownMax()),
+                                             barHeight]) # The 25 is to space from the health bar
     pygame.draw.rect(screen, c.geT("BLACK"), [p2NameIndent - barWidth, 0.85*windowHeight + mazeY, barWidth, barHeight], 2) # Outline
 
     # Misc text and other little pieces
@@ -1828,7 +1866,9 @@ def reset():
     setUpPlayers()
 
 def updateTankHealth():
-
+    # This function will update the tank health and check if the tank is dead
+    # Inputs: None
+    # Outputs: None
     global explosionGroup, tank1Dead, tank2Dead, gameOverFlag
     global p1Score, p2Score
     global allSprites, tank1, tank2, gun1, gun2
@@ -1983,10 +2023,12 @@ buttonText = c.geT("WHITE")
 optionText = c.geT("GREY")
 #Hull and turret list
 # turretList = ["Sidewinder", "Avalanche", "Boxer", "Bucket", "Chamber", "Huntsman", "Silencer", "Judge", "Watcher"]
-turretList = [Boxer(Tank(0,0,None, "Default"), None, "Boxer"), Silencer(Tank(0,0,None, "Default"), None, "Silencer"), Watcher(Tank(0,0,None, "Default"), None, "Watcher"), Chamber(Tank(0,0,None, "Default"), None, "Chamber")]
+turretList = [Boxer(Tank(0,0,None, "Default"), None, "Boxer"), Silencer(Tank(0,0,None, "Default"), None, "Silencer"),
+              Watcher(Tank(0,0,None, "Default"), None, "Watcher"), Chamber(Tank(0,0,None, "Default"), None, "Chamber")]
 # hullList = ["Panther", "Cicada", "Gater", "Bonsai", "Fossil"]
 
-hullList = [Panther(0, 0, None, "Panther"), Cicada(0, 0, None, "Cicada"), Gater(0, 0, None, "Gater"), Bonsai(0, 0, None, "Bonsai"), Fossil(0, 0, None, "Fossil")]
+hullList = [Panther(0, 0, None, "Panther"), Cicada(0, 0, None, "Cicada"), Gater(0, 0, None, "Gater"), Bonsai(0, 0, None, "Bonsai"),
+            Fossil(0, 0, None, "Fossil")]
 turretListLength = len(turretList)
 hullListLength = len(hullList)
 
@@ -2063,18 +2105,21 @@ buttonList.append(rArrowP1Colour)
 rArrowP2Turret = Button(buttonPrimary, buttonPrimary, windowWidth-tileSize*2, TurretX, tileSize, tileSize, '>', buttonText, 50)
 rArrowP2Turret.selectable(False)
 buttonList.append(rArrowP2Turret) # Right arrow button for turret
-textP2Turret = TextBox(windowWidth - tileSize*2 - forceWidth, TurretX, font='Courier New',fontSize=26, text=turretList[p1I].getGunName(), textColor=buttonText)
+textP2Turret = TextBox(windowWidth - tileSize*2 - forceWidth, TurretX, font='Courier New',fontSize=26,
+                       text=turretList[p1I].getGunName(), textColor=buttonText)
 textP2Turret.setBoxColor(optionText)
 textP2Turret.selectable(False)
 buttonList.append(textP2Turret)  # Textbox for turret
-lArrowP2Turret = Button(buttonPrimary, buttonPrimary, windowWidth - tileSize*3 - forceWidth, TurretX, tileSize, tileSize, '<', buttonText, 50)
+lArrowP2Turret = Button(buttonPrimary, buttonPrimary, windowWidth - tileSize*3 - forceWidth,
+                        TurretX, tileSize, tileSize, '<', buttonText, 50)
 lArrowP2Turret.selectable(False)
 buttonList.append(lArrowP2Turret) # Left arrow button for turret
 
 rArrowP2Hull = Button(buttonPrimary, buttonPrimary,  windowWidth-tileSize*2, HullX, tileSize, tileSize, '>', buttonText, 50)
 rArrowP2Hull.selectable(False)
 buttonList.append(rArrowP2Hull) # Right arrow button for hull
-textP2Hull = TextBox(windowWidth - tileSize*2 - forceWidth, HullX, font='Courier New',fontSize=26, text=hullList[p1J].getTankName(), textColor=buttonText)
+textP2Hull = TextBox(windowWidth - tileSize*2 - forceWidth, HullX, font='Courier New',fontSize=26, text=hullList[p1J].getTankName(),
+                     textColor=buttonText)
 textP2Hull.setBoxColor(optionText)
 textP2Hull.selectable(False) # Textbox for hull
 buttonList.append(textP2Hull)
@@ -2333,11 +2378,11 @@ while not done:
             if gameMode == GameMode.pause:
                 #We are paused
                 if (unPause.getCorners()[0] <= mouse[0] <= unPause.getCorners()[2] and
-                    unPause.getCorners()[1] <= mouse[1] <= unPause.getCorners()[3]): #If we click the button
+                    unPause.getCorners()[1] <= mouse[1] <= unPause.getCorners()[3]): #If we click the return to game button
                     constantPlayGame()
                     gameMode = GameMode.play # Return to game if button was clicked
                 if (home.getCorners()[0] <= mouse[0] <= home.getCorners()[2] and
-                    home.getCorners()[1] <= mouse[1] <= home.getCorners()[3]):
+                    home.getCorners()[1] <= mouse[1] <= home.getCorners()[3]): # Home button
                     constantHomeScreen()
                     gameMode = GameMode.home
                     music.stop()
@@ -2345,22 +2390,22 @@ while not done:
                     musicMax = lobbyMusicMax
                     music.play(-1)
                 if (quitButton.getCorners()[0] <= mouse[0] <= quitButton.getCorners()[2]and
-                    quitButton.getCorners()[1] <= mouse[1] <= quitButton.getCorners()[3]):
+                    quitButton.getCorners()[1] <= mouse[1] <= quitButton.getCorners()[3]): # If we hit the quit butotn
                     print("Quitting the game")
                     done = True # We quit the appplication
                 if (mute.getCorners()[0] <= mouse[0] <= mute.getCorners()[2] and
-                    mute.getCorners()[1] <= mouse[1] <= mute.getCorners()[3]):
+                    mute.getCorners()[1] <= mouse[1] <= mute.getCorners()[3]): # If we hit the mute button
                     mute.buttonClick()
-                if (sfx.getCorners()[0] <= mouse[0] <= sfx.getCorners()[2] and
-                    sfx.getCorners()[1] <= mouse[1] <= sfx.getCorners()[3]):
+                if (sfx.getCorners()[0] <= mouse[0] <= sfx.getCorners()[2] and 
+                    sfx.getCorners()[1] <= mouse[1] <= sfx.getCorners()[3]): # If we hit the sfx button
                     sfx.buttonClick()
-            elif gameMode == GameMode.selection:
+            elif gameMode == GameMode.selection: # Selection screen
                 textP1Turret.setText(turretList[p1I].getGunName())
                 textP2Turret.setText(turretList[p2I].getGunName())
                 textP1Hull.setText(hullList[p1J].getTankName())
                 textP2Hull.setText(hullList[p2J].getTankName())
                 checkButtons(pygame.mouse.get_pos())
-            elif gameMode == GameMode.home:
+            elif gameMode == GameMode.home: # Home screen
                 checkHomeButtons(pygame.mouse.get_pos())
         elif event.type == pygame.KEYDOWN: # Any key pressed
             if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
@@ -2389,7 +2434,7 @@ while not done:
             if event.key == pygame.K_k:
                 pass
             if event.key == pygame.K_f:
-                # print("The current FPS is: ", clock.get_fps())
+                #Calculate and track the average FPS
                 if not fpsTrack:
                     fpsTrack = True
                 else:
@@ -2421,14 +2466,14 @@ while not done:
     mouse = pygame.mouse.get_pos() #Update the position
 
     if gameMode == GameMode.play:
-        playGame()
+        playGame() # Play the game
     elif gameMode == GameMode.pause:
-        pauseScreen()
+        pauseScreen() # Pause screen
         if pygame.mouse.get_pressed()[0]:
             mute.updateSlider(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
             sfx.updateSlider(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
     elif gameMode == GameMode.selection:
-        constantSelectionScreen()
+        constantSelectionScreen() # Selection screen
         pygame.draw.rect(screen,(0,0,0), (tileSize, tileSize*multiplyConstant, rectX, rectY), 1)
         for button in buttonList:
             button.update_display(pygame.mouse.get_pos())
@@ -2477,8 +2522,9 @@ while not done:
 
         speedBarOutline2 = pygame.draw.rect(screen, c.geT("BLACK"), (windowWidth - tileSize*3 - forceWidth, tileSize*multiplyConstant,
                                                                      rectX, rectY),barBorder)
-        speedBar2 = pygame.draw.rect(screen, c.geT("GREEN"), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
-                                                              tileSize*multiplyConstant, (rectX - speedText.getWidth()) * hullList[p2J].getSpeedStatistic()/3, rectY))
+        speedBar2 = pygame.draw.rect(screen, c.geT("GREEN"),
+                                     (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(), tileSize*multiplyConstant,
+                                      (rectX - speedText.getWidth()) * hullList[p2J].getSpeedStatistic()/3, rectY))
         #Outlines
         speedOutline2 = pygame.draw.rect(screen, (0,0,0), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
                                                            tileSize*multiplyConstant, rectX - speedText.getWidth(), rectY), barBorder)
