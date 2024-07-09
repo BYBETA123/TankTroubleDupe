@@ -1350,7 +1350,7 @@ class Watcher(Gun):
         if self.scoping:
             self.setTurretSpeed(self.getTurretSpeed()/20)
             self.getTank().setSpeed(self.getTank().getSpeed()/2)
-            self.getTank().setRotationalSpeed(self.getTank().getTopRotationalSpeed()/5)
+            self.getTank().setRotationalSpeed(self.getTank().getTopRotationalSpeed()/25)
             #Scale the damage of the bullet
             self.scopeDamage += 20
             if self.scopeDamage >= 3300: # Max damage
