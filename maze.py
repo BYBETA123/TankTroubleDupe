@@ -275,10 +275,12 @@ class Tank(pygame.sprite.Sprite):
     def draw(self, screen): # A manual entry of the draw screen so that we can update it with anything else we may need to draw
         screen.blit(self.image, self.rect)
 
+    def getName(self):
+        return self.name
+
 class Gun(pygame.sprite.Sprite):
 
     topTurretSpeed = 0
-
     def __init__(self, tank, controls, name):
         """
         Initializes the Gun class.
@@ -407,11 +409,12 @@ class Gun(pygame.sprite.Sprite):
 
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
         # Calculating where the bullet should spawn
-        bulletAngle = self.angle
-        bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
-        bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
-        bullet = Bullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
+        # bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
+        # bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
+        # bullet = Bullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
+        bullet = Bullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
         bullet.setDamage(self.damage)
+        bullet.setName(self.getTank().getName())
         bulletSprites.add(bullet)
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
@@ -490,6 +493,8 @@ class Gun(pygame.sprite.Sprite):
 
 class Bullet(pygame.sprite.Sprite):
 
+    originalCollision = True
+    name = "Default"
     def __init__(self, x, y, angle, gunLength, tipOffSet):
         """
         Initializes the Bullet class.
@@ -567,16 +572,15 @@ class Bullet(pygame.sprite.Sprite):
         #If we hit a tank
         tank1Collision = satCollision(self, tank1)
         tank2Collision = satCollision(self, tank2)
-        if tank1Collision or tank2Collision:
-            #If either tank dies, play this tank dead sound effect.
-            tankDeadSFX.play()
-            if tank1Collision: #If we hit tank1
-                tank1.damage(self.damage)
-                self.kill()
-            else:
+
+        if self.name == tank1.getName() and tank2Collision:
+                tankDeadSFX.play()
                 tank2.damage(self.damage)
                 self.kill()
-            return
+        if self.name == tank2.getName() and tank1Collision:
+                tankDeadSFX.play()
+                tank1.damage(self.damage)
+                self.kill()
 
         tile = tileList[index-1]
         wallCollision = False
@@ -634,6 +638,9 @@ class Bullet(pygame.sprite.Sprite):
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)
+
+    def setName(self, name):
+        self.name = name
 
 class SilencerBullet(Bullet):
 
@@ -1418,8 +1425,7 @@ class Panther(Tank):
         self.setMaxHealth(1800)
         self.setSpeedStatistic(3)
         self.setHealthStatistic(1)
-        # self.setTopSpeed(0.3)
-        self.setTopSpeed(0.5)
+        self.setTopSpeed(0.3)
         self.setTopRotationalSpeed(0.75)
         self.setTankName("Panther")
 
