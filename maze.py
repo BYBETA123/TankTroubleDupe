@@ -686,20 +686,20 @@ class SilencerBullet(Bullet):
             self.kill()
             return
         
-        #If we hit a tank
-        tank1Collision = satCollision(self, tank1)
-        tank2Collision = satCollision(self, tank2)
-        #If either tank dies, play this tank dead sound effect.
-        if self.name == tank1.getName() and tank2Collision:
-                tankDeadSFX.play()
-                tank2.damage(self.damage)
-                self.kill()
-                return
-        if self.name == tank2.getName() and tank1Collision:
-                tankDeadSFX.play()
-                tank1.damage(self.damage)
-                self.kill()
-                return
+        # #If we hit a tank
+        # tank1Collision = satCollision(self, tank1)
+        # tank2Collision = satCollision(self, tank2)
+        # #If either tank dies, play this tank dead sound effect.
+        # if self.name == tank1.getName() and tank2Collision:
+        #         tankDeadSFX.play()
+        #         tank2.damage(self.damage)
+        #         self.kill()
+        #         return
+        # if self.name == tank2.getName() and tank1Collision:
+        #         tankDeadSFX.play()
+        #         tank1.damage(self.damage)
+        #         self.kill()
+        #         return
 
         tile = tileList[index-1]
         wallCollision = False
@@ -1251,12 +1251,22 @@ class Silencer(Gun):
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
         #Setup bullet
         bullet = SilencerBullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
-        bullet.setDamage(self.damage)
+        bullet.setDamage(0)
         bullet.setBulletSpeed(5)
         bullet.setName(self.getTank().getName())
         bullet.drawable = True
         bullet.trail = True
         bulletSprites.add(bullet)
+
+        bullet1 = Bullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
+        bullet1.setDamage(self.damage)
+        bullet1.setBulletSpeed(5)
+        bullet1.setName(self.getTank().getName())
+        bullet1.drawable = True
+        bullet1.trail = True
+        bulletSprites.add(bullet1)
+
+
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
         #If either tank shoots, play this sound effect.
