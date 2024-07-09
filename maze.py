@@ -642,6 +642,9 @@ class Bullet(pygame.sprite.Sprite):
     def setName(self, name):
         self.name = name
 
+    def setoriginalCollision(self, value):
+        self.originalCollision = value
+
 class SilencerBullet(Bullet):
 
     def __init__(self, x, y, angle, gunLength, tipOffSet):
@@ -684,17 +687,16 @@ class SilencerBullet(Bullet):
         tank1Collision = satCollision(self, tank1)
         tank2Collision = satCollision(self, tank2)
         #If either tank dies, play this tank dead sound effect.
-        if tank1Collision: #If we hit tank1
-            tankDeadSFX.play()
-            print("Tank 1 hit: ", self.damage)
-            tank1.damage(self.damage)
-            self.kill() # delete the bullet
-            return
-        if tank2Collision:
-            print("Tank 2 hit: ", self.damage)
-            tank2.damage(self.damage)
-            self.kill() # delete the bullet
-            return
+        if self.name == tank1.getName() and tank2Collision:
+                tankDeadSFX.play()
+                tank2.damage(self.damage)
+                self.kill()
+                return
+        if self.name == tank2.getName() and tank1Collision:
+                tankDeadSFX.play()
+                tank1.damage(self.damage)
+                self.kill()
+                return
 
         tile = tileList[index-1]
         wallCollision = False
@@ -765,13 +767,15 @@ class WatcherBullet(Bullet):
         #If we hit a tank
         tank1Collision = satCollision(self, tank1)
         tank2Collision = satCollision(self, tank2)
-        if tank1Collision or tank2Collision:
-            #If either tank dies, play this tank dead sound effect.
-            if tank1Collision: #If we hit tank1
+
+        if self.name == tank1.getName() and tank2Collision:
+                tankDeadSFX.play()
+                tank2.damage(self.damage)
                 self.kill()
-            else:
+        if self.name == tank2.getName() and tank1Collision:
+                tankDeadSFX.play()
+                tank1.damage(self.damage)
                 self.kill()
-            return
 
         tile = tileList[index-1]
         wallCollision = False
@@ -856,17 +860,17 @@ class ChamberBullet(Bullet):
         #If we hit a tank
         tank1Collision = satCollision(self, tank1)
         tank2Collision = satCollision(self, tank2)
-        if tank1Collision or tank2Collision:
-            global p1Score, p2Score, gameOverFlag
-            #If either tank dies, play this tank dead sound effect.
-            tankDeadSFX.play()
-            if tank1Collision: #If we hit tank1
-                tank1.damage(self.damage)
-                self.explode()
-            if tank2Collision:
+
+        if self.name == tank1.getName() and tank2Collision:
+                tankDeadSFX.play()
                 tank2.damage(self.damage)
                 self.explode()
-            return
+        if self.name == tank2.getName() and tank1Collision:
+                tankDeadSFX.play()
+                tank1.damage(self.damage)
+                self.explode()
+
+
 
         tile = tileList[index-1]
         wallCollision = False
@@ -883,6 +887,15 @@ class ChamberBullet(Bullet):
             wallCollision = True
             self.angle = 360 - self.angle
         if wallCollision:
+            if self.name == tank1.getName() and tank1Collision:
+                tank1.damage(self.damage)
+                self.explode()
+                return
+            if self.name == tank2.getName() and tank2Collision:
+                tank2.damage(self.damage)
+                self.explode()
+                return
+
             self.bounce -= 1
             self.speed *= -1
             if self.bounce == 0:
@@ -921,6 +934,7 @@ class ChamberBullet(Bullet):
             splash1.updateCorners()
             splash1.setSplash(False)
             splash1.setDamage(self.damage)
+            splash1.setName(self.name)
             splash1.setBulletSpeed(0)
             splash1.update()
             splash1.kill()
@@ -930,6 +944,7 @@ class ChamberBullet(Bullet):
             splash2.updateCorners()
             splash2.setSplash(False)
             splash2.setDamage(self.damage)
+            splash2.setName(self.name)
             splash2.setBulletSpeed(0)
             splash2.update()
             splash2.kill()
@@ -1223,12 +1238,10 @@ class Silencer(Gun):
 
     def fire(self):
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
-        bulletAngle = self.angle
-        bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
-        bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
-        bullet = SilencerBullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
+        bullet = SilencerBullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
         bullet.setDamage(self.damage)
         bullet.setBulletSpeed(5)
+        bullet.setName(self.getTank().getName())
         bullet.drawable = True
         bullet.trail = True
         bulletSprites.add(bullet)
@@ -1370,6 +1383,7 @@ class Watcher(Gun):
         bullet = Bullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
         bullet.setDamage(self.getDamage())
         bullet.setBulletSpeed(5)
+        bullet.setName(self.getTank().getName())
         bullet.drawable = True
         bulletSprites.add(bullet)
         self.canShoot = False
@@ -1386,10 +1400,7 @@ class Watcher(Gun):
         # Inputs: None
         # Outputs: None
         if self.scoping:
-            bulletAngle = self.angle
-            bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
-            bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
-            bullet = WatcherBullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
+            bullet = WatcherBullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
             bullet.setDamage(0)
             bullet.setBulletSpeed(25)
             bullet.drawable = True
@@ -1407,10 +1418,8 @@ class Chamber(Gun):
 
     def fire(self):
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
-        bulletAngle = self.angle
-        bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
-        bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
-        bullet = ChamberBullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
+        bullet = ChamberBullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
+        bullet.setName(self.getTank().getName())
         bullet.setDamage(self.damage)
         bullet.setBulletSpeed(5)
         bulletSprites.add(bullet)
