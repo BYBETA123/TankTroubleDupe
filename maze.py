@@ -2315,6 +2315,10 @@ allSprites = pygame.sprite.Group()
 bulletSprites = pygame.sprite.Group()
 
 constantHomeScreen()
+fpsTrack = False
+totalfps = 0
+fpsCounter = 0
+
 
 #Main loop
 while not done:
@@ -2385,7 +2389,14 @@ while not done:
             if event.key == pygame.K_k:
                 pass
             if event.key == pygame.K_f:
-                print("The current FPS is: ", clock.get_fps())
+                # print("The current FPS is: ", clock.get_fps())
+                if not fpsTrack:
+                    fpsTrack = True
+                else:
+                    totalfps += clock.get_fps()
+                    fpsCounter += 1
+                    print("The average FPS is: ", totalfps/fpsCounter)
+
             if event.key == pygame.K_n:
                 if gameMode == GameMode.play:
                     constantPlayGame()
