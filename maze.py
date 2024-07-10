@@ -295,10 +295,6 @@ class Tank(pygame.sprite.Sprite):
         self.x = float(self.rect.centerx)
         self.y = float(self.rect.centery)
 
-
-
-
-
 class Gun(pygame.sprite.Sprite):
 
     topTurretSpeed = 0
@@ -514,7 +510,8 @@ class Gun(pygame.sprite.Sprite):
     def setImage(self, imagePath):
         # Setup a new image if the selected one isn't the default
         # Inputs: imagePath: The filepath the points to the required image
-        # Outputs: None        currentDir = os.path.dirname(__file__)
+        # Outputs: None        
+        currentDir = os.path.dirname(__file__)
         gunPath = os.path.join(currentDir,'Sprites', imagePath)
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
         self.gunImage = self.originalGunImage
@@ -1748,7 +1745,7 @@ def setUpPlayers():
     gun2.setImage('gun' + str(p2K + 1) + '.png')
     #Updating the groups
     allSprites = pygame.sprite.Group() # Wipe the current Sprite Group
-    allSprites.add(tank1, gun1, tank2, gun2)
+    allSprites.add(tank1, gun1, tank2, gun2) # Add the new sprites
     bulletSprites = pygame.sprite.Group()
 
 def constantHomeScreen():
@@ -1795,6 +1792,8 @@ def playGame():
             reset()
 
     #UI Elements
+
+    pygame.draw.rect(screen, c.geT("GREY"), [tileSize*0.8, tileSize*0.3, windowWidth - tileSize*1.5, tileSize*8.5]) # Draw a box for the maze
     
     #Making the string for score
     p1ScoreText = str(p1Score)
