@@ -4,6 +4,7 @@ import math
 import time
 import os
 from ColorDictionary import ColorDicionary
+from threading import Timer
 from enum import Enum
 from UIUtility import Button, ButtonSlider, TextBox
 import copy
@@ -1139,6 +1140,28 @@ class GameMode(Enum):
     selection = 4
 
 #Turrets
+class Judge(Gun):
+    def __init__(self, tank, controls, name):
+        super().__init__(tank, controls, name)
+        self.setCooldown(800) # 800 ms
+        self.setDamage(76)
+        self.setDamageStatistic(2)
+        self.setReloadStatistic(2)
+        self.setGunBackDuration(300)
+        self.bulletInterval=70
+    def fire(self):
+        self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
+        self.canShoot = False
+        self.shootCooldown = self.cooldownDuration
+
+        for i in range(1,10):
+            Timer(self.bulletInterval * i / 1000.0, self.fire_bullet).start()
+    def fire_bullet(self):
+        bullet = Bullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
+        bullet.setName(self.getTank().getName())
+        bullet.setDamage(self.damage)
+        bullet.setBulletSpeed(1)
+        bulletSprites.add(bullet)
 class Huntsman(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
@@ -2078,7 +2101,8 @@ optionText = c.geT("GREY")
 #Hull and turret list
 # turretList = ["Sidewinder", "Avalanche", "Boxer", "Bucket", "Chamber", "Huntsman", "Silencer", "Judge", "Watcher"]
 turretList = [Boxer(Tank(0,0,None, "Default"), None, "Boxer"), Silencer(Tank(0,0,None, "Default"), None, "Silencer"),
-              Watcher(Tank(0,0,None, "Default"), None, "Watcher"), Chamber(Tank(0,0,None, "Default"), None, "Chamber"),Huntsman(Tank(0,0,None,"Default"),None,"Huntsman")]
+              Watcher(Tank(0,0,None, "Default"), None, "Watcher"), Chamber(Tank(0,0,None, "Default"), None, "Chamber"),
+              Huntsman(Tank(0,0,None,"Default"),None,"Huntsman"), Judge(Tank(0,0,None,"Default"),None,"Judge")]
 # hullList = ["Panther", "Cicada", "Gater", "Bonsai", "Fossil"]
 
 hullList = [Panther(0, 0, None, "Panther"), Cicada(0, 0, None, "Cicada"), Gater(0, 0, None, "Gater"), Bonsai(0, 0, None, "Bonsai"),
