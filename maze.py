@@ -278,6 +278,27 @@ class Tank(pygame.sprite.Sprite):
     def getName(self):
         return self.name
 
+    def setImage(self, imagePath):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imagePath: The filepath the points to the required image
+        # Outputs: None
+        # Load the tank image
+        currentDir = os.path.dirname(__file__)
+        tankPath = os.path.join(currentDir, 'Sprites', imagePath)
+        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
+
+        # Scale the tank image to a smaller size
+        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
+        self.image = self.tankImage
+        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
+        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
+        self.x = float(self.rect.centerx)
+        self.y = float(self.rect.centery)
+
+
+
+
+
 class Gun(pygame.sprite.Sprite):
 
     topTurretSpeed = 0
@@ -489,6 +510,15 @@ class Gun(pygame.sprite.Sprite):
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)
+
+    def setImage(self, imagePath):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imagePath: The filepath the points to the required image
+        # Outputs: None        currentDir = os.path.dirname(__file__)
+        gunPath = os.path.join(currentDir,'Sprites', imagePath)
+        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
+        self.gunImage = self.originalGunImage
+        self.image = self.gunImage
 
 class Bullet(pygame.sprite.Sprite):
 
@@ -1687,6 +1717,7 @@ def satCollision(rect1, rect2):
 
 def setUpPlayers():
     global tileList, spawnpoint, tank1, tank2, gun1, gun2, allSprites, bulletSprites
+    global p1I, p1J, p2I, p2J, p1K, p2K, p1L, p2L
     # This function sets up the players for the game including reseting the respective global veriables
     #This function has no real dependencies on things outside of its control
     # Inputs: None
@@ -1700,14 +1731,22 @@ def setUpPlayers():
     player2PackageTank = [spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName]
     player2PackageGun = [controlsTank2, p2GunName]
     #Setup the tanks
-    tank1 = copy.copy(hullList[p1J])
+    tank1 = copy.copy(hullList[p1J]) # Tank 1 setup
     tank1.setData(player1PackageTank)
-    tank2 = copy.copy(hullList[p2J])
+    tank1.setImage('tank' + str(p1L + 1) + '.png')
+
+    tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
     tank2.setData(player2PackageTank)
-    gun1 = copy.copy(turretList[p1I])
+    tank2.setImage('tank' + str(p2L + 1) + '.png')
+
+    gun1 = copy.copy(turretList[p1I]) # Gun 1 setup
     gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1])
-    gun2 = copy.copy(turretList[p2I])
+    gun1.setImage('gun' + str(p1K + 1) + '.png')
+
+    gun2 = copy.copy(turretList[p2I]) # Gun 2 setup
     gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1])
+    gun2.setImage('gun' + str(p2K + 1) + '.png')
+    #Updating the groups
     allSprites = pygame.sprite.Group() # Wipe the current Sprite Group
     allSprites.add(tank1, gun1, tank2, gun2)
     bulletSprites = pygame.sprite.Group()
@@ -2055,12 +2094,16 @@ p2J = 0
 p1K = 0
 p2K = 1
 
-verticalSpacing = 75
-choicesX = 200
+p1L = 1
+p2L = 0
+
+verticalSpacing = 60
+choicesX = 190
 
 TurretX = choicesX
 HullX = TurretX + verticalSpacing
 ColourX = HullX + verticalSpacing
+ColourX2 = ColourX + verticalSpacing
 
 lArrowP1Turret = Button(buttonPrimary, buttonPrimary, tileSize, TurretX, tileSize, tileSize, '<', buttonText, 50)
 lArrowP1Turret.selectable(False) # Left arrow button for turret
@@ -2095,6 +2138,17 @@ buttonList.append(textP1Colour)
 rArrowP1Colour = Button(buttonPrimary, buttonPrimary, tileSize*2 + forceWidth, ColourX, tileSize, tileSize, '>', buttonText, 50)
 rArrowP1Colour.selectable(False) # Right arrow button for colour
 buttonList.append(rArrowP1Colour)
+
+lArrowP1Colour2 = Button(buttonPrimary, buttonPrimary, tileSize, ColourX2, tileSize, tileSize, '<', buttonText, 50)
+lArrowP1Colour2.selectable(False)
+buttonList.append(lArrowP1Colour2) # Left arrow button for colour
+textP1Colour2 = TextBox(tileSize*2, ColourX2, font='Courier New',fontSize=26, text="", textColor=buttonText)
+textP1Colour2.setBoxColor(c.geT(ColorIndex[p1L])) # Textbox for colour
+textP1Colour2.selectable(False)
+buttonList.append(textP1Colour2)
+rArrowP1Colour2 = Button(buttonPrimary, buttonPrimary, tileSize*2 + forceWidth, ColourX2, tileSize, tileSize, '>', buttonText, 50)
+rArrowP1Colour2.selectable(False) # Right arrow button for colour
+buttonList.append(rArrowP1Colour2)
 
 rArrowP2Turret = Button(buttonPrimary, buttonPrimary, windowWidth-tileSize*2, TurretX, tileSize, tileSize, '>', buttonText, 50)
 rArrowP2Turret.selectable(False)
@@ -2132,6 +2186,17 @@ lArrowP2Colour = Button(buttonPrimary, buttonPrimary, windowWidth - tileSize*3 -
 lArrowP2Colour.selectable(False) # Left arrow button for colour
 buttonList.append(lArrowP2Colour)
 
+lArrowP2Colour2 = Button(buttonPrimary, buttonPrimary,  windowWidth-tileSize*2, ColourX2, tileSize, tileSize, '>', buttonText, 50)
+lArrowP2Colour2.selectable(False)
+buttonList.append(lArrowP2Colour2) # Left arrow button for colour
+textP2Colour2 = TextBox(windowWidth - tileSize*2 - forceWidth, ColourX2, font='Courier New',fontSize=26, text="", textColor=buttonText)
+textP2Colour2.setBoxColor(c.geT(ColorIndex[p2L])) # Textbox for colour
+textP2Colour2.selectable(False)
+buttonList.append(textP2Colour2)
+rArrowP2Colour2 = Button(buttonPrimary, buttonPrimary,  windowWidth - tileSize*3 - forceWidth, ColourX2, tileSize, tileSize, '<', buttonText, 50)
+rArrowP2Colour2.selectable(False) # Right arrow button for colour
+buttonList.append(rArrowP2Colour2)
+
 # Player names
 textP1 = TextBox(tileSize*2, tileSize*0.5, font='Courier New',fontSize=26,
                  text="Player 1", textColor=buttonText)
@@ -2150,7 +2215,7 @@ playButton.selectable(True)
 buttonList.append(playButton)
 
 
-multiplyConstant = 8.5
+multiplyConstant = 9
 offset = 35
 tankValue = 3
 
@@ -2202,7 +2267,7 @@ def checkButtons(mouse):
     #This function checks all the buttons of the mouse in the selection screen
     # Inputs: Mouse: The current location of the mouse
     # Outputs: None
-    global p1I, p2I, p1J, p2J, p1K, p2K, gameMode
+    global p1I, p2I, p1J, p2J, p1K, p2K, p1L, p2L, gameMode
     global tank1, tank2, gun1, gun2
 
     if lArrowP1Turret.buttonClick(mouse):
@@ -2249,6 +2314,29 @@ def checkButtons(mouse):
         if p2K == p1K:
             p2K = (p2K + 1) % len(hullColors)
         textP2Colour.setBoxColor(c.geT(ColorIndex[p2K]))
+    if lArrowP1Colour2.buttonClick(mouse):
+        p1L = (p1L - 1) % len(hullColors)
+        if p1L == p2L:
+            p1L = (p1L - 1) % len(hullColors)
+        textP1Colour2.setBoxColor(c.geT(ColorIndex[p1L]))
+    if rArrowP1Colour2.buttonClick(mouse):
+        p1L = (p1L + 1) % len(hullColors)
+        if p1L == p2L:
+            p1L = (p1L + 1) % len(hullColors)
+        textP1Colour2.setBoxColor(c.geT(ColorIndex[p1L]))
+    if lArrowP2Colour2.buttonClick(mouse):
+        p2L = (p2L - 1) % len(hullColors)
+        if p2L == p1L:
+            p2L = (p2L - 1) % len(hullColors)
+        textP2Colour2.setBoxColor(c.geT(ColorIndex[p2L]))
+    if rArrowP2Colour2.buttonClick(mouse):
+        p2L = (p2L + 1) % len(hullColors)
+        if p2L == p1L:
+            p2L = (p2L + 1) % len(hullColors)
+        textP2Colour2.setBoxColor(c.geT(ColorIndex[p2L]))
+
+
+
     global music, musicMax # Handling music
     if playButton.buttonClick(mouse):
         setUpPlayers()
@@ -2564,8 +2652,8 @@ while not done:
                                                 tileSize*multiplyConstant + offset*3, (rectX - speedText.getWidth())/3,rectY), barBorder)
 
         #Draw the tank image
-        screen.blit(hullColors[p1K], (tileSize*2 + forceWidth//2-50, tileSize*2))
-        screen.blit(hullColors[p2K], (windowWidth - tileSize*2 - forceWidth//2-50, tileSize*2))
+        screen.blit(hullColors[p1L], (tileSize*2 + forceWidth//2-50, tileSize*2))
+        screen.blit(hullColors[p2L], (windowWidth - tileSize*2 - forceWidth//2-50, tileSize*2))
         screen.blit(gunColors[p1K], (tileSize*2 + forceWidth//2, tileSize*2.5))
         screen.blit(gunColors[p2K], (windowWidth - tileSize*2 - forceWidth//2, tileSize*2.5))
 
