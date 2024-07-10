@@ -264,7 +264,7 @@ class Tank(pygame.sprite.Sprite):
     
     def setData(self, data):
         # This function will set up the tanks that are being used
-        # Inputs: Data, all the data stored within the packages defined as global variabels
+        # Inputs: Data, all the data stored within the packages defined as global variables
         # Outputs: None
         self.controls = data[2]
         self.name = data[3]
@@ -343,16 +343,15 @@ class Gun(pygame.sprite.Sprite):
         #Checks what keys are pressed, and changes speed accordingly
         #If tank hull moves left or right, the gun will also move simultaneously
         #with the tank hull at the same speed and direction.
+        self.rotationSpeed = 0
         if keys[self.controls['rotate_left']]:
-            self.rotationSpeed = self.turretSpeed
+            self.rotationSpeed += self.turretSpeed
         elif keys[self.controls['rotate_right']]:
-            self.rotationSpeed = -self.turretSpeed
-        elif  keys[self.controls['left']]:
-            self.rotationSpeed = self.tank.getRotationalSpeed()
+            self.rotationSpeed += -self.turretSpeed
+        if  keys[self.controls['left']]:
+            self.rotationSpeed += self.tank.getRotationalSpeed()
         elif keys[self.controls['right']]:
-            self.rotationSpeed = -self.tank.getRotationalSpeed()
-        else:
-            self.rotationSpeed = 0
+            self.rotationSpeed += -self.tank.getRotationalSpeed()
 
         #This if statement checks to see if speed or rotation of speed is 0,
         #if so it will stop playing moving sound, otherwise, sound will play
@@ -645,7 +644,7 @@ class Bullet(pygame.sprite.Sprite):
     def setName(self, name):
         self.name = name
 
-    def setoriginalCollision(self, value):
+    def setOriginalCollision(self, value):
         self.originalCollision = value
 
 class SilencerBullet(Bullet):
@@ -685,21 +684,6 @@ class SilencerBullet(Bullet):
         if tempX <= mazeX or tempY <= mazeY or tempX >= mazeWidth + mazeX or tempY >= mazeHeight + mazeY:
             self.kill()
             return
-        
-        # #If we hit a tank
-        # tank1Collision = satCollision(self, tank1)
-        # tank2Collision = satCollision(self, tank2)
-        # #If either tank dies, play this tank dead sound effect.
-        # if self.name == tank1.getName() and tank2Collision:
-        #         tankDeadSFX.play()
-        #         tank2.damage(self.damage)
-        #         self.kill()
-        #         return
-        # if self.name == tank2.getName() and tank1Collision:
-        #         tankDeadSFX.play()
-        #         tank1.damage(self.damage)
-        #         self.kill()
-        #         return
 
         tile = tileList[index-1]
         wallCollision = False
@@ -1076,7 +1060,7 @@ class Explosion(pygame.sprite.Sprite):
         self.images = []
         SpriteSheetImage = pygame.image.load('explosion.png').convert_alpha()
         for i in range(48):
-            self.images.append(self.get_image(SpriteSheetImage, i, 128, 128, 0.5))
+            self.images.append(self.getImage(SpriteSheetImage, i, 128, 128, 0.5))
         self.index = 0
         self.image = self.images[self.index]
         self.rect = self.image.get_rect()
@@ -1085,7 +1069,7 @@ class Explosion(pygame.sprite.Sprite):
         global animationCool
         self.animationCooldown = animationCool
 
-    def get_image(self, sheet, frame, width, height, scale):
+    def getImage(self, sheet, frame, width, height, scale):
         # This function will use the spritesheet to get the respective image from the sprite sheet
         # Inputs: Sheet: The required sprite sheet for the animation
         # Inputs: Frame: The frame index of the animation
