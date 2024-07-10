@@ -1142,6 +1142,16 @@ class GameMode(Enum):
     selection = 4
 
 #Turrets
+class Huntsman(Gun):
+    def __init__(self, tank, controls, name):
+        super().__init__(tank, controls, name)
+        self.setCooldown(1000) # 1000 ms
+        self.setDamage(600)
+        self.setDamageStatistic(2)
+        self.setReloadStatistic(2)
+        self.setGunBackDuration(300)
+    def fire():
+        pass
 class Boxer(Gun):
 
     def __init__(self, tank, controls, name):
@@ -2057,7 +2067,7 @@ optionText = c.geT("GREY")
 #Hull and turret list
 # turretList = ["Sidewinder", "Avalanche", "Boxer", "Bucket", "Chamber", "Huntsman", "Silencer", "Judge", "Watcher"]
 turretList = [Boxer(Tank(0,0,None, "Default"), None, "Boxer"), Silencer(Tank(0,0,None, "Default"), None, "Silencer"),
-              Watcher(Tank(0,0,None, "Default"), None, "Watcher"), Chamber(Tank(0,0,None, "Default"), None, "Chamber")]
+              Watcher(Tank(0,0,None, "Default"), None, "Watcher"), Chamber(Tank(0,0,None, "Default"), None, "Chamber"),Huntsman(Tank(0,0,None,"Default"),None,"Huntsman")]
 # hullList = ["Panther", "Cicada", "Gater", "Bonsai", "Fossil"]
 
 hullList = [Panther(0, 0, None, "Panther"), Cicada(0, 0, None, "Cicada"), Gater(0, 0, None, "Gater"), Bonsai(0, 0, None, "Bonsai"),
