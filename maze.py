@@ -264,7 +264,7 @@ class Tank(pygame.sprite.Sprite):
     
     def setData(self, data):
         # This function will set up the tanks that are being used
-        # Inputs: Data, all the data stored within the packages defined as global variabels
+        # Inputs: Data, all the data stored within the packages defined as global variables
         # Outputs: None
         self.controls = data[2]
         self.name = data[3]
@@ -275,10 +275,12 @@ class Tank(pygame.sprite.Sprite):
     def draw(self, screen): # A manual entry of the draw screen so that we can update it with anything else we may need to draw
         screen.blit(self.image, self.rect)
 
+    def getName(self):
+        return self.name
+
 class Gun(pygame.sprite.Sprite):
 
     topTurretSpeed = 0
-
     def __init__(self, tank, controls, name):
         """
         Initializes the Gun class.
@@ -341,16 +343,15 @@ class Gun(pygame.sprite.Sprite):
         #Checks what keys are pressed, and changes speed accordingly
         #If tank hull moves left or right, the gun will also move simultaneously
         #with the tank hull at the same speed and direction.
+        self.rotationSpeed = 0
         if keys[self.controls['rotate_left']]:
-            self.rotationSpeed = self.turretSpeed
+            self.rotationSpeed += self.turretSpeed
         elif keys[self.controls['rotate_right']]:
-            self.rotationSpeed = -self.turretSpeed
-        elif  keys[self.controls['left']]:
-            self.rotationSpeed = self.tank.getRotationalSpeed()
+            self.rotationSpeed += -self.turretSpeed
+        if  keys[self.controls['left']]:
+            self.rotationSpeed += self.tank.getRotationalSpeed()
         elif keys[self.controls['right']]:
-            self.rotationSpeed = -self.tank.getRotationalSpeed()
-        else:
-            self.rotationSpeed = 0
+            self.rotationSpeed += -self.tank.getRotationalSpeed()
 
         #This if statement checks to see if speed or rotation of speed is 0,
         #if so it will stop playing moving sound, otherwise, sound will play
@@ -407,11 +408,12 @@ class Gun(pygame.sprite.Sprite):
 
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
         # Calculating where the bullet should spawn
-        bulletAngle = self.angle
-        bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
-        bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
-        bullet = Bullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
+        # bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
+        # bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
+        # bullet = Bullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
+        bullet = Bullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
         bullet.setDamage(self.damage)
+        bullet.setName(self.getTank().getName())
         bulletSprites.add(bullet)
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
@@ -490,6 +492,9 @@ class Gun(pygame.sprite.Sprite):
 
 class Bullet(pygame.sprite.Sprite):
 
+    originalCollision = True
+    name = "Default"
+
     def __init__(self, x, y, angle, gunLength, tipOffSet):
         """
         Initializes the Bullet class.
@@ -529,7 +534,8 @@ class Bullet(pygame.sprite.Sprite):
         self.trailX =  self.rect.centerx
         self.trailY = self.rect.centery
         self.bounce = 1
-        self.corners = [(self.rect.x, self.rect.y), (self.rect.x + self.rect.width, self.rect.y), (self.rect.x + self.rect.width, self.rect.y + self.rect.height), (self.rect.x, self.rect.y + self.rect.height)]
+        self.corners = [(self.rect.x, self.rect.y), (self.rect.x + self.rect.width, self.rect.y),
+                        (self.rect.x + self.rect.width, self.rect.y + self.rect.height), (self.rect.x, self.rect.y + self.rect.height)]
         self.damage = 700
         self.pleaseDraw = False
 
@@ -567,16 +573,15 @@ class Bullet(pygame.sprite.Sprite):
         #If we hit a tank
         tank1Collision = satCollision(self, tank1)
         tank2Collision = satCollision(self, tank2)
-        if tank1Collision or tank2Collision:
-            #If either tank dies, play this tank dead sound effect.
-            tankDeadSFX.play()
-            if tank1Collision: #If we hit tank1
-                tank1.damage(self.damage)
-                self.kill()
-            else:
+
+        if self.name == tank1.getName() and tank2Collision:
+                tankDeadSFX.play()
                 tank2.damage(self.damage)
                 self.kill()
-            return
+        if self.name == tank2.getName() and tank1Collision:
+                tankDeadSFX.play()
+                tank1.damage(self.damage)
+                self.kill()
 
         tile = tileList[index-1]
         wallCollision = False
@@ -619,7 +624,8 @@ class Bullet(pygame.sprite.Sprite):
         # This function will update the corners of the tank based on the new position
         # Inputs: None
         # Outputs: None
-        self.corners = [(self.rect.x, self.rect.y), (self.rect.x + self.rect.width, self.rect.y), (self.rect.x + self.rect.width, self.rect.y + self.rect.height), (self.rect.x, self.rect.y + self.rect.height)]
+        self.corners = [(self.rect.x, self.rect.y), (self.rect.x + self.rect.width, self.rect.y),
+                        (self.rect.x + self.rect.width, self.rect.y + self.rect.height), (self.rect.x, self.rect.y + self.rect.height)]
 
     def setDamage(self, damage):
         self.damage = damage
@@ -635,7 +641,14 @@ class Bullet(pygame.sprite.Sprite):
     def draw(self, screen):
         screen.blit(self.image, self.rect)
 
+    def setName(self, name):
+        self.name = name
+
+    def setOriginalCollision(self, value):
+        self.originalCollision = value
+
 class SilencerBullet(Bullet):
+
     def __init__(self, x, y, angle, gunLength, tipOffSet):
         super().__init__(x, y, angle, gunLength, tipOffSet)
         self.speed = 0.4
@@ -671,22 +684,6 @@ class SilencerBullet(Bullet):
         if tempX <= mazeX or tempY <= mazeY or tempX >= mazeWidth + mazeX or tempY >= mazeHeight + mazeY:
             self.kill()
             return
-        
-        #If we hit a tank
-        tank1Collision = satCollision(self, tank1)
-        tank2Collision = satCollision(self, tank2)
-        #If either tank dies, play this tank dead sound effect.
-        if tank1Collision: #If we hit tank1
-            tankDeadSFX.play()
-            print("Tank 1 hit: ", self.damage)
-            tank1.damage(self.damage)
-            self.kill() # delete the bullet
-            return
-        if tank2Collision:
-            print("Tank 2 hit: ", self.damage)
-            tank2.damage(self.damage)
-            self.kill() # delete the bullet
-            return
 
         tile = tileList[index-1]
         wallCollision = False
@@ -717,6 +714,7 @@ class SilencerBullet(Bullet):
             self.pleaseDraw = True
 
 class WatcherBullet(Bullet):
+
     def __init__(self, x, y, angle, gunLength, tipOffSet):
         super().__init__(x, y, angle, gunLength, tipOffSet)
         self.speed = 0.2
@@ -756,13 +754,15 @@ class WatcherBullet(Bullet):
         #If we hit a tank
         tank1Collision = satCollision(self, tank1)
         tank2Collision = satCollision(self, tank2)
-        if tank1Collision or tank2Collision:
-            #If either tank dies, play this tank dead sound effect.
-            if tank1Collision: #If we hit tank1
+
+        if self.name == tank1.getName() and tank2Collision:
+                tankDeadSFX.play()
+                tank2.damage(self.damage)
                 self.kill()
-            else:
+        if self.name == tank2.getName() and tank1Collision:
+                tankDeadSFX.play()
+                tank1.damage(self.damage)
                 self.kill()
-            return
 
         tile = tileList[index-1]
         wallCollision = False
@@ -802,9 +802,11 @@ class WatcherBullet(Bullet):
         return # We don't want to draw the bullet
 
 class ChamberBullet(Bullet):
+
     gunLength = -24
     tipOffSet = 30
     splash = True
+
     def __init__(self, x, y, angle, gunLength, tipOffSet):
         super().__init__(x, y, angle, gunLength, tipOffSet)
         self.speed = 0.5
@@ -847,17 +849,17 @@ class ChamberBullet(Bullet):
         #If we hit a tank
         tank1Collision = satCollision(self, tank1)
         tank2Collision = satCollision(self, tank2)
-        if tank1Collision or tank2Collision:
-            global p1Score, p2Score, gameOverFlag
-            #If either tank dies, play this tank dead sound effect.
-            tankDeadSFX.play()
-            if tank1Collision: #If we hit tank1
-                tank1.damage(self.damage)
-                self.explode()
-            if tank2Collision:
+
+        if self.name == tank1.getName() and tank2Collision:
+                tankDeadSFX.play()
                 tank2.damage(self.damage)
                 self.explode()
-            return
+        if self.name == tank2.getName() and tank1Collision:
+                tankDeadSFX.play()
+                tank1.damage(self.damage)
+                self.explode()
+
+
 
         tile = tileList[index-1]
         wallCollision = False
@@ -874,6 +876,15 @@ class ChamberBullet(Bullet):
             wallCollision = True
             self.angle = 360 - self.angle
         if wallCollision:
+            if self.name == tank1.getName() and tank1Collision:
+                tank1.damage(self.damage)
+                self.explode()
+                return
+            if self.name == tank2.getName() and tank2Collision:
+                tank2.damage(self.damage)
+                self.explode()
+                return
+
             self.bounce -= 1
             self.speed *= -1
             if self.bounce == 0:
@@ -912,6 +923,7 @@ class ChamberBullet(Bullet):
             splash1.updateCorners()
             splash1.setSplash(False)
             splash1.setDamage(self.damage)
+            splash1.setName(self.name)
             splash1.setBulletSpeed(0)
             splash1.update()
             splash1.kill()
@@ -921,6 +933,7 @@ class ChamberBullet(Bullet):
             splash2.updateCorners()
             splash2.setSplash(False)
             splash2.setDamage(self.damage)
+            splash2.setName(self.name)
             splash2.setBulletSpeed(0)
             splash2.update()
             splash2.kill()
@@ -940,6 +953,7 @@ class Tile:
     border = [True, True, True, True]
     borderWidth = 2
     spawn = False
+
     def __init__(self, index, x, y, color, spawn = False):
         self.index = index
         self.x = x
@@ -1039,13 +1053,14 @@ class Tile:
         self.border[borderidx] = value
         self.neighbours, self.bordering = self.neighbourCheck() # Update the neighbours list
 
-class Explosion(pygame.sprite.Sprite):    
+class Explosion(pygame.sprite.Sprite):
+
     def __init__(self, x, y):
         super().__init__()
         self.images = []
         SpriteSheetImage = pygame.image.load('explosion.png').convert_alpha()
         for i in range(48):
-            self.images.append(self.get_image(SpriteSheetImage, i, 128, 128, 0.5))
+            self.images.append(self.getImage(SpriteSheetImage, i, 128, 128, 0.5))
         self.index = 0
         self.image = self.images[self.index]
         self.rect = self.image.get_rect()
@@ -1054,7 +1069,7 @@ class Explosion(pygame.sprite.Sprite):
         global animationCool
         self.animationCooldown = animationCool
 
-    def get_image(self, sheet, frame, width, height, scale):
+    def getImage(self, sheet, frame, width, height, scale):
         # This function will use the spritesheet to get the respective image from the sprite sheet
         # Inputs: Sheet: The required sprite sheet for the animation
         # Inputs: Frame: The frame index of the animation
@@ -1098,6 +1113,7 @@ class GameMode(Enum):
 
 #Turrets
 class Boxer(Gun):
+
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(200) # 200 ms
@@ -1212,16 +1228,29 @@ class Silencer(Gun):
         self.lastUpdateTime = pygame.time.get_ticks()
 
     def fire(self):
+        # This function is responsible for all the firing mechanics of the gun
+        # The Bullet is custom here as it is tailored for the Silencer
+        # Inputs: None
+        # Outputs: None
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
-        bulletAngle = self.angle
-        bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
-        bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
-        bullet = SilencerBullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
-        bullet.setDamage(self.damage)
+        #Setup bullet
+        bullet = SilencerBullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
+        bullet.setDamage(0)
         bullet.setBulletSpeed(5)
+        bullet.setName(self.getTank().getName())
         bullet.drawable = True
         bullet.trail = True
         bulletSprites.add(bullet)
+
+        bullet1 = Bullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
+        bullet1.setDamage(self.damage)
+        bullet1.setBulletSpeed(5)
+        bullet1.setName(self.getTank().getName())
+        bullet1.drawable = True
+        bullet1.trail = True
+        bulletSprites.add(bullet1)
+
+
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
         #If either tank shoots, play this sound effect.
@@ -1232,7 +1261,10 @@ class Silencer(Gun):
         # Inputs: Screen - The screen that the gun will be drawn on
         # Outputs: None
         if self.wind_up - (pygame.time.get_ticks() - self.lastRegister) >= 0:
-            pygame.draw.circle(screen, c.geT("NEON_PURPLE"), (self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(self.angle)), self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(self.angle))), (pygame.time.get_ticks() - self.lastRegister)/self.wind_up * 5)
+            pygame.draw.circle(screen, c.geT("NEON_PURPLE"),
+                               (self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(self.angle)),
+                                self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(self.angle))),
+                                (pygame.time.get_ticks() - self.lastRegister)/self.wind_up * 5)
 
 class Watcher(Gun):
 
@@ -1240,6 +1272,7 @@ class Watcher(Gun):
     scopeDamage = 700
     scopeStartTime = 0
     speed = 0.1
+
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(1500) #1500 ms
@@ -1311,7 +1344,7 @@ class Watcher(Gun):
         if self.scoping:
             self.setTurretSpeed(self.getTurretSpeed()/20)
             self.getTank().setSpeed(self.getTank().getSpeed()/2)
-            self.getTank().setRotationalSpeed(self.getTank().getTopRotationalSpeed()/5)
+            self.getTank().setRotationalSpeed(self.getTank().getTopRotationalSpeed()/25)
             #Scale the damage of the bullet
             self.scopeDamage += 20
             if self.scopeDamage >= 3300: # Max damage
@@ -1353,13 +1386,16 @@ class Watcher(Gun):
         self.lastUpdateTime = pygame.time.get_ticks()
 
     def fire(self):
+        # This function is responsible for all the firing mechanics of the gun
+        # The Bullet is custom here as it is tailored for the Watcher
+        # Inputs: None
+        # Outputs: None
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
-        bulletAngle = self.angle
-        bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
-        bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
-        bullet = Bullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
+        # Setup bullet
+        bullet = Bullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
         bullet.setDamage(self.getDamage())
         bullet.setBulletSpeed(5)
+        bullet.setName(self.getTank().getName())
         bullet.drawable = True
         bulletSprites.add(bullet)
         self.canShoot = False
@@ -1376,10 +1412,7 @@ class Watcher(Gun):
         # Inputs: None
         # Outputs: None
         if self.scoping:
-            bulletAngle = self.angle
-            bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
-            bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
-            bullet = WatcherBullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
+            bullet = WatcherBullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
             bullet.setDamage(0)
             bullet.setBulletSpeed(25)
             bullet.drawable = True
@@ -1387,20 +1420,23 @@ class Watcher(Gun):
             bulletSprites.add(bullet)
 
 class Chamber(Gun):
+
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(1500) # 200 ms
-        self.setDamage(300) # Should be 900 but because of the 3 step effect it will be split into 3x 300
+        self.setDamage(270) # Should be 900 but because of the 3 step effect it will be split into 3x 300
         self.setDamageStatistic(2)
         self.setReloadStatistic(2)
         self.setGunBackDuration(500)
 
     def fire(self):
+        # This function is responsible for all the firing mechanics of the gun
+        # The Bullet is custom here as it is tailored for the Chamber
+        # Inputs: None
+        # Outputs: None
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
-        bulletAngle = self.angle
-        bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
-        bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
-        bullet = ChamberBullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
+        bullet = ChamberBullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
+        bullet.setName(self.getTank().getName())
         bullet.setDamage(self.damage)
         bullet.setBulletSpeed(5)
         bulletSprites.add(bullet)
@@ -1410,6 +1446,7 @@ class Chamber(Gun):
 
 #Hulls
 class Panther(Tank):
+
     def __init__(self, x, y, controls, name):
         super().__init__(x, y, controls, name)
         self.setMaxHealth(1800)
@@ -1420,6 +1457,7 @@ class Panther(Tank):
         self.setTankName("Panther")
 
 class Cicada(Tank):
+
     def __init__(self, x, y, controls, name):
         super().__init__(x, y, controls, name)
         self.setMaxHealth(2000)
@@ -1430,6 +1468,7 @@ class Cicada(Tank):
         self.setTankName("Cicada")
 
 class Gater(Tank):
+
     def __init__(self, x, y, controls, name):
         super().__init__(x, y, controls, name)
         self.setMaxHealth(3000)
@@ -1440,6 +1479,7 @@ class Gater(Tank):
         self.setTankName("Gater")
 
 class Bonsai(Tank):
+
     def __init__(self, x, y, controls, name):
         super().__init__(x, y, controls, name)
         self.setMaxHealth(3500)
@@ -1450,6 +1490,7 @@ class Bonsai(Tank):
         self.setTankName("Bonsai")
 
 class Fossil(Tank):
+
     def __init__(self, x, y, controls, name):
         super().__init__(x, y, controls, name)
         self.setMaxHealth(4000)
@@ -1671,6 +1712,30 @@ def setUpPlayers():
     allSprites.add(tank1, gun1, tank2, gun2)
     bulletSprites = pygame.sprite.Group()
 
+def constantHomeScreen():
+    #This funciton handles the constant elements of the home screen
+    # Inputs: None
+    # Outputs: None
+    screen.fill(bg) # This is the first line when drawing a new frame
+
+def constantSelectionScreen():
+    #This function handles the constant elements of the selection screen
+    # Inputs: None
+    # Outputs: None
+    screen.fill(bg) # This is the first line when drawing a new frame
+
+def constantPlayGame():
+    #This function handles the constant elements of the game screen
+    # Inputs: None
+    # Outputs: None
+    screen.fill(bg) # This is the first line when drawing a new frame
+    fontName = pygame.font.SysFont('Calibri', 35, True, False)
+    textp1Name = fontName.render(" Plwasd1", True, c.geT("WHITE"))
+    textp2Name = fontName.render(" Plarro2", True, c.geT("WHITE"))
+    #Visualising player 2
+    screen.blit(textp1Name,[p1NameIndent, 0.78*windowHeight]) # This is the name on the left
+    screen.blit(textp2Name,[p2NameIndent - textp2Name.get_width(), 0.78*windowHeight]) # This is the name on the right
+
 def playGame():
     # This function controls the main execution of the game
     # Inputs: None
@@ -1698,46 +1763,36 @@ def playGame():
     
     #Setting up the text
     fontScore = pygame.font.SysFont('Calibri', 100, True, False)
-    fontName = pygame.font.SysFont('Calibri', 35, True, False)
-    # Player 1 Text
-    textp1 = fontScore.render(p1ScoreText, True, c.geT("WHITE"))
-    textp1Name = fontName.render(" Plwasd1", True, c.geT("WHITE"))
 
-    # Player 2 Text
-    textp2 = fontScore.render(p2ScoreText, True, c.geT("WHITE"))
-    textp2Name = fontName.render(" Plarro2", True, c.geT("WHITE"))
+    text3 = fontScore.render(p1ScoreText + " - " + p2ScoreText, True, c.geT("WHITE"))
 
-    #Misc Text
-    text3 = fontScore.render("-",True,c.geT("WHITE"))
+    #Box around the bottom of the screen for the health and reload bars
+    pygame.draw.rect(screen, c.geT("GREY"), [0, 0.85*windowHeight, windowWidth, windowHeight*0.15]) # The bottom bar
 
-    #Visualing player 1
-    screen.blit(textp1,[windowWidth/2 - textp1.get_width()-text3.get_width()/2, 0.8*windowHeight]) # This is the score on the left
-    screen.blit(textp1Name,[p1NameIndent, 0.783*windowHeight]) # This is the name on the left
-    #Health bars outline
-    #Health bar
+    screen.blit(text3, [windowWidth/2 - text3.get_width()/2, 0.85*windowHeight])
 
-    pygame.draw.rect(screen, c.geT("RED"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth*((tank1.getHealth())/tank1.getMaxHealth()), barHeight]) # Bar
-    pygame.draw.rect(screen, c.geT("BLACK"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height(), barWidth, barHeight], 2) # Outline
+    pygame.draw.rect(screen, c.geT("RED"), [p1NameIndent, 0.85*windowHeight, barWidth*((tank1.getHealth())/tank1.getMaxHealth()),
+                                            barHeight]) # Bar
+    pygame.draw.rect(screen, c.geT("BLACK"), [p1NameIndent, 0.85*windowHeight, barWidth, barHeight], 2) # Outline
     #Reload bars
-    pygame.draw.rect(screen, c.geT("BLUE"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + mazeY, barWidth*((gun1.getCooldownMax()-gun1.getCooldown())/gun1.getCooldownMax()), barHeight]) # The 25 is to space from the health bar
-    pygame.draw.rect(screen, c.geT("BLACK"), [p1NameIndent, 0.8*windowHeight + textp1Name.get_height() + mazeY, barWidth, barHeight], 2) # Outline
-    #Visualising player 2
-    screen.blit(textp2,[windowWidth/2 + text3.get_width()*1.5, 0.8*windowHeight]) # This is the score on the right 
-    screen.blit(textp2Name,[p2NameIndent - textp2Name.get_width(), 0.783*windowHeight]) # This is the name on the left
+    pygame.draw.rect(screen, c.geT("BLUE"), [p1NameIndent, 0.85*windowHeight + mazeY, barWidth*(1-((gun1.getCooldown())/gun1.getCooldownMax())),
+                                             barHeight]) # The 25 is to space from the health bar
+    pygame.draw.rect(screen, c.geT("BLACK"), [p1NameIndent, 0.85*windowHeight + mazeY, barWidth, barHeight], 2) # Outline
+
     #Health bars
-    pygame.draw.rect(screen, c.geT("RED"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth, barHeight])
-    pygame.draw.rect(screen, c.geT("GREY"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth*((tank2.getMaxHealth()-tank2.getHealth())/tank2.getMaxHealth()), barHeight])
-    pygame.draw.rect(screen, c.geT("BLACK"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height(), barWidth, barHeight], 2)
+    pygame.draw.rect(screen, c.geT("RED"), [p2NameIndent - barWidth, 0.85*windowHeight, barWidth*(((tank2.getHealth())/tank2.getMaxHealth())),
+                                            barHeight])
+    pygame.draw.rect(screen, c.geT("BLACK"), [p2NameIndent - barWidth, 0.85*windowHeight, barWidth, barHeight], 2)
     #Reload bars
-    pygame.draw.rect(screen, c.geT("BLUE"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + mazeY, barWidth*((gun2.getCooldownMax()-gun2.getCooldown())/gun2.getCooldownMax()), barHeight]) # The 25 is to space from the health bar
-    pygame.draw.rect(screen, c.geT("BLACK"), [p2NameIndent - barWidth, 0.8*windowHeight + textp2Name.get_height() + mazeY, barWidth, barHeight], 2) # Outline
+    pygame.draw.rect(screen, c.geT("BLUE"), [p2NameIndent - barWidth, 0.85*windowHeight + mazeY,
+                                             barWidth*((gun2.getCooldownMax()-gun2.getCooldown())/gun2.getCooldownMax()),
+                                             barHeight]) # The 25 is to space from the health bar
+    pygame.draw.rect(screen, c.geT("BLACK"), [p2NameIndent - barWidth, 0.85*windowHeight + mazeY, barWidth, barHeight], 2) # Outline
 
     # Misc text and other little pieces
-    screen.blit(text3,[windowWidth/2,0.79*windowHeight])
 
     # Draw the border
     pygame.draw.rect(screen, c.geT("BLACK"), [mazeX, mazeY, mazeWidth,mazeHeight], 1) # The maze border
-
 
     for tile in tileList:
         tile.draw(screen)
@@ -1781,7 +1836,6 @@ def pauseScreen():
     quitButton.draw(screen, outline = True)
     mute.draw(screen, outline = False)
     sfx.draw(screen, outline = False)
-    pass
 
 def reset():
     # This function is to reset the board everytime we want to restart the game
@@ -1806,7 +1860,9 @@ def reset():
     setUpPlayers()
 
 def updateTankHealth():
-
+    # This function will update the tank health and check if the tank is dead
+    # Inputs: None
+    # Outputs: None
     global explosionGroup, tank1Dead, tank2Dead, gameOverFlag
     global p1Score, p2Score
     global allSprites, tank1, tank2, gun1, gun2
@@ -1961,10 +2017,12 @@ buttonText = c.geT("WHITE")
 optionText = c.geT("GREY")
 #Hull and turret list
 # turretList = ["Sidewinder", "Avalanche", "Boxer", "Bucket", "Chamber", "Huntsman", "Silencer", "Judge", "Watcher"]
-turretList = [Boxer(Tank(0,0,None, "Default"), None, "Boxer"), Silencer(Tank(0,0,None, "Default"), None, "Silencer"), Watcher(Tank(0,0,None, "Default"), None, "Watcher"), Chamber(Tank(0,0,None, "Default"), None, "Chamber")]
+turretList = [Boxer(Tank(0,0,None, "Default"), None, "Boxer"), Silencer(Tank(0,0,None, "Default"), None, "Silencer"),
+              Watcher(Tank(0,0,None, "Default"), None, "Watcher"), Chamber(Tank(0,0,None, "Default"), None, "Chamber")]
 # hullList = ["Panther", "Cicada", "Gater", "Bonsai", "Fossil"]
 
-hullList = [Panther(0, 0, None, "Panther"), Cicada(0, 0, None, "Cicada"), Gater(0, 0, None, "Gater"), Bonsai(0, 0, None, "Bonsai"), Fossil(0, 0, None, "Fossil")]
+hullList = [Panther(0, 0, None, "Panther"), Cicada(0, 0, None, "Cicada"), Gater(0, 0, None, "Gater"), Bonsai(0, 0, None, "Bonsai"),
+            Fossil(0, 0, None, "Fossil")]
 turretListLength = len(turretList)
 hullListLength = len(hullList)
 
@@ -2041,18 +2099,21 @@ buttonList.append(rArrowP1Colour)
 rArrowP2Turret = Button(buttonPrimary, buttonPrimary, windowWidth-tileSize*2, TurretX, tileSize, tileSize, '>', buttonText, 50)
 rArrowP2Turret.selectable(False)
 buttonList.append(rArrowP2Turret) # Right arrow button for turret
-textP2Turret = TextBox(windowWidth - tileSize*2 - forceWidth, TurretX, font='Courier New',fontSize=26, text=turretList[p1I].getGunName(), textColor=buttonText)
+textP2Turret = TextBox(windowWidth - tileSize*2 - forceWidth, TurretX, font='Courier New',fontSize=26,
+                       text=turretList[p1I].getGunName(), textColor=buttonText)
 textP2Turret.setBoxColor(optionText)
 textP2Turret.selectable(False)
 buttonList.append(textP2Turret)  # Textbox for turret
-lArrowP2Turret = Button(buttonPrimary, buttonPrimary, windowWidth - tileSize*3 - forceWidth, TurretX, tileSize, tileSize, '<', buttonText, 50)
+lArrowP2Turret = Button(buttonPrimary, buttonPrimary, windowWidth - tileSize*3 - forceWidth,
+                        TurretX, tileSize, tileSize, '<', buttonText, 50)
 lArrowP2Turret.selectable(False)
 buttonList.append(lArrowP2Turret) # Left arrow button for turret
 
 rArrowP2Hull = Button(buttonPrimary, buttonPrimary,  windowWidth-tileSize*2, HullX, tileSize, tileSize, '>', buttonText, 50)
 rArrowP2Hull.selectable(False)
 buttonList.append(rArrowP2Hull) # Right arrow button for hull
-textP2Hull = TextBox(windowWidth - tileSize*2 - forceWidth, HullX, font='Courier New',fontSize=26, text=hullList[p1J].getTankName(), textColor=buttonText)
+textP2Hull = TextBox(windowWidth - tileSize*2 - forceWidth, HullX, font='Courier New',fontSize=26, text=hullList[p1J].getTankName(),
+                     textColor=buttonText)
 textP2Hull.setBoxColor(optionText)
 textP2Hull.selectable(False) # Textbox for hull
 buttonList.append(textP2Hull)
@@ -2193,6 +2254,7 @@ def checkButtons(mouse):
         setUpPlayers()
         #Switch the the play screen
         print("Play")
+        constantPlayGame()
         gameMode=GameMode.play
         music.stop()
         music = gameMusic
@@ -2200,6 +2262,7 @@ def checkButtons(mouse):
         music.play(-1)
     if homeButton.buttonClick(mouse):
         #Switch back to the home screen
+        constantHomeScreen()
         print("Back")
         gameMode = GameMode.home
         music.stop()
@@ -2218,6 +2281,7 @@ def checkHomeButtons(mouse):
         gameMode = GameMode.selection
         global music, musicMax
         print("Selection")
+        constantSelectionScreen()
         music.stop()
         music = selectionMusic
         musicMax = selectionMusicMax
@@ -2240,9 +2304,9 @@ originalTankImage = pygame.image.load(tankPath).convert_alpha()
 
 
 # Create buttons with specified positions and text
-playButtonHome = Button((0, 0, 0), (0, 0, 255), 150, 400, 175, 70, 'Play', (255, 255, 255), 30, hoverColor=(100, 100, 255))
-settingsButton = Button((0, 0, 0), (0, 0, 255), 475, 400, 175, 70, 'Settings', (255, 255, 255), 30, hoverColor=(100, 100, 255))
-quitButtonHome = Button((0, 0, 0), (0, 0, 255), 10, 10, 130, 50, 'Quit', (255, 255, 255), 25, hoverColor=(100, 100, 255))
+playButtonHome = Button(c.geT("BLACK"),c.geT("BLACK"), 150, 400, 175, 70, 'Play', (255, 255, 255), 30, hoverColor=(100, 100, 255))
+settingsButton = Button(c.geT("BLACK"), c.geT("BLACK"), 475, 400, 175, 70, 'Settings', (255, 255, 255), 30, hoverColor=(100, 100, 255))
+quitButtonHome = Button(c.geT("BLACK"), c.geT("BLACK"), 10, 10, 130, 50, 'Quit', (255, 255, 255), 25, hoverColor=(100, 100, 255))
 
 homeButtonList.append(playButtonHome)
 homeButtonList.append(settingsButton)
@@ -2289,6 +2353,12 @@ player2PackageGun = [controlsTank2, p2GunName]
 allSprites = pygame.sprite.Group()
 bulletSprites = pygame.sprite.Group()
 
+constantHomeScreen()
+fpsTrack = False
+totalfps = 0
+fpsCounter = 0
+
+
 #Main loop
 while not done:
     for event in pygame.event.get():
@@ -2302,32 +2372,34 @@ while not done:
             if gameMode == GameMode.pause:
                 #We are paused
                 if (unPause.getCorners()[0] <= mouse[0] <= unPause.getCorners()[2] and
-                    unPause.getCorners()[1] <= mouse[1] <= unPause.getCorners()[3]): #If we click the button
+                    unPause.getCorners()[1] <= mouse[1] <= unPause.getCorners()[3]): #If we click the return to game button
+                    constantPlayGame()
                     gameMode = GameMode.play # Return to game if button was clicked
                 if (home.getCorners()[0] <= mouse[0] <= home.getCorners()[2] and
-                    home.getCorners()[1] <= mouse[1] <= home.getCorners()[3]):
+                    home.getCorners()[1] <= mouse[1] <= home.getCorners()[3]): # Home button
+                    constantHomeScreen()
                     gameMode = GameMode.home
                     music.stop()
                     music = lobbyMusic
                     musicMax = lobbyMusicMax
                     music.play(-1)
                 if (quitButton.getCorners()[0] <= mouse[0] <= quitButton.getCorners()[2]and
-                    quitButton.getCorners()[1] <= mouse[1] <= quitButton.getCorners()[3]):
+                    quitButton.getCorners()[1] <= mouse[1] <= quitButton.getCorners()[3]): # If we hit the quit butotn
                     print("Quitting the game")
                     done = True # We quit the appplication
                 if (mute.getCorners()[0] <= mouse[0] <= mute.getCorners()[2] and
-                    mute.getCorners()[1] <= mouse[1] <= mute.getCorners()[3]):
+                    mute.getCorners()[1] <= mouse[1] <= mute.getCorners()[3]): # If we hit the mute button
                     mute.buttonClick()
-                if (sfx.getCorners()[0] <= mouse[0] <= sfx.getCorners()[2] and
-                    sfx.getCorners()[1] <= mouse[1] <= sfx.getCorners()[3]):
+                if (sfx.getCorners()[0] <= mouse[0] <= sfx.getCorners()[2] and 
+                    sfx.getCorners()[1] <= mouse[1] <= sfx.getCorners()[3]): # If we hit the sfx button
                     sfx.buttonClick()
-            elif gameMode == GameMode.selection:
+            elif gameMode == GameMode.selection: # Selection screen
                 textP1Turret.setText(turretList[p1I].getGunName())
                 textP2Turret.setText(turretList[p2I].getGunName())
                 textP1Hull.setText(hullList[p1J].getTankName())
                 textP2Hull.setText(hullList[p2J].getTankName())
                 checkButtons(pygame.mouse.get_pos())
-            elif gameMode == GameMode.home:
+            elif gameMode == GameMode.home: # Home screen
                 checkHomeButtons(pygame.mouse.get_pos())
         elif event.type == pygame.KEYDOWN: # Any key pressed
             if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
@@ -2347,6 +2419,7 @@ while not done:
             if event.key == pygame.K_p:
                 #Pause
                 if gameMode == GameMode.pause:
+                    constantPlayGame()
                     gameMode = GameMode.play # Return to game if button was clicked
                 elif gameMode == GameMode.play:
                     gameMode = GameMode.pause # Pause the game
@@ -2355,12 +2428,21 @@ while not done:
             if event.key == pygame.K_k:
                 pass
             if event.key == pygame.K_f:
-                print("The current FPS is: ", clock.get_fps())
+                #Calculate and track the average FPS
+                if not fpsTrack:
+                    fpsTrack = True
+                else:
+                    totalfps += clock.get_fps()
+                    fpsCounter += 1
+                    print("The average FPS is: ", totalfps/fpsCounter)
+
             if event.key == pygame.K_n:
                 if gameMode == GameMode.play:
+                    constantPlayGame()
                     reset()
             if event.key == pygame.K_0:
                 if gameMode == GameMode.play:
+                    constantPlayGame()
                     reset()
             if event.key == pygame.K_m:
                 mute.mute()
@@ -2377,16 +2459,15 @@ while not done:
     tankMoveSFX.set_volume(sfx.getValue() * tankMoveMax)
     mouse = pygame.mouse.get_pos() #Update the position
 
-    screen.fill(bg) # This is the first line when drawing a new frame
-
     if gameMode == GameMode.play:
-        playGame()
+        playGame() # Play the game
     elif gameMode == GameMode.pause:
-        pauseScreen()
+        pauseScreen() # Pause screen
         if pygame.mouse.get_pressed()[0]:
             mute.updateSlider(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
             sfx.updateSlider(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
     elif gameMode == GameMode.selection:
+        constantSelectionScreen() # Selection screen
         pygame.draw.rect(screen,(0,0,0), (tileSize, tileSize*multiplyConstant, rectX, rectY), 1)
         for button in buttonList:
             button.update_display(pygame.mouse.get_pos())
@@ -2435,8 +2516,9 @@ while not done:
 
         speedBarOutline2 = pygame.draw.rect(screen, c.geT("BLACK"), (windowWidth - tileSize*3 - forceWidth, tileSize*multiplyConstant,
                                                                      rectX, rectY),barBorder)
-        speedBar2 = pygame.draw.rect(screen, c.geT("GREEN"), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
-                                                              tileSize*multiplyConstant, (rectX - speedText.getWidth()) * hullList[p2J].getSpeedStatistic()/3, rectY))
+        speedBar2 = pygame.draw.rect(screen, c.geT("GREEN"),
+                                     (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(), tileSize*multiplyConstant,
+                                      (rectX - speedText.getWidth()) * hullList[p2J].getSpeedStatistic()/3, rectY))
         #Outlines
         speedOutline2 = pygame.draw.rect(screen, (0,0,0), (windowWidth - tileSize*3 - forceWidth + speedText.getWidth(),
                                                            tileSize*multiplyConstant, rectX - speedText.getWidth(), rectY), barBorder)
