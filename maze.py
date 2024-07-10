@@ -674,9 +674,79 @@ class Bullet(pygame.sprite.Sprite):
 
     def setOriginalCollision(self, value):
         self.originalCollision = value
+class JudgeBullet(Bullet):
+    def update(self):
+        """
+        Updates the bullet's position based on its speed and direction.
 
+        This method calculates the new position of the bullet and updates its rect attribute accordingly.
+
+        Inputs:
+        -------
+        None
+
+        Outputs:
+        --------
+        None
+        """
+        angleRad = math.radians(self.angle)
+        dx = self.speed * math.cos(angleRad)
+        dy = -self.speed * math.sin(angleRad)
+        tempX = self.x + dx
+        tempY = self.y + dy
+
+        # Check for collision with walls
+        row = math.ceil((self.getCenter()[1] - mazeY) / tileSize)
+        col = math.ceil((self.getCenter()[0] - mazeX) / tileSize)
+        index = (row - 1) * colAmount + col
+
+        if tempX <= mazeX or tempY <= mazeY or tempX >= mazeWidth + mazeX or tempY >= mazeHeight + mazeY:
+            self.kill()
+            return
+
+        tank1Collision = satCollision(self, tank1)
+        tank2Collision = satCollision(self, tank2)
+
+        if self.name == tank1.getName() and tank2Collision:
+            tankDeadSFX.play()
+            tank2.damage(self.damage)
+            self.kill()
+        elif self.name == tank2.getName() and tank1Collision:
+            tankDeadSFX.play()
+            tank1.damage(self.damage)
+            self.kill()
+
+        tile = tileList[index - 1]
+        wallCollision = False
+
+        if tile.border[0] and tempY - self.image.get_size()[1] <= tile.y:  # Top border
+            wallCollision = True
+            self.angle = -self.angle
+        if tile.border[1] and tempX + self.image.get_size()[0] >= tile.x + tileSize:  # Right border
+            wallCollision = True
+            self.angle = 180 - self.angle
+        if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + tileSize:  # Bottom border
+            wallCollision = True
+            self.angle = -self.angle
+        if tile.border[3] and tempX - self.image.get_size()[0] <= tile.x:  # Left border
+            wallCollision = True
+            self.angle = 180 - self.angle
+
+        if wallCollision:
+            self.bounce -= 1
+            if self.bounce < 0:
+                self.kill()  # Delete the bullet
+            else:
+                self.speed *= 0.8  # Optional: reduce speed after each bounce
+
+        self.updateCorners()
+        self.rect.x = int(tempX)
+        self.rect.y = int(tempY)
+        self.x = tempX
+        self.y = tempY
+        if abs(self.x - self.trailX) >= 1 and abs(self.y - self.trailY) >= 1:  # Trails
+            self.pleaseDraw = True
 class SilencerBullet(Bullet):
-
     def __init__(self, x, y, angle, gunLength, tipOffSet):
         super().__init__(x, y, angle, gunLength, tipOffSet)
         self.speed = 0.4
@@ -1160,7 +1230,7 @@ class Judge(Gun):
     def fire_bullet(self):
         scatter_angle = random.uniform(-self.scatterRange, self.scatterRange)
         bullet_angle = self.angle + scatter_angle
-        bullet = Bullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], bullet_angle, self.gunLength, self.tipOffSet)
+        bullet = JudgeBullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], bullet_angle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
         bullet.setDamage(self.damage)
         bullet.setBulletSpeed(0.5)
