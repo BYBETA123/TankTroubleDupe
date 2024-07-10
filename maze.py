@@ -1151,9 +1151,9 @@ class Huntsman(Gun):
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
         bullet = Bullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
-        if random.random() < 0.3:  # 5% chance
+        if random.random() < 0.05:  # 5% chance
             bullet.setDamage(self.damage * 2)
-            print("CRITICAL")
+            #print("CRITICAL")
         else:
             bullet.setDamage(self.damage)
         bullet.setBulletSpeed(2)
