@@ -675,6 +675,16 @@ class Bullet(pygame.sprite.Sprite):
     def setOriginalCollision(self, value):
         self.originalCollision = value
 class JudgeBullet(Bullet):
+    def __init__(self, x, y, angle, gunLength, tipOffSet, initialDamage=76, minDamage=50, damageDecreaseInterval=10):
+        super().__init__(x, y, angle, gunLength, tipOffSet)
+        self.damage = initialDamage
+        self.min_damage = minDamage
+        self.damageDecreaseInterval = damageDecreaseInterval
+        self.startDamageDecrease()
+    def startDamageDecrease(self):
+        if self.damage > self.min_damage:
+            self.damage -= 1
+            Timer(self.damageDecreaseInterval / 1000.0, self.startDamageDecrease).start()
     def update(self):
         """
         Updates the bullet's position based on its speed and direction.
@@ -1227,14 +1237,16 @@ class Judge(Gun):
 
         for i in range(1,10):
             Timer(self.bulletInterval * i / 1000.0, self.fire_bullet).start()
+        
     def fire_bullet(self):
-        scatter_angle = random.uniform(-self.scatterRange, self.scatterRange)
-        bullet_angle = self.angle + scatter_angle
-        bullet = JudgeBullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], bullet_angle, self.gunLength, self.tipOffSet)
+        scatterAngle = random.uniform(-self.scatterRange, self.scatterRange)
+        bulletAngle = self.angle + scatterAngle
+        bullet = JudgeBullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], bulletAngle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
         bullet.setDamage(self.damage)
         bullet.setBulletSpeed(0.5)
         bulletSprites.add(bullet)
+        Timer(2, lambda: bullet.kill()).start()
 class Huntsman(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
