@@ -1148,7 +1148,8 @@ class Judge(Gun):
         self.setDamageStatistic(2)
         self.setReloadStatistic(2)
         self.setGunBackDuration(300)
-        self.bulletInterval=70
+        self.bulletInterval=15
+        self.scatterRange=13
     def fire(self):
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
         self.canShoot = False
@@ -1157,10 +1158,12 @@ class Judge(Gun):
         for i in range(1,10):
             Timer(self.bulletInterval * i / 1000.0, self.fire_bullet).start()
     def fire_bullet(self):
-        bullet = Bullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
+        scatter_angle = random.uniform(-self.scatterRange, self.scatterRange)
+        bullet_angle = self.angle + scatter_angle
+        bullet = Bullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], bullet_angle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
         bullet.setDamage(self.damage)
-        bullet.setBulletSpeed(1)
+        bullet.setBulletSpeed(0.5)
         bulletSprites.add(bullet)
 class Huntsman(Gun):
     def __init__(self, tank, controls, name):
