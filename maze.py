@@ -1223,22 +1223,32 @@ class GameMode(Enum):
 class Judge(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
-        self.setCooldown(800) # 800 ms
+        self.setCooldown(400)  # 800 ms
         self.setDamage(76)
         self.setDamageStatistic(2)
         self.setReloadStatistic(2)
         self.setGunBackDuration(300)
-        self.bulletInterval=15
-        self.scatterRange=13
-    def fire(self):
-        self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
-        self.canShoot = False
-        self.shootCooldown = self.cooldownDuration
+        self.bulletInterval = 15
+        self.scatterRange = 13
+        self.maxUses = 3
+        self.currentUses = 0
+        self.reloadTime = 2  # 2 seconds
 
-        for i in range(1,10):
-            Timer(self.bulletInterval * i / 1000.0, self.fire_bullet).start()
-        
-    def fire_bullet(self):
+    def fire(self):
+        if self.currentUses < self.maxUses:
+            self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
+            self.canShoot = False
+            self.shootCooldown = self.cooldownDuration
+
+            for i in range(1, 11):
+                Timer(self.bulletInterval * i / 1000.0, self.fireBullet).start()
+
+            self.currentUses += 1
+            if self.currentUses >= self.maxUses:
+                self.canShoot = False
+                Timer(self.reloadTime, self.reload).start()
+
+    def fireBullet(self):
         scatterAngle = random.uniform(-self.scatterRange, self.scatterRange)
         bulletAngle = self.angle + scatterAngle
         bullet = JudgeBullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], bulletAngle, self.gunLength, self.tipOffSet)
@@ -1247,6 +1257,10 @@ class Judge(Gun):
         bullet.setBulletSpeed(0.5)
         bulletSprites.add(bullet)
         Timer(2, lambda: bullet.kill()).start()
+
+    def reload(self):
+        self.currentUses = 0
+        self.canShoot = True
 class Huntsman(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
