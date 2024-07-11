@@ -26,15 +26,14 @@ class Music:
     tankDeadMax = 0.5
     turretRotateMax = 0.2
     tankMoveMax = 0.05
-    lobbyMusicMax = 0.2
-    selectionMusicMax = 1
-    gameMusicMax = 0.2
+
     currentTrack = None
     currentTrackString = 'lobby'
     nextTrack = None
     nextTrackString = 'lobby'
     fadeTrack = 0
     trigger = False
+
     def __init__(self):
         super().__init__()
         pygame.mixer.init() # Initialising music
@@ -49,13 +48,38 @@ class Music:
         self.volume = {
             'lobby': 0.2,
             'selection': 1,
-            'game': 0.2
+            'game': 0.2,
+            'tankShoot': 1,
+            'tankDead': 0.5,
+            'turretRotate': 0.2,
+            'tankMove': 0.05
         }
 
         self.channels = {
             'lobby': pygame.mixer.Channel(0),
             'selection': pygame.mixer.Channel(1),
             'game': pygame.mixer.Channel(2)
+        }
+
+        self.busyChannels = {
+            'tankShoot': pygame.mixer.Channel(3),
+            'tankDead': pygame.mixer.Channel(4),
+            'turretRotate': pygame.mixer.Channel(5),
+            'tankMove': pygame.mixer.Channel(6)
+        }
+
+        self.playing = {
+            'tankShoot': False,
+            'tankDead': False,
+            'turretRotate': False,
+            'tankMove': False
+        }
+
+        self.customSoundVolume = {
+            'tankShoot': 0,
+            'tankDead': 0,
+            'turretRotate': 0,
+            'tankMove': 0
         }
 
         self.currentTrack = self.tracks['lobby']
