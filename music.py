@@ -103,7 +103,6 @@ class Music:
                 self.trigger = False
                 self.fadeTrack = 0
         else:
-            print(newVolumes, self.hardVolume[self.currentTrackString], newVolumes*self.hardVolume[self.currentTrackString])
             self.channels[self.currentTrackString].set_volume(newVolumes*self.hardVolume[self.currentTrackString])
 
     def play(self):
