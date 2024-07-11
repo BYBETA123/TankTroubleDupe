@@ -641,12 +641,85 @@ class Bullet(pygame.sprite.Sprite):
 
     def setOriginalCollision(self, value):
         self.originalCollision = value
+class SidewinderBullet(Bullet):
+    def __init__(self, x, y, angle, gunLength, tipOffSet):
+        super().__init__(x, y, angle, gunLength, tipOffSet)
+        self.bounce=5
+    def update(self):
+        """
+        Updates the bullet's position based on its speed and direction.
 
+        This method calculates the new position of the bullet and updates its rect attribute accordingly.
+
+        Inputs:
+        -------
+        None
+
+        Outputs:
+        --------
+        None
+        """
+        angleRad = math.radians(self.angle)
+        dx = self.speed * math.cos(angleRad)
+        dy = -self.speed * math.sin(angleRad)
+        tempX = self.x + dx
+        tempY = self.y + dy
+        #Check for collision with walls
+        #We are going to calculate the row and column
+        row = math.ceil((self.getCenter()[1] - mazeY)/tileSize)
+        col = math.ceil((self.getCenter()[0] - mazeX)/tileSize)
+        #Find the file at the exact index
+        index = (row-1)*colAmount + col
+
+        #If we are outside of the maze, delete the bullet
+        if tempX <= mazeX or tempY <= mazeY or tempX >= mazeWidth + mazeX or tempY >= mazeHeight + mazeY:
+            self.kill()
+            return
+        
+        #If we hit a tank
+        tank1Collision = satCollision(self, tank1)
+        tank2Collision = satCollision(self, tank2)
+
+        if self.name == tank1.getName() and tank2Collision:
+                tank2.damage(self.damage)
+                self.kill()
+        if self.name == tank2.getName() and tank1Collision:
+                tank1.damage(self.damage)
+                self.kill()
+
+        tile = tileList[index-1]
+        wallCollision = False
+        if tile.border[0] and tempY - self.image.get_size()[1] <= tile.y: #If the top border is present
+            wallCollision = True
+            self.angle = 180 - self.angle
+        if tile.border[1] and tempX + self.image.get_size()[1] >= tile.x + tileSize: #If the right border is present
+            wallCollision = True
+            self.angle = 360 - self.angle
+        if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + tileSize: #If the bottom border is present
+            wallCollision = True
+            self.angle = 180 - self.angle
+        if tile.border[3] and tempX - self.image.get_size()[1] <= tile.x: #If the left border is present
+            wallCollision = True
+            self.angle = 360 - self.angle
+        if wallCollision:
+            self.bounce -= 1
+            self.speed *= -1
+            if self.bounce == 0:
+                self.kill() # delete the bullet
+        self.updateCorners()
+        # Store the updated values
+        self.rect.x = int(tempX)
+        self.rect.y = int(tempY)
+        self.x = tempX
+        self.y = tempY
+        if abs(self.x- self.trailX) >= 1 and abs(tempY-self.trailY) >= 1: # Trails
+            self.pleaseDraw = True
 class JudgeBullet(Bullet):
     def __init__(self, x, y, angle, gunLength, tipOffSet, initialDamage=76, minDamage=50, damageDecreaseInterval=10):
         super().__init__(x, y, angle, gunLength, tipOffSet)
         self.damage = initialDamage
         self.min_damage = minDamage
+        self.bounce=2
         self.damageDecreaseInterval = damageDecreaseInterval
         self.startDamageDecrease()
     def startDamageDecrease(self):
@@ -1183,10 +1256,28 @@ class GameMode(Enum):
     selection = 4
 
 #Turrets
+class Sidewinder(Gun):
+    def __init__(self, tank, controls, name):
+        super().__init__(tank, controls, name)
+        self.setCooldown(500)  # 500 ms
+        self.setDamage(350)
+        self.setDamageStatistic(1)
+        self.setReloadStatistic(2)
+        self.setGunBackDuration(300)
+    def fire(self):
+        self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
+        bullet = SidewinderBullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
+        bullet.setName(self.getTank().getName())
+        bullet.setBulletSpeed(1)
+        bulletSprites.add(bullet)
+        self.canShoot = False
+        self.shootCooldown = self.cooldownDuration
+    
+    
 class Judge(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
-        self.setCooldown(400)  # 800 ms
+        self.setCooldown(800)  # 800 ms
         self.setDamage(76)
         self.setDamageStatistic(2)
         self.setReloadStatistic(2)
@@ -2095,7 +2186,8 @@ optionText = c.geT("GREY")
 #Hull and turret list
 turretList = [Boxer(Tank(0,0,None, "Default"), None, "Boxer"), Silencer(Tank(0,0,None, "Default"), None, "Silencer"),
               Watcher(Tank(0,0,None, "Default"), None, "Watcher"), Chamber(Tank(0,0,None, "Default"), None, "Chamber"),
-              Huntsman(Tank(0,0,None,"Default"),None,"Huntsman"), Judge(Tank(0,0,None,"Default"),None,"Judge")]
+              Huntsman(Tank(0,0,None,"Default"),None,"Huntsman"), Judge(Tank(0,0,None,"Default"),None,"Judge"),
+              Sidewinder(Tank(0,0,None,"Default"),None,"Sidewinder")]
 
 hullList = [Panther(0, 0, None, "Panther"), Cicada(0, 0, None, "Cicada"), Gater(0, 0, None, "Gater"), Bonsai(0, 0, None, "Bonsai"),
             Fossil(0, 0, None, "Fossil")]
