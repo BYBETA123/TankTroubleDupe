@@ -2015,14 +2015,15 @@ def constantPlayGame():
     # Inputs: None
     # Outputs: None
     screen.fill(bg) # This is the first line when drawing a new frame
+    pygame.draw.rect(screen, c.geT("RED"), [p1NameIndent, 0.78*windowHeight, tileSize*2,tileSize], 1) # The maze border
+    pygame.draw.rect(screen, c.geT("RED"), [windowWidth-p1NameIndent-tileSize*2, 0.78*windowHeight, tileSize*2,tileSize], 1) # The maze border
+
     print("Switching to game music")
     mixer.crossfade('game')
     fontName = pygame.font.SysFont('Calibri', 35, True, False)
-    textp1Name = fontName.render(" Plwasd1", True, c.geT("WHITE"))
-    textp2Name = fontName.render(" Plarro2", True, c.geT("WHITE"))
-    #Visualising player 2
-    screen.blit(textp1Name,[p1NameIndent, 0.78*windowHeight]) # This is the name on the left
-    screen.blit(textp2Name,[p2NameIndent - textp2Name.get_width(), 0.78*windowHeight]) # This is the name on the right
+    fontString = "Plwasd1" + "          SCORE            " +"Plarro2" # This is a bad way to write a string
+    textp2Name = fontName.render(fontString, True, c.geT("WHITE"))
+    screen.blit(textp2Name,[p1NameIndent*2 + tileSize * 2, 0.78*windowHeight]) # This is the name on the right
 
 def playGame():
     # This function controls the main execution of the game
@@ -2038,13 +2039,13 @@ def playGame():
         gameOverFlag = False
         cooldownTimer = True
     if cooldownTimer:
-        if time.time() - startTime >= 3:
+        if time.time() - startTime >= 3: # 3 seconds
             #Reset the game
             reset()
 
     #UI Elements
 
-    pygame.draw.rect(screen, c.geT("GREY"), [tileSize*0.8, tileSize*0.3, windowWidth - tileSize*1.5, tileSize*8.5]) # Draw a box for the maze
+    pygame.draw.rect(screen, c.geT("GREY"), [tileSize*0.8, tileSize*0.8, windowWidth - tileSize*1.5, tileSize*8.5]) # Draw a box for the maze
     
     #Making the string for score
     p1ScoreText = str(p1Score)
@@ -2053,7 +2054,7 @@ def playGame():
     #Setting up the text
     fontScore = pygame.font.SysFont('Calibri', 100, True, False)
 
-    text3 = fontScore.render(p1ScoreText + " - " + p2ScoreText, True, c.geT("WHITE"))
+    text3 = fontScore.render(p1ScoreText + "   " + p2ScoreText, True, c.geT("WHITE"))
 
     #Box around the bottom of the screen for the health and reload bars
     pygame.draw.rect(screen, c.geT("GREY"), [0, 0.85*windowHeight, windowWidth, windowHeight*0.15]) # The bottom bar
@@ -2064,24 +2065,24 @@ def playGame():
                                             barHeight]) # Bar
     pygame.draw.rect(screen, c.geT("BLACK"), [p1NameIndent, 0.85*windowHeight, barWidth, barHeight], 2) # Outline
     #Reload bars
-    pygame.draw.rect(screen, c.geT("BLUE"), [p1NameIndent, 0.85*windowHeight + mazeY, barWidth*(1-((gun1.getCooldown())/gun1.getCooldownMax())),
+    pygame.draw.rect(screen, c.geT("BLUE"), [p1NameIndent, 0.85*windowHeight + mazeY//2, barWidth*(1-((gun1.getCooldown())/gun1.getCooldownMax())),
                                              barHeight]) # The 25 is to space from the health bar
-    pygame.draw.rect(screen, c.geT("BLACK"), [p1NameIndent, 0.85*windowHeight + mazeY, barWidth, barHeight], 2) # Outline
+    pygame.draw.rect(screen, c.geT("BLACK"), [p1NameIndent, 0.85*windowHeight + mazeY//2, barWidth, barHeight], 2) # Outline
 
     #Health bars
     pygame.draw.rect(screen, c.geT("RED"), [p2NameIndent - barWidth, 0.85*windowHeight, barWidth*(((tank2.getHealth())/tank2.getMaxHealth())),
                                             barHeight])
     pygame.draw.rect(screen, c.geT("BLACK"), [p2NameIndent - barWidth, 0.85*windowHeight, barWidth, barHeight], 2)
     #Reload bars
-    pygame.draw.rect(screen, c.geT("BLUE"), [p2NameIndent - barWidth, 0.85*windowHeight + mazeY,
+    pygame.draw.rect(screen, c.geT("BLUE"), [p2NameIndent - barWidth, 0.85*windowHeight + mazeY//2,
                                              barWidth*((gun2.getCooldownMax()-gun2.getCooldown())/gun2.getCooldownMax()),
                                              barHeight]) # The 25 is to space from the health bar
-    pygame.draw.rect(screen, c.geT("BLACK"), [p2NameIndent - barWidth, 0.85*windowHeight + mazeY, barWidth, barHeight], 2) # Outline
+    pygame.draw.rect(screen, c.geT("BLACK"), [p2NameIndent - barWidth, 0.85*windowHeight + mazeY//2, barWidth, barHeight], 2) # Outline
 
     # Misc text and other little pieces
+    pygame.draw.rect(screen, c.geT("RED"), [mazeX, mazeY, mazeWidth,mazeHeight], 1) # The maze border
 
     # Draw the border
-    pygame.draw.rect(screen, c.geT("BLACK"), [mazeX, mazeY, mazeWidth,mazeHeight], 1) # The maze border
 
     for tile in tileList:
         tile.draw(screen)
@@ -2229,9 +2230,9 @@ p2NameIndent = windowWidth - 25
 
 #Defining the variables that make up the main maze screen
 mazeX = 50 # We want at least a little indent or border
-mazeY = 25
+mazeY = 50
 mazeWidth = windowWidth - mazeX*2 # We want it to span most of the screen
-mazeHeight = windowHeight - mazeY*8
+mazeHeight = windowHeight - mazeY*4
 rowAmount = mazeHeight//tileSize # Assigning the amount of rows
 colAmount = mazeWidth//tileSize # Assigning the amount of columns
 barWidth = 150
@@ -2739,6 +2740,8 @@ soundDictionary = {
     'turretRotate' : pygame.mixer.Sound('Sounds/tank_turret_rotate.wav'),
 }
 
+
+
 for sound in soundDictionary:
     soundDictionary[sound].set_volume(volume[sound])
 
@@ -2881,7 +2884,10 @@ while not done:
     else:
         screen.fill(c.geT("WHITE"))
     clock.tick(240) # Set the FPS
-    mixer.update() # Update the mixer
+    mixer.update(mute.getValue()) # Update the mixer
+
+    for sound in soundDictionary:
+        soundDictionary[sound].set_volume(volume[sound] * sfx.getValue())
     pygame.display.flip()# Update the screen
 
 pygame.quit()
