@@ -1247,6 +1247,7 @@ class Judge(Gun):
             if self.currentUses >= self.maxUses:
                 self.canShoot = False
                 Timer(self.reloadTime, self.reload).start()
+            
 
     def fireBullet(self):
         scatterAngle = random.uniform(-self.scatterRange, self.scatterRange)
