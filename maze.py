@@ -2015,41 +2015,39 @@ def constantPlayGame():
     # Inputs: None
     # Outputs: None
     screen.fill(bg) # This is the first line when drawing a new frame
-    pygame.draw.rect(screen, c.geT("RED"), [p1NameIndent, 0.78*windowHeight, tileSize*2,tileSize], 1) # The maze border
-    pygame.draw.rect(screen, c.geT("RED"), [windowWidth-p1NameIndent-tileSize*2, 0.78*windowHeight, tileSize*2,tileSize], 1) # The maze border
+    pygame.draw.rect(screen, c.geT("RED"), [tileSize, 0.78*windowHeight, tileSize*2,tileSize], 1) # The maze border
+    pygame.draw.rect(screen, c.geT("RED"), [windowWidth-tileSize*3, 0.78*windowHeight, tileSize*2,tileSize], 1) # The maze border
 
     print("Switching to game music")
     mixer.crossfade('game')
-    fontName = pygame.font.SysFont('Courier New', 35, True, False)
-    fontName2 = pygame.font.SysFont('Courier New', 21, True, False)
-    fontString = "Plwasd1  SCORE   Plarro2" # This is a bad way to write a string
-    controlString = "WASD                              ↑↓→←" # This is a bad way to write a string
+    fontName = pygame.font.Font('fonts/LondrinaSolid-Regular.otf', 30)
+    fontName2 = pygame.font.SysFont('Courier New', 20, True, False)
+    fontString = "PLAYER 1             SCORE              PLAYER 2" # This is a bad way to write a string
+    controlString = "WASD                            ↑↓→←" # This is a bad way to write a string
     textp2Name = fontName.render(fontString, True, c.geT("WHITE"))
     controls = fontName2.render(controlString, True, c.geT("WHITE"))
-    screen.blit(textp2Name,[p1NameIndent*2 + tileSize * 2, 0.78*windowHeight]) # This is the name on the right
-    screen.blit(controls,[p1NameIndent*2 + tileSize * 2.1, windowHeight*5/6]) # This is the name on the right
+    screen.blit(textp2Name,[windowWidth//2 - textp2Name.get_width()//2, 0.78*windowHeight]) # This is the name on the right
+    screen.blit(controls,[windowWidth//2 - controls.get_width()//2, windowHeight*5/6]) # This is the name on the right
 
-    # pygame.draw.rect(screen, c.geT("RED"), [p1NameIndent*2 + tileSize * 2.05, windowHeight*5/6,textp1Name.get_width(), tileSize//2], 1) # The maze border
-
-    HealthBox = TextBox(tileSize*0.9, 0.88*windowHeight, "Courier New", "HEALTH", 20, c.geT("WHITE"))
+    HealthBox = TextBox(tileSize*7/8-1, 0.88*windowHeight, "Londrina", "HEALTH", 20, c.geT("WHITE"))
     HealthBox.setPaddingHeight(0)
     HealthBox.setPaddingWidth(0)
     HealthBox.setBoxColor(c.geT("GREY"))
     HealthBox.draw(screen)
 
-    ReloadBox = TextBox(tileSize*0.9, 0.88*windowHeight + mazeY//2, "Courier New", "RELOAD", 20, c.geT("WHITE"))
+    ReloadBox = TextBox(tileSize*7/8-1, 0.88*windowHeight + mazeY//2, "Londrina", "RELOAD", 20, c.geT("WHITE"))
     ReloadBox.setPaddingHeight(0)
     ReloadBox.setPaddingWidth(0)
     ReloadBox.setBoxColor(c.geT("GREY"))
     ReloadBox.draw(screen)
 
-    HealthBox2 = TextBox(windowWidth-tileSize*3.3, 0.88*windowHeight, "Courier New", "HEALTH", 20, c.geT("WHITE"))
+    HealthBox2 = TextBox(windowWidth-tileSize*2.2-1, 0.88*windowHeight, "Londrina", "HEALTH", 20, c.geT("WHITE"))
     HealthBox2.setPaddingHeight(0)
     HealthBox2.setPaddingWidth(0)
     HealthBox2.setBoxColor(c.geT("GREY"))
     HealthBox2.draw(screen)
 
-    ReloadBox2 = TextBox(windowWidth-tileSize*3.3, 0.88*windowHeight + mazeY//2, "Courier New", "RELOAD", 20, c.geT("WHITE"))
+    ReloadBox2 = TextBox(windowWidth-tileSize*2.2-1, 0.88*windowHeight + mazeY//2, "Londrina", "RELOAD", 20, c.geT("WHITE"))
     ReloadBox2.setPaddingHeight(0)
     ReloadBox2.setPaddingWidth(0)
     ReloadBox2.setBoxColor(c.geT("GREY"))
@@ -2081,41 +2079,38 @@ def playGame():
     
     #Making the string for score
     p1ScoreText = str(p1Score)
-    if p2Score < 10:
-        p2ScoreText = " " + str(p2Score)
-    else:
-        p2ScoreText = str(p2Score)
-    
+    p2ScoreText = str(p2Score)
     #Setting up the text
-    fontScore = pygame.font.SysFont('Calibri', 95, True, False)
+    fontScore = pygame.font.SysFont('Londrina', 90, True, False)
+    fontScore = pygame.font.Font('fonts/LondrinaSolid-Regular.otf', 70)
+    pygame.draw.rect(screen, c.geT("GREY"), [tileSize*2.1, 0.87*windowHeight, windowWidth-tileSize*1.2-barWidth, windowHeight*0.15]) # The bottom bar
 
-    text3 = fontScore.render(p1ScoreText + " " + p2ScoreText, True, c.geT("WHITE"))
+    text3 = fontScore.render(p1ScoreText + ":" + p2ScoreText, True, c.geT("WHITE"))
+    screen.blit(text3, [windowWidth/2 - text3.get_width()/2, 0.87*windowHeight])
 
     #Box around the bottom of the screen for the health and reload bars
-    pygame.draw.rect(screen, c.geT("GREY"), [tileSize*2.9, 0.87*windowHeight, windowWidth-tileSize*2.8-barWidth, windowHeight*0.15]) # The bottom bar
 
-    screen.blit(text3, [windowWidth/2 - text3.get_width()/2, 0.86*windowHeight])
 
-    pygame.draw.rect(screen, c.geT("RED"), [tileSize*3, 0.88*windowHeight, barWidth*((tank1.getHealth())/tank1.getMaxHealth()),
+    pygame.draw.rect(screen, c.geT("RED"), [tileSize*2.2, 0.88*windowHeight, barWidth*((tank1.getHealth())/tank1.getMaxHealth()),
                                             barHeight]) # Bar
-    pygame.draw.rect(screen, c.geT("BLACK"), [tileSize*3, 0.88*windowHeight, barWidth, barHeight], 2) # Outline
+    pygame.draw.rect(screen, c.geT("BLACK"), [tileSize*2.2, 0.88*windowHeight, barWidth, barHeight], 2) # Outline
     #Reload bars
-    pygame.draw.rect(screen, c.geT("BLUE"), [tileSize*3, 0.88*windowHeight + mazeY//2, barWidth*(1-((gun1.getCooldown())/gun1.getCooldownMax())),
+    pygame.draw.rect(screen, c.geT("BLUE"), [tileSize*2.2, 0.88*windowHeight + mazeY//2, barWidth*(1-((gun1.getCooldown())/gun1.getCooldownMax())),
                                              barHeight]) # The 25 is to space from the health bar
-    pygame.draw.rect(screen, c.geT("BLACK"), [tileSize*3, 0.88*windowHeight + mazeY//2, barWidth, barHeight], 2) # Outline
+    pygame.draw.rect(screen, c.geT("BLACK"), [tileSize*2.2, 0.88*windowHeight + mazeY//2, barWidth, barHeight], 2) # Outline
 
 
 
 
     #Health bars
-    pygame.draw.rect(screen, c.geT("RED"), [windowWidth - tileSize*3 - barWidth, 0.88*windowHeight, barWidth*(((tank2.getHealth())/tank2.getMaxHealth())),
+    pygame.draw.rect(screen, c.geT("RED"), [windowWidth - tileSize*2.2 - barWidth, 0.88*windowHeight, barWidth*(((tank2.getHealth())/tank2.getMaxHealth())),
                                             barHeight])
-    pygame.draw.rect(screen, c.geT("BLACK"), [windowWidth - tileSize*3 - barWidth, 0.88*windowHeight, barWidth, barHeight], 2)
+    pygame.draw.rect(screen, c.geT("BLACK"), [windowWidth - tileSize*2.2 - barWidth, 0.88*windowHeight, barWidth, barHeight], 2)
     #Reload bars
-    pygame.draw.rect(screen, c.geT("BLUE"), [windowWidth - tileSize*3 - barWidth, 0.88*windowHeight + mazeY//2,
+    pygame.draw.rect(screen, c.geT("BLUE"), [windowWidth - tileSize*2.2 - barWidth, 0.88*windowHeight + mazeY//2,
                                              barWidth*((gun2.getCooldownMax()-gun2.getCooldown())/gun2.getCooldownMax()),
                                              barHeight]) # The 25 is to space from the health bar
-    pygame.draw.rect(screen, c.geT("BLACK"), [windowWidth - tileSize*3 - barWidth, 0.88*windowHeight + mazeY//2, barWidth, barHeight], 2) # Outline
+    pygame.draw.rect(screen, c.geT("BLACK"), [windowWidth - tileSize*2.2 - barWidth, 0.88*windowHeight + mazeY//2, barWidth, barHeight], 2) # Outline
 
     # Draw the border
 
@@ -2833,6 +2828,10 @@ while not done:
                 if (sfx.getCorners()[0] <= mouse[0] <= sfx.getCorners()[2] and 
                     sfx.getCorners()[1] <= mouse[1] <= sfx.getCorners()[3]): # If we hit the sfx button
                     sfx.buttonClick()
+                if pauseButton.buttonClick(mouse):
+                    constantPlayGame()
+                    gameMode = GameMode.play
+                    print("Pause button clicked")
             elif gameMode == GameMode.selection: # Selection screen
                 textP1Turret.setText(turretList[p1I].getGunName())
                 textP2Turret.setText(turretList[p2I].getGunName())
@@ -2841,6 +2840,10 @@ while not done:
                 checkButtons(pygame.mouse.get_pos())
             elif gameMode == GameMode.home: # Home screen
                 checkHomeButtons(pygame.mouse.get_pos())
+            elif gameMode == GameMode.play:
+                if pauseButton.buttonClick(mouse):
+                    gameMode = GameMode.pause
+                    print("Pause button clicked")
         elif event.type == pygame.KEYDOWN: # Any key pressed
             if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
                 done = True
