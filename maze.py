@@ -15,7 +15,9 @@ import copy
 class Tank(pygame.sprite.Sprite):
     topSpeed = 0
     topRotation = 0
+    
     def __init__(self, x, y, controls, name = "Default"):
+
         super().__init__()
         try:
             # Load the tank image
@@ -143,8 +145,10 @@ class Tank(pygame.sprite.Sprite):
         #Movement keys
         if keys[self.controls['up']]:
             self.speed = self.maxSpeed
+            # mixer.playSFX(soundDictionary['tankMove'], 'tankMove')
         elif keys[self.controls['down']]:
             self.speed = -self.maxSpeed
+            # mixer.playSFX(soundDictionary['tankMove'], 'tankMove')
         else:
             self.speed = 0
         if keys[self.controls['left']]:
@@ -153,6 +157,18 @@ class Tank(pygame.sprite.Sprite):
             self.rotationSpeed = -self.rotationalSpeed
         else:
             self.rotationSpeed = 0
+
+        #This if statement checks to see if speed or rotation of speed is 0,
+        #if so it will stop playing moving sound, otherwise, sound will play
+        #indefinitely
+        if self.speed != 0 or self.rotationSpeed != 0:
+            if not self.soundPlaying:
+                soundDictionary["tankMove"].play(-1)  # Play sound indefinitely
+                self.soundPlaying = True
+        else:
+            if self.soundPlaying:
+                soundDictionary["tankMove"].stop()  # Play sound indefinitely
+                self.soundPlaying = False
 
         self.angle += self.rotationSpeed
         self.angle %= 360
@@ -363,6 +379,23 @@ class Gun(pygame.sprite.Sprite):
         self.angle += self.rotationSpeed
         self.angle %= 360
         
+        #This if statement checks to see if speed or rotation of speed is 0,
+        #if so it will stop playing moving sound, otherwise, sound will play
+        #indefinitely
+        if keys[self.controls['rotate_left']] or keys[self.controls['rotate_right']]:
+            if self.rotationSpeed != 0:
+                if not self.soundPlaying:
+                    soundDictionary["turretRotate"].play(loops = -1, fade_ms = 100)  # Play sound indefinitely
+                    self.soundPlaying = True
+            else:
+                if self.soundPlaying:
+                    soundDictionary["turretRotate"].stop()
+                    self.soundPlaying = False
+        else:
+            if self.soundPlaying:
+                soundDictionary["turretRotate"].stop()
+                self.soundPlaying = False
+
         #Reload cooldown of bullet and determines the angle to fire the bullet,
         #which is relative to the posistion of the tank gun.
         if keys[self.controls['fire']] and self.canShoot:
@@ -397,15 +430,13 @@ class Gun(pygame.sprite.Sprite):
 
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
         # Calculating where the bullet should spawn
-        # bulletX = self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(bulletAngle))
-        # bulletY = self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(bulletAngle))
-        # bullet = Bullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
         bullet = Bullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
         bullet.setDamage(self.damage)
         bullet.setName(self.getTank().getName())
         bulletSprites.add(bullet)
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
+        soundDictionary["tankShoot"].play()
 
     def setCooldown(self, value = 0):
         #This function sets the cooldown of the gun
@@ -572,9 +603,11 @@ class Bullet(pygame.sprite.Sprite):
         tank2Collision = satCollision(self, tank2)
 
         if self.name == tank1.getName() and tank2Collision:
+                soundDictionary["tankDeath"].play()
                 tank2.damage(self.damage)
                 self.kill()
         if self.name == tank2.getName() and tank1Collision:
+                soundDictionary["tankDeath"].play()
                 tank1.damage(self.damage)
                 self.kill()
 
@@ -641,7 +674,9 @@ class Bullet(pygame.sprite.Sprite):
 
     def setOriginalCollision(self, value):
         self.originalCollision = value
+
 class SidewinderBullet(Bullet):
+
     def __init__(self, x, y, angle, gunLength, tipOffSet):
         super().__init__(x, y, angle, gunLength, tipOffSet)
         self.bounce=5
@@ -681,9 +716,11 @@ class SidewinderBullet(Bullet):
         tank2Collision = satCollision(self, tank2)
 
         if self.name == tank1.getName() and tank2Collision:
+                soundDictionary["tankDeath"].play()
                 tank2.damage(self.damage)
                 self.kill()
         if self.name == tank2.getName() and tank1Collision:
+                soundDictionary["tankDeath"].play()
                 tank1.damage(self.damage)
                 self.kill()
 
@@ -714,6 +751,7 @@ class SidewinderBullet(Bullet):
         self.y = tempY
         if abs(self.x- self.trailX) >= 1 and abs(tempY-self.trailY) >= 1: # Trails
             self.pleaseDraw = True
+
 class JudgeBullet(Bullet):
     def __init__(self, x, y, angle, gunLength, tipOffSet, initialDamage=76, minDamage=50, damageDecreaseInterval=10):
         super().__init__(x, y, angle, gunLength, tipOffSet)
@@ -759,9 +797,11 @@ class JudgeBullet(Bullet):
         tank2Collision = satCollision(self, tank2)
 
         if self.name == tank1.getName() and tank2Collision:
+            soundDictionary["tankDeath"].play()
             tank2.damage(self.damage)
             self.kill()
         elif self.name == tank2.getName() and tank1Collision:
+            soundDictionary["tankDeath"].play()
             tank1.damage(self.damage)
             self.kill()
 
@@ -797,6 +837,7 @@ class JudgeBullet(Bullet):
             self.pleaseDraw = True
 
 class SilencerBullet(Bullet):
+
     def __init__(self, x, y, angle, gunLength, tipOffSet):
         super().__init__(x, y, angle, gunLength, tipOffSet)
         self.speed = 0.4
@@ -904,9 +945,11 @@ class WatcherBullet(Bullet):
         tank2Collision = satCollision(self, tank2)
 
         if self.name == tank1.getName() and tank2Collision:
+                soundDictionary["tankDeath"].play()
                 tank2.damage(self.damage)
                 self.kill()
         if self.name == tank2.getName() and tank1Collision:
+                soundDictionary["tankDeath"].play()
                 tank1.damage(self.damage)
                 self.kill()
 
@@ -997,9 +1040,11 @@ class ChamberBullet(Bullet):
         tank2Collision = satCollision(self, tank2)
 
         if self.name == tank1.getName() and tank2Collision:
+                soundDictionary["tankDeath"].play()
                 tank2.damage(self.damage)
                 self.explode()
         if self.name == tank2.getName() and tank1Collision:
+                soundDictionary["tankDeath"].play()
                 tank1.damage(self.damage)
                 self.explode()
 
@@ -1021,10 +1066,12 @@ class ChamberBullet(Bullet):
             self.angle = 360 - self.angle
         if wallCollision:
             if self.name == tank1.getName() and tank1Collision:
+                soundDictionary["tankDeath"].play()
                 tank1.damage(self.damage)
                 self.explode()
                 return
             if self.name == tank2.getName() and tank2Collision:
+                soundDictionary["tankDeath"].play()
                 tank2.damage(self.damage)
                 self.explode()
                 return
@@ -1272,6 +1319,7 @@ class Sidewinder(Gun):
         bulletSprites.add(bullet)
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
+        soundDictionary["tankShoot"].play()
     
     
 class Judge(Gun):
@@ -1296,7 +1344,7 @@ class Judge(Gun):
 
             for i in range(1, 11):
                 Timer(self.bulletInterval * i / 1000.0, self.fireBullet).start()
-
+            soundDictionary["tankShoot"].play()
             self.currentUses += 1
             if self.currentUses >= self.maxUses:
                 self.canShoot = False
@@ -1339,6 +1387,7 @@ class Huntsman(Gun):
         bulletSprites.add(bullet)
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
+        soundDictionary["tankShoot"].play()
     
 class Boxer(Gun):
 
@@ -1399,7 +1448,24 @@ class Silencer(Gun):
     
         self.angle += self.rotationSpeed
         self.angle %= 360
-        
+
+        #This if statement checks to see if speed or rotation of speed is 0,
+        #if so it will stop playing moving sound, otherwise, sound will play
+        #indefinitely
+        if keys[self.controls['rotate_left']] or keys[self.controls['rotate_right']]:
+            if self.rotationSpeed != 0:
+                if not self.soundPlaying:
+                    soundDictionary["turretRotate"].play(loops = -1, fade_ms = 100)  # Play sound indefinitely
+                    self.soundPlaying = True
+            else:
+                if self.soundPlaying:
+                    soundDictionary["turretRotate"].stop()
+                    self.soundPlaying = False
+        else:
+            if self.soundPlaying:
+                soundDictionary["turretRotate"].stop()
+                self.soundPlaying = False
+
         #Reload cooldown of bullet and determines the angle to fire the bullet,
         #which is relative to the posistion of the tank gun.
         if keys[self.controls['fire']] and self.canShoot:
@@ -1459,6 +1525,7 @@ class Silencer(Gun):
         bullet1.drawable = True
         bullet1.trail = True
         bulletSprites.add(bullet1)
+        soundDictionary["tankShoot"].play()
 
 
         self.canShoot = False
@@ -1525,6 +1592,24 @@ class Watcher(Gun):
         self.angle += self.rotationSpeed
         self.angle %= 360
         
+        #This if statement checks to see if speed or rotation of speed is 0,
+        #if so it will stop playing moving sound, otherwise, sound will play
+        #indefinitely
+        if keys[self.controls['rotate_left']] or keys[self.controls['rotate_right']]:
+            if self.rotationSpeed != 0:
+                if not self.soundPlaying:
+                    soundDictionary["turretRotate"].play(loops = -1, fade_ms = 100)  # Play sound indefinitely
+                    self.soundPlaying = True
+            else:
+                if self.soundPlaying:
+                    soundDictionary["turretRotate"].stop()
+                    self.soundPlaying = False
+        else:
+            if self.soundPlaying:
+                soundDictionary["turretRotate"].stop()
+                self.soundPlaying = False
+
+
         #Reload cooldown of bullet and determines the angle to fire the bullet,
         #which is relative to the posistion of the tank gun.
         if keys[self.controls['fire']] and self.canShoot:
@@ -1589,6 +1674,7 @@ class Watcher(Gun):
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
         self.scopeDamage = 700 # Reset the damage
+        soundDictionary["tankShoot"].play()
 
     def getDamage(self):
         return self.scopeDamage
@@ -1629,6 +1715,7 @@ class Chamber(Gun):
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
         #If either tank shoots, play this sound effect.
+        soundDictionary["tankShoot"].play()
 
 #Hulls
 class Panther(Tank):
@@ -2634,6 +2721,26 @@ controlsTank2 = {
     'rotate_right': pygame.K_PERIOD,
     'fire': pygame.K_SLASH
 }
+
+volume = {
+    'lobby': 0.2,
+    'selection': 1,
+    'game': 0.2,
+    'tankShoot': 1,
+    'tankDeath': 0.5,
+    'turretRotate': 0.2,
+    'tankMove': 0.05
+}
+
+soundDictionary = {
+    'tankDeath' : pygame.mixer.Sound('Sounds/tank_dead.mp3'),
+    'tankMove' : pygame.mixer.Sound('Sounds/tank_moving.mp3'),
+    'tankShoot' : pygame.mixer.Sound('Sounds/tank_shoot.mp3'),
+    'turretRotate' : pygame.mixer.Sound('Sounds/tank_turret_rotate.wav'),
+}
+
+for sound in soundDictionary:
+    soundDictionary[sound].set_volume(volume[sound])
 
 spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
 spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
