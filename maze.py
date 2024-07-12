@@ -719,7 +719,7 @@ class JudgeBullet(Bullet):
         super().__init__(x, y, angle, gunLength, tipOffSet)
         self.damage = initialDamage
         self.min_damage = minDamage
-        self.bounce=2
+        self.bounce=1
         self.damageDecreaseInterval = damageDecreaseInterval
         self.startDamageDecrease()
     def startDamageDecrease(self):
