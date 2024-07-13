@@ -2740,12 +2740,14 @@ def selectionScreen():
 
     hullImageX = 130
     hullImageY = 174
+    gunImageX = 170
+    gunImageY = 194
 
     #Draw the tank image
-    screen.blit(hullColors[p1K], (hullImageX, hullImageY))
-    screen.blit(hullColors[p2K], (windowWidth - hullImageX - imageScaler*20, hullImageY))
-    # screen.blit(gunColors[p1K], (tileSize*2 + (forceWidth+30)//2, tileSize*3.25))
-    # screen.blit(gunColors[p2K], (windowWidth - tileSize*2 - (forceWidth+30)//2, tileSize*3.25))
+    screen.blit(hullColors[p1L], (hullImageX, hullImageY))
+    screen.blit(hullColors[p2L], (windowWidth - hullImageX - imageScaler * 20, hullImageY))
+    screen.blit(gunColors[p1K], (gunImageX, gunImageY))
+    screen.blit(gunColors[p2K], (windowWidth - gunImageX - imageScaler * 15, gunImageY))
 
 #Menu screen
 homeButtonList = []
