@@ -2758,9 +2758,9 @@ originalTankImage = pygame.image.load(tankPath).convert_alpha()
 
 
 # Create buttons with specified positions and text
-playButtonHome = Button(c.geT("BLACK"),c.geT("BLACK"), 150, 400, 175, 70, 'Play', (255, 255, 255), 30, hoverColor=(100, 100, 255))
-settingsButton = Button(c.geT("BLACK"), c.geT("BLACK"), 475, 400, 175, 70, 'Settings', (255, 255, 255), 30, hoverColor=(100, 100, 255))
-quitButtonHome = Button(c.geT("BLACK"), c.geT("BLACK"), 10, 10, 130, 50, 'Quit', (255, 255, 255), 25, hoverColor=(100, 100, 255))
+playButtonHome = Button(c.geT("BLACK"),c.geT("BLACK"), 140, 470, 140, 80, 'Play', (255, 255, 255), 30, hoverColor=(100, 100, 255))
+quitButtonHome = Button(c.geT("BLACK"), c.geT("BLACK"), 315, 470, 140, 80, 'Quit', (255, 255, 255), 25, hoverColor=(100, 100, 255))
+settingsButton = Button(c.geT("BLACK"), c.geT("BLACK"), 500, 470, 210, 80, 'Settings', (255, 255, 255), 30, hoverColor=(100, 100, 255))
 
 homeButtonList.append(playButtonHome)
 homeButtonList.append(settingsButton)
