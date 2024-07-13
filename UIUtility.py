@@ -3,6 +3,7 @@ import pygame
 class Button:
     buttonState = False  # False = Not clicked, True = Clicked
     outline = False
+    outlineWidth = 1
     def __init__(self, color=(0, 0, 0), secondaryColor=(255, 255, 255), x=0, y=0, width=0, height=0, text='', textColor=(0, 0, 0), textSize=20, hoverColor=(200, 200, 200)):
         self.color = color
         self.x = x
@@ -20,7 +21,7 @@ class Button:
     def draw(self, screen, outline=None):
         pygame.draw.rect(screen, self.display, (self.x, self.y, self.width, self.height), 0)
         if outline or self.outline:
-            pygame.draw.rect(screen, (0, 0, 0), (self.x, self.y, self.width, self.height), 1)
+            pygame.draw.rect(screen, (0, 0, 0), (self.x, self.y, self.width, self.height), self.outlineWidth)
 
         if self.text != '':
             font = pygame.font.SysFont('Courier New', self.textSize)
@@ -57,8 +58,9 @@ class Button:
     def selectable(self, value):
         self.hover = value
 
-    def setOutline(self, outline):
+    def setOutline(self, outline, outlineWidth = 1):
         self.outline = outline
+        self.outlineWidth = outlineWidth
 
 class ButtonSlider:
     carrierX = 20

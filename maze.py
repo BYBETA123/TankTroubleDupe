@@ -2006,7 +2006,6 @@ def constantSelectionScreen():
     #This function handles the constant elements of the selection screen
     # Inputs: None
     # Outputs: None
-    screen.fill(selectionBackground) # This is the first line when drawing a new frame
     print("Switching to selection music")
     mixer.crossfade('selection')
 
@@ -2024,33 +2023,33 @@ def constantPlayGame():
     fontName2 = pygame.font.SysFont('Courier New', 20, True, False)
     fontString = "PLAYER 1             SCORE              PLAYER 2" # This is a bad way to write a string
     controlString = "WASD                            ↑↓→←" # This is a bad way to write a string
-    textp2Name = fontName.render(fontString, True, c.geT("WHITE"))
-    controls = fontName2.render(controlString, True, c.geT("WHITE"))
+    textp2Name = fontName.render(fontString, True, c.geT("BLACK"))
+    controls = fontName2.render(controlString, True, c.geT("BLACK"))
     screen.blit(textp2Name,[windowWidth//2 - textp2Name.get_width()//2, 0.78*windowHeight]) # This is the name on the right
     screen.blit(controls,[windowWidth//2 - controls.get_width()//2, windowHeight*5/6]) # This is the name on the right
 
-    HealthBox = TextBox(tileSize*7/8-1, 0.88*windowHeight, "Londrina", "HEALTH", 20, c.geT("WHITE"))
+    HealthBox = TextBox(tileSize*7/8-1, 0.88*windowHeight, "Londrina", "HEALTH", 20, c.geT("BLACK"))
     HealthBox.setPaddingHeight(0)
     HealthBox.setPaddingWidth(0)
-    HealthBox.setBoxColor(c.geT("GREY"))
+    HealthBox.setBoxColor(bg)
     HealthBox.draw(screen)
 
-    ReloadBox = TextBox(tileSize*7/8-1, 0.88*windowHeight + mazeY//2, "Londrina", "RELOAD", 20, c.geT("WHITE"))
+    ReloadBox = TextBox(tileSize*7/8-1, 0.88*windowHeight + mazeY//2, "Londrina", "RELOAD", 20, c.geT("BLACK"))
     ReloadBox.setPaddingHeight(0)
     ReloadBox.setPaddingWidth(0)
-    ReloadBox.setBoxColor(c.geT("GREY"))
+    ReloadBox.setBoxColor(bg)
     ReloadBox.draw(screen)
 
-    HealthBox2 = TextBox(windowWidth-tileSize*2.2-1, 0.88*windowHeight, "Londrina", "HEALTH", 20, c.geT("WHITE"))
+    HealthBox2 = TextBox(windowWidth-tileSize*2.2-1, 0.88*windowHeight, "Londrina", "HEALTH", 20, c.geT("BLACK"))
     HealthBox2.setPaddingHeight(0)
     HealthBox2.setPaddingWidth(0)
-    HealthBox2.setBoxColor(c.geT("GREY"))
+    HealthBox2.setBoxColor(bg)
     HealthBox2.draw(screen)
 
-    ReloadBox2 = TextBox(windowWidth-tileSize*2.2-1, 0.88*windowHeight + mazeY//2, "Londrina", "RELOAD", 20, c.geT("WHITE"))
+    ReloadBox2 = TextBox(windowWidth-tileSize*2.2-1, 0.88*windowHeight + mazeY//2, "Londrina", "RELOAD", 20, c.geT("BLACK"))
     ReloadBox2.setPaddingHeight(0)
     ReloadBox2.setPaddingWidth(0)
-    ReloadBox2.setBoxColor(c.geT("GREY"))
+    ReloadBox2.setBoxColor(bg)
     ReloadBox2.draw(screen)
 
 def playGame():
@@ -2075,7 +2074,7 @@ def playGame():
     pauseButton.update_display(pygame.mouse.get_pos())
     pauseButton.draw(screen, outline = True)
 
-    pygame.draw.rect(screen, c.geT("GREY"), [tileSize*0.8, tileSize*0.8, windowWidth - tileSize*1.5, tileSize*8.5]) # Draw a box for the maze
+    pygame.draw.rect(screen, bg, [tileSize*0.8, tileSize*0.8, windowWidth - tileSize*1.5, tileSize*8.5]) # Draw a box for the maze
     
     #Making the string for score
     p1ScoreText = str(p1Score)
@@ -2083,9 +2082,9 @@ def playGame():
     #Setting up the text
     fontScore = pygame.font.SysFont('Londrina', 90, True, False)
     fontScore = pygame.font.Font('fonts/LondrinaSolid-Regular.otf', 70)
-    pygame.draw.rect(screen, c.geT("GREY"), [tileSize*2.1, 0.87*windowHeight, windowWidth-tileSize*1.2-barWidth, windowHeight*0.15]) # The bottom bar
+    pygame.draw.rect(screen, bg, [tileSize*2.1, 0.87*windowHeight, windowWidth-tileSize*1.2-barWidth, windowHeight*0.15]) # The bottom bar
 
-    text3 = fontScore.render(p1ScoreText + ":" + p2ScoreText, True, c.geT("WHITE"))
+    text3 = fontScore.render(p1ScoreText + ":" + p2ScoreText, True, c.geT("BLACK"))
     screen.blit(text3, [windowWidth/2 - text3.get_width()/2, 0.87*windowHeight])
 
     #Box around the bottom of the screen for the health and reload bars
@@ -2267,7 +2266,7 @@ rowAmount = mazeHeight//tileSize # Assigning the amount of rows
 colAmount = mazeWidth//tileSize # Assigning the amount of columns
 barWidth = 150
 barHeight = 20
-bg = c.geT('GREY')
+bg = c.geT('SOFT_WHITE')
 gameMode = GameMode.home
 #Changing variables
 p1TankName = "Plwasd1"
@@ -2292,7 +2291,7 @@ mute = ButtonSlider(c.geT("BLACK"), c.geT("BLUE"), sliderX, sliderY*3, tileSize,
 sfx = ButtonSlider(c.geT("BLACK"), c.geT("BLUE"), sliderX, sliderY*5 - tileSize, tileSize, tileSize,
                    tileSize*8, tileSize*2, 'SFX', c.geT("WHITE"), c.geT("BLACK"), c.geT("RED"))
 
-selectionBackground = c.geT("WHITE")
+selectionBackground = c.geT("SOFT_WHITE")
 selectionFont = 'Londrina Solid'
 monoFont = 'Courier New'
 
@@ -2771,7 +2770,8 @@ homeButtonList.append(quitButtonHome)
 titleFont = pygame.font.SysFont('Arial', 60)
 titleText = titleFont.render('Tank Game Menu', True, (0, 0, 0))  # Render the title text
 
-pauseButton = Button(c.geT("LIGHT_GREY"),c.geT("LIGHT_GREY"),windowWidth-tileSize*3, tileSize//5,tileSize*2,tileSize//2, "PAUSE", c.geT("BLACK"), 20, c.geT("OFF_WHITE"))
+pauseButton = Button(bg ,bg, windowWidth-tileSize*3, tileSize//5,tileSize*2,tileSize//2, "PAUSE", c.geT("BLACK"), 20, c.geT("OFF_WHITE"))
+pauseButton.setOutline(True, 2)
 
 # Controls for the first tank
 controlsTank1 = {
