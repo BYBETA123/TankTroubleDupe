@@ -2,6 +2,7 @@ import pygame
 
 class Button:
     buttonState = False  # False = Not clicked, True = Clicked
+    outline = False
     def __init__(self, color=(0, 0, 0), secondaryColor=(255, 255, 255), x=0, y=0, width=0, height=0, text='', textColor=(0, 0, 0), textSize=20, hoverColor=(200, 200, 200)):
         self.color = color
         self.x = x
@@ -18,7 +19,7 @@ class Button:
 
     def draw(self, screen, outline=None):
         pygame.draw.rect(screen, self.display, (self.x, self.y, self.width, self.height), 0)
-        if outline:
+        if outline or self.outline:
             pygame.draw.rect(screen, (0, 0, 0), (self.x, self.y, self.width, self.height), 1)
 
         if self.text != '':
@@ -55,6 +56,9 @@ class Button:
 
     def selectable(self, value):
         self.hover = value
+
+    def setOutline(self, outline):
+        self.outline = outline
 
 class ButtonSlider:
     carrierX = 20
@@ -136,6 +140,8 @@ class TextBox:
     paddingWidth, paddingHeight = 10, 10
     characterPad = 10
     hover = False # Whether or not we want to show a hover effect
+    outline = False
+    outlineWidth = 1
     def __init__(self, x, y, font, text='Click me!', fontSize = 20, textColor = (0,0,0)):
         self.x=x
         self.y=y
@@ -147,7 +153,6 @@ class TextBox:
         self.fontSize = fontSize
 
         # Get the text surface and its dimensions
-        # self.text_surface = self.font.render(self.text, True, self.text_color)
         self.text_surface = pygame.font.SysFont(self.font,fontSize, bold=True).render(self.text, True, self.text_color)
         self.text_width, self.text_height = self.text_surface.get_size()
 
@@ -161,12 +166,14 @@ class TextBox:
 
 
         pygame.draw.rect(screen, self.box_color, self.rect)
-        if outline:
-            pygame.draw.rect(screen, (0,0,0), self.rect, 1)
 
         if self.rect.x < mouse[0] < self.rect.x + self.rect.width and self.rect.y < mouse[1] < self.rect.y + self.rect.height and self.hover:
             pygame.draw.rect(screen, (100,100,255), self.rect)
             #We are hovering
+
+        if outline or self.outline:
+            pygame.draw.rect(screen, (0,0,0), self.rect, self.outlineWidth)
+
 
         # Center the text within the box
         text_x = self.rect.x + (self.rect.width - self.text_width) / 2
@@ -194,10 +201,15 @@ class TextBox:
         self.rect = pygame.Rect(self.x, self.y, self.text_width + 2 * self.paddingWidth, self.text_height + 2 * self.paddingHeight)
 
 
-    def setText(self, text):
-        # Pad the text to at least 10 characters
-        self.text = text.center(self.characterPad)
-        
+    def setText(self, text, padType = 'center'):
+        # Pad the text to at least 10 characters        
+        if padType == 'left':
+            self.text = text.ljust(self.characterPad)
+        elif padType == 'right':
+            self.text = text.rjust(self.characterPad)
+        else:
+            self.text = text.center(self.characterPad)
+
         # Update the text surface and its dimensions
         self.text_surface = pygame.font.SysFont(self.font,self.fontSize, bold = True).render(self.text, True, self.text_color)
         self.text_width, self.text_height = self.text_surface.get_size()
@@ -225,3 +237,7 @@ class TextBox:
 
     def update_display(self, mouse):
         return
+    
+    def setOutline(self, outline, outlineWidth = 1):
+        self.outline = outline
+        self.outlineWidth = outlineWidth
