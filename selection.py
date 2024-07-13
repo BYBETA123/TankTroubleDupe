@@ -40,7 +40,6 @@ playButton = TextBox(SCREEN_WIDTH//2-84, 95, font=selectionFont,fontSize=52, tex
 playButton.setBoxColor(selectionBackground)
 playButton.setOutline(True, 5)
 playButton.selectable(True)
-print(playButton.getWidth())
 buttonList.append(playButton)
 
 buttonPrimary = c.geT("BLACK")

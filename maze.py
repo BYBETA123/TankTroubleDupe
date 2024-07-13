@@ -2006,7 +2006,7 @@ def constantSelectionScreen():
     #This function handles the constant elements of the selection screen
     # Inputs: None
     # Outputs: None
-    screen.fill(bg) # This is the first line when drawing a new frame
+    screen.fill(selectionBackground) # This is the first line when drawing a new frame
     print("Switching to selection music")
     mixer.crossfade('selection')
 
@@ -2292,14 +2292,32 @@ mute = ButtonSlider(c.geT("BLACK"), c.geT("BLUE"), sliderX, sliderY*3, tileSize,
 sfx = ButtonSlider(c.geT("BLACK"), c.geT("BLUE"), sliderX, sliderY*5 - tileSize, tileSize, tileSize,
                    tileSize*8, tileSize*2, 'SFX', c.geT("WHITE"), c.geT("BLACK"), c.geT("RED"))
 
+selectionBackground = c.geT("WHITE")
+selectionFont = 'Londrina Solid'
+monoFont = 'Courier New'
+
+
 #Selection Screen
 buttonList = []
-homeButton = Button(c.geT("BLACK"), c.geT("BLACK"), tileSize//4, tileSize//4,
-                    tileSize, tileSize, 'back', (255, 255, 255), hoverColor=(100, 100, 255))
+homeButton = TextBox(tileSize//4, tileSize//4, font=selectionFont,fontSize=26, text="BACK", textColor=c.geT("BLACK"))
+homeButton.setBoxColor(selectionBackground)
+homeButton.setOutline(True, 5)
+homeButton.selectable(True)
 buttonList.append(homeButton)
-howToPlayButton = Button(c.geT("BLACK"), c.geT("BLACK"), windowWidth - tileSize*3.25, tileSize//4,
-                         tileSize*3, tileSize, 'How to Play', (255, 255, 255), hoverColor=(100, 100, 255))
+
+#How to play button
+howToPlayButton = TextBox(windowWidth - 150, tileSize//4, font=selectionFont,fontSize=26, text="HOW TO PLAY", textColor=c.geT("BLACK"))
+howToPlayButton.setBoxColor(selectionBackground)
+howToPlayButton.setOutline(True, 5)
+howToPlayButton.selectable(True)
 buttonList.append(howToPlayButton)
+
+playButton = TextBox(windowWidth//2-84, 95, font=selectionFont,fontSize=52, text="PLAY", textColor=c.geT("BLACK"))
+playButton.setBoxColor(selectionBackground)
+playButton.setOutline(True, 5)
+playButton.selectable(True)
+buttonList.append(playButton)
+
 buttonPrimary = c.geT("BLACK")
 buttonSecondary = c.geT("WHITE")
 buttonText = c.geT("WHITE")
@@ -2322,6 +2340,7 @@ gunColors = []
 currentDir = os.path.dirname(__file__)
 tankMultiple = 4
 gunMultiple = 4
+imageScaler = 4
 for i in range(8): # Generate all the tanks
     tankPath = os.path.join(currentDir, 'Sprites', 'tank' + str(i+1) + '.png')
     originalTankImage = pygame.image.load(tankPath).convert_alpha()
@@ -2348,222 +2367,213 @@ p2K = 1
 
 p1L = 1
 p2L = 0
+verticalSpacing =40
+choicesX = 420
 
-verticalSpacing = 60
-choicesX = 380
-
-buttonSize = 30
-bFont = 50
-btFont = 28
-forceWidth = 111
-turretX = choicesX
-HullX = turretX + verticalSpacing
+TurretX = choicesX
+HullX = TurretX + verticalSpacing
 ColourX = HullX + verticalSpacing
 ColourX2 = ColourX + verticalSpacing
 
-lArrowP1Turret = Button(buttonPrimary, buttonPrimary, tileSize*14/5, turretX, buttonSize, buttonSize, '<', buttonText, bFont)
-lArrowP1Turret.selectable(False) # Left arrow button for turret
+buttonSize = 30
+buttonFontSize = 30
+textFontSize = 26
+lArrowX = 70
+cBoX = lArrowX + buttonSize
+rArrowX = cBoX + 180 # 115 is the longest text width
+
+
+
+lArrowP1Turret = Button(buttonPrimary, buttonPrimary, lArrowX, TurretX, buttonSize, buttonSize, '<', buttonText, buttonFontSize)
+lArrowP1Turret.selectable(False)
 buttonList.append(lArrowP1Turret)
-textP1Turret = TextBox(tileSize*14/5 + buttonSize, turretX, font='Londrina',fontSize=btFont, text=turretList[p1I].getGunName(), textColor=buttonText)
-textP1Turret.setBoxColor(optionText) # Textbox for turret
+textP1Turret = TextBox(cBoX, TurretX, font=monoFont,fontSize=textFontSize, text=turretList[p1I].getGunName(), textColor=buttonText)
+textP1Turret.setBoxColor(optionText)
 textP1Turret.selectable(False)
-textP1Turret.setPaddingWidth(0)
-textP1Turret.setPaddingHeight(5)
+textP1Turret.setPaddingHeight(0)
 buttonList.append(textP1Turret)
-rArrowP1Turret = Button(buttonPrimary, buttonPrimary, tileSize*14/5 + buttonSize + forceWidth, turretX, buttonSize, buttonSize, '>', buttonText, bFont)
-rArrowP1Turret.selectable(False) # Right arrow button for turret
+rArrowP1Turret = Button(buttonPrimary, buttonPrimary, rArrowX, TurretX, buttonSize, buttonSize, '>', buttonText, buttonFontSize)
+rArrowP1Turret.selectable(False)
 buttonList.append(rArrowP1Turret)
-lArrowP1Hull = Button(buttonPrimary, buttonPrimary, tileSize*14/5, HullX, buttonSize, buttonSize, '<', buttonText, bFont)
-lArrowP1Hull.selectable(False) # Left arrow button for hull
+
+lArrowP1Hull = Button(buttonPrimary, buttonPrimary, lArrowX, HullX, buttonSize, buttonSize, '<', buttonText, buttonFontSize)
+lArrowP1Hull.selectable(False)
 buttonList.append(lArrowP1Hull)
-textP1Hull = TextBox(tileSize*14/5 + buttonSize, HullX, font='Londrina',fontSize=btFont, text=hullList[p1J].getTankName(), textColor=buttonText)
-textP1Hull.setBoxColor(optionText) # Textbox for hull
+textP1Hull = TextBox(cBoX, HullX, font=monoFont,fontSize=textFontSize, text=hullList[p1J].getTankName(), textColor=buttonText)
+textP1Hull.setBoxColor(optionText)
 textP1Hull.selectable(False)
-textP1Hull.setPaddingWidth(0)
-textP1Hull.setPaddingHeight(5)
+textP1Hull.setPaddingHeight(0)
 buttonList.append(textP1Hull)
-rArrowP1Hull = Button(buttonPrimary, buttonPrimary, tileSize*14/5 + buttonSize + forceWidth, HullX, buttonSize, buttonSize, '>', buttonText, bFont)
-rArrowP1Hull.selectable(False) # Right arrow button for hull
+rArrowP1Hull = Button(buttonPrimary, buttonPrimary, rArrowX, HullX, buttonSize, buttonSize, '>', buttonText, buttonFontSize)
+rArrowP1Hull.selectable(False)
 buttonList.append(rArrowP1Hull)
 
-lArrowP1Colour = Button(buttonPrimary, buttonPrimary, tileSize*14/5, ColourX, buttonSize, buttonSize, '<', buttonText, bFont)
+lArrowP1Colour = Button(buttonPrimary, buttonPrimary, lArrowX, ColourX, buttonSize, buttonSize, '<', buttonText, buttonFontSize)
 lArrowP1Colour.selectable(False)
-buttonList.append(lArrowP1Colour) # Left arrow button for colour
-textP1Colour = TextBox(tileSize*14/5 + buttonSize, ColourX, font='Londrina',fontSize=btFont, text="", textColor=buttonText)
-textP1Colour.setBoxColor(c.geT(ColorIndex[p1K])) # Textbox for colour
+buttonList.append(lArrowP1Colour)
+textP1Colour = TextBox(cBoX, ColourX, font=monoFont,fontSize=textFontSize, text="", textColor=buttonText)
+textP1Colour.setBoxColor(c.geT(ColorIndex[p1K]))
 textP1Colour.selectable(False)
-textP1Colour.setPaddingWidth(0)
-textP1Colour.setPaddingHeight(5)
+textP1Colour.setPaddingHeight(0)
 buttonList.append(textP1Colour)
-rArrowP1Colour = Button(buttonPrimary, buttonPrimary, tileSize*14/5 + buttonSize + forceWidth, ColourX, buttonSize, buttonSize, '>', buttonText, bFont)
-rArrowP1Colour.selectable(False) # Right arrow button for colour
+rArrowP1Colour = Button(buttonPrimary, buttonPrimary, rArrowX, ColourX, buttonSize, buttonSize, '>', buttonText, buttonFontSize)
+rArrowP1Colour.selectable(False)
 buttonList.append(rArrowP1Colour)
 
-lArrowP1Colour2 = Button(buttonPrimary, buttonPrimary, tileSize*14/5, ColourX2, buttonSize, buttonSize, '<', buttonText, bFont)
+lArrowP1Colour2 = Button(buttonPrimary, buttonPrimary, lArrowX, ColourX2, buttonSize, buttonSize, '<', buttonText, buttonFontSize)
 lArrowP1Colour2.selectable(False)
-buttonList.append(lArrowP1Colour2) # Left arrow button for colour
-textP1Colour2 = TextBox(tileSize*14/5 + buttonSize, ColourX2, font='Londrina',fontSize=btFont, text="", textColor=buttonText)
-textP1Colour2.setBoxColor(c.geT(ColorIndex[p1L])) # Textbox for colour
+buttonList.append(lArrowP1Colour2)
+textP1Colour2 = TextBox(cBoX, ColourX2, font=monoFont,fontSize=textFontSize, text="", textColor=buttonText)
+textP1Colour2.setBoxColor(c.geT(ColorIndex[p1L]))
 textP1Colour2.selectable(False)
-textP1Colour2.setPaddingWidth(0)
-textP1Colour2.setPaddingHeight(5)
+textP1Colour2.setPaddingHeight(0)
 buttonList.append(textP1Colour2)
-rArrowP1Colour2 = Button(buttonPrimary, buttonPrimary, tileSize*14/5 + buttonSize + forceWidth, ColourX2, buttonSize, buttonSize, '>', buttonText, bFont)
-rArrowP1Colour2.selectable(False) # Right arrow button for colour
+rArrowP1Colour2 = Button(buttonPrimary, buttonPrimary, rArrowX, ColourX2, buttonSize, buttonSize, '>', buttonText, buttonFontSize)
+rArrowP1Colour2.selectable(False)
 buttonList.append(rArrowP1Colour2)
-rArrowP2Turret = Button(buttonPrimary, buttonPrimary, windowWidth-tileSize*7 + buttonSize + forceWidth, turretX, buttonSize, buttonSize, '>', buttonText, bFont)
-rArrowP2Turret.selectable(False)
-buttonList.append(rArrowP2Turret) # Right arrow button for turret
-textP2Turret = TextBox(windowWidth - tileSize*7 + buttonSize, turretX, font='Londrina',fontSize=btFont,
-                       text=turretList[p1I].getGunName(), textColor=buttonText)
+
+lArrow2X = 493
+cBo2X = lArrow2X + buttonSize
+rArrow2X = cBo2X + 180 # 115 is the longest text width
+
+lArrowP2Turret = Button(buttonPrimary, buttonPrimary, lArrow2X, TurretX, buttonSize, buttonSize, '<', buttonText, buttonFontSize)
+lArrowP2Turret.selectable(False)
+buttonList.append(lArrowP2Turret)
+textP2Turret = TextBox(cBo2X, TurretX, font=monoFont,fontSize=textFontSize, text=turretList[p2I].getGunName(), textColor=buttonText)
 textP2Turret.setBoxColor(optionText)
 textP2Turret.selectable(False)
-textP2Turret.setPaddingWidth(0)
-textP2Turret.setPaddingHeight(5)
-buttonList.append(textP2Turret)  # Textbox for turret
-lArrowP2Turret = Button(buttonPrimary, buttonPrimary, windowWidth - tileSize*7,
-                        turretX, buttonSize, buttonSize, '<', buttonText, bFont)
-lArrowP2Turret.selectable(False)
-buttonList.append(lArrowP2Turret) # Left arrow button for turret
+textP2Turret.setPaddingHeight(0)
+buttonList.append(textP2Turret)
+rArrowP2Turret = Button(buttonPrimary, buttonPrimary,rArrow2X, TurretX, buttonSize, buttonSize, '>', buttonText, buttonFontSize)
+rArrowP2Turret.selectable(False)
+buttonList.append(rArrowP2Turret)
 
-rArrowP2Hull = Button(buttonPrimary, buttonPrimary,  windowWidth-tileSize*7 + buttonSize + forceWidth, HullX, buttonSize, buttonSize, '>', buttonText, bFont)
-rArrowP2Hull.selectable(False)
-buttonList.append(rArrowP2Hull) # Right arrow button for hull
-textP2Hull = TextBox(windowWidth-tileSize*7 + buttonSize, HullX, font='Londrina',fontSize=btFont, text=hullList[p1J].getTankName(),
-                     textColor=buttonText)
-textP2Hull.setBoxColor(optionText)
-textP2Hull.selectable(False) # Textbox for hull
-textP2Hull.setPaddingWidth(0)
-textP2Hull.setPaddingHeight(5)
-buttonList.append(textP2Hull)
-lArrowP2Hull = Button(buttonPrimary, buttonPrimary,windowWidth-tileSize*7, HullX, buttonSize, buttonSize, '<', buttonText, bFont)
-lArrowP2Hull.selectable(False) # Left arrow button for hull
+lArrowP2Hull = Button(buttonPrimary, buttonPrimary, lArrow2X, HullX, buttonSize, buttonSize, '<', buttonText, buttonFontSize)
+lArrowP2Hull.selectable(False)
 buttonList.append(lArrowP2Hull)
+textP2Hull = TextBox(cBo2X, HullX, font=monoFont,fontSize=textFontSize, text=hullList[p2J].getTankName(), textColor=buttonText)
+textP2Hull.setBoxColor(optionText)
+textP2Hull.selectable(False)
+textP2Hull.setPaddingHeight(0)
+buttonList.append(textP2Hull)
+rArrowP2Hull = Button(buttonPrimary, buttonPrimary,  rArrow2X, HullX, buttonSize, buttonSize, '>', buttonText, buttonFontSize)
+rArrowP2Hull.selectable(False)
+buttonList.append(rArrowP2Hull)
 
-rArrowP2Colour = Button(buttonPrimary, buttonPrimary,  windowWidth-tileSize*7 + buttonSize + forceWidth, ColourX, buttonSize, buttonSize, '>', buttonText, bFont)
-rArrowP2Colour.selectable(False)
-buttonList.append(rArrowP2Colour) # Right arrow button for colour
-textP2Colour = TextBox(windowWidth-tileSize*7 + buttonSize, ColourX, font='Londrina',fontSize=btFont, text="", textColor=buttonText)
-textP2Colour.setBoxColor(c.geT(ColorIndex[p2K]))
-textP2Colour.selectable(False) # Textbox for colour
-textP2Colour.setPaddingWidth(0)
-textP2Colour.setPaddingHeight(5)
-buttonList.append(textP2Colour)
-lArrowP2Colour = Button(buttonPrimary, buttonPrimary, windowWidth-tileSize*7, ColourX, buttonSize, buttonSize, '<', buttonText, bFont)
-lArrowP2Colour.selectable(False) # Left arrow button for colour
+lArrowP2Colour = Button(buttonPrimary, buttonPrimary, lArrow2X, ColourX, buttonSize, buttonSize, '<', buttonText, buttonFontSize)
+lArrowP2Colour.selectable(False)
 buttonList.append(lArrowP2Colour)
+textP2Colour = TextBox(cBo2X, ColourX, font=monoFont,fontSize=textFontSize, text="", textColor=buttonText)
+textP2Colour.setBoxColor(c.geT(ColorIndex[p2K]))
+textP2Colour.selectable(False)
+textP2Colour.setPaddingHeight(0)
+buttonList.append(textP2Colour)
+rArrowP2Colour = Button(buttonPrimary, buttonPrimary,  rArrow2X, ColourX, buttonSize, buttonSize, '>', buttonText, buttonFontSize)
+rArrowP2Colour.selectable(False)
+buttonList.append(rArrowP2Colour)
 
-lArrowP2Colour2 = Button(buttonPrimary, buttonPrimary,  windowWidth-tileSize*7 + buttonSize + forceWidth, ColourX2, buttonSize, buttonSize, '>', buttonText, bFont)
+lArrowP2Colour2 = Button(buttonPrimary, buttonPrimary, lArrow2X, ColourX2, buttonSize, buttonSize, '<', buttonText, buttonFontSize)
 lArrowP2Colour2.selectable(False)
-buttonList.append(lArrowP2Colour2) # Left arrow button for colour
-textP2Colour2 = TextBox(windowWidth-tileSize*7 + buttonSize, ColourX2, font='Londrina',fontSize=btFont, text="", textColor=buttonText)
-textP2Colour2.setBoxColor(c.geT(ColorIndex[p2L])) # Textbox for colour
+buttonList.append(lArrowP2Colour2)
+textP2Colour2 = TextBox(cBo2X, ColourX2, font=monoFont,fontSize=textFontSize, text="", textColor=buttonText)
+textP2Colour2.setBoxColor(c.geT(ColorIndex[p2L]))
 textP2Colour2.selectable(False)
-textP2Colour2.setPaddingWidth(0)
-textP2Colour2.setPaddingHeight(5)
+textP2Colour2.setPaddingHeight(0)
 buttonList.append(textP2Colour2)
-rArrowP2Colour2 = Button(buttonPrimary, buttonPrimary,windowWidth-tileSize*7, ColourX2, buttonSize, buttonSize, '<', buttonText, bFont)
-rArrowP2Colour2.selectable(False) # Right arrow button for colour
+rArrowP2Colour2 = Button(buttonPrimary, buttonPrimary,  rArrow2X, ColourX2, buttonSize, buttonSize, '>', buttonText, buttonFontSize)
+rArrowP2Colour2.selectable(False)
 buttonList.append(rArrowP2Colour2)
 
 # Player names
-textP1 = TextBox(tileSize*2, tileSize*1.5, font='Londrina',fontSize=26,
-                 text="Player 1", textColor=buttonText)
-textP1.setBoxColor(c.geT("GREEN"))
-buttonList.append(textP1) # Textbox for player 1
-textP2 = TextBox(windowWidth - tileSize*2 - forceWidth, tileSize*1.5,
-                 font='Londrina',fontSize=26, text="Player 2", textColor=buttonText)
-textP2.setBoxColor(c.geT("GREEN"))
+playerX = 100
+playerY = 100
+
+textP1 = TextBox(playerX, playerY, font=selectionFont,fontSize=38, text="PLAYER 1", textColor=c.geT("BLACK"))
+textP1.setBoxColor(selectionBackground)
+textP1.setOutline(True, outlineWidth = 5)
+buttonList.append(textP1)
+
+textP2 = TextBox(windowWidth - playerX*2.5, playerY, font=selectionFont,fontSize=38, text="PLAYER 2", textColor=c.geT("BLACK"))
+textP2.setBoxColor(selectionBackground)
+textP2.setOutline(True, outlineWidth = 5)
 buttonList.append(textP2)
 
-#Play button
-playButton = TextBox(windowWidth//2 - tileSize*1.75, tileSize*1.5,
-                     font='Londrina',fontSize=26, text="Play", textColor=buttonText)
-playButton.setBoxColor(c.geT("BLACK")) # Play button
-playButton.selectable(True)
-buttonList.append(playButton)
-
-
-multiplyConstant = 4.5
 offset = 35
 tankValue = 3
 
+speedBarX = 250
+healthBarX = speedBarX + offset
+damageBarX = healthBarX + offset
+reloadBarX = damageBarX + offset
+
+
 #Other constants
-rectX = tileSize
-rectY = tileSize//2
-#Player 1 Statistics 
-speedText = TextBox(tileSize, tileSize*multiplyConstant, font='Londrina',
-                    fontSize=29, text="Speed", textColor=buttonText)
-speedText.setPaddingHeight(1)
+rectX = 280
+rectY = 25
+barFontSize = 36
+speedText = TextBox(50, speedBarX, font=selectionFont,fontSize=barFontSize, text="SPEED", textColor=c.geT("BLACK"))
+speedText.setPaddingHeight(0)
+speedText.setPaddingWidth(0)
+speedText.setCharacterPad(7)
+speedText.setBoxColor(selectionBackground)
+speedText.setText("SPEED", 'right')
 buttonList.append(speedText)
-#Health bar
-healthText = TextBox(tileSize, tileSize*multiplyConstant + offset+1, font='Londrina',
-                     fontSize=29, text="Health", textColor=buttonText)
-healthText.setPaddingHeight(1)
+
+healthText = TextBox(42, healthBarX, font=selectionFont,fontSize=barFontSize, text="Health", textColor=c.geT("BLACK"))
+healthText.setPaddingHeight(0)
+healthText.setPaddingWidth(0)
+healthText.setCharacterPad(7)
+healthText.setBoxColor(selectionBackground)
+healthText.setText("HEALTH", "right")
 buttonList.append(healthText)
-#Damage bar
-damageBar = TextBox(tileSize, tileSize*multiplyConstant + offset*2, font='Londrina',
-                    fontSize=29, text="Damage", textColor=buttonText)
-damageBar.setPaddingHeight(1)
+
+damageBar = TextBox(31, damageBarX, font=selectionFont,fontSize=barFontSize, text="Damage", textColor=c.geT("BLACK"))
+damageBar.setPaddingHeight(0)
+damageBar.setPaddingWidth(0)
+damageBar.setCharacterPad(7)
+damageBar.setBoxColor(selectionBackground)
+damageBar.setText("DAMAGE", "right")
 buttonList.append(damageBar)
-#Reload bar
-reloadBar = TextBox(tileSize, tileSize*multiplyConstant + offset*3+1, font='Londrina',
-                    fontSize=29, text="Reload", textColor=buttonText)
-reloadBar.setPaddingHeight(1)
+
+reloadBar = TextBox(37, reloadBarX, font=selectionFont,fontSize=barFontSize, text="Reload", textColor=c.geT("BLACK"))
+reloadBar.setPaddingHeight(0)
+reloadBar.setPaddingWidth(0)
+reloadBar.setCharacterPad(7)
+reloadBar.setBoxColor(selectionBackground)
+reloadBar.setText("RELOAD", "right")
 buttonList.append(reloadBar)
 
-#Player 2 Statistics
-speedText2 = TextBox(windowWidth - tileSize*3 - forceWidth-50, tileSize*multiplyConstant,
-                     font='Londrina',fontSize=29, text="Speed", textColor=buttonText)
-speedText2.setPaddingHeight(1)
+speedText2 = TextBox(650, speedBarX, font=selectionFont,fontSize=barFontSize, text="Speed", textColor=c.geT("BLACK"))
+speedText2.setPaddingHeight(0)
+speedText2.setPaddingWidth(0)
+speedText2.setCharacterPad(7)
+speedText2.setBoxColor(selectionBackground)
+speedText2.setText("SPEED", "left")
 buttonList.append(speedText2)
-#Health bar
-healthText2 = TextBox(windowWidth - tileSize*3 - forceWidth-50, tileSize*multiplyConstant + offset+1,
-                      font='Londrina',fontSize=29, text="Health", textColor=buttonText)
-healthText2.setPaddingHeight(1)
+
+healthText2 = TextBox(650, healthBarX, font=selectionFont,fontSize=barFontSize, text="Health", textColor=c.geT("BLACK"))
+healthText2.setPaddingHeight(0)
+healthText2.setPaddingWidth(0)
+healthText2.setCharacterPad(7)
+healthText2.setBoxColor(selectionBackground)
+healthText2.setText("HEALTH", "left")
 buttonList.append(healthText2)
-#Damage bar
-damageBar2 = TextBox(windowWidth - tileSize*3 - forceWidth-50, tileSize*multiplyConstant + offset*2,
-                     font='Londrina',fontSize=29, text="Damage", textColor=buttonText)
-damageBar2.setPaddingHeight(1)
+
+damageBar2 = TextBox(650, damageBarX, font=selectionFont,fontSize=barFontSize, text="Damage", textColor=c.geT("BLACK"))
+damageBar2.setPaddingHeight(0)
+damageBar2.setPaddingWidth(0)
+damageBar2.setCharacterPad(7)
+damageBar2.setBoxColor(selectionBackground)
+damageBar2.setText("DAMAGE", "left")
 buttonList.append(damageBar2)
-#Reload bar
-reloadBar2 = TextBox(windowWidth - tileSize*3 - forceWidth-50, tileSize*multiplyConstant + offset*3+1,
-                     font='Londrina',fontSize=29, text="Reload", textColor=buttonText)
-reloadBar2.setPaddingHeight(1)
+
+reloadBar2 = TextBox(650, reloadBarX, font=selectionFont,fontSize=barFontSize, text="Reload", textColor=c.geT("BLACK"))
+reloadBar2.setPaddingHeight(0)
+reloadBar2.setPaddingWidth(0)
+reloadBar2.setCharacterPad(7)
+reloadBar2.setBoxColor(selectionBackground)
+reloadBar2.setText("RELOAD", "left")
 buttonList.append(reloadBar2)
-
-p1Gun = TextBox(tileSize*0.8+1-15, turretX, font='Londrina',fontSize=35, text="Gun", textColor=buttonText)
-p1Gun.setPaddingHeight(3)
-p1Gun.setPaddingWidth(0)
-p1Gun.setCharacterPad(3)
-p1Gun.setText("TURRET")
-p1Gun.setBoxColor(c.geT("GREY"))
-buttonList.append(p1Gun)
-p1Hull = TextBox(tileSize*1.5-15, HullX, font='Londrina',fontSize=35, text="Hull", textColor=buttonText)
-p1Hull.setPaddingHeight(3)
-p1Hull.setPaddingWidth(0)
-p1Hull.setCharacterPad(3)
-p1Hull.setBoxColor(c.geT("GREY"))
-p1Hull.setText("HULL")
-buttonList.append(p1Hull)
-p1Colour = TextBox(tileSize*0.7+5-15, ColourX, font='Londrina',fontSize=35, text="Gun", textColor=buttonText)
-p1Colour.setPaddingHeight(3)
-p1Colour.setPaddingWidth(0)
-p1Colour.setCharacterPad(3)
-p1Colour.setText("COLOR1")
-p1Colour.setBoxColor(c.geT("GREY"))
-buttonList.append(p1Colour)
-p1Colour2 = TextBox(tileSize*0.7+1-15, ColourX2, font='Londrina',fontSize=35, text="Gun", textColor=buttonText)
-p1Colour2.setPaddingHeight(3)
-p1Colour2.setPaddingWidth(0)
-p1Colour2.setCharacterPad(3)
-p1Colour2.setText("COLOR2")
-p1Colour2.setBoxColor(c.geT("GREY"))
-buttonList.append(p1Colour2)
-
-
-
 
 
 def checkButtons(mouse):
@@ -2671,104 +2681,72 @@ def checkHomeButtons(mouse):
 
 def selectionScreen():
     barBorder = 3
-
+    
     #Blocks
-    pygame.draw.rect(screen, c.geT("GREEN"), (tileSize + speedText.getWidth(), tileSize*multiplyConstant,
-                                                            (speedText.getWidth()) * hullList[p1J].getSpeedStatistic()/3, rectY)) # Speed Bar
-    pygame.draw.rect(screen, c.geT("BLACK"), (tileSize + speedText.getWidth(), tileSize*multiplyConstant, (speedText.getWidth()), rectY), barBorder) #Speed bar outline
-    # # #Outlines
-    pygame.draw.rect(screen, c.geT("BLACK"), (tileSize, tileSize*multiplyConstant,
-                                                        speedText.getWidth(), rectY), barBorder) # Speed outline
-    pygame.draw.rect(screen, c.geT("BLACK"), (tileSize + speedText.getWidth()*4/3,
-                                                            tileSize*multiplyConstant, (speedText.getWidth())/3,rectY), barBorder) # Speed block outline
-
-    pygame.draw.rect(screen, c.geT("GREEN"), (tileSize + speedText.getWidth(), tileSize*multiplyConstant + offset,
-                                                            (speedText.getWidth()) * hullList[p1J].getHealthStatistic()/3, rectY)) # Health bar
-    pygame.draw.rect(screen, c.geT("BLACK"), (tileSize + speedText.getWidth(), tileSize*multiplyConstant + offset, (speedText.getWidth()), rectY),barBorder) # Health bar outline
-    # #Outlines
-    pygame.draw.rect(screen, c.geT("BLACK"), (tileSize, tileSize*multiplyConstant + offset,
-                                                        speedText.getWidth(), rectY), barBorder) # Health outline
-    pygame.draw.rect(screen, c.geT("BLACK"), (tileSize + speedText.getWidth()*4/3,
-                                                            tileSize*multiplyConstant + offset, (speedText.getWidth())/3,rectY),
-                                                            barBorder) # Health block outline
-
-    pygame.draw.rect(screen, c.geT("GREEN"), (tileSize + speedText.getWidth(), tileSize*multiplyConstant + offset*2,
-                                                            (speedText.getWidth()) * turretList[p1I].getDamageStatistic()/3, rectY)) # Damage bar
-    pygame.draw.rect(screen, c.geT("BLACK"), (tileSize + (speedText.getWidth()), tileSize*multiplyConstant + offset*2, (speedText.getWidth()), rectY),barBorder) # Damage bar outline
+    BarLevelX = 157
+    cellWidth = 50
+    # Player 1 Speed
+    pygame.draw.rect(screen, c.geT("GREEN"), (BarLevelX, speedBarX, cellWidth * hullList[p1J].getSpeedStatistic(), rectY)) # Green bar
     #Outlines
-    pygame.draw.rect(screen, c.geT("BLACK"), (tileSize, tileSize*multiplyConstant + offset*2,
-                                                        speedText.getWidth(), rectY), barBorder) # Damage outline
-    pygame.draw.rect(screen, c.geT("BLACK"), (tileSize + speedText.getWidth()*4/3,
-                                                            tileSize*multiplyConstant + offset*2, (speedText.getWidth())/3,rectY),
-                                                            barBorder) # Damage Block Outline
+    pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelX, speedBarX, cellWidth * 3, rectY), barBorder) # Green bar outline
+    pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelX + cellWidth, speedBarX, cellWidth, rectY), barBorder) # Thirding
 
-    pygame.draw.rect(screen, c.geT("GREEN"), (tileSize + speedText.getWidth(), tileSize*multiplyConstant + offset*3,
-                                                            (speedText.getWidth()) * turretList[p1I].getReloadStatistic()/3, rectY)) # Reload bar
-    pygame.draw.rect(screen, c.geT("BLACK"), (tileSize + speedText.getWidth(), tileSize*multiplyConstant + offset*3, speedText.getWidth(), rectY),barBorder) # Reload bar outline
+    #Player 1 Health
+    pygame.draw.rect(screen, c.geT("GREEN"), (BarLevelX, healthBarX, cellWidth * hullList[p1J].getHealthStatistic(), rectY)) # Green bar
     #Outlines
-    pygame.draw.rect(screen, c.geT("BLACK"), (tileSize, tileSize*multiplyConstant + offset*3,
-                                                        speedText.getWidth(), rectY), barBorder) # Reload Outline
-    pygame.draw.rect(screen, c.geT("BLACK"),
-                                            (tileSize + speedText.getWidth()*4/3,
-                                            tileSize*multiplyConstant + offset*3, (speedText.getWidth())/3,rectY), barBorder) # Reload Block Outline
+    pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelX, healthBarX, cellWidth * 3, rectY), barBorder) # Green bar outline
+    pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelX + cellWidth, healthBarX, cellWidth,rectY), barBorder) # Thirding
 
-    pygame.draw.rect(screen, c.geT("GREEN"),
-                                    (windowWidth - tileSize*3 - forceWidth-50 + speedText.getWidth(), tileSize*multiplyConstant,
-                                    (speedText.getWidth()) * hullList[p2J].getSpeedStatistic()/3, rectY)) # Speed Bar 2
-    pygame.draw.rect(screen, c.geT("BLACK"), (windowWidth - tileSize*3 - forceWidth-50, tileSize*multiplyConstant,
-                                                                    speedText.getWidth(), rectY),barBorder) # Speed bar outline 2
-    # #Outlines
-    pygame.draw.rect(screen, c.geT("BLACK"), (windowWidth - tileSize*3 - forceWidth-50 + speedText.getWidth(),
-                                                        tileSize*multiplyConstant, speedText.getWidth(), rectY),  barBorder) # Speed Outline 2
-    pygame.draw.rect(screen, c.geT("BLACK"), (windowWidth - tileSize*3 - forceWidth-50 + speedText.getWidth()*4/3, tileSize*multiplyConstant,
-                                                            (speedText.getWidth())/3,rectY), barBorder) # Speed block outline 2
-
-
-
-    pygame.draw.rect(screen, c.geT("GREEN"), (windowWidth - tileSize*3 - forceWidth-50 + speedText.getWidth(),
-                                                            tileSize*multiplyConstant + offset,
-                                                            (speedText.getWidth()) * hullList[p2J].getHealthStatistic()/3, rectY)) # Health bar 2
-    pygame.draw.rect(screen, c.geT("BLACK"), (windowWidth - tileSize*3 - forceWidth-50,
-                                                                    tileSize*multiplyConstant + offset, speedText.getWidth(), rectY),barBorder) # Health bar outline 2
+    # Player 1 damage
+    pygame.draw.rect(screen, c.geT("GREEN"), (BarLevelX, damageBarX, cellWidth * turretList[p1I].getDamageStatistic(), rectY)) # Green bar
     #Outlines
-    pygame.draw.rect(screen, c.geT("BLACK"), (windowWidth - tileSize*3 - forceWidth -50+ speedText.getWidth(),
-                                                        tileSize*multiplyConstant + offset, speedText.getWidth(), rectY), barBorder) # Health outline 2
-    pygame.draw.rect(screen, c.geT("BLACK"),
-                                            (windowWidth - tileSize*3 - forceWidth -50+ speedText.getWidth()*4/3,
-                                            tileSize*multiplyConstant + offset, (speedText.getWidth())/3,rectY),  barBorder) # Health Block outline 2
+    pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelX, damageBarX, cellWidth * 3, rectY), barBorder) # Green bar outline
+    pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelX + cellWidth, damageBarX, cellWidth,rectY), barBorder) # Thirding
 
-
-
-    pygame.draw.rect(screen, c.geT("GREEN"), (windowWidth - tileSize*3 - forceWidth-50 + speedText.getWidth(),
-                                                            tileSize*multiplyConstant + offset*2,
-                                                            (speedText.getWidth()) * turretList[p2I].getDamageStatistic()/3,
-                                                            rectY)) # Damage bar 2
-    pygame.draw.rect(screen, c.geT("BLACK"), (windowWidth - tileSize*3 - forceWidth-50, tileSize*multiplyConstant + offset*2,
-                                                                    speedText.getWidth(), rectY),barBorder) # Damage bar outline 2
+    # Player 1 reload
+    pygame.draw.rect(screen, c.geT("GREEN"), (BarLevelX, reloadBarX, cellWidth * turretList[p1I].getReloadStatistic(), rectY)) # Green bar
     #Outlines
-    pygame.draw.rect(screen, c.geT("BLACK"), (windowWidth - tileSize*3 - forceWidth-50 + speedText.getWidth(),
-                                                        tileSize*multiplyConstant + offset*2, speedText.getWidth(), rectY), barBorder) # Damage outline 2
-    pygame.draw.rect(screen, c.geT("BLACK"),
-                                            (windowWidth - tileSize*3 - forceWidth-50 + speedText.getWidth()*4/3,
-                                            tileSize*multiplyConstant + offset*2, (speedText.getWidth())/3,rectY), barBorder) # Damage block outline 2
+    pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelX, reloadBarX, cellWidth * 3, rectY), barBorder) # Green bar outline
+    pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelX + cellWidth, reloadBarX, cellWidth,rectY), barBorder) # Thirding
 
-    pygame.draw.rect(screen, c.geT("GREEN"),
-                                    (windowWidth - tileSize*3 - forceWidth-50 + speedText.getWidth(), tileSize*multiplyConstant + offset*3,
-                                    (speedText.getWidth()) * turretList[p2I].getReloadStatistic()/3, rectY)) # Reload bar 2
-    pygame.draw.rect(screen, c.geT("BLACK"), (windowWidth - tileSize*3 - forceWidth-50, tileSize*multiplyConstant + offset*3,
-                                                                    speedText.getWidth(), rectY),barBorder) # Reload bar outline 2
+
+    BarLevelRX = 493
+
+    #Player 2 Speed
+    pygame.draw.rect(screen, c.geT("GREEN"), (BarLevelRX, speedBarX, cellWidth * hullList[p2J].getSpeedStatistic(), rectY)) # Green bar
     #Outlines
-    pygame.draw.rect(screen, c.geT("BLACK"), (windowWidth - tileSize*3 - forceWidth-50 + speedText.getWidth(),
-                                                        tileSize*multiplyConstant + offset*3, speedText.getWidth(), rectY), barBorder) # Reload Outline 2
-    pygame.draw.rect(screen, c.geT("BLACK"),
-                                            (windowWidth - tileSize*3 - forceWidth-50 + speedText.getWidth()*4/3,
-                                            tileSize*multiplyConstant + offset*3, (speedText.getWidth())/3,rectY), barBorder) # Reload block outline
+    pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelRX, speedBarX, cellWidth * 3, rectY), barBorder) # Green bar outline
+    pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelRX + cellWidth, speedBarX, cellWidth,rectY), barBorder) # Thirding
+
+    # Player 2 Health
+    pygame.draw.rect(screen, c.geT("GREEN"), (BarLevelRX, healthBarX, cellWidth * hullList[p2J].getHealthStatistic(), rectY)) # Green bar
+    #Outlines
+    pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelRX, healthBarX, cellWidth * 3, rectY), barBorder) # Green bar outline
+    pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelRX + cellWidth, healthBarX, cellWidth,rectY), barBorder) # Thirding
+
+    # Player 2 Damage
+    pygame.draw.rect(screen, c.geT("GREEN"), (BarLevelRX, damageBarX,cellWidth * turretList[p2I].getDamageStatistic(), rectY)) # Green bar
+    #Outlines
+    pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelRX, damageBarX, cellWidth*3, rectY), barBorder) # Green bar outline
+    pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelRX + cellWidth, damageBarX, cellWidth, rectY), barBorder) # Thirding
+
+    # Player 2 Reload
+    pygame.draw.rect(screen, c.geT("GREEN"), (BarLevelRX, reloadBarX, cellWidth * turretList[p2I].getReloadStatistic(), rectY)) # Green bar
+    #Outlines
+    pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelRX, reloadBarX, cellWidth * 3, rectY), barBorder) # Green bar outline
+    pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelRX + cellWidth, reloadBarX, cellWidth,rectY), barBorder) # Thirding
 
     #Draw the tank image
-    screen.blit(hullColors[p1L], (tileSize*2 + (forceWidth+30)//2-50, tileSize*2.75))
-    screen.blit(hullColors[p2L], (windowWidth - tileSize*2 - (forceWidth+30)//2-50, tileSize*2.75))
-    screen.blit(gunColors[p1K], (tileSize*2 + (forceWidth+30)//2, tileSize*3.25))
-    screen.blit(gunColors[p2K], (windowWidth - tileSize*2 - (forceWidth+30)//2, tileSize*3.25))
+    # Update display
+
+    hullImageX = 130
+    hullImageY = 174
+
+    #Draw the tank image
+    screen.blit(hullColors[p1K], (hullImageX, hullImageY))
+    screen.blit(hullColors[p2K], (windowWidth - hullImageX - imageScaler*20, hullImageY))
+    # screen.blit(gunColors[p1K], (tileSize*2 + (forceWidth+30)//2, tileSize*3.25))
+    # screen.blit(gunColors[p2K], (windowWidth - tileSize*2 - (forceWidth+30)//2, tileSize*3.25))
 
 #Menu screen
 homeButtonList = []
@@ -2964,7 +2942,7 @@ while not done:
             mute.updateSlider(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
             sfx.updateSlider(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
     elif gameMode == GameMode.selection:
-        screen.fill(bg) # This is the first line when drawing a new frame
+        screen.fill(selectionBackground) # This is the first line when drawing a new frame
         for button in buttonList:
             button.update_display(pygame.mouse.get_pos())
             button.draw(screen, outline = False)
