@@ -17,8 +17,31 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 running = True
 clock = pygame.time.Clock()
 buttonList = []
-homeButton = Button(c.geT("BLACK"), c.geT("BLACK"), tileSize//4, tileSize//4, tileSize, tileSize, 'back', (255, 255, 255), hoverColor=(100, 100, 255))
+
+selectionBackground = c.geT("WHITE")
+selectionFont = 'Londrina Solid'
+monoFont = 'Courier New'
+
+
+homeButton = TextBox(tileSize//4, tileSize//4, font=selectionFont,fontSize=26, text="BACK", textColor=c.geT("BLACK"))
+homeButton.setBoxColor(selectionBackground)
+homeButton.setOutline(True, 5)
+homeButton.selectable(True)
 buttonList.append(homeButton)
+
+#How to play button
+howToPlayButton = TextBox(SCREEN_WIDTH - 150, tileSize//4, font=selectionFont,fontSize=26, text="HOW TO PLAY", textColor=c.geT("BLACK"))
+howToPlayButton.setBoxColor(selectionBackground)
+howToPlayButton.setOutline(True, 5)
+howToPlayButton.selectable(True)
+buttonList.append(howToPlayButton)
+
+playButton = TextBox(SCREEN_WIDTH//2-84, 95, font=selectionFont,fontSize=52, text="PLAY", textColor=c.geT("BLACK"))
+playButton.setBoxColor(selectionBackground)
+playButton.setOutline(True, 5)
+playButton.selectable(True)
+buttonList.append(playButton)
+
 buttonPrimary = c.geT("BLACK")
 buttonSecondary = c.geT("WHITE")
 buttonText = c.geT("WHITE")
@@ -33,10 +56,11 @@ hullColors = []
 
 # Load all the images
 currentDir = os.path.dirname(__file__)
+imageScaler = 4
 for i in range(8): # Generate all the tanks
     tankPath = os.path.join(currentDir, 'Sprites', 'tank' + str(i+1) + '.png')
     originalTankImage = pygame.image.load(tankPath).convert_alpha()
-    tankImage = pygame.transform.scale(originalTankImage, (100, 65))
+    tankImage = pygame.transform.scale(originalTankImage, (20*imageScaler, 13 * imageScaler))
     hullColors.append(tankImage)
 
 
@@ -53,142 +77,224 @@ p2J = 0
 p1K = 0
 p2K = 1
 
-verticalSpacing = 75
-choicesX = 200
+verticalSpacing =40
+choicesX = 420
 
 TurretX = choicesX
 HullX = TurretX + verticalSpacing
 ColourX = HullX + verticalSpacing
+ColourX2 = ColourX + verticalSpacing
 
-lArrowP1Turret = Button(buttonPrimary, buttonPrimary, tileSize, TurretX, tileSize, tileSize, '<', buttonText, 50)
+
+
+buttonSize = 30
+buttonFontSize = 30
+textFontSize = 26
+lArrowX = 70
+cBoX = lArrowX + buttonSize
+rArrowX = cBoX + 180 # 115 is the longest text width
+
+
+
+lArrowP1Turret = Button(buttonPrimary, buttonPrimary, lArrowX, TurretX, buttonSize, buttonSize, '<', buttonText, buttonFontSize)
 lArrowP1Turret.selectable(False)
 buttonList.append(lArrowP1Turret)
-textP1Turret = TextBox(tileSize*2, TurretX, font='Courier New',fontSize=26, text=turretList[0], textColor=buttonText)
+textP1Turret = TextBox(cBoX, TurretX, font=monoFont,fontSize=textFontSize, text=turretList[0], textColor=buttonText)
 textP1Turret.setBoxColor(optionText)
 textP1Turret.selectable(False)
-forceWidth = textP1Turret.getWidth()
+textP1Turret.setPaddingHeight(0)
+textP1Turret.setText(turretList[0])
 buttonList.append(textP1Turret)
-rArrowP1Turret = Button(buttonPrimary, buttonPrimary, tileSize*2 + forceWidth, TurretX, tileSize, tileSize, '>', buttonText, 50)
+rArrowP1Turret = Button(buttonPrimary, buttonPrimary, rArrowX, TurretX, buttonSize, buttonSize, '>', buttonText, buttonFontSize)
 rArrowP1Turret.selectable(False)
 buttonList.append(rArrowP1Turret)
 
-lArrowP1Hull = Button(buttonPrimary, buttonPrimary, tileSize, HullX, tileSize, tileSize, '<', buttonText, 50)
+lArrowP1Hull = Button(buttonPrimary, buttonPrimary, lArrowX, HullX, buttonSize, buttonSize, '<', buttonText, buttonFontSize)
 lArrowP1Hull.selectable(False)
 buttonList.append(lArrowP1Hull)
-textP1Hull = TextBox(tileSize*2, HullX, font='Courier New',fontSize=26, text=hullList[0], textColor=buttonText)
+textP1Hull = TextBox(cBoX, HullX, font=monoFont,fontSize=textFontSize, text=hullList[0], textColor=buttonText)
 textP1Hull.setBoxColor(optionText)
 textP1Hull.selectable(False)
+textP1Hull.setPaddingHeight(0)
+textP1Hull.setText(hullList[0])
 buttonList.append(textP1Hull)
-rArrowP1Hull = Button(buttonPrimary, buttonPrimary, tileSize*2 + forceWidth, HullX, tileSize, tileSize, '>', buttonText, 50)
+rArrowP1Hull = Button(buttonPrimary, buttonPrimary, rArrowX, HullX, buttonSize, buttonSize, '>', buttonText, buttonFontSize)
 rArrowP1Hull.selectable(False)
 buttonList.append(rArrowP1Hull)
 
-lArrowP1Colour = Button(buttonPrimary, buttonPrimary, tileSize, ColourX, tileSize, tileSize, '<', buttonText, 50)
+lArrowP1Colour = Button(buttonPrimary, buttonPrimary, lArrowX, ColourX, buttonSize, buttonSize, '<', buttonText, buttonFontSize)
 lArrowP1Colour.selectable(False)
 buttonList.append(lArrowP1Colour)
-textP1Colour = TextBox(tileSize*2, ColourX, font='Courier New',fontSize=26, text="", textColor=buttonText)
+textP1Colour = TextBox(cBoX, ColourX, font=monoFont,fontSize=textFontSize, text="", textColor=buttonText)
 textP1Colour.setBoxColor(c.geT(ColorIndex[p1K]))
 textP1Colour.selectable(False)
+textP1Colour.setPaddingHeight(0)
 buttonList.append(textP1Colour)
-rArrowP1Colour = Button(buttonPrimary, buttonPrimary, tileSize*2 + forceWidth, ColourX, tileSize, tileSize, '>', buttonText, 50)
+rArrowP1Colour = Button(buttonPrimary, buttonPrimary, rArrowX, ColourX, buttonSize, buttonSize, '>', buttonText, buttonFontSize)
 rArrowP1Colour.selectable(False)
 buttonList.append(rArrowP1Colour)
 
-rArrowP2Turret = Button(buttonPrimary, buttonPrimary, SCREEN_WIDTH-tileSize*2, TurretX, tileSize, tileSize, '>', buttonText, 50)
-rArrowP2Turret.selectable(False)
-buttonList.append(rArrowP2Turret)
-textP2Turret = TextBox(SCREEN_WIDTH - tileSize*2 - forceWidth, TurretX, font='Courier New',fontSize=26, text=turretList[0], textColor=buttonText)
-textP2Turret.setBoxColor(optionText)
-textP2Turret.selectable(False)
-buttonList.append(textP2Turret)
-lArrowP2Turret = Button(buttonPrimary, buttonPrimary, SCREEN_WIDTH - tileSize*3 - forceWidth, TurretX, tileSize, tileSize, '<', buttonText, 50)
+lArrowP1Colour2 = Button(buttonPrimary, buttonPrimary, lArrowX, ColourX2, buttonSize, buttonSize, '<', buttonText, buttonFontSize)
+lArrowP1Colour2.selectable(False)
+buttonList.append(lArrowP1Colour2)
+textP1Colour2 = TextBox(cBoX, ColourX2, font=monoFont,fontSize=textFontSize, text="", textColor=buttonText)
+textP1Colour2.setBoxColor(c.geT(ColorIndex[p1K]))
+textP1Colour2.selectable(False)
+textP1Colour2.setPaddingHeight(0)
+buttonList.append(textP1Colour2)
+rArrowP1Colour2 = Button(buttonPrimary, buttonPrimary, rArrowX, ColourX2, buttonSize, buttonSize, '>', buttonText, buttonFontSize)
+rArrowP1Colour2.selectable(False)
+buttonList.append(rArrowP1Colour2)
+
+lArrow2X = 493
+cBo2X = lArrow2X + buttonSize
+rArrow2X = cBo2X + 180 # 115 is the longest text width
+
+lArrowP2Turret = Button(buttonPrimary, buttonPrimary, lArrow2X, TurretX, buttonSize, buttonSize, '<', buttonText, buttonFontSize)
 lArrowP2Turret.selectable(False)
 buttonList.append(lArrowP2Turret)
+textP2Turret = TextBox(cBo2X, TurretX, font=monoFont,fontSize=textFontSize, text=turretList[0], textColor=buttonText)
+textP2Turret.setBoxColor(optionText)
+textP2Turret.selectable(False)
+textP2Turret.setPaddingHeight(0)
+buttonList.append(textP2Turret)
+rArrowP2Turret = Button(buttonPrimary, buttonPrimary,rArrow2X, TurretX, buttonSize, buttonSize, '>', buttonText, buttonFontSize)
+rArrowP2Turret.selectable(False)
+buttonList.append(rArrowP2Turret)
 
-rArrowP2Hull = Button(buttonPrimary, buttonPrimary,  SCREEN_WIDTH-tileSize*2, HullX, tileSize, tileSize, '>', buttonText, 50)
-rArrowP2Hull.selectable(False)
-buttonList.append(rArrowP2Hull)
-textP2Hull = TextBox(SCREEN_WIDTH - tileSize*2 - forceWidth, HullX, font='Courier New',fontSize=26, text=hullList[0], textColor=buttonText)
-textP2Hull.setBoxColor(optionText)
-textP2Hull.selectable(False)
-buttonList.append(textP2Hull)
-lArrowP2Hull = Button(buttonPrimary, buttonPrimary, SCREEN_WIDTH - tileSize*3 - forceWidth, HullX, tileSize, tileSize, '<', buttonText, 50)
+lArrowP2Hull = Button(buttonPrimary, buttonPrimary, lArrow2X, HullX, buttonSize, buttonSize, '<', buttonText, buttonFontSize)
 lArrowP2Hull.selectable(False)
 buttonList.append(lArrowP2Hull)
+textP2Hull = TextBox(cBo2X, HullX, font=monoFont,fontSize=textFontSize, text=hullList[0], textColor=buttonText)
+textP2Hull.setBoxColor(optionText)
+textP2Hull.selectable(False)
+textP2Hull.setPaddingHeight(0)
+buttonList.append(textP2Hull)
+rArrowP2Hull = Button(buttonPrimary, buttonPrimary,  rArrow2X, HullX, buttonSize, buttonSize, '>', buttonText, buttonFontSize)
+rArrowP2Hull.selectable(False)
+buttonList.append(rArrowP2Hull)
 
-rArrowP2Colour = Button(buttonPrimary, buttonPrimary,  SCREEN_WIDTH-tileSize*2, ColourX, tileSize, tileSize, '>', buttonText, 50)
-rArrowP2Colour.selectable(False)
-buttonList.append(rArrowP2Colour)
-textP2Colour = TextBox(SCREEN_WIDTH - tileSize*2 - forceWidth, ColourX, font='Courier New',fontSize=26, text="", textColor=buttonText)
-textP2Colour.setBoxColor(c.geT(ColorIndex[p2K]))
-textP2Colour.selectable(False)
-buttonList.append(textP2Colour)
-lArrowP2Colour = Button(buttonPrimary, buttonPrimary, SCREEN_WIDTH - tileSize*3 - forceWidth, ColourX, tileSize, tileSize, '<', buttonText, 50)
+lArrowP2Colour = Button(buttonPrimary, buttonPrimary, lArrow2X, ColourX, buttonSize, buttonSize, '<', buttonText, buttonFontSize)
 lArrowP2Colour.selectable(False)
 buttonList.append(lArrowP2Colour)
+textP2Colour = TextBox(cBo2X, ColourX, font=monoFont,fontSize=textFontSize, text="", textColor=buttonText)
+textP2Colour.setBoxColor(c.geT(ColorIndex[p2K]))
+textP2Colour.selectable(False)
+textP2Colour.setPaddingHeight(0)
+buttonList.append(textP2Colour)
+rArrowP2Colour = Button(buttonPrimary, buttonPrimary,  rArrow2X, ColourX, buttonSize, buttonSize, '>', buttonText, buttonFontSize)
+rArrowP2Colour.selectable(False)
+buttonList.append(rArrowP2Colour)
+
+lArrowP2Colour2 = Button(buttonPrimary, buttonPrimary, lArrow2X, ColourX2, buttonSize, buttonSize, '<', buttonText, buttonFontSize)
+lArrowP2Colour2.selectable(False)
+buttonList.append(lArrowP2Colour2)
+textP2Colour2 = TextBox(cBo2X, ColourX2, font=monoFont,fontSize=textFontSize, text="", textColor=buttonText)
+textP2Colour2.setBoxColor(c.geT(ColorIndex[p2K]))
+textP2Colour2.selectable(False)
+textP2Colour2.setPaddingHeight(0)
+buttonList.append(textP2Colour2)
+rArrowP2Colour2 = Button(buttonPrimary, buttonPrimary,  rArrow2X, ColourX2, buttonSize, buttonSize, '>', buttonText, buttonFontSize)
+rArrowP2Colour2.selectable(False)
+buttonList.append(rArrowP2Colour2)
+
+
+
+
+forceWidth = 0
+
 
 # Player names
-textP1 = TextBox(tileSize*2, tileSize*0.5, font='Courier New',fontSize=26, text="Player 1", textColor=buttonText)
-textP1.setBoxColor(c.geT("GREEN"))
+playerX = 100
+playerY = 100
+
+textP1 = TextBox(playerX, playerY, font=selectionFont,fontSize=38, text="PLAYER 1", textColor=c.geT("BLACK"))
+textP1.setBoxColor(selectionBackground)
+textP1.setOutline(True, outlineWidth = 5)
 buttonList.append(textP1)
-textP2 = TextBox(SCREEN_WIDTH - tileSize*2 - forceWidth, tileSize*0.5, font='Courier New',fontSize=26, text="Player 2", textColor=buttonText)
-textP2.setBoxColor(c.geT("GREEN"))
+
+textP2 = TextBox(SCREEN_WIDTH - playerX*2.5, playerY, font=selectionFont,fontSize=38, text="PLAYER 2", textColor=c.geT("BLACK"))
+textP2.setBoxColor(selectionBackground)
+textP2.setOutline(True, outlineWidth = 5)
 buttonList.append(textP2)
-
-#Play button
-playButton = TextBox(SCREEN_WIDTH//2 - tileSize*1.75, tileSize//2, font='Courier New',fontSize=26, text="Play", textColor=buttonText)
-playButton.setBoxColor(c.geT("BLACK"))
-playButton.selectable(True)
-buttonList.append(playButton)
-
 
 multiply_constant = 8.5
 offset = 35
 tankValue = 3
 
+speedBarX = 250
+healthBarX = speedBarX + offset
+damageBarX = healthBarX + offset
+reloadBarX = damageBarX + offset
+
 
 #Other constants
-rectX = tileSize*2 + forceWidth
-rectY = tileSize//2
- 
-speedText = TextBox(tileSize, tileSize*multiply_constant, font='Courier New',fontSize=21, text="Speed", textColor=buttonText)
+rectX = 280
+rectY = 25
+barFontSize = 36
+speedText = TextBox(50, speedBarX, font=selectionFont,fontSize=barFontSize, text="SPEED", textColor=c.geT("BLACK"))
 speedText.setPaddingHeight(0)
+speedText.setPaddingWidth(0)
+speedText.setCharacterPad(7)
+speedText.setBoxColor(selectionBackground)
+speedText.setText("SPEED", 'right')
 buttonList.append(speedText)
 
-healthText = TextBox(tileSize, tileSize*multiply_constant + offset, font='Courier New',fontSize=21, text="Health", textColor=buttonText)
+healthText = TextBox(42, healthBarX, font=selectionFont,fontSize=barFontSize, text="Health", textColor=c.geT("BLACK"))
 healthText.setPaddingHeight(0)
+healthText.setPaddingWidth(0)
+healthText.setCharacterPad(7)
+healthText.setBoxColor(selectionBackground)
+healthText.setText("HEALTH", "right")
 buttonList.append(healthText)
 
-damageBar = TextBox(tileSize, tileSize*multiply_constant + offset*2, font='Courier New',fontSize=21, text="Damage", textColor=buttonText)
+damageBar = TextBox(31, damageBarX, font=selectionFont,fontSize=barFontSize, text="Damage", textColor=c.geT("BLACK"))
 damageBar.setPaddingHeight(0)
+damageBar.setPaddingWidth(0)
+damageBar.setCharacterPad(7)
+damageBar.setBoxColor(selectionBackground)
+damageBar.setText("DAMAGE", "right")
 buttonList.append(damageBar)
 
-reloadBar = TextBox(tileSize, tileSize*multiply_constant + offset*3, font='Courier New',fontSize=21, text="Reload", textColor=buttonText)
+reloadBar = TextBox(37, reloadBarX, font=selectionFont,fontSize=barFontSize, text="Reload", textColor=c.geT("BLACK"))
 reloadBar.setPaddingHeight(0)
+reloadBar.setPaddingWidth(0)
+reloadBar.setCharacterPad(7)
+reloadBar.setBoxColor(selectionBackground)
+reloadBar.setText("RELOAD", "right")
 buttonList.append(reloadBar)
 
-speedText2 = TextBox(SCREEN_WIDTH - tileSize*3 - forceWidth, tileSize*multiply_constant, font='Courier New',fontSize=21, text="Speed", textColor=buttonText)
+speedText2 = TextBox(650, speedBarX, font=selectionFont,fontSize=barFontSize, text="Speed", textColor=c.geT("BLACK"))
 speedText2.setPaddingHeight(0)
+speedText2.setPaddingWidth(0)
+speedText2.setCharacterPad(7)
+speedText2.setBoxColor(selectionBackground)
+speedText2.setText("SPEED", "left")
 buttonList.append(speedText2)
 
-healthText2 = TextBox(SCREEN_WIDTH - tileSize*3 - forceWidth, tileSize*multiply_constant + offset, font='Courier New',fontSize=21, text="Health", textColor=buttonText)
+healthText2 = TextBox(650, healthBarX, font=selectionFont,fontSize=barFontSize, text="Health", textColor=c.geT("BLACK"))
 healthText2.setPaddingHeight(0)
+healthText2.setPaddingWidth(0)
+healthText2.setCharacterPad(7)
+healthText2.setBoxColor(selectionBackground)
+healthText2.setText("HEALTH", "left")
 buttonList.append(healthText2)
 
-damageBar2 = TextBox(SCREEN_WIDTH - tileSize*3 - forceWidth, tileSize*multiply_constant + offset*2, font='Courier New',fontSize=21, text="Damage", textColor=buttonText)
+damageBar2 = TextBox(650, damageBarX, font=selectionFont,fontSize=barFontSize, text="Damage", textColor=c.geT("BLACK"))
 damageBar2.setPaddingHeight(0)
+damageBar2.setPaddingWidth(0)
+damageBar2.setCharacterPad(7)
+damageBar2.setBoxColor(selectionBackground)
+damageBar2.setText("DAMAGE", "left")
 buttonList.append(damageBar2)
 
-reloadBar2 = TextBox(SCREEN_WIDTH - tileSize*3 - forceWidth, tileSize*multiply_constant + offset*3, font='Courier New',fontSize=21, text="Reload", textColor=buttonText)
+reloadBar2 = TextBox(650, reloadBarX, font=selectionFont,fontSize=barFontSize, text="Reload", textColor=c.geT("BLACK"))
 reloadBar2.setPaddingHeight(0)
+reloadBar2.setPaddingWidth(0)
+reloadBar2.setCharacterPad(7)
+reloadBar2.setBoxColor(selectionBackground)
+reloadBar2.setText("RELOAD", "left")
 buttonList.append(reloadBar2)
-
-    # pygame.draw.rect(screen,(0,0,0), (SCREEN_WIDTH - tileSize*3 - forceWidth, tileSize*multiply_constant, rectX, rectY), 1)
-    # pygame.draw.rect(screen,(0,0,0), (SCREEN_WIDTH - tileSize*2 - forceWidth - tileSize, tileSize*multiply_constant+ offset, rectX, rectY), 1)
-
-    # pygame.draw.rect(screen,(0,0,0), (SCREEN_WIDTH - tileSize*2 - forceWidth - tileSize, tileSize*multiply_constant+ offset*2, rectX, rectY), 1)
-    # pygame.draw.rect(screen,(0,0,0), (SCREEN_WIDTH - tileSize*2 - forceWidth - tileSize, tileSize*multiply_constant+ offset*3, rectX, rectY), 1)
-
 
 def checkButtons(mouse):
     global p1I, p2I, p1J, p2J, p1K, p2K
@@ -240,6 +346,9 @@ def checkButtons(mouse):
         print("Play")
     if homeButton.buttonClick(mouse):
         print("Back")
+    if howToPlayButton.buttonClick(mouse):
+        print("How to play")
+
 
 while running:
     for event in pygame.event.get():
@@ -247,6 +356,7 @@ while running:
             running = False
         if event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
+                pass
                 textP1Turret.setText(turretList[p1I])
                 textP2Turret.setText(turretList[p2I])
                 textP1Hull.setText(hullList[p1J])
@@ -267,9 +377,7 @@ while running:
                 pass
 
     # Clear screen with the chosen soft white color
-    screen.fill((250,250,240))
-
-    pygame.draw.rect(screen,(0,0,0), (tileSize, tileSize*multiply_constant, rectX, rectY), 1)
+    screen.fill(selectionBackground)
     for button in buttonList:
         button.update_display(pygame.mouse.get_pos())
         button.draw(screen, outline = False)
@@ -277,53 +385,51 @@ while running:
     barBorder = 3
     
     #Blocks
-    speedBarOutline = pygame.draw.rect(screen, c.geT("BLACK"), (tileSize, tileSize*multiply_constant, rectX, rectY),barBorder)
-    speedBar = pygame.draw.rect(screen, c.geT("GREEN"), (tileSize + speedText.getWidth(), tileSize*multiply_constant, (rectX - speedText.getWidth()) * tankValue/3, rectY))
+    BarLevelX = 157
+    cellWidth = 50
+    speedBar = pygame.draw.rect(screen, c.geT("GREEN"), (BarLevelX, speedBarX, cellWidth * tankValue, rectY))
     #Outlines
-    speedOutline = pygame.draw.rect(screen, (0,0,0), (tileSize + speedText.getWidth(), tileSize*multiply_constant, rectX - speedText.getWidth(), rectY), barBorder)
-    speedBlockOutline = pygame.draw.rect(screen, (0,0,0), (tileSize + speedText.getWidth() + (rectX - speedText.getWidth())/3, tileSize*multiply_constant, (rectX - speedText.getWidth())/3,rectY), barBorder)
+    speedOutline = pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelX, speedBarX, cellWidth * 3, rectY), barBorder) # Raw outline
+    speedBlockOutline = pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelX + cellWidth, speedBarX, cellWidth, rectY), barBorder) # Raw outline
 
-    healthBarOutline = pygame.draw.rect(screen, c.geT("BLACK"), (tileSize, tileSize*multiply_constant + offset, rectX, rectY),barBorder)
-    healthBar = pygame.draw.rect(screen, c.geT("GREEN"), (tileSize + speedText.getWidth(), tileSize*multiply_constant + offset, (rectX - speedText.getWidth()) * tankValue/3, rectY))
+    healthBar = pygame.draw.rect(screen, c.geT("GREEN"), (BarLevelX, healthBarX, cellWidth * tankValue, rectY))
     #Outlines
-    healthOutline = pygame.draw.rect(screen, (0,0,0), (tileSize + speedText.getWidth(), tileSize*multiply_constant + offset, rectX - speedText.getWidth(), rectY), barBorder)
-    healthBlockOutline = pygame.draw.rect(screen, (0,0,0), (tileSize + speedText.getWidth() + (rectX - speedText.getWidth())/3, tileSize*multiply_constant + offset, (rectX - speedText.getWidth())/3,rectY), barBorder)
+    healthOutline = pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelX, healthBarX, cellWidth * 3, rectY), barBorder)
+    healthBlockOutline = pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelX + cellWidth, healthBarX, cellWidth,rectY), barBorder)
 
-    damageBarOutline = pygame.draw.rect(screen, c.geT("BLACK"), (tileSize, tileSize*multiply_constant + offset*2, rectX, rectY),barBorder)
-    damageBar = pygame.draw.rect(screen, c.geT("GREEN"), (tileSize + speedText.getWidth(), tileSize*multiply_constant + offset*2, (rectX - speedText.getWidth()) * tankValue/3, rectY))
+    damageBar = pygame.draw.rect(screen, c.geT("GREEN"), (BarLevelX, damageBarX, cellWidth * tankValue, rectY))
     #Outlines
-    damageOutline = pygame.draw.rect(screen, (0,0,0), (tileSize + speedText.getWidth(), tileSize*multiply_constant + offset*2, rectX - speedText.getWidth(), rectY), barBorder)
-    damageBlockOutline = pygame.draw.rect(screen, (0,0,0), (tileSize + speedText.getWidth() + (rectX - speedText.getWidth())/3, tileSize*multiply_constant + offset*2, (rectX - speedText.getWidth())/3,rectY), barBorder)
+    damageOutline = pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelX, damageBarX, cellWidth * 3, rectY), barBorder)
+    damageBlockOutline = pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelX + cellWidth, damageBarX, cellWidth,rectY), barBorder)
 
-    reloadBarOutline = pygame.draw.rect(screen, c.geT("BLACK"), (tileSize, tileSize*multiply_constant + offset*3, rectX, rectY),barBorder)
-    reloadBar = pygame.draw.rect(screen, c.geT("GREEN"), (tileSize + speedText.getWidth(), tileSize*multiply_constant + offset*3, (rectX - speedText.getWidth()) * tankValue/3, rectY))
+    reloadBar = pygame.draw.rect(screen, c.geT("GREEN"), (BarLevelX, reloadBarX, cellWidth * tankValue, rectY))
     #Outlines
-    reloadOutline = pygame.draw.rect(screen, (0,0,0), (tileSize + speedText.getWidth(), tileSize*multiply_constant + offset*3, rectX - speedText.getWidth(), rectY), barBorder)
-    reloadBlockOutline = pygame.draw.rect(screen, (0,0,0), (tileSize + speedText.getWidth() + (rectX - speedText.getWidth())/3, tileSize*multiply_constant + offset*3, (rectX - speedText.getWidth())/3,rectY), barBorder)
+    reloadOutline = pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelX, reloadBarX, cellWidth * 3, rectY), barBorder)
+    reloadBlockOutline = pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelX + cellWidth, reloadBarX, cellWidth,rectY), barBorder)
 
-    speedBarOutline2 = pygame.draw.rect(screen, c.geT("BLACK"), (SCREEN_WIDTH - tileSize*3 - forceWidth, tileSize*multiply_constant, rectX, rectY),barBorder)
-    speedBar2 = pygame.draw.rect(screen, c.geT("GREEN"), (SCREEN_WIDTH - tileSize*3 - forceWidth + speedText.getWidth(), tileSize*multiply_constant, (rectX - speedText.getWidth()) * tankValue/3, rectY))
-    #Outlines
-    speedOutline2 = pygame.draw.rect(screen, (0,0,0), (SCREEN_WIDTH - tileSize*3 - forceWidth + speedText.getWidth(), tileSize*multiply_constant, rectX - speedText.getWidth(), rectY), barBorder)
-    speedBlockOutline2 = pygame.draw.rect(screen, (0,0,0), (SCREEN_WIDTH - tileSize*3 - forceWidth + speedText.getWidth() + (rectX - speedText.getWidth())/3, tileSize*multiply_constant, (rectX - speedText.getWidth())/3,rectY), barBorder)
 
-    healthBarOutline2 = pygame.draw.rect(screen, c.geT("BLACK"), (SCREEN_WIDTH - tileSize*3 - forceWidth, tileSize*multiply_constant + offset, rectX, rectY),barBorder)
-    healthBar2 = pygame.draw.rect(screen, c.geT("GREEN"), (SCREEN_WIDTH - tileSize*3 - forceWidth + speedText.getWidth(), tileSize*multiply_constant + offset, (rectX - speedText.getWidth()) * tankValue/3, rectY))
-    #Outlines
-    healthOutline2 = pygame.draw.rect(screen, (0,0,0), (SCREEN_WIDTH - tileSize*3 - forceWidth + speedText.getWidth(), tileSize*multiply_constant + offset, rectX - speedText.getWidth(), rectY), barBorder)
-    healthBlockOutline2 = pygame.draw.rect(screen, (0,0,0), (SCREEN_WIDTH - tileSize*3 - forceWidth + speedText.getWidth() + (rectX - speedText.getWidth())/3, tileSize*multiply_constant + offset, (rectX - speedText.getWidth())/3,rectY), barBorder)
+    BarLevelRX = 493
 
-    damageBarOutline2 = pygame.draw.rect(screen, c.geT("BLACK"), (SCREEN_WIDTH - tileSize*3 - forceWidth, tileSize*multiply_constant + offset*2, rectX, rectY),barBorder)
-    damageBar2 = pygame.draw.rect(screen, c.geT("GREEN"), (SCREEN_WIDTH - tileSize*3 - forceWidth + speedText.getWidth(), tileSize*multiply_constant + offset*2, (rectX - speedText.getWidth()) * tankValue/3, rectY))
-    #Outlines
-    damageOutline2 = pygame.draw.rect(screen, (0,0,0), (SCREEN_WIDTH - tileSize*3 - forceWidth + speedText.getWidth(), tileSize*multiply_constant + offset*2, rectX - speedText.getWidth(), rectY), barBorder)
-    damageBlockOutline2 = pygame.draw.rect(screen, (0,0,0), (SCREEN_WIDTH - tileSize*3 - forceWidth + speedText.getWidth() + (rectX - speedText.getWidth())/3, tileSize*multiply_constant + offset*2, (rectX - speedText.getWidth())/3,rectY), barBorder)
 
-    reloadBarOutline2 = pygame.draw.rect(screen, c.geT("BLACK"), (SCREEN_WIDTH - tileSize*3 - forceWidth, tileSize*multiply_constant + offset*3, rectX, rectY),barBorder)
-    reloadBar2 = pygame.draw.rect(screen, c.geT("GREEN"), (SCREEN_WIDTH - tileSize*3 - forceWidth + speedText.getWidth(), tileSize*multiply_constant + offset*3, (rectX - speedText.getWidth()) * tankValue/3, rectY))
+    speedBar2 = pygame.draw.rect(screen, c.geT("GREEN"), (BarLevelRX, speedBarX, cellWidth * tankValue, rectY))
     #Outlines
-    reloadOutline2 = pygame.draw.rect(screen, (0,0,0), (SCREEN_WIDTH - tileSize*3 - forceWidth + speedText.getWidth(), tileSize*multiply_constant + offset*3, rectX - speedText.getWidth(), rectY), barBorder)
-    reloadBlockOutline2 = pygame.draw.rect(screen, (0,0,0), (SCREEN_WIDTH - tileSize*3 - forceWidth + speedText.getWidth() + (rectX - speedText.getWidth())/3, tileSize*multiply_constant + offset*3, (rectX - speedText.getWidth())/3,rectY), barBorder)
+    speedOutline2 = pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelRX, speedBarX, cellWidth * 3, rectY), barBorder)
+    speedBlockOutline2 = pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelRX + cellWidth, speedBarX, cellWidth,rectY), barBorder)
+
+    healthBar2 = pygame.draw.rect(screen, c.geT("GREEN"), (BarLevelRX, healthBarX, cellWidth * tankValue, rectY))
+    #Outlines
+    healthOutline2 = pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelRX, healthBarX, cellWidth * 3, rectY), barBorder)
+    healthBlockOutline2 = pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelRX + cellWidth, healthBarX, cellWidth,rectY), barBorder)
+
+    damageBar2 = pygame.draw.rect(screen, c.geT("GREEN"), (BarLevelRX, damageBarX,cellWidth * tankValue, rectY))
+    #Outlines
+    damageOutline2 = pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelRX, damageBarX, cellWidth*3, rectY), barBorder)
+    damageBlockOutline2 = pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelRX + cellWidth, damageBarX, cellWidth, rectY), barBorder)
+
+    reloadBar2 = pygame.draw.rect(screen, c.geT("GREEN"), (BarLevelRX, reloadBarX, cellWidth * tankValue, rectY))
+    #Outlines
+    reloadOutline2 = pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelRX, reloadBarX, cellWidth * 3, rectY), barBorder)
+    reloadBlockOutline2 = pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelRX + cellWidth, reloadBarX, cellWidth,rectY), barBorder)
 
 
 
@@ -333,12 +439,12 @@ while running:
 
     # Update display
 
-
+    hullImageX = 130
+    hullImageY = 174
 
     #Draw the tank image
-    screen.blit(hullColors[p1K], (tileSize*2 + forceWidth//2-50, tileSize*2))
-    screen.blit(hullColors[p2K], (SCREEN_WIDTH - tileSize*2 - forceWidth//2-50, tileSize*2))
-
+    screen.blit(hullColors[p1K], (hullImageX, hullImageY))
+    screen.blit(hullColors[p2K], (SCREEN_WIDTH - hullImageX - imageScaler*20, hullImageY))
     pygame.display.flip()
     # Cap the frame rate
     clock.tick(60)
