@@ -522,7 +522,10 @@ class Bullet(pygame.sprite.Sprite):
 
     originalCollision = True
     name = "Default"
-
+    initialX = 0
+    initialY = 0
+    selfCollision = False
+    originalBounce = 1
     def __init__(self, x, y, angle, gunLength, tipOffSet):
         """
         Initializes the Bullet class.
@@ -562,11 +565,13 @@ class Bullet(pygame.sprite.Sprite):
         self.trailX =  self.rect.centerx
         self.trailY = self.rect.centery
         self.bounce = 1
+        self.originalBounce = self.bounce
         self.corners = [(self.rect.x, self.rect.y), (self.rect.x + self.rect.width, self.rect.y),
                         (self.rect.x + self.rect.width, self.rect.y + self.rect.height), (self.rect.x, self.rect.y + self.rect.height)]
         self.damage = 700
         self.pleaseDraw = False
-
+        self.initialX = x
+        self.initialY = y
     def update(self):
         """
         Updates the bullet's position based on its speed and direction.
@@ -610,6 +615,20 @@ class Bullet(pygame.sprite.Sprite):
                 soundDictionary["tankDeath"].play()
                 tank1.damage(self.damage)
                 self.kill()
+
+        if self.selfCollision:
+            if tank1Collision:
+                soundDictionary["tankDeath"].play()
+                tank1.damage(self.damage)
+                self.kill()
+            if tank2Collision:
+                soundDictionary["tankDeath"].play()
+                tank2.damage(self.damage)
+                self.kill()
+
+        # Checking for self damage
+        if (self.x - self.initialX)**2 + (self.y - self.initialY)**2 >= 20**2 or self.bounce != self.originalBounce:
+            self.selfCollision = True
 
         tile = tileList[index-1]
         wallCollision = False
@@ -675,166 +694,21 @@ class Bullet(pygame.sprite.Sprite):
     def setOriginalCollision(self, value):
         self.originalCollision = value
 
+    def setBounce(self, bounceValue):
+        self.bounce = bounceValue
+        self.originalBounce = bounceValue
+
 class SidewinderBullet(Bullet):
 
     def __init__(self, x, y, angle, gunLength, tipOffSet):
         super().__init__(x, y, angle, gunLength, tipOffSet)
-        self.bounce=5
-    def update(self):
-        """
-        Updates the bullet's position based on its speed and direction.
-
-        This method calculates the new position of the bullet and updates its rect attribute accordingly.
-
-        Inputs:
-        -------
-        None
-
-        Outputs:
-        --------
-        None
-        """
-        angleRad = math.radians(self.angle)
-        dx = self.speed * math.cos(angleRad)
-        dy = -self.speed * math.sin(angleRad)
-        tempX = self.x + dx
-        tempY = self.y + dy
-        #Check for collision with walls
-        #We are going to calculate the row and column
-        row = math.ceil((self.getCenter()[1] - mazeY)/tileSize)
-        col = math.ceil((self.getCenter()[0] - mazeX)/tileSize)
-        #Find the file at the exact index
-        index = (row-1)*colAmount + col
-
-        #If we are outside of the maze, delete the bullet
-        if tempX <= mazeX or tempY <= mazeY or tempX >= mazeWidth + mazeX or tempY >= mazeHeight + mazeY:
-            self.kill()
-            return
-        
-        #If we hit a tank
-        tank1Collision = satCollision(self, tank1)
-        tank2Collision = satCollision(self, tank2)
-
-        if self.name == tank1.getName() and tank2Collision:
-                soundDictionary["tankDeath"].play()
-                tank2.damage(self.damage)
-                self.kill()
-        if self.name == tank2.getName() and tank1Collision:
-                soundDictionary["tankDeath"].play()
-                tank1.damage(self.damage)
-                self.kill()
-
-        tile = tileList[index-1]
-        wallCollision = False
-        if tile.border[0] and tempY - self.image.get_size()[1] <= tile.y: #If the top border is present
-            wallCollision = True
-            self.angle = 180 - self.angle
-        if tile.border[1] and tempX + self.image.get_size()[1] >= tile.x + tileSize: #If the right border is present
-            wallCollision = True
-            self.angle = 360 - self.angle
-        if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + tileSize: #If the bottom border is present
-            wallCollision = True
-            self.angle = 180 - self.angle
-        if tile.border[3] and tempX - self.image.get_size()[1] <= tile.x: #If the left border is present
-            wallCollision = True
-            self.angle = 360 - self.angle
-        if wallCollision:
-            self.bounce -= 1
-            self.speed *= -1
-            if self.bounce == 0:
-                self.kill() # delete the bullet
-        self.updateCorners()
-        # Store the updated values
-        self.rect.x = int(tempX)
-        self.rect.y = int(tempY)
-        self.x = tempX
-        self.y = tempY
-        if abs(self.x- self.trailX) >= 1 and abs(tempY-self.trailY) >= 1: # Trails
-            self.pleaseDraw = True
+        self.setBounce(5)
 
 class JudgeBullet(Bullet):
-    def __init__(self, x, y, angle, gunLength, tipOffSet, initialDamage=76, minDamage=50, damageDecreaseInterval=10):
+    def __init__(self, x, y, angle, gunLength, tipOffSet, initialDamage=76, minDamage=50):
         super().__init__(x, y, angle, gunLength, tipOffSet)
         self.damage = initialDamage
-        self.min_damage = minDamage
-        self.bounce=1
-        self.damageDecreaseInterval = damageDecreaseInterval
-        self.startDamageDecrease()
-    def startDamageDecrease(self):
-        if self.damage > self.min_damage:
-            self.damage -= 1
-            Timer(self.damageDecreaseInterval / 1000.0, self.startDamageDecrease).start()
-    def update(self):
-        """
-        Updates the bullet's position based on its speed and direction.
-
-        This method calculates the new position of the bullet and updates its rect attribute accordingly.
-
-        Inputs:
-        -------
-        None
-
-        Outputs:
-        --------
-        None
-        """
-        angleRad = math.radians(self.angle)
-        dx = self.speed * math.cos(angleRad)
-        dy = -self.speed * math.sin(angleRad)
-        tempX = self.x + dx
-        tempY = self.y + dy
-
-        # Check for collision with walls
-        row = math.ceil((self.getCenter()[1] - mazeY) / tileSize)
-        col = math.ceil((self.getCenter()[0] - mazeX) / tileSize)
-        index = (row - 1) * colAmount + col
-
-        if tempX <= mazeX or tempY <= mazeY or tempX >= mazeWidth + mazeX or tempY >= mazeHeight + mazeY:
-            self.kill()
-            return
-
-        tank1Collision = satCollision(self, tank1)
-        tank2Collision = satCollision(self, tank2)
-
-        if self.name == tank1.getName() and tank2Collision:
-            soundDictionary["tankDeath"].play()
-            tank2.damage(self.damage)
-            self.kill()
-        elif self.name == tank2.getName() and tank1Collision:
-            soundDictionary["tankDeath"].play()
-            tank1.damage(self.damage)
-            self.kill()
-
-        tile = tileList[index - 1]
-        wallCollision = False
-
-        if tile.border[0] and tempY - self.image.get_size()[1] <= tile.y:  # Top border
-            wallCollision = True
-            self.angle = -self.angle
-        if tile.border[1] and tempX + self.image.get_size()[0] >= tile.x + tileSize:  # Right border
-            wallCollision = True
-            self.angle = 180 - self.angle
-        if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + tileSize:  # Bottom border
-            wallCollision = True
-            self.angle = -self.angle
-        if tile.border[3] and tempX - self.image.get_size()[0] <= tile.x:  # Left border
-            wallCollision = True
-            self.angle = 180 - self.angle
-
-        if wallCollision:
-            self.bounce -= 1
-            if self.bounce < 0:
-                self.kill()  # Delete the bullet
-            else:
-                self.speed *= 0.8  # Optional: reduce speed after each bounce
-
-        self.updateCorners()
-        self.rect.x = int(tempX)
-        self.rect.y = int(tempY)
-        self.x = tempX
-        self.y = tempY
-        if abs(self.x - self.trailX) >= 1 and abs(self.y - self.trailY) >= 1:  # Trails
-            self.pleaseDraw = True
+        self.setBounce(2)
 
 class SilencerBullet(Bullet):
 
