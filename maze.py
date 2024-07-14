@@ -15,7 +15,7 @@ import copy
 class Tank(pygame.sprite.Sprite):
     topSpeed = 0
     topRotation = 0
-    
+    spriteImage = None
     def __init__(self, x, y, controls, name = "Default"):
 
         super().__init__()
@@ -282,13 +282,13 @@ class Tank(pygame.sprite.Sprite):
     def getName(self):
         return self.name
 
-    def setImage(self, imagePath):
+    def setImage(self, imageNum = 1):
         # Setup a new image if the selected one isn't the default
         # Inputs: imagePath: The filepath the points to the required image
         # Outputs: None
         # Load the tank image
         currentDir = os.path.dirname(__file__)
-        tankPath = os.path.join(currentDir, 'Sprites', imagePath)
+        tankPath = os.path.join(currentDir, 'Sprites', 'tank' + str(imageNum) + '.png')
         self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
 
         # Scale the tank image to a smaller size
@@ -299,9 +299,15 @@ class Tank(pygame.sprite.Sprite):
         self.x = float(self.rect.centerx)
         self.y = float(self.rect.centery)
 
+        spritePath = os.path.join(currentDir, 'Sprites', 'playerTankSprite' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
     def getHealthPercentage(self):
         return min((self.health/self.maxHealth),1)
 
+    def getSprite(self, flipped = False):
+        return pygame.transform.flip(self.spriteImage, flipped, False)
+    
 class Gun(pygame.sprite.Sprite):
 
     topTurretSpeed = 0
@@ -510,18 +516,24 @@ class Gun(pygame.sprite.Sprite):
     def draw(self, screen):
         screen.blit(self.image, self.rect)
 
-    def setImage(self, imagePath):
+    def setImage(self, imageNum = 1):
         # Setup a new image if the selected one isn't the default
         # Inputs: imagePath: The filepath the points to the required image
         # Outputs: None        
         currentDir = os.path.dirname(__file__)
-        gunPath = os.path.join(currentDir,'Sprites', imagePath)
+        gunPath = os.path.join(currentDir,'Sprites', 'gun' + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
         self.gunImage = self.originalGunImage
         self.image = self.gunImage
 
+        spritePath = os.path.join(currentDir, 'Sprites', 'playerGunSprite' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
     def getReloadPercentage(self):
         return min((self.shootCooldown/self.cooldownDuration),1)
+
+    def getSprite(self, flipped = False):
+        return pygame.transform.flip(self.spriteImage, flipped, False)
 
 class Bullet(pygame.sprite.Sprite):
 
@@ -1855,19 +1867,19 @@ def setUpPlayers():
     #Setup the tanks
     tank1 = copy.copy(hullList[p1J]) # Tank 1 setup
     tank1.setData(player1PackageTank)
-    tank1.setImage('tank' + str(p1L + 1) + '.png')
+    tank1.setImage(p1L + 1)
 
     tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
     tank2.setData(player2PackageTank)
-    tank2.setImage('tank' + str(p2L + 1) + '.png')
+    tank2.setImage(p2L + 1)
 
     gun1 = copy.copy(turretList[p1I]) # Gun 1 setup
     gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1])
-    gun1.setImage('gun' + str(p1K + 1) + '.png')
+    gun1.setImage(p1K + 1)
 
     gun2 = copy.copy(turretList[p2I]) # Gun 2 setup
     gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1])
-    gun2.setImage('gun' + str(p2K + 1) + '.png')
+    gun2.setImage(p2K + 1)
     #Updating the groups
     print("AllSprites: ", allSprites.sprites())
     for sprite in allSprites:
@@ -1877,6 +1889,8 @@ def setUpPlayers():
 
     allSprites.add(tank1, gun1, tank2, gun2) # Add the new sprites
     print("After adding: ", allSprites.sprites())
+    for bullet in bulletSprites:
+        bullet.kill()
     bulletSprites = pygame.sprite.Group()
 
 def constantHomeScreen():
@@ -1900,8 +1914,12 @@ def constantPlayGame():
     # Outputs: None
     screen.fill(bg) # This is the first line when drawing a new frame
     pygame.draw.rect(screen, c.geT("RED"), [tileSize, 0.78*windowHeight, tileSize*2,tileSize], 1) # The maze border
-    pygame.draw.rect(screen, c.geT("RED"), [windowWidth-tileSize*3, 0.78*windowHeight, tileSize*2,tileSize], 1) # The maze border
+    screen.blit(gun1.getSprite(True), (tileSize, 0.78*windowHeight)) # Gun 2
+    screen.blit(tank1.getSprite(True), (tileSize, 0.78*windowHeight+15)) # Tank 2
 
+    # pygame.draw.rect(screen, c.geT("RED"), [windowWidth-tileSize*3, 0.78*windowHeight, tileSize*2,tileSize], 1) # The maze border
+    screen.blit(gun2.getSprite(), (windowWidth - tileSize*3, 0.78*windowHeight)) # Gun 2
+    screen.blit(tank2.getSprite(), (windowWidth - tileSize*3, 0.78*windowHeight+15)) # Tank 2
     print("Switching to game music")
     mixer.crossfade('game')
     fontName = pygame.font.Font('fonts/LondrinaSolid-Regular.otf', 30)
@@ -2057,6 +2075,8 @@ def reset():
     for sprite in allSprites:
         sprite.kill()
     allSprites = pygame.sprite.Group() # Wipe the current Sprite Group
+    for sprite in bulletSprites:
+        sprite.kill()
     bulletSprites = pygame.sprite.Group()
     #Nautural constants
     startTime = 0
