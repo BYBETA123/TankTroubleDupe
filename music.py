@@ -94,6 +94,9 @@ class Music:
         if self.trigger:
             self.channels[self.nextTrackString].set_volume(self.fadeTrack * self.volume[self.nextTrackString]*newVolumes)
             self.channels[self.currentTrackString].set_volume((1 - self.fadeTrack) * self.volume[self.currentTrackString]*newVolumes)
+            for channel in self.channels:
+                if channel != self.nextTrackString and channel != self.currentTrackString:
+                    self.channels[channel].set_volume(0)
             self.fadeTrack += 0.01
 
             if self.fadeTrack >= 1:
