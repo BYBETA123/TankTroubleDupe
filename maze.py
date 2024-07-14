@@ -299,6 +299,9 @@ class Tank(pygame.sprite.Sprite):
         self.x = float(self.rect.centerx)
         self.y = float(self.rect.centery)
 
+    def getHealthPercentage(self):
+        return min((self.health/self.maxHealth),1)
+
 class Gun(pygame.sprite.Sprite):
 
     topTurretSpeed = 0
@@ -1867,6 +1870,8 @@ def setUpPlayers():
     gun2.setImage('gun' + str(p2K + 1) + '.png')
     #Updating the groups
     print("AllSprites: ", allSprites.sprites())
+    for sprite in allSprites:
+        sprite.kill()
     allSprites = pygame.sprite.Group() # Wipe the current Sprite Group
     print("After wipe: ", allSprites.sprites())
 
@@ -1971,7 +1976,7 @@ def playGame():
     #Box around the bottom of the screen for the health and reload bars
 
 
-    pygame.draw.rect(screen, c.geT("RED"), [tileSize*2.2, 0.88*windowHeight, barWidth*((tank1.getHealth())/tank1.getMaxHealth()),
+    pygame.draw.rect(screen, c.geT("RED"), [tileSize*2.2, 0.88*windowHeight, barWidth*(tank1.getHealthPercentage()),
                                             barHeight]) # Bar
     pygame.draw.rect(screen, c.geT("BLACK"), [tileSize*2.2, 0.88*windowHeight, barWidth, barHeight], 2) # Outline
     #Reload bars
@@ -1984,7 +1989,7 @@ def playGame():
 
 
     #Health bars
-    pygame.draw.rect(screen, c.geT("RED"), [windowWidth - tileSize*2.2 - barWidth, 0.88*windowHeight, barWidth*(((tank2.getHealth())/tank2.getMaxHealth())),
+    pygame.draw.rect(screen, c.geT("RED"), [windowWidth - tileSize*2.2 - barWidth, 0.88*windowHeight, barWidth*(tank2.getHealthPercentage()),
                                             barHeight])
     pygame.draw.rect(screen, c.geT("BLACK"), [windowWidth - tileSize*2.2 - barWidth, 0.88*windowHeight, barWidth, barHeight], 2)
     #Reload bars
@@ -2049,6 +2054,8 @@ def reset():
     gameOverFlag = False
     cooldownTimer = False
     #Remove all the sprites
+    for sprite in allSprites:
+        sprite.kill()
     allSprites = pygame.sprite.Group() # Wipe the current Sprite Group
     bulletSprites = pygame.sprite.Group()
     #Nautural constants
@@ -2076,6 +2083,8 @@ def updateTankHealth():
         gun1.kill()
         tank1.kill()
         if tank2.getHealth() <= 0:
+            for sprite in allSprites:
+                sprite.kill()
             allSprites = pygame.sprite.Group()
         gameOverFlag = True #The game is over
     if tank2.getHealth() <= 0:
@@ -2088,6 +2097,8 @@ def updateTankHealth():
         gun2.kill()
         tank2.kill()
         if tank1.getHealth() <= 0:
+            for sprite in allSprites:
+                sprite.kill()            
             allSprites = pygame.sprite.Group()
         gameOverFlag = True #The game is over
 
