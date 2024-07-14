@@ -284,7 +284,7 @@ class Tank(pygame.sprite.Sprite):
 
     def setImage(self, imageNum = 1):
         # Setup a new image if the selected one isn't the default
-        # Inputs: imagePath: The filepath the points to the required image
+        # Inputs: imageNum: The index that points to the required image
         # Outputs: None
         # Load the tank image
         currentDir = os.path.dirname(__file__)
@@ -722,6 +722,7 @@ class SidewinderBullet(Bullet):
         self.setBounce(5)
 
 class JudgeBullet(Bullet):
+
     def __init__(self, x, y, angle, gunLength, tipOffSet, initialDamage=76, minDamage=50):
         super().__init__(x, y, angle, gunLength, tipOffSet)
         self.damage = initialDamage
@@ -1195,6 +1196,7 @@ class GameMode(Enum):
 
 #Turrets
 class Sidewinder(Gun):
+
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(500)  # 500 ms
@@ -1202,6 +1204,7 @@ class Sidewinder(Gun):
         self.setDamageStatistic(1)
         self.setReloadStatistic(2)
         self.setGunBackDuration(300)
+        
     def fire(self):
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
         bullet = SidewinderBullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
@@ -1214,6 +1217,7 @@ class Sidewinder(Gun):
     
     
 class Judge(Gun):
+
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(800)  # 800 ms
@@ -1881,14 +1885,11 @@ def setUpPlayers():
     gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1])
     gun2.setImage(p2K + 1)
     #Updating the groups
-    print("AllSprites: ", allSprites.sprites())
     for sprite in allSprites:
         sprite.kill()
     allSprites = pygame.sprite.Group() # Wipe the current Sprite Group
-    print("After wipe: ", allSprites.sprites())
 
     allSprites.add(tank1, gun1, tank2, gun2) # Add the new sprites
-    print("After adding: ", allSprites.sprites())
     for bullet in bulletSprites:
         bullet.kill()
     bulletSprites = pygame.sprite.Group()
@@ -1913,11 +1914,9 @@ def constantPlayGame():
     # Inputs: None
     # Outputs: None
     screen.fill(bg) # This is the first line when drawing a new frame
-    pygame.draw.rect(screen, c.geT("RED"), [tileSize, 0.78*windowHeight, tileSize*2,tileSize], 1) # The maze border
     screen.blit(gun1.getSprite(True), (tileSize, 0.78*windowHeight)) # Gun 2
     screen.blit(tank1.getSprite(True), (tileSize, 0.78*windowHeight+15)) # Tank 2
 
-    # pygame.draw.rect(screen, c.geT("RED"), [windowWidth-tileSize*3, 0.78*windowHeight, tileSize*2,tileSize], 1) # The maze border
     screen.blit(gun2.getSprite(), (windowWidth - tileSize*3, 0.78*windowHeight)) # Gun 2
     screen.blit(tank2.getSprite(), (windowWidth - tileSize*3, 0.78*windowHeight+15)) # Tank 2
     print("Switching to game music")
