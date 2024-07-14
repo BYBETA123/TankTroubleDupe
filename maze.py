@@ -145,10 +145,8 @@ class Tank(pygame.sprite.Sprite):
         #Movement keys
         if keys[self.controls['up']]:
             self.speed = self.maxSpeed
-            # mixer.playSFX(soundDictionary['tankMove'], 'tankMove')
         elif keys[self.controls['down']]:
             self.speed = -self.maxSpeed
-            # mixer.playSFX(soundDictionary['tankMove'], 'tankMove')
         else:
             self.speed = 0
         if keys[self.controls['left']]:
@@ -367,6 +365,7 @@ class Gun(pygame.sprite.Sprite):
         #If tank hull moves left or right, the gun will also move simultaneously
         #with the tank hull at the same speed and direction.
         self.rotationSpeed = 0
+        
         if keys[self.controls['rotate_left']]:
             self.rotationSpeed += self.turretSpeed
         elif keys[self.controls['rotate_right']]:
@@ -518,6 +517,9 @@ class Gun(pygame.sprite.Sprite):
         self.gunImage = self.originalGunImage
         self.image = self.gunImage
 
+    def getReloadPercentage(self):
+        return min((self.shootCooldown/self.cooldownDuration),1)
+
 class Bullet(pygame.sprite.Sprite):
 
     originalCollision = True
@@ -627,7 +629,7 @@ class Bullet(pygame.sprite.Sprite):
                 self.kill()
 
         # Checking for self damage
-        if (self.x - self.initialX)**2 + (self.y - self.initialY)**2 >= 20**2 or self.bounce != self.originalBounce:
+        if self.bounce != self.originalBounce:
             self.selfCollision = True
 
         tile = tileList[index-1]
@@ -1864,8 +1866,12 @@ def setUpPlayers():
     gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1])
     gun2.setImage('gun' + str(p2K + 1) + '.png')
     #Updating the groups
+    print("AllSprites: ", allSprites.sprites())
     allSprites = pygame.sprite.Group() # Wipe the current Sprite Group
+    print("After wipe: ", allSprites.sprites())
+
     allSprites.add(tank1, gun1, tank2, gun2) # Add the new sprites
+    print("After adding: ", allSprites.sprites())
     bulletSprites = pygame.sprite.Group()
 
 def constantHomeScreen():
@@ -1943,6 +1949,7 @@ def playGame():
         if time.time() - startTime >= 3: # 3 seconds
             #Reset the game
             reset()
+            constantPlayGame()
 
     #UI Elements
     pauseButton.update_display(pygame.mouse.get_pos())
@@ -1968,8 +1975,9 @@ def playGame():
                                             barHeight]) # Bar
     pygame.draw.rect(screen, c.geT("BLACK"), [tileSize*2.2, 0.88*windowHeight, barWidth, barHeight], 2) # Outline
     #Reload bars
-    pygame.draw.rect(screen, c.geT("BLUE"), [tileSize*2.2, 0.88*windowHeight + mazeY//2, barWidth*(1-((gun1.getCooldown())/gun1.getCooldownMax())),
+    pygame.draw.rect(screen, c.geT("BLUE"), [tileSize*2.2, 0.88*windowHeight + mazeY//2, barWidth*(min(1,1-gun1.getReloadPercentage())),
                                              barHeight]) # The 25 is to space from the health bar
+
     pygame.draw.rect(screen, c.geT("BLACK"), [tileSize*2.2, 0.88*windowHeight + mazeY//2, barWidth, barHeight], 2) # Outline
 
 
@@ -1981,7 +1989,7 @@ def playGame():
     pygame.draw.rect(screen, c.geT("BLACK"), [windowWidth - tileSize*2.2 - barWidth, 0.88*windowHeight, barWidth, barHeight], 2)
     #Reload bars
     pygame.draw.rect(screen, c.geT("BLUE"), [windowWidth - tileSize*2.2 - barWidth, 0.88*windowHeight + mazeY//2,
-                                             barWidth*((gun2.getCooldownMax()-gun2.getCooldown())/gun2.getCooldownMax()),
+                                             barWidth*(min(1,1-gun2.getReloadPercentage())),
                                              barHeight]) # The 25 is to space from the health bar
     pygame.draw.rect(screen, c.geT("BLACK"), [windowWidth - tileSize*2.2 - barWidth, 0.88*windowHeight + mazeY//2, barWidth, barHeight], 2) # Outline
 
@@ -2000,7 +2008,7 @@ def playGame():
     allSprites.update()
     bulletSprites.update()
     explosionGroup.update()
-
+    # print(allSprites.sprites())
     for sprite in allSprites:
         sprite.draw(screen)
         if sprite.isDrawable():
@@ -2040,11 +2048,9 @@ def reset():
     global allSprites, bulletSprites
     gameOverFlag = False
     cooldownTimer = False
-    #Removee all the sprites
-    for sprite in allSprites:
-        sprite.kill()
-    for sprite in bulletSprites:
-        sprite.kill()
+    #Remove all the sprites
+    allSprites = pygame.sprite.Group() # Wipe the current Sprite Group
+    bulletSprites = pygame.sprite.Group()
     #Nautural constants
     startTime = 0
     tank1Dead = False
