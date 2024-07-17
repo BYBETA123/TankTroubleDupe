@@ -2691,9 +2691,9 @@ controlsTank1 = {
     'down': pygame.K_s,
     'left': pygame.K_a,
     'right': pygame.K_d,
-    'rotate_left': pygame.K_h,
-    'rotate_right': pygame.K_k,
-    'fire': pygame.K_j
+    'rotate_left': pygame.K_r,
+    'rotate_right': pygame.K_y,
+    'fire': pygame.K_t
 }
 
 # Controls for the second tank
@@ -2703,8 +2703,8 @@ controlsTank2 = {
     'left': pygame.K_LEFT,
     'right': pygame.K_RIGHT,
     'rotate_left': pygame.K_COMMA,
-    'rotate_right': pygame.K_PERIOD,
-    'fire': pygame.K_SLASH
+    'rotate_right': pygame.K_SLASH,
+    'fire': pygame.K_PERIOD
 }
 
 volume = {
