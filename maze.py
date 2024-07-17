@@ -796,6 +796,8 @@ class SilencerBullet(Bullet):
 
 class WatcherBullet(Bullet):
 
+    trailColor = (255, 0, 0)
+
     def __init__(self, x, y, angle, gunLength, tipOffSet):
         super().__init__(x, y, angle, gunLength, tipOffSet)
         self.speed = 0.2
@@ -876,8 +878,11 @@ class WatcherBullet(Bullet):
         # Inputs: screen: The screen that the bullet will be drawn on
         # Outputs: None
         if self.trail:
-            pygame.draw.circle(screen, c.geT("RED"), (self.x, self.y), 1)
+            pygame.draw.circle(screen, self.trailColor, (self.x, self.y), 1)
             self.pleaseDraw = False
+
+    def setTrailColor(self, color):
+        self.trailColor = color
 
     def draw(self,_):
         return # We don't want to draw the bullet
@@ -1214,8 +1219,7 @@ class Sidewinder(Gun):
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
         soundDictionary["tankShoot"].play()
-    
-    
+     
 class Judge(Gun):
 
     def __init__(self, tank, controls, name):
@@ -1582,6 +1586,8 @@ class Watcher(Gun):
             bullet = WatcherBullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
             bullet.setDamage(0)
             bullet.setBulletSpeed(25)
+            if self.scopeDamage >= 3300:
+                bullet.setTrailColor(c.geT("GREEN"))
             bullet.drawable = True
             bullet.trail = True
             bulletSprites.add(bullet)
@@ -1977,7 +1983,7 @@ def playGame():
     pauseButton.update_display(pygame.mouse.get_pos())
     pauseButton.draw(screen, outline = True)
 
-    pygame.draw.rect(screen, bg, [tileSize*0.8, tileSize*0.8, windowWidth - tileSize*1.5, tileSize*8.5]) # Draw a box for the maze
+    pygame.draw.rect(screen, bg, [tileSize*0.72, tileSize*0.72, windowWidth - tileSize*1.4, tileSize*8.5]) # Draw a box for the maze
     
     #Making the string for score
     p1ScoreText = str(p1Score)
@@ -2692,8 +2698,8 @@ controlsTank1 = {
     'left': pygame.K_a,
     'right': pygame.K_d,
     'rotate_left': pygame.K_r,
-    'rotate_right': pygame.K_y,
-    'fire': pygame.K_t
+    'rotate_right': pygame.K_t,
+    'fire': pygame.K_y
 }
 
 # Controls for the second tank
@@ -2703,8 +2709,8 @@ controlsTank2 = {
     'left': pygame.K_LEFT,
     'right': pygame.K_RIGHT,
     'rotate_left': pygame.K_COMMA,
-    'rotate_right': pygame.K_SLASH,
-    'fire': pygame.K_PERIOD
+    'rotate_right': pygame.K_PERIOD,
+    'fire': pygame.K_SLASH
 }
 
 volume = {
