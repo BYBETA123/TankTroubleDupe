@@ -1236,26 +1236,33 @@ class GameMode(Enum):
     selection = 4
 
 #Turrets
-class Sidewinder(Gun):
+
+class Chamber(Gun):
 
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
-        self.setCooldown(500)  # 500 ms
-        self.setDamage(350)
-        self.setDamageStatistic(1)
+        self.setCooldown(1500) # 200 ms
+        self.setDamage(270) # Should be 900 but because of the 3 step effect it will be split into 3x 300
+        self.setDamageStatistic(2)
         self.setReloadStatistic(2)
-        self.setGunBackDuration(300)
-        self.setGunCenter(0, 1)
-        
+        self.setGunBackDuration(500)
+        self.setGunCenter(0, -4)
+
     def fire(self):
+        # This function is responsible for all the firing mechanics of the gun
+        # The Bullet is custom here as it is tailored for the Chamber
+        # Inputs: None
+        # Outputs: None
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
         bulletX, bulletY = self.getTank().getGunCenter()
-        bullet = SidewinderBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
+        bullet = ChamberBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
-        bullet.setBulletSpeed(1)
+        bullet.setDamage(self.damage)
+        bullet.setBulletSpeed(5)
         bulletSprites.add(bullet)
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
+        #If either tank shoots, play this sound effect.
         soundDictionary["tankShoot"].play()
 
     def setImage(self, imageNum = 1):
@@ -1263,7 +1270,7 @@ class Sidewinder(Gun):
         # Inputs: imagePath: The filepath the points to the required image
         # Outputs: None        
         currentDir = os.path.dirname(__file__)
-        gunPath = os.path.join(currentDir,'Sprites', 'Sidewinder' + str(imageNum) + '.png')
+        gunPath = os.path.join(currentDir,'Sprites', 'Chamber' + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
         width, height = self.originalGunImage.get_size()
         self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
@@ -1376,23 +1383,34 @@ class Huntsman(Gun):
         spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
         self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
-class Tempest(Gun):
+class Sidewinder(Gun):
 
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
-        self.setCooldown(200) # 200 ms
-        self.setDamage(200)
+        self.setCooldown(500)  # 500 ms
+        self.setDamage(350)
         self.setDamageStatistic(1)
-        self.setReloadStatistic(3)
-        self.setGunBackDuration(50)
-        self.setGunCenter(0, -2)
+        self.setReloadStatistic(2)
+        self.setGunBackDuration(300)
+        self.setGunCenter(0, 1)
+        
+    def fire(self):
+        self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
+        bulletX, bulletY = self.getTank().getGunCenter()
+        bullet = SidewinderBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
+        bullet.setName(self.getTank().getName())
+        bullet.setBulletSpeed(1)
+        bulletSprites.add(bullet)
+        self.canShoot = False
+        self.shootCooldown = self.cooldownDuration
+        soundDictionary["tankShoot"].play()
 
     def setImage(self, imageNum = 1):
         # Setup a new image if the selected one isn't the default
         # Inputs: imagePath: The filepath the points to the required image
         # Outputs: None        
         currentDir = os.path.dirname(__file__)
-        gunPath = os.path.join(currentDir,'Sprites', 'Tempest' + str(imageNum) + '.png')
+        gunPath = os.path.join(currentDir,'Sprites', 'Sidewinder' + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
         width, height = self.originalGunImage.get_size()
         self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
@@ -1564,6 +1582,32 @@ class Silencer(Gun):
         spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
         self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
+class Tempest(Gun):
+
+    def __init__(self, tank, controls, name):
+        super().__init__(tank, controls, name)
+        self.setCooldown(200) # 200 ms
+        self.setDamage(200)
+        self.setDamageStatistic(1)
+        self.setReloadStatistic(3)
+        self.setGunBackDuration(50)
+        self.setGunCenter(0, -2)
+
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imagePath: The filepath the points to the required image
+        # Outputs: None        
+        currentDir = os.path.dirname(__file__)
+        gunPath = os.path.join(currentDir,'Sprites', 'Tempest' + str(imageNum) + '.png')
+        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
+        width, height = self.originalGunImage.get_size()
+        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
+        self.gunImage = self.originalGunImage
+        self.image = self.gunImage
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
 class Watcher(Gun):
 
     scoping = False
@@ -1726,60 +1770,19 @@ class Watcher(Gun):
         spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
         self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
-class Chamber(Gun):
 
-    def __init__(self, tank, controls, name):
-        super().__init__(tank, controls, name)
-        self.setCooldown(1500) # 200 ms
-        self.setDamage(270) # Should be 900 but because of the 3 step effect it will be split into 3x 300
-        self.setDamageStatistic(2)
-        self.setReloadStatistic(2)
-        self.setGunBackDuration(500)
-        self.setGunCenter(0, -4)
-
-    def fire(self):
-        # This function is responsible for all the firing mechanics of the gun
-        # The Bullet is custom here as it is tailored for the Chamber
-        # Inputs: None
-        # Outputs: None
-        self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
-        bulletX, bulletY = self.getTank().getGunCenter()
-        bullet = ChamberBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
-        bullet.setName(self.getTank().getName())
-        bullet.setDamage(self.damage)
-        bullet.setBulletSpeed(5)
-        bulletSprites.add(bullet)
-        self.canShoot = False
-        self.shootCooldown = self.cooldownDuration
-        #If either tank shoots, play this sound effect.
-        soundDictionary["tankShoot"].play()
-
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imagePath: The filepath the points to the required image
-        # Outputs: None        
-        currentDir = os.path.dirname(__file__)
-        gunPath = os.path.join(currentDir,'Sprites', 'Chamber' + str(imageNum) + '.png')
-        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
-        width, height = self.originalGunImage.get_size()
-        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
-        self.gunImage = self.originalGunImage
-        self.image = self.gunImage
-
-        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
 #Hulls
-class Panther(Tank):
+class Bonsai(Tank):
 
     def __init__(self, x, y, controls, name):
         super().__init__(x, y, controls, name)
-        self.setMaxHealth(1500)
-        self.setSpeedStatistic(3)
-        self.setHealthStatistic(1)
-        self.setTopSpeed(0.3)
-        self.setTopRotationalSpeed(0.8)
-        self.setTankName("Panther")
+        self.setMaxHealth(3500)
+        self.setSpeedStatistic(2)
+        self.setHealthStatistic(2)
+        self.setTopSpeed(0.15)
+        self.setTopRotationalSpeed(0.5)
+        self.setTankName("Bonsai")
 
     def setImage(self, imageNum = 1):
         # Setup a new image if the selected one isn't the default
@@ -1787,7 +1790,7 @@ class Panther(Tank):
         # Outputs: None
         # Load the tank image
         currentDir = os.path.dirname(__file__)
-        tankPath = os.path.join(currentDir, 'Sprites', 'Panther' + str(imageNum) + '.png')
+        tankPath = os.path.join(currentDir, 'Sprites', 'Bonsai' + str(imageNum) + '.png')
         self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
 
         # Scale the tank image to a smaller size
@@ -1805,8 +1808,8 @@ class Panther(Tank):
         #Since the point is not in the center of the tank, we need to adjust the gun position
         # Inputs: None
         # Outputs: The center of the gun
-        return self.rotate_point((self.rect.centerx, self.rect.centery), -4, 0, self.angle)
-
+        return self.rotate_point((self.rect.centerx, self.rect.centery), -5, 0, self.angle)
+    
 class Cicada(Tank):
 
     def __init__(self, x, y, controls, name):
@@ -1844,6 +1847,43 @@ class Cicada(Tank):
         # Outputs: The center of the gun
         return self.rotate_point((self.rect.centerx, self.rect.centery), -4, 0, self.angle)
 
+class Fossil(Tank):
+
+    def __init__(self, x, y, controls, name):
+        super().__init__(x, y, controls, name)
+        self.setMaxHealth(4000)
+        self.setSpeedStatistic(1)
+        self.setHealthStatistic(3)
+        self.setTopSpeed(0.1)
+        self.setTopRotationalSpeed(0.25)
+        self.setTankName("Fossil")
+
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imageNum: The index that points to the required image
+        # Outputs: None
+        # Load the tank image
+        currentDir = os.path.dirname(__file__)
+        tankPath = os.path.join(currentDir, 'Sprites', 'Fossil' + str(imageNum) + '.png')
+        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
+
+        # Scale the tank image to a smaller size
+        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
+        self.image = self.tankImage
+        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
+        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
+        self.x = float(self.rect.centerx)
+        self.y = float(self.rect.centery)
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
+    def getGunCenter(self):
+        #Since the point is not in the center of the tank, we need to adjust the gun position
+        # Inputs: None
+        # Outputs: The center of the gun
+        return self.rotate_point((self.rect.centerx, self.rect.centery), 4, 0, self.angle)
+    
 class Gater(Tank):
 
     def __init__(self, x, y, controls, name):
@@ -1881,16 +1921,16 @@ class Gater(Tank):
         # Outputs: The center of the gun
         return self.rotate_point((self.rect.centerx, self.rect.centery), 0, 0, self.angle)
 
-class Bonsai(Tank):
+class Panther(Tank):
 
     def __init__(self, x, y, controls, name):
         super().__init__(x, y, controls, name)
-        self.setMaxHealth(3500)
-        self.setSpeedStatistic(2)
-        self.setHealthStatistic(2)
-        self.setTopSpeed(0.15)
-        self.setTopRotationalSpeed(0.5)
-        self.setTankName("Bonsai")
+        self.setMaxHealth(1500)
+        self.setSpeedStatistic(3)
+        self.setHealthStatistic(1)
+        self.setTopSpeed(0.3)
+        self.setTopRotationalSpeed(0.8)
+        self.setTankName("Panther")
 
     def setImage(self, imageNum = 1):
         # Setup a new image if the selected one isn't the default
@@ -1898,7 +1938,7 @@ class Bonsai(Tank):
         # Outputs: None
         # Load the tank image
         currentDir = os.path.dirname(__file__)
-        tankPath = os.path.join(currentDir, 'Sprites', 'Bonsai' + str(imageNum) + '.png')
+        tankPath = os.path.join(currentDir, 'Sprites', 'Panther' + str(imageNum) + '.png')
         self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
 
         # Scale the tank image to a smaller size
@@ -1916,44 +1956,7 @@ class Bonsai(Tank):
         #Since the point is not in the center of the tank, we need to adjust the gun position
         # Inputs: None
         # Outputs: The center of the gun
-        return self.rotate_point((self.rect.centerx, self.rect.centery), -5, 0, self.angle)
-
-class Fossil(Tank):
-
-    def __init__(self, x, y, controls, name):
-        super().__init__(x, y, controls, name)
-        self.setMaxHealth(4000)
-        self.setSpeedStatistic(1)
-        self.setHealthStatistic(3)
-        self.setTopSpeed(0.1)
-        self.setTopRotationalSpeed(0.25)
-        self.setTankName("Fossil")
-
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imageNum: The index that points to the required image
-        # Outputs: None
-        # Load the tank image
-        currentDir = os.path.dirname(__file__)
-        tankPath = os.path.join(currentDir, 'Sprites', 'Fossil' + str(imageNum) + '.png')
-        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
-
-        # Scale the tank image to a smaller size
-        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
-        self.image = self.tankImage
-        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
-        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
-        self.x = float(self.rect.centerx)
-        self.y = float(self.rect.centery)
-
-        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
-
-    def getGunCenter(self):
-        #Since the point is not in the center of the tank, we need to adjust the gun position
-        # Inputs: None
-        # Outputs: The center of the gun
-        return self.rotate_point((self.rect.centerx, self.rect.centery), 4, 0, self.angle)
+        return self.rotate_point((self.rect.centerx, self.rect.centery), -4, 0, self.angle)
 
 #Functions
 def tileGen():
