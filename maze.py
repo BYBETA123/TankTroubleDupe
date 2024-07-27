@@ -299,7 +299,7 @@ class Tank(pygame.sprite.Sprite):
         self.x = float(self.rect.centerx)
         self.y = float(self.rect.centery)
 
-        spritePath = os.path.join(currentDir, 'Sprites', 'playerTankSprite' + str(imageNum) + '.png')
+        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
         self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
     def getHealthPercentage(self):
@@ -308,6 +308,32 @@ class Tank(pygame.sprite.Sprite):
     def getSprite(self, flipped = False):
         return pygame.transform.flip(self.spriteImage, flipped, False)
     
+    def getGunCenter(self):
+        return (self.x, self.y)
+
+    def rotate_point(self, pivot, distance, initial_angle, rotation_angle):
+        """
+        Rotate a point around a given pivot point by a certain angle.
+        
+        :param pivot: Tuple of (x, y) for the pivot point
+        :param distance: Distance of the point from the pivot
+        :param initial_angle: Initial angle of the point from the pivot in degrees
+        :param rotation_angle: Rotation angle in degrees
+        :return: Tuple of (x', y') for the rotated point
+        """
+        initial_angle_rad = math.radians(initial_angle)  # Convert initial angle to radians
+        rotation_angle_rad = math.radians(rotation_angle)  # Convert rotation angle to radians
+        # Calculate the new angle after rotation
+        new_angle_rad = initial_angle_rad + rotation_angle_rad
+        new_angle_rad = 2 * math.pi - new_angle_rad
+
+        # Calculate new coordinates
+        x_p, y_p = pivot
+        x_prime = x_p + distance * math.cos(new_angle_rad)
+        y_prime = y_p + distance * math.sin(new_angle_rad)
+        
+        return x_prime, y_prime
+
 class Gun(pygame.sprite.Sprite):
 
     topTurretSpeed = 0
@@ -351,6 +377,10 @@ class Gun(pygame.sprite.Sprite):
         self.turretSpeed = 0.8
         self.drawable = False
         self.topTurretSpeed = self.turretSpeed
+        self.gunH = 7
+        angleRad = math.radians(self.angle)
+        gunEndX, gunEndY = self.tank.getGunCenter()
+        self.rect = self.image.get_rect(center=(gunEndX + self.gunH * math.cos(angleRad), gunEndY - self.gunH * math.sin(angleRad)))
 
     def update(self):
         """
@@ -408,21 +438,13 @@ class Gun(pygame.sprite.Sprite):
         #which is relative to the posistion of the tank gun.
         if keys[self.controls['fire']] and self.canShoot:
             self.fire()
-        #Here is the bullet cooldown
-        elapsedTime = pygame.time.get_ticks() - self.gunBackStartTime
-        if elapsedTime <= self.gunBackDuration:
-            progress = elapsedTime / self.gunBackDuration
-            self.gunLength = self.originalGunLength - 5 * progress
-        else:
-            self.gunLength = self.originalGunLength
 
         angleRad = math.radians(self.angle)
-        gunEndX = self.tank.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(angleRad)
-        gunEndY = self.tank.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(angleRad)
+        gunEndX, gunEndY = self.tank.getGunCenter()
 
         rotatedGunImage = pygame.transform.rotate(self.originalGunImage, self.angle)
         self.image = rotatedGunImage
-        self.rect = self.image.get_rect(center=(gunEndX, gunEndY))
+        self.rect = self.image.get_rect(center=(gunEndX + self.gunH * math.cos(angleRad), gunEndY - self.gunH * math.sin(angleRad)))
         if self.shootCooldown > 0:
             self.shootCooldown -= pygame.time.get_ticks() - self.lastUpdateTime
         else:
@@ -438,7 +460,8 @@ class Gun(pygame.sprite.Sprite):
 
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
         # Calculating where the bullet should spawn
-        bullet = Bullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
+        bulletX, bulletY = self.getTank().getGunCenter()
+        bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setDamage(self.damage)
         bullet.setName(self.getTank().getName())
         bulletSprites.add(bullet)
@@ -526,7 +549,7 @@ class Gun(pygame.sprite.Sprite):
         self.gunImage = self.originalGunImage
         self.image = self.gunImage
 
-        spritePath = os.path.join(currentDir, 'Sprites', 'playerGunSprite' + str(imageNum) + '.png')
+        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
         self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
     def getReloadPercentage(self):
@@ -534,6 +557,15 @@ class Gun(pygame.sprite.Sprite):
 
     def getSprite(self, flipped = False):
         return pygame.transform.flip(self.spriteImage, flipped, False)
+
+    def setTipOffset(self, tip):
+        self.tipOffSet = tip
+
+    def setGunCenter(self, x, y):
+        self.gunH = (x**2 + y**2)**0.5 # hypotenuse
+    
+    def getGunCenter(self):
+        return self.rect.center
 
 class Bullet(pygame.sprite.Sprite):
 
@@ -720,6 +752,7 @@ class SidewinderBullet(Bullet):
     def __init__(self, x, y, angle, gunLength, tipOffSet):
         super().__init__(x, y, angle, gunLength, tipOffSet)
         self.setBounce(5)
+        self.setDamage(350)
 
 class JudgeBullet(Bullet):
 
@@ -1209,17 +1242,32 @@ class Sidewinder(Gun):
         self.setDamageStatistic(1)
         self.setReloadStatistic(2)
         self.setGunBackDuration(300)
+        self.setGunCenter(0, 1)
         
     def fire(self):
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
-        bullet = SidewinderBullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
+        bulletX, bulletY = self.getTank().getGunCenter()
+        bullet = SidewinderBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
         bullet.setBulletSpeed(1)
         bulletSprites.add(bullet)
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
         soundDictionary["tankShoot"].play()
-     
+
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imagePath: The filepath the points to the required image
+        # Outputs: None        
+        currentDir = os.path.dirname(__file__)
+        gunPath = os.path.join(currentDir,'Sprites', 'Sidewinder' + str(imageNum) + '.png')
+        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
+        self.gunImage = self.originalGunImage
+        self.image = self.gunImage
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
 class Judge(Gun):
 
     def __init__(self, tank, controls, name):
@@ -1229,11 +1277,13 @@ class Judge(Gun):
         self.setDamageStatistic(2)
         self.setReloadStatistic(2)
         self.setGunBackDuration(300)
+        self.setTipOffset(28)
         self.bulletInterval = 15
         self.scatterRange = 13
         self.maxUses = 3
         self.currentUses = 0
         self.reloadTime = 2  # 2 seconds
+        self.setGunCenter(0, -3)
 
     def fire(self):
         if self.currentUses < self.maxUses:
@@ -1246,14 +1296,16 @@ class Judge(Gun):
             soundDictionary["tankShoot"].play()
             self.currentUses += 1
             if self.currentUses >= self.maxUses:
-                self.canShoot = False
-                Timer(self.reloadTime, self.reload).start()
-            
+                self.currentUses = 0
+                #This needs to be fixed a little bit
+                # self.canShoot = False
+                # Timer(self.reloadTime, self.reload).start()
 
     def fireBullet(self):
         scatterAngle = random.uniform(-self.scatterRange, self.scatterRange)
         bulletAngle = self.angle + scatterAngle
-        bullet = JudgeBullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], bulletAngle, self.gunLength, self.tipOffSet)
+        bulletX, bulletY = self.getTank().getGunCenter()
+        bullet = JudgeBullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
         bullet.setDamage(self.damage)
         bullet.setBulletSpeed(0.5)
@@ -1263,6 +1315,19 @@ class Judge(Gun):
     def reload(self):
         self.currentUses = 0
         self.canShoot = True
+
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imagePath: The filepath the points to the required image
+        # Outputs: None        
+        currentDir = os.path.dirname(__file__)
+        gunPath = os.path.join(currentDir,'Sprites', 'Judge' + str(imageNum) + '.png')
+        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
+        self.gunImage = self.originalGunImage
+        self.image = self.gunImage
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
 class Huntsman(Gun):
 
@@ -1276,7 +1341,8 @@ class Huntsman(Gun):
 
     def fire(self):
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
-        bullet = Bullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
+        bulletX, bulletY = self.getTank().getGunCenter()
+        bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
         if random.random() < 0.05:  # 5% chance
             bullet.setDamage(self.damage * 2)
@@ -1287,8 +1353,21 @@ class Huntsman(Gun):
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
         soundDictionary["tankShoot"].play()
-    
-class Boxer(Gun):
+
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imagePath: The filepath the points to the required image
+        # Outputs: None
+        currentDir = os.path.dirname(__file__)
+        gunPath = os.path.join(currentDir,'Sprites', 'Huntsman' + str(imageNum) + '.png')
+        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
+        self.gunImage = self.originalGunImage
+        self.image = self.gunImage
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
+class Tempest(Gun):
 
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
@@ -1297,6 +1376,20 @@ class Boxer(Gun):
         self.setDamageStatistic(1)
         self.setReloadStatistic(3)
         self.setGunBackDuration(50)
+        self.setGunCenter(0, -2)
+
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imagePath: The filepath the points to the required image
+        # Outputs: None        
+        currentDir = os.path.dirname(__file__)
+        gunPath = os.path.join(currentDir,'Sprites', 'Tempest' + str(imageNum) + '.png')
+        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
+        self.gunImage = self.originalGunImage
+        self.image = self.gunImage
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
 class Silencer(Gun):
 
@@ -1311,6 +1404,7 @@ class Silencer(Gun):
         self.setDamageStatistic(3)
         self.setReloadStatistic(1)
         self.drawable = True
+        self.setGunCenter(0, -3)
 
     def update(self):
         """
@@ -1388,12 +1482,11 @@ class Silencer(Gun):
             self.gunLength = self.originalGunLength
 
         angleRad = math.radians(self.angle)
-        gunEndX = self.tank.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(angleRad)
-        gunEndY = self.tank.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(angleRad)
+        gunEndX, gunEndY = self.tank.getGunCenter()
 
         rotatedGunImage = pygame.transform.rotate(self.originalGunImage, self.angle)
         self.image = rotatedGunImage
-        self.rect = self.image.get_rect(center=(gunEndX, gunEndY))
+        self.rect = self.image.get_rect(center=(gunEndX + self.gunH * math.cos(angleRad), gunEndY - self.gunH * math.sin(angleRad)))
         if self.shootCooldown > 0:
             self.shootCooldown -= pygame.time.get_ticks() - self.lastUpdateTime
         else:
@@ -1409,7 +1502,8 @@ class Silencer(Gun):
         # Outputs: None
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
         #Setup bullet
-        bullet = SilencerBullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
+        bulletX, bulletY = self.getTank().getGunCenter()
+        bullet = SilencerBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setDamage(0)
         bullet.setBulletSpeed(5)
         bullet.setName(self.getTank().getName())
@@ -1417,7 +1511,7 @@ class Silencer(Gun):
         bullet.trail = True
         bulletSprites.add(bullet)
 
-        bullet1 = Bullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
+        bullet1 = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet1.setDamage(self.damage)
         bullet1.setBulletSpeed(5)
         bullet1.setName(self.getTank().getName())
@@ -1435,10 +1529,27 @@ class Silencer(Gun):
         # Inputs: Screen - The screen that the gun will be drawn on
         # Outputs: None
         if self.wind_up - (pygame.time.get_ticks() - self.lastRegister) >= 0:
+            gunEndX, gunEndY = self.tank.getGunCenter()
+            angleRad = math.radians(self.angle)
+
+            # self.rect = self.image.get_rect(center=(gunEndX + self.gunH * math.cos(angleRad), gunEndY - self.gunH * math.sin(angleRad)))
+
             pygame.draw.circle(screen, c.geT("NEON_PURPLE"),
-                               (self.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(math.radians(self.angle)),
-                                self.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(math.radians(self.angle))),
+                               (gunEndX + (self.gunH + 7) * math.cos(angleRad), gunEndY - (self.gunH + 7) * math.sin(angleRad)),
                                 (pygame.time.get_ticks() - self.lastRegister)/self.wind_up * 5)
+
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imagePath: The filepath the points to the required image
+        # Outputs: None        
+        currentDir = os.path.dirname(__file__)
+        gunPath = os.path.join(currentDir,'Sprites', 'Silencer' + str(imageNum) + '.png')
+        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
+        self.gunImage = self.originalGunImage
+        self.image = self.gunImage
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
 class Watcher(Gun):
 
@@ -1453,7 +1564,9 @@ class Watcher(Gun):
         self.setDamage(3300)
         self.setDamageStatistic(2)
         self.setReloadStatistic(2)
+        self.setTipOffset(25)
         self.drawable = True
+        self.setGunCenter(0, -3)
 
     def update(self):
         """
@@ -1534,21 +1647,12 @@ class Watcher(Gun):
             self.getTank().resetMaxSpeed()
             self.getTank().resetRotationalSpeed()
 
-        #Here is the bullet cooldown
-        elapsedTime = pygame.time.get_ticks() - self.gunBackStartTime
-        if elapsedTime <= self.gunBackDuration:
-            progress = elapsedTime / self.gunBackDuration
-            self.gunLength = self.originalGunLength - 5 * progress
-        else:
-            self.gunLength = self.originalGunLength
-
         angleRad = math.radians(self.angle)
-        gunEndX = self.tank.rect.centerx + (self.gunLength + self.tipOffSet) * math.cos(angleRad)
-        gunEndY = self.tank.rect.centery - (self.gunLength + self.tipOffSet) * math.sin(angleRad)
+        gunEndX, gunEndY = self.tank.getGunCenter()
 
         rotatedGunImage = pygame.transform.rotate(self.originalGunImage, self.angle)
         self.image = rotatedGunImage
-        self.rect = self.image.get_rect(center=(gunEndX, gunEndY))
+        self.rect = self.image.get_rect(center=(gunEndX + self.gunH * math.cos(angleRad), gunEndY - self.gunH * math.sin(angleRad)))
         if self.shootCooldown > 0:
             self.shootCooldown -= pygame.time.get_ticks() - self.lastUpdateTime
         else:
@@ -1564,7 +1668,8 @@ class Watcher(Gun):
         # Outputs: None
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
         # Setup bullet
-        bullet = Bullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
+        bulletX, bulletY = self.getTank().getGunCenter()
+        bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setDamage(self.getDamage())
         bullet.setBulletSpeed(5)
         bullet.setName(self.getTank().getName())
@@ -1583,7 +1688,8 @@ class Watcher(Gun):
         # Inputs: None
         # Outputs: None
         if self.scoping:
-            bullet = WatcherBullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
+            bulletX, bulletY = self.getTank().getGunCenter()
+            bullet = WatcherBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
             bullet.setDamage(0)
             bullet.setBulletSpeed(25)
             if self.scopeDamage >= 3300:
@@ -1591,6 +1697,19 @@ class Watcher(Gun):
             bullet.drawable = True
             bullet.trail = True
             bulletSprites.add(bullet)
+
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imagePath: The filepath the points to the required image
+        # Outputs: None        
+        currentDir = os.path.dirname(__file__)
+        gunPath = os.path.join(currentDir,'Sprites', 'Watcher' + str(imageNum) + '.png')
+        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
+        self.gunImage = self.originalGunImage
+        self.image = self.gunImage
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
 class Chamber(Gun):
 
@@ -1601,6 +1720,7 @@ class Chamber(Gun):
         self.setDamageStatistic(2)
         self.setReloadStatistic(2)
         self.setGunBackDuration(500)
+        self.setGunCenter(0, -4)
 
     def fire(self):
         # This function is responsible for all the firing mechanics of the gun
@@ -1608,7 +1728,8 @@ class Chamber(Gun):
         # Inputs: None
         # Outputs: None
         self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
-        bullet = ChamberBullet(self.getTank().getCenter()[0], self.getTank().getCenter()[1], self.angle, self.gunLength, self.tipOffSet)
+        bulletX, bulletY = self.getTank().getGunCenter()
+        bullet = ChamberBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
         bullet.setDamage(self.damage)
         bullet.setBulletSpeed(5)
@@ -1618,17 +1739,56 @@ class Chamber(Gun):
         #If either tank shoots, play this sound effect.
         soundDictionary["tankShoot"].play()
 
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imagePath: The filepath the points to the required image
+        # Outputs: None        
+        currentDir = os.path.dirname(__file__)
+        gunPath = os.path.join(currentDir,'Sprites', 'Chamber' + str(imageNum) + '.png')
+        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
+        self.gunImage = self.originalGunImage
+        self.image = self.gunImage
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
 #Hulls
 class Panther(Tank):
 
     def __init__(self, x, y, controls, name):
         super().__init__(x, y, controls, name)
-        self.setMaxHealth(1800)
+        self.setMaxHealth(1500)
         self.setSpeedStatistic(3)
         self.setHealthStatistic(1)
         self.setTopSpeed(0.3)
-        self.setTopRotationalSpeed(0.75)
+        self.setTopRotationalSpeed(0.8)
         self.setTankName("Panther")
+
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imageNum: The index that points to the required image
+        # Outputs: None
+        # Load the tank image
+        currentDir = os.path.dirname(__file__)
+        tankPath = os.path.join(currentDir, 'Sprites', 'Panther' + str(imageNum) + '.png')
+        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
+
+        # Scale the tank image to a smaller size
+        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
+        self.image = self.tankImage
+        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
+        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
+        self.x = float(self.rect.centerx)
+        self.y = float(self.rect.centery)
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
+    def getGunCenter(self):
+        #Since the point is not in the center of the tank, we need to adjust the gun position
+        # Inputs: None
+        # Outputs: The center of the gun
+        return self.rotate_point((self.rect.centerx, self.rect.centery), -4, 0, self.angle)
 
 class Cicada(Tank):
 
@@ -1641,6 +1801,32 @@ class Cicada(Tank):
         self.setTopRotationalSpeed(0.75)
         self.setTankName("Cicada")
 
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imageNum: The index that points to the required image
+        # Outputs: None
+        # Load the tank image
+        currentDir = os.path.dirname(__file__)
+        tankPath = os.path.join(currentDir, 'Sprites', 'Cicada' + str(imageNum) + '.png')
+        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
+
+        # Scale the tank image to a smaller size
+        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
+        self.image = self.tankImage
+        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
+        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
+        self.x = float(self.rect.centerx)
+        self.y = float(self.rect.centery)
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
+    def getGunCenter(self):
+        #Since the point is not in the center of the tank, we need to adjust the gun position
+        # Inputs: None
+        # Outputs: The center of the gun
+        return self.rotate_point((self.rect.centerx, self.rect.centery), -4, 0, self.angle)
+
 class Gater(Tank):
 
     def __init__(self, x, y, controls, name):
@@ -1648,9 +1834,35 @@ class Gater(Tank):
         self.setMaxHealth(3000)
         self.setSpeedStatistic(2)
         self.setHealthStatistic(2)
-        self.setTopSpeed(0.18)
-        self.setTopRotationalSpeed(0.75)
+        self.setTopSpeed(0.2)
+        self.setTopRotationalSpeed(0.5)
         self.setTankName("Gater")
+
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imageNum: The index that points to the required image
+        # Outputs: None
+        # Load the tank image
+        currentDir = os.path.dirname(__file__)
+        tankPath = os.path.join(currentDir, 'Sprites', 'Gater' + str(imageNum) + '.png')
+        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
+
+        # Scale the tank image to a smaller size
+        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
+        self.image = self.tankImage
+        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
+        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
+        self.x = float(self.rect.centerx)
+        self.y = float(self.rect.centery)
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
+    def getGunCenter(self):
+        #Since the point is not in the center of the tank, we need to adjust the gun position
+        # Inputs: None
+        # Outputs: The center of the gun
+        return self.rotate_point((self.rect.centerx, self.rect.centery), 0, 0, self.angle)
 
 class Bonsai(Tank):
 
@@ -1659,9 +1871,35 @@ class Bonsai(Tank):
         self.setMaxHealth(3500)
         self.setSpeedStatistic(2)
         self.setHealthStatistic(2)
-        self.setTopSpeed(0.12)
-        self.setTopRotationalSpeed(0.75)
+        self.setTopSpeed(0.15)
+        self.setTopRotationalSpeed(0.5)
         self.setTankName("Bonsai")
+
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imageNum: The index that points to the required image
+        # Outputs: None
+        # Load the tank image
+        currentDir = os.path.dirname(__file__)
+        tankPath = os.path.join(currentDir, 'Sprites', 'Bonsai' + str(imageNum) + '.png')
+        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
+
+        # Scale the tank image to a smaller size
+        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
+        self.image = self.tankImage
+        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
+        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
+        self.x = float(self.rect.centerx)
+        self.y = float(self.rect.centery)
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
+    def getGunCenter(self):
+        #Since the point is not in the center of the tank, we need to adjust the gun position
+        # Inputs: None
+        # Outputs: The center of the gun
+        return self.rotate_point((self.rect.centerx, self.rect.centery), -5, 0, self.angle)
 
 class Fossil(Tank):
 
@@ -1670,10 +1908,35 @@ class Fossil(Tank):
         self.setMaxHealth(4000)
         self.setSpeedStatistic(1)
         self.setHealthStatistic(3)
-        self.setTopSpeed(0.05)
-        self.setTopRotationalSpeed(0.75)
+        self.setTopSpeed(0.1)
+        self.setTopRotationalSpeed(0.25)
         self.setTankName("Fossil")
 
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imageNum: The index that points to the required image
+        # Outputs: None
+        # Load the tank image
+        currentDir = os.path.dirname(__file__)
+        tankPath = os.path.join(currentDir, 'Sprites', 'Fossil' + str(imageNum) + '.png')
+        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
+
+        # Scale the tank image to a smaller size
+        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
+        self.image = self.tankImage
+        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
+        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
+        self.x = float(self.rect.centerx)
+        self.y = float(self.rect.centery)
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
+    def getGunCenter(self):
+        #Since the point is not in the center of the tank, we need to adjust the gun position
+        # Inputs: None
+        # Outputs: The center of the gun
+        return self.rotate_point((self.rect.centerx, self.rect.centery), 4, 0, self.angle)
 
 #Functions
 def tileGen():
@@ -1921,10 +2184,10 @@ def constantPlayGame():
     # Outputs: None
     screen.fill(bg) # This is the first line when drawing a new frame
     screen.blit(gun1.getSprite(True), (tileSize, 0.78*windowHeight)) # Gun 2
-    screen.blit(tank1.getSprite(True), (tileSize, 0.78*windowHeight+15)) # Tank 2
+    screen.blit(tank1.getSprite(True), (tileSize, 0.78*windowHeight)) # Tank 2
 
     screen.blit(gun2.getSprite(), (windowWidth - tileSize*3, 0.78*windowHeight)) # Gun 2
-    screen.blit(tank2.getSprite(), (windowWidth - tileSize*3, 0.78*windowHeight+15)) # Tank 2
+    screen.blit(tank2.getSprite(), (windowWidth - tileSize*3, 0.78*windowHeight)) # Tank 2
     print("Switching to game music")
     mixer.crossfade('game')
     fontName = pygame.font.Font('fonts/LondrinaSolid-Regular.otf', 30)
@@ -2045,7 +2308,7 @@ def playGame():
     for sprite in bulletSprites:
         sprite.draw(screen)
         if sprite.isDrawable():
-            sprite.customDraw(screen)
+            sprite.customDraw(screen)    
 
     explosionGroup.draw(screen)
 
@@ -2238,25 +2501,30 @@ buttonSecondary = c.geT("WHITE")
 buttonText = c.geT("WHITE")
 optionText = c.geT("GREY")
 #Hull and turret list
-turretList = [Boxer(Tank(0,0,None, "Default"), None, "Boxer"), Silencer(Tank(0,0,None, "Default"), None, "Silencer"),
+turretList = [Tempest(Tank(0,0,None, "Default"), None, "Tempest"), Silencer(Tank(0,0,None, "Default"), None, "Silencer"),
               Watcher(Tank(0,0,None, "Default"), None, "Watcher"), Chamber(Tank(0,0,None, "Default"), None, "Chamber"),
               Huntsman(Tank(0,0,None,"Default"),None,"Huntsman"), Judge(Tank(0,0,None,"Default"),None,"Judge"),
               Sidewinder(Tank(0,0,None,"Default"),None,"Sidewinder")]
 
 hullList = [Panther(0, 0, None, "Panther"), Cicada(0, 0, None, "Cicada"), Gater(0, 0, None, "Gater"), Bonsai(0, 0, None, "Bonsai"),
             Fossil(0, 0, None, "Fossil")]
+
 turretListLength = len(turretList)
 hullListLength = len(hullList)
 
 hullColors = []
 gunColors = []
 
+
+
 # Load all the images
 currentDir = os.path.dirname(__file__)
+
+ColorIndex = ["TANK_GREEN", "BURGUNDY", "ORANGE", "YELLOW", "SKY_BLUE", "LIGHT_BROWN", "DARK_LILAC", "BRIGHT_PINK"]
+
 tankMultiple = 4
 gunMultiple = 4
-imageScaler = 4
-for i in range(8): # Generate all the tanks
+for i in range(8): # Generate all the tanks, this needs to be removed as it's not needed anymore
     tankPath = os.path.join(currentDir, 'Sprites', 'tank' + str(i+1) + '.png')
     originalTankImage = pygame.image.load(tankPath).convert_alpha()
     tankImage = pygame.transform.scale(originalTankImage, (20*tankMultiple, 13*tankMultiple))
@@ -2266,8 +2534,6 @@ for i in range(8): # Generate all the tanks
     gunImage = pygame.transform.scale(originalGunImage, (15*gunMultiple, 2*gunMultiple))
     gunColors.append(gunImage)    
 
-
-ColorIndex = ["TANK_GREEN", "BURGUNDY", "ORANGE", "YELLOW", "SKY_BLUE", "LIGHT_BROWN", "DARK_LILAC", "BRIGHT_PINK"]
 
 #List indexes for player selection
 #Turret index
@@ -2660,10 +2926,32 @@ def selectionScreen():
     gunImageY = 194
 
     #Draw the tank image
-    screen.blit(hullColors[p1L], (hullImageX, hullImageY))
-    screen.blit(hullColors[p2L], (windowWidth - hullImageX - imageScaler * 20, hullImageY))
-    screen.blit(gunColors[p1K], (gunImageX, gunImageY))
-    screen.blit(gunColors[p2K], (windowWidth - gunImageX - imageScaler * 15, gunImageY))
+
+    tankPath = os.path.join(currentDir, 'Sprites', hullList[p1J].getTankName() + str(p1L + 1) + '.png')
+    originalTankImage = pygame.image.load(tankPath).convert_alpha()
+    tankImage = pygame.transform.scale(originalTankImage, (20*4, 13*4))
+    screen.blit(tankImage, (hullImageX, hullImageY))
+
+    gunPath = os.path.join(currentDir, 'Sprites', turretList[p1I].getGunName() + str(p1K+1) + '.png')
+    originalGunImage = pygame.image.load(gunPath).convert_alpha()
+    centerX, centerY = hullList[p1J].getGunCenter()
+    gX, _ = turretList[p1I].getGunCenter()
+    gunImage = pygame.transform.scale(originalGunImage, (15*4, 15*4))
+    screen.blit(gunImage, (gunImageX + (centerX - gX) * 4, gunImageY - (centerY + 6) * 4))
+    
+    tankPath2 = os.path.join(currentDir, 'Sprites', hullList[p2J].getTankName() + str(p2L + 1) + '.png')
+    originalTankImage2 = pygame.image.load(tankPath2).convert_alpha()
+    tankImage2 = pygame.transform.scale(originalTankImage2, (20*4, 13*4))
+    tankImage2 = pygame.transform.flip(tankImage2, True, False) # Flipped    
+    screen.blit(tankImage2, (windowWidth - hullImageX - 4 * 20, hullImageY))
+
+    gunPath2 = os.path.join(currentDir, 'Sprites', turretList[p2I].getGunName() + str(p2K+1) + '.png')
+    originalGunImage2 = pygame.image.load(gunPath2).convert_alpha()
+    centerX, centerY = hullList[p2J].getGunCenter()
+    gX, _ = turretList[p2I].getGunCenter()
+    gunImage2 = pygame.transform.scale(originalGunImage2, (15*4, 15*4))
+    gunImage2 = pygame.transform.flip(gunImage2, True, False) # Flipped
+    screen.blit(gunImage2, (windowWidth - gunImageX - 4 * 15 - (centerX - gX)*4, gunImageY + centerY*4 - 6*4))
 
 #Menu screen
 homeButtonList = []
