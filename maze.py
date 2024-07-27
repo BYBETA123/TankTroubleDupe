@@ -378,6 +378,7 @@ class Gun(pygame.sprite.Sprite):
         self.drawable = False
         self.topTurretSpeed = self.turretSpeed
         self.gunH = 7
+        self.imgScaler = 1.5
         angleRad = math.radians(self.angle)
         gunEndX, gunEndY = self.tank.getGunCenter()
         self.rect = self.image.get_rect(center=(gunEndX + self.gunH * math.cos(angleRad), gunEndY - self.gunH * math.sin(angleRad)))
@@ -546,6 +547,8 @@ class Gun(pygame.sprite.Sprite):
         currentDir = os.path.dirname(__file__)
         gunPath = os.path.join(currentDir,'Sprites', 'gun' + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
+        width, height = self.originalGunImage.get_size()
+        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
         self.gunImage = self.originalGunImage
         self.image = self.gunImage
 
@@ -1262,6 +1265,8 @@ class Sidewinder(Gun):
         currentDir = os.path.dirname(__file__)
         gunPath = os.path.join(currentDir,'Sprites', 'Sidewinder' + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
+        width, height = self.originalGunImage.get_size()
+        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
         self.gunImage = self.originalGunImage
         self.image = self.gunImage
 
@@ -1323,6 +1328,8 @@ class Judge(Gun):
         currentDir = os.path.dirname(__file__)
         gunPath = os.path.join(currentDir,'Sprites', 'Judge' + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
+        width, height = self.originalGunImage.get_size()
+        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
         self.gunImage = self.originalGunImage
         self.image = self.gunImage
 
@@ -1361,6 +1368,8 @@ class Huntsman(Gun):
         currentDir = os.path.dirname(__file__)
         gunPath = os.path.join(currentDir,'Sprites', 'Huntsman' + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
+        width, height = self.originalGunImage.get_size()
+        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
         self.gunImage = self.originalGunImage
         self.image = self.gunImage
 
@@ -1385,6 +1394,8 @@ class Tempest(Gun):
         currentDir = os.path.dirname(__file__)
         gunPath = os.path.join(currentDir,'Sprites', 'Tempest' + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
+        width, height = self.originalGunImage.get_size()
+        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
         self.gunImage = self.originalGunImage
         self.image = self.gunImage
 
@@ -1545,6 +1556,8 @@ class Silencer(Gun):
         currentDir = os.path.dirname(__file__)
         gunPath = os.path.join(currentDir,'Sprites', 'Silencer' + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
+        width, height = self.originalGunImage.get_size()
+        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
         self.gunImage = self.originalGunImage
         self.image = self.gunImage
 
@@ -1705,6 +1718,8 @@ class Watcher(Gun):
         currentDir = os.path.dirname(__file__)
         gunPath = os.path.join(currentDir,'Sprites', 'Watcher' + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
+        width, height = self.originalGunImage.get_size()
+        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
         self.gunImage = self.originalGunImage
         self.image = self.gunImage
 
@@ -1746,6 +1761,8 @@ class Chamber(Gun):
         currentDir = os.path.dirname(__file__)
         gunPath = os.path.join(currentDir,'Sprites', 'Chamber' + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
+        width, height = self.originalGunImage.get_size()
+        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
         self.gunImage = self.originalGunImage
         self.image = self.gunImage
 
@@ -2925,6 +2942,8 @@ def selectionScreen():
     gunImageX = 170
     gunImageY = 194
 
+    gunScale = 5
+
     #Draw the tank image
 
     tankPath = os.path.join(currentDir, 'Sprites', hullList[p1J].getTankName() + str(p1L + 1) + '.png')
@@ -2936,8 +2955,8 @@ def selectionScreen():
     originalGunImage = pygame.image.load(gunPath).convert_alpha()
     centerX, centerY = hullList[p1J].getGunCenter()
     gX, _ = turretList[p1I].getGunCenter()
-    gunImage = pygame.transform.scale(originalGunImage, (15*4, 15*4))
-    screen.blit(gunImage, (gunImageX + (centerX - gX) * 4, gunImageY - (centerY + 6) * 4))
+    gunImage = pygame.transform.scale(originalGunImage, (15*gunScale, 15*gunScale))
+    screen.blit(gunImage, (gunImageX + (centerX - gX) * gunScale, gunImageY - (centerY + 6) * gunScale))
     
     tankPath2 = os.path.join(currentDir, 'Sprites', hullList[p2J].getTankName() + str(p2L + 1) + '.png')
     originalTankImage2 = pygame.image.load(tankPath2).convert_alpha()
@@ -2949,9 +2968,10 @@ def selectionScreen():
     originalGunImage2 = pygame.image.load(gunPath2).convert_alpha()
     centerX, centerY = hullList[p2J].getGunCenter()
     gX, _ = turretList[p2I].getGunCenter()
-    gunImage2 = pygame.transform.scale(originalGunImage2, (15*4, 15*4))
+
+    gunImage2 = pygame.transform.scale(originalGunImage2, (15*gunScale, 15*gunScale))
     gunImage2 = pygame.transform.flip(gunImage2, True, False) # Flipped
-    screen.blit(gunImage2, (windowWidth - gunImageX - 4 * 15 - (centerX - gX)*4, gunImageY + centerY*4 - 6*4))
+    screen.blit(gunImage2, (windowWidth - gunImageX - gunScale * 15 - (centerX - gX)*gunScale, gunImageY + centerY*gunScale - 6*gunScale))
 
 #Menu screen
 homeButtonList = []
