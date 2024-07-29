@@ -1084,8 +1084,6 @@ class Tile:
         self.y = y
         self.color = color
         self.spawn = spawn
-        if spawn:
-            self.color = c.geT('GREEN')
         self.border = self.borderControl()
         self.neighbours, self.bordering = self.neighbourCheck()
 
