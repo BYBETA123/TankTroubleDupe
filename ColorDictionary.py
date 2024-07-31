@@ -21,6 +21,8 @@ class ColorDicionary:
         "BRIGHT_PINK" : '#FF00FF',
         "NEON_PURPLE" : '#BC13FE',
         "SOFT_WHITE" : '#D9D9D9',
+        "BEIGE" : '#F5F5DC',
+        "SAND_BEIGE" : '#F4A460',
     }
 
     def __init__(self):

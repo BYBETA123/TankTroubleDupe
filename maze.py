@@ -1632,7 +1632,7 @@ class Tempest(Gun):
     def setImage(self, imageNum = 1):
         # Setup a new image if the selected one isn't the default
         # Inputs: imagePath: The filepath the points to the required image
-        # Outputs: None        
+        # Outputs: None
         currentDir = os.path.dirname(__file__)
         gunPath = os.path.join(currentDir,'Sprites', 'Tempest' + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
@@ -3083,7 +3083,8 @@ volume = {
     'Huntsman': 1,
     'Judge': 0.38,
     'Silencer': 0.25,
-    'Tempest': 0.5,
+    'Sidewinder': 1,
+    'Tempest': 1,
     'Watcher': 0.5
 }
 
@@ -3092,12 +3093,13 @@ soundDictionary = {
     'tankMove' : pygame.mixer.Sound('Sounds/tank_moving.wav'),
     'tankShoot' : pygame.mixer.Sound('Sounds/tank_shoot.wav'),
     'turretRotate' : pygame.mixer.Sound('Sounds/tank_turret_rotate.wav'),
-    'Chamber' : pygame.mixer.Sound('Sounds/Chamber.wav'),
+    'Chamber' : pygame.mixer.Sound('Sounds/Empty.wav'),
     'Empty' : pygame.mixer.Sound('Sounds/Empty.wav'),
     'Huntsman' : pygame.mixer.Sound('Sounds/Huntsman.wav'),
     'Judge' : pygame.mixer.Sound('Sounds/Judge.wav'),
     'Silencer' : pygame.mixer.Sound('Sounds/Silencer.wav'),
-    'Tempest' : pygame.mixer.Sound('Sounds/Tempest.wav'),
+    'Sidewinder' : pygame.mixer.Sound('Sounds/Empty.wav'),
+    'Tempest' : pygame.mixer.Sound('Sounds/Empty.wav'),
     'Watcher' : pygame.mixer.Sound('Sounds/Watcher.wav'),
 }
 
