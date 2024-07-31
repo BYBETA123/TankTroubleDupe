@@ -468,7 +468,7 @@ class Gun(pygame.sprite.Sprite):
         bulletSprites.add(bullet)
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
-        soundDictionary["tankShoot"].play()
+        self.playSFX()
 
     def setCooldown(self, value = 0):
         #This function sets the cooldown of the gun
@@ -569,6 +569,12 @@ class Gun(pygame.sprite.Sprite):
     
     def getGunCenter(self):
         return self.rect.center
+
+    def playSFX(self):
+        # This function will play the sound effect of the gun firing
+        # Inputs: None
+        # Outputs: None
+        soundDictionary["Empty"].play()
 
 class Bullet(pygame.sprite.Sprite):
 
@@ -707,8 +713,7 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.y = int(tempY)
         self.x = tempX
         self.y = tempY
-        if abs(self.x- self.trailX) >= 1 and abs(tempY-self.trailY) >= 1: # Trails
-            self.pleaseDraw = True
+        self.pleaseDraw = True
 
     def setBulletSpeed(self, speed):
         self.speed = speed
@@ -1263,7 +1268,7 @@ class Chamber(Gun):
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
         #If either tank shoots, play this sound effect.
-        soundDictionary["tankShoot"].play()
+        self.playSFX()
 
     def setImage(self, imageNum = 1):
         # Setup a new image if the selected one isn't the default
@@ -1279,6 +1284,12 @@ class Chamber(Gun):
 
         spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
         self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
+    def playSFX(self):
+        # This function will play the sound effect of the gun firing
+        # Inputs: None
+        # Outputs: None
+        soundDictionary["Chamber"].play()
 
 class Judge(Gun):
 
@@ -1305,7 +1316,7 @@ class Judge(Gun):
 
             for i in range(1, 11):
                 Timer(self.bulletInterval * i / 1000.0, self.fireBullet).start()
-            soundDictionary["tankShoot"].play()
+            self.playSFX()
             self.currentUses += 1
             if self.currentUses >= self.maxUses:
                 self.currentUses = 0
@@ -1343,6 +1354,12 @@ class Judge(Gun):
         spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
         self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
+    def playSFX(self):
+        # This function will play the sound effect of the gun firing
+        # Inputs: None
+        # Outputs: None
+        soundDictionary["Judge"].play()
+
 class Huntsman(Gun):
 
     def __init__(self, tank, controls, name):
@@ -1366,7 +1383,7 @@ class Huntsman(Gun):
         bulletSprites.add(bullet)
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
-        soundDictionary["tankShoot"].play()
+        self.playSFX()
 
     def setImage(self, imageNum = 1):
         # Setup a new image if the selected one isn't the default
@@ -1382,6 +1399,12 @@ class Huntsman(Gun):
 
         spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
         self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
+    def playSFX(self):
+        # This function will play the sound effect of the gun firing
+        # Inputs: None
+        # Outputs: None
+        soundDictionary["Huntsman"].play()
 
 class Sidewinder(Gun):
 
@@ -1403,7 +1426,7 @@ class Sidewinder(Gun):
         bulletSprites.add(bullet)
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
-        soundDictionary["tankShoot"].play()
+        self.playSFX()
 
     def setImage(self, imageNum = 1):
         # Setup a new image if the selected one isn't the default
@@ -1420,12 +1443,19 @@ class Sidewinder(Gun):
         spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
         self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
+    def playSFX(self):
+        # This function will play the sound effect of the gun firing
+        # Inputs: None
+        # Outputs: None
+        print("No sound effect smh")
+        soundDictionary["Empty"].play()
+
 class Silencer(Gun):
 
     wind_up = 1200
     delay = True
     lastRegister = 0
-    
+    sound = True
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(2400) #2400 ms
@@ -1491,6 +1521,10 @@ class Silencer(Gun):
         #Reload cooldown of bullet and determines the angle to fire the bullet,
         #which is relative to the posistion of the tank gun.
         if keys[self.controls['fire']] and self.canShoot:
+            if self.sound:
+                self.playSFX()
+                self.sound = False
+
             if self.delay:
                 self.lastRegister = pygame.time.get_ticks()
                 self.delay = False
@@ -1547,9 +1581,7 @@ class Silencer(Gun):
         bullet1.drawable = True
         bullet1.trail = True
         bulletSprites.add(bullet1)
-        soundDictionary["tankShoot"].play()
-
-
+        self.sound = True
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
 
@@ -1582,6 +1614,12 @@ class Silencer(Gun):
         spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
         self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
+    def playSFX(self):
+        # This function will play the sound effect of the gun firing
+        # Inputs: None
+        # Outputs: None
+        soundDictionary["Silencer"].play()
+
 class Tempest(Gun):
 
     def __init__(self, tank, controls, name):
@@ -1607,6 +1645,12 @@ class Tempest(Gun):
 
         spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
         self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
+    def playSFX(self):
+        # This function will play the sound effect of the gun firing
+        # Inputs: None
+        # Outputs: None
+        soundDictionary["Tempest"].play()
 
 class Watcher(Gun):
 
@@ -1735,7 +1779,7 @@ class Watcher(Gun):
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
         self.scopeDamage = 700 # Reset the damage
-        soundDictionary["tankShoot"].play()
+        self.playSFX()
 
     def getDamage(self):
         return self.scopeDamage
@@ -1770,7 +1814,11 @@ class Watcher(Gun):
         spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
         self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
-
+    def playSFX(self):
+        # This function will play the sound effect of the gun firing
+        # Inputs: None
+        # Outputs: None
+        soundDictionary["Watcher"].play()
 
 #Hulls
 class Bonsai(Tank):
@@ -3031,14 +3079,28 @@ volume = {
     'tankShoot': 1,
     'tankDeath': 0.5,
     'turretRotate': 0.2,
-    'tankMove': 0.05
+    'tankMove': 0.05,
+    'Chamber': 0.5,
+    'Empty': 1,
+    'Huntsman': 1,
+    'Judge': 0.38,
+    'Silencer': 0.25,
+    'Tempest': 0.5,
+    'Watcher': 0.5
 }
 
 soundDictionary = {
-    'tankDeath' : pygame.mixer.Sound('Sounds/tank_dead.mp3'),
-    'tankMove' : pygame.mixer.Sound('Sounds/tank_moving.mp3'),
-    'tankShoot' : pygame.mixer.Sound('Sounds/tank_shoot.mp3'),
+    'tankDeath' : pygame.mixer.Sound('Sounds/tank_dead.wav'),
+    'tankMove' : pygame.mixer.Sound('Sounds/tank_moving.wav'),
+    'tankShoot' : pygame.mixer.Sound('Sounds/tank_shoot.wav'),
     'turretRotate' : pygame.mixer.Sound('Sounds/tank_turret_rotate.wav'),
+    'Chamber' : pygame.mixer.Sound('Sounds/Chamber.wav'),
+    'Empty' : pygame.mixer.Sound('Sounds/Empty.wav'),
+    'Huntsman' : pygame.mixer.Sound('Sounds/Huntsman.wav'),
+    'Judge' : pygame.mixer.Sound('Sounds/Judge.wav'),
+    'Silencer' : pygame.mixer.Sound('Sounds/Silencer.wav'),
+    'Tempest' : pygame.mixer.Sound('Sounds/Tempest.wav'),
+    'Watcher' : pygame.mixer.Sound('Sounds/Watcher.wav'),
 }
 
 

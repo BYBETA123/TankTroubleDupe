@@ -40,8 +40,8 @@ class Music:
 
         self.tracks = {
             'lobby': pygame.mixer.Sound('Sounds/lobby_music.wav'),
-            'selection': pygame.mixer.Sound('Sounds/selection_music.mp3'),
-            'game': pygame.mixer.Sound('Sounds/game_music.mp3')
+            'selection': pygame.mixer.Sound('Sounds/selection_music.wav'),
+            'game': pygame.mixer.Sound('Sounds/game_music.wav')
         }
 
         self.volume = {
