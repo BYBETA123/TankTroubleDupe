@@ -364,7 +364,6 @@ class Gun(pygame.sprite.Sprite):
         self.controls = controls
         self.name = name
         self.originalGunLength = self.gunLength
-        self.gunBackStartTime = 0
         self.gunBackDuration = 200
         self.canShoot = True
         self.shootCooldown = 0
@@ -421,6 +420,7 @@ class Gun(pygame.sprite.Sprite):
         #This if statement checks to see if speed or rotation of speed is 0,
         #if so it will stop playing moving sound, otherwise, sound will play
         #indefinitely
+        # <SOUND REWORK>
         if keys[self.controls['rotate_left']] or keys[self.controls['rotate_right']]:
             if self.rotationSpeed != 0:
                 if not self.soundPlaying:
@@ -459,7 +459,6 @@ class Gun(pygame.sprite.Sprite):
         # Inputs: None
         # Outputs: None
 
-        self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
         # Calculating where the bullet should spawn
         bulletX, bulletY = self.getTank().getGunCenter()
         bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
@@ -543,7 +542,7 @@ class Gun(pygame.sprite.Sprite):
     def setImage(self, imageNum = 1):
         # Setup a new image if the selected one isn't the default
         # Inputs: imagePath: The filepath the points to the required image
-        # Outputs: None        
+        # Outputs: None
         currentDir = os.path.dirname(__file__)
         gunPath = os.path.join(currentDir,'Sprites', 'gun' + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
@@ -1256,7 +1255,7 @@ class Chamber(Gun):
         # The Bullet is custom here as it is tailored for the Chamber
         # Inputs: None
         # Outputs: None
-        self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
+
         bulletX, bulletY = self.getTank().getGunCenter()
         bullet = ChamberBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
@@ -1308,12 +1307,11 @@ class Judge(Gun):
 
     def fire(self):
         if self.currentUses < self.maxUses:
-            self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
             self.canShoot = False
             self.shootCooldown = self.cooldownDuration
 
             for i in range(1, 11):
-                Timer(self.bulletInterval * i / 1000.0, self.fireBullet).start()
+                Timer(self.bulletInterval * i / 1000.0, self.fireBullet).start() # Threaded???
             self.playSFX()
             self.currentUses += 1
             if self.currentUses >= self.maxUses:
@@ -1331,7 +1329,7 @@ class Judge(Gun):
         bullet.setDamage(self.damage)
         bullet.setBulletSpeed(0.5)
         bulletSprites.add(bullet)
-        Timer(2, lambda: bullet.kill()).start()
+        Timer(2, lambda: bullet.kill()).start() # Dies after a while
 
     def reload(self):
         self.currentUses = 0
@@ -1369,7 +1367,6 @@ class Huntsman(Gun):
         self.setGunBackDuration(300)
 
     def fire(self):
-        self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
         bulletX, bulletY = self.getTank().getGunCenter()
         bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
@@ -1416,7 +1413,6 @@ class Sidewinder(Gun):
         self.setGunCenter(0, 1)
         
     def fire(self):
-        self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
         bulletX, bulletY = self.getTank().getGunCenter()
         bullet = SidewinderBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
@@ -1534,14 +1530,6 @@ class Silencer(Gun):
                 self.fire()
                 self.delay = True
 
-        #Here is the bullet cooldown
-        elapsedTime = pygame.time.get_ticks() - self.gunBackStartTime
-        if elapsedTime <= self.gunBackDuration:
-            progress = elapsedTime / self.gunBackDuration
-            self.gunLength = self.originalGunLength - 5 * progress
-        else:
-            self.gunLength = self.originalGunLength
-
         angleRad = math.radians(self.angle)
         gunEndX, gunEndY = self.tank.getGunCenter()
 
@@ -1561,8 +1549,7 @@ class Silencer(Gun):
         # The Bullet is custom here as it is tailored for the Silencer
         # Inputs: None
         # Outputs: None
-        self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
-        #Setup bullet
+        #Setup bullet (Trailed/ Temp)
         bulletX, bulletY = self.getTank().getGunCenter()
         bullet = SilencerBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setDamage(0)
@@ -1571,7 +1558,7 @@ class Silencer(Gun):
         bullet.drawable = True
         bullet.trail = True
         bulletSprites.add(bullet)
-
+        # Real bullet
         bullet1 = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet1.setDamage(self.damage)
         bullet1.setBulletSpeed(5)
@@ -1590,9 +1577,6 @@ class Silencer(Gun):
         if self.wind_up - (pygame.time.get_ticks() - self.lastRegister) >= 0:
             gunEndX, gunEndY = self.tank.getGunCenter()
             angleRad = math.radians(self.angle)
-
-            # self.rect = self.image.get_rect(center=(gunEndX + self.gunH * math.cos(angleRad), gunEndY - self.gunH * math.sin(angleRad)))
-
             pygame.draw.circle(screen, c.geT("NEON_PURPLE"),
                                (gunEndX + (self.gunH + 7) * math.cos(angleRad), gunEndY - (self.gunH + 7) * math.sin(angleRad)),
                                 (pygame.time.get_ticks() - self.lastRegister)/self.wind_up * 5)
@@ -1765,7 +1749,6 @@ class Watcher(Gun):
         # The Bullet is custom here as it is tailored for the Watcher
         # Inputs: None
         # Outputs: None
-        self.gunBackStartTime = pygame.time.get_ticks()  # Start moving the gun back
         # Setup bullet
         bulletX, bulletY = self.getTank().getGunCenter()
         bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
@@ -2464,8 +2447,6 @@ mixer = Music()
 mixer.play()
 pygame.display.set_caption("TankTroubleDupe") # Name the window
 clock = pygame.time.Clock() # Start the clock
-#Keeping the mouse and its location
-mouse = pygame.mouse.get_pos()
 
 initialStartTime = pygame.time.get_ticks()
 soundPlayed = False
@@ -3124,21 +3105,24 @@ allSprites = pygame.sprite.Group()
 bulletSprites = pygame.sprite.Group()
 
 constantHomeScreen()
-fpsTrack = False
 totalfps = 0
 fpsCounter = 0
 
 
 #Main loop
 while not done:
+    # Early define probably not a good idea, but will help with reducing function calls
+    mouse = pygame.mouse.get_pos() #Update the position
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
         elif event.type == pygame.MOUSEBUTTONDOWN:
+
+            mouse = pygame.mouse.get_pos() # Update on button press
             if event.button != 1:
                 #Not left click
                 break
-            mouse = pygame.mouse.get_pos()
             if gameMode == GameMode.pause:
                 #We are paused
                 if (unPause.getCorners()[0] <= mouse[0] <= unPause.getCorners()[2] and
@@ -3168,9 +3152,9 @@ while not done:
                 textP2Turret.setText(turretList[p2I].getGunName())
                 textP1Hull.setText(hullList[p1J].getTankName())
                 textP2Hull.setText(hullList[p2J].getTankName())
-                checkButtons(pygame.mouse.get_pos())
+                checkButtons(mouse)
             elif gameMode == GameMode.home: # Home screen
-                checkHomeButtons(pygame.mouse.get_pos())
+                checkHomeButtons(mouse)
             elif gameMode == GameMode.play:
                 if pauseButton.buttonClick(mouse):
                     gameMode = GameMode.pause
@@ -3203,14 +3187,11 @@ while not done:
                 pass
             if event.key == pygame.K_f:
                 #Calculate and track the average FPS
-                if not fpsTrack:
-                    fpsTrack = True
-                else:
-                    totalfps += clock.get_fps()
-                    fpsCounter += 1
-                    print("The average FPS is: ", totalfps/fpsCounter)
-                    totalfps = 0
-                    fpsCounter = 0
+                totalfps += clock.get_fps()
+                fpsCounter += 1
+                print("The average FPS is: ", totalfps/fpsCounter)
+                totalfps = 0
+                fpsCounter = 0
 
             if event.key == pygame.K_n:
                 if gameMode == GameMode.play:
@@ -3223,19 +3204,19 @@ while not done:
             if event.key == pygame.K_m:
                 mute.mute()
 
-    mouse = pygame.mouse.get_pos() #Update the position
-
     if gameMode == GameMode.play:
         playGame() # Play the game
     elif gameMode == GameMode.pause:
         pauseScreen() # Pause screen
-        if pygame.mouse.get_pressed()[0]:
-            mute.updateSlider(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
-            sfx.updateSlider(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
+        if mouse[0]:
+            mute.updateSlider(mouse[0], mouse[1])
+            sfx.updateSlider(mouse[0], mouse[1])
+            for sound in soundDictionary:
+                soundDictionary[sound].set_volume(volume[sound] * sfx.getValue())
     elif gameMode == GameMode.selection:
         screen.fill(selectionBackground) # This is the first line when drawing a new frame
         for button in buttonList:
-            button.update_display(pygame.mouse.get_pos())
+            button.update_display(mouse)
             button.draw(screen, outline = False)
         selectionScreen()
 
@@ -3248,18 +3229,15 @@ while not done:
         screen.blit(titleText, (windowWidth // 2 - titleText.get_width() // 2, 50))  # Centered horizontally, 50 pixels from top
 
         # Handle hover effect and draw buttons
-        mouse_pos = pygame.mouse.get_pos()
         for button in homeButtonList:
-            button.update_display(mouse_pos)
+            button.update_display(mouse)
             button.draw(screen, outline=True)
     
     else:
-        screen.fill(c.geT("WHITE"))
+        screen.fill(c.geT("WHITE")) # Errornous state
     clock.tick(240) # Set the FPS
     mixer.update(mute.getValue()) # Update the mixer
 
-    for sound in soundDictionary:
-        soundDictionary[sound].set_volume(volume[sound] * sfx.getValue())
     pygame.display.flip()# Update the screen
 
 pygame.quit()
