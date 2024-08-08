@@ -334,6 +334,27 @@ class Tank(pygame.sprite.Sprite):
         
         return x_prime, y_prime
 
+    def treads(self, num):
+        # This function will draw the treads of the tank
+        # Inputs: None
+        # Outputs: None
+        rect_surface = pygame.image.load("Sprites/ZTreads.png").convert_alpha()
+        rect_surface = pygame.transform.scale(rect_surface, (self.originalTankImage.get_size()))
+
+
+        rotated_surface = pygame.transform.rotate(rect_surface, self.angle)
+        rotated_rect = rotated_surface.get_rect(center = (self.x, self.y))
+
+        if num:
+            treadsp1.append((rotated_surface, rotated_rect.topleft))
+            if len(treadsp1) > 15:
+                treadsp1.pop(0)
+        if not num:
+            treadsp2.append((rotated_surface, rotated_rect.topleft))
+            if len(treadsp2) > 15:
+                treadsp2.pop(0)
+
+
 class Gun(pygame.sprite.Sprite):
 
     topTurretSpeed = 0
@@ -2277,7 +2298,7 @@ def playGame():
     # Inputs: None
     # Outputs: None
     # Because of the way the game is structured, these global variables can't be avoided
-    global gameOverFlag, cooldownTimer, startTime, p1Score, p2Score
+    global gameOverFlag, cooldownTimer, startTime, p1Score, p2Score, startTreads
     global tank1Dead, tank2Dead, tileList, spawnpoint
     global tank1, tank2, gun1, gun2, allSprites, bulletSprites
     if gameOverFlag:
@@ -2338,11 +2359,24 @@ def playGame():
     for tile in tileList:
         tile.draw(screen)
 
+
+
+
     #Anything below here will be drawn on top of the maze and hence is game updates
 
     #Update the location of the corners
     tank1.updateCorners()
     tank2.updateCorners()
+
+    if pygame.time.get_ticks() - startTreads > 50:
+        tank1.treads(1)
+        tank2.treads(2)
+        startTreads = pygame.time.get_ticks() # Reset the timer
+
+    for pos in treadsp1:
+        screen.blit(pos[0], pos[1])
+    for pos in treadsp2:
+        screen.blit(pos[0], pos[1])
     # pygame.draw.polygon(screen, GREEN, tank1.getCorners(), 2) #Hit box outline
     # pygame.draw.polygon(screen, GREEN, tank2.getCorners(), 2) #Hit box outline
     allSprites.update()
@@ -2358,6 +2392,7 @@ def playGame():
         sprite.draw(screen)
         if sprite.isDrawable():
             sprite.customDraw(screen)    
+
 
     explosionGroup.draw(screen)
 
@@ -2399,7 +2434,8 @@ def reset():
     startTime = 0
     tank1Dead = False
     tank2Dead = False
-
+    treadsp1.clear()
+    treadsp2.clear()
     setUpPlayers()
 
 def updateTankHealth():
@@ -2460,7 +2496,8 @@ explosionGroup = pygame.sprite.Group() #All the explosions
 resetFlag = True
 startTime = 0
 cooldownTimer = False
-
+global startTreads
+startTreads = 0
 global gameOverFlag
 gameOverFlag = False
 
@@ -2562,7 +2599,9 @@ hullListLength = len(hullList)
 hullColors = []
 gunColors = []
 
-
+treadsp1 = []
+treadsp2 = []
+treadslen = 10
 
 # Load all the images
 currentDir = os.path.dirname(__file__)
