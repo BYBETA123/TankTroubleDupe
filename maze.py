@@ -94,19 +94,22 @@ class Tank(pygame.sprite.Sprite):
         if tempY > mazeHeight + mazeY - self.originalTankImage.get_size()[0]/2:
             tempY = mazeHeight + mazeY - self.originalTankImage.get_size()[0]/2
 
+
+        # if pygame.sprite.collide_rect(tank1, tank2):
+
         if satCollision(tank1, tank2): #If the tanks are colliding
             if self.name == p1TankName:
                 #If there is a collision here, move the other tank
                     #This player is being pushed
                     tank2.setCoords(tank2.x + dx, tank2.y - dy)
-                    tempX = self.x - dx
-                    tempY = self.y + dy
+                    tempX = self.x - dx * 1.5
+                    tempY = self.y + dy * 1.5
             elif self.name == p2TankName:
                 #If there is a collision here, move the other tank
                     #This player is being pushed
                     tank1.setCoords(tank1.x + dx, tank1.y - dy)
-                    tempX = self.x - dx
-                    tempY = self.y + dy
+                    tempX = self.x - dx * 1.5
+                    tempY = self.y + dy * 1.5
             else:
                 print("Error: Invalid tank name")
 
@@ -2382,7 +2385,6 @@ def playGame():
     allSprites.update()
     bulletSprites.update()
     explosionGroup.update()
-    # print(allSprites.sprites())
     for sprite in allSprites:
         sprite.draw(screen)
         if sprite.isDrawable():
