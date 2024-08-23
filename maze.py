@@ -94,6 +94,9 @@ class Tank(pygame.sprite.Sprite):
         if tempY > mazeHeight + mazeY - self.originalTankImage.get_size()[0]/2:
             tempY = mazeHeight + mazeY - self.originalTankImage.get_size()[0]/2
 
+    
+
+
 
         # if pygame.sprite.collide_rect(tank1, tank2):
 
@@ -2936,11 +2939,31 @@ def checkHomeButtons(mouse):
     # Inputs: Mouse: The current location of the mouse
     # Outputs: None
     global gameMode
-    if playButtonHome.buttonClick(mouse):
-        #Switch to the selection screen
+
+# homeButtonList.append(onePlayerButtonHomeN)
+# homeButtonList.append(onePlayerButtonHomeH)
+# homeButtonList.append(twoPlayerButtonHomeN)
+# homeButtonList.append(twoPlayerButtonHomeH)
+    if onePlayerButtonHomeN.buttonClick(mouse):
+        print("One Player Easy")
+    if twoPlayerButtonHomeN.buttonClick(mouse):
+        print("Two Player Easy")
+    if onePlayerButtonHomeH.buttonClick(mouse):
+        print("One Player Hard")
         gameMode = GameMode.selection
-        print("Selection")
         constantSelectionScreen()
+    if twoPlayerButtonHomeH.buttonClick(mouse):
+        print("Two Player")
+        gameMode = GameMode.selection
+        constantSelectionScreen()
+
+
+
+    # if playButtonHome.buttonClick(mouse):
+    #     #Switch to the selection screen
+    #     gameMode = GameMode.selection
+    #     print("Selection")
+    #     constantSelectionScreen()
     if settingsButton.buttonClick(mouse):
         print("Unimplmented")
         # gameMode = GameMode.settings
@@ -3055,11 +3078,17 @@ originalTankImage = pygame.image.load(tankPath).convert_alpha()
 
 
 # Create buttons with specified positions and text
-playButtonHome = Button(c.geT("BLACK"),c.geT("BLACK"), 140, 470, 140, 80, 'Play', (255, 255, 255), 30, hoverColor=(100, 100, 255))
-quitButtonHome = Button(c.geT("BLACK"), c.geT("BLACK"), 315, 470, 140, 80, 'Quit', (255, 255, 255), 25, hoverColor=(100, 100, 255))
-settingsButton = Button(c.geT("BLACK"), c.geT("BLACK"), 500, 470, 210, 80, 'Settings', (255, 255, 255), 30, hoverColor=(100, 100, 255))
+onePlayerButtonHomeN = Button(c.geT("BLACK"),c.geT("BLACK"), 50, 470, 140, 80, 'One Player Easy', (255, 255, 255), 15, hoverColor=(100, 100, 255))
+onePlayerButtonHomeH = Button(c.geT("BLACK"),c.geT("BLACK"), 250, 470, 140, 80, 'One Player Hard', (255, 255, 255), 15, hoverColor=(100, 100, 255))
+twoPlayerButtonHomeN = Button(c.geT("BLACK"),c.geT("BLACK"), 400, 470, 140, 80, 'Two Player Easy', (255, 255, 255), 15, hoverColor=(100, 100, 255))
+twoPlayerButtonHomeH = Button(c.geT("BLACK"),c.geT("BLACK"), 600, 470, 140, 80, 'Two Player Hard', (255, 255, 255), 15, hoverColor=(100, 100, 255))
+quitButtonHome = Button(c.geT("BLACK"), c.geT("BLACK"), 30, 30, 140, 80, 'Quit', (255, 255, 255), 25, hoverColor=(100, 100, 255))
+settingsButton = Button(c.geT("BLACK"), c.geT("BLACK"), 600, 30, 210, 80, 'Settings', (255, 255, 255), 25, hoverColor=(100, 100, 255))
 
-homeButtonList.append(playButtonHome)
+homeButtonList.append(onePlayerButtonHomeN)
+homeButtonList.append(onePlayerButtonHomeH)
+homeButtonList.append(twoPlayerButtonHomeN)
+homeButtonList.append(twoPlayerButtonHomeH)
 homeButtonList.append(settingsButton)
 homeButtonList.append(quitButtonHome)
 

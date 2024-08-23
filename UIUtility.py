@@ -1,4 +1,5 @@
 import pygame
+import random
 
 class Button:
     buttonState = False  # False = Not clicked, True = Clicked
@@ -61,6 +62,12 @@ class Button:
     def setOutline(self, outline, outlineWidth = 1):
         self.outline = outline
         self.outlineWidth = outlineWidth
+
+    def getText(self):
+        return self.text
+
+    def setText(self, text):
+        self.text = text
 
 class ButtonSlider:
     carrierX = 20
@@ -243,3 +250,75 @@ class TextBox:
     def setOutline(self, outline, outlineWidth = 1):
         self.outline = outline
         self.outlineWidth = outlineWidth
+
+
+
+class Dropdown:
+    def __init__(self, x, y, width, height, options):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.options = options
+        self.open = False
+        self.buttonList = []
+        self.options = options
+        for i in range(len(options)):
+            self.buttonList.append(Button((106, 76, 165), (106, 76, 165), x, y + height*i, width, height, options[i], (255, 255, 255), 20, (255, 255, 0)))
+        self.arrow = Button((106, 76, 165), (106, 76, 165), x + width, y, height, height, "▼", (255, 255, 255), 30, (255, 255, 0))
+
+    def draw(self, screen):
+        if self.open:
+            for i in range(len(self.options)):
+                self.buttonList[i].draw(screen)
+        else:
+            self.buttonList[0].draw(screen)
+        self.arrow.draw(screen)
+
+    def getButtonList(self):
+        return self.buttonList
+
+    def click(self, mousepos):
+        x, y = mousepos
+        if not(x<self.x or x>self.x+self.width or y<self.y or y>self.y+self.height*len(self.options)) and self.open:
+            for button in self.buttonList:
+                if button.buttonClick(mousepos):
+                    self.open = False
+                    index = self.buttonList.index(button)
+                    cindex = 0
+
+                    t = self.buttonList[index].text
+                    self.buttonList[index].text = self.buttonList[cindex].text
+                    self.buttonList[cindex].text = t
+                    return True
+
+            self.open = False
+
+        if x<self.arrow.x+self.arrow.width and x>self.arrow.x and y<self.arrow.y+self.arrow.height and y>self.arrow.y:
+            self.open = not self.open
+            return True
+        return False
+
+    def setTextSize(self, size):
+        for button in self.buttonList:
+            button.textSize = size
+        self.arrow.textSize = size
+    
+    def setRect(self, width, height):
+        for button in self.buttonList:
+            button.width = width
+            button.height = height
+        self.width = width
+        self.height = height
+        for i in range(len(self.options)):
+            self.buttonList[i].y = self.y + height*i
+        self.arrow.x = self.x + width
+        self.arrow.y = self.y
+        self.arrow.width = 50
+        self.arrow.height = 50
+
+    def getValue(self):
+        return self.buttonList[0].text
+    
+    def getState(self):
+        return self.open
