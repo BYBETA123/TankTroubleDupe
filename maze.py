@@ -360,6 +360,17 @@ class Tank(pygame.sprite.Sprite):
             if len(treadsp2) > 15:
                 treadsp2.pop(0)
 
+    def getCurrentTile(self):
+        # This function will return the tile that the tank is currently on
+        # Inputs: None
+        # Outputs: The tile that the tank is currently on
+        row = math.ceil((self.getCenter()[1] - mazeY)/tileSize)
+        col = math.ceil((self.getCenter()[0] - mazeX)/tileSize)
+        index = (row-1)*colAmount + col
+        return tileList[index-1]
+
+    def getAngle(self):
+        return self.angle
 
 class Gun(pygame.sprite.Sprite):
 
@@ -1117,7 +1128,7 @@ class Tile:
         self.spawn = spawn
         self.border = self.borderControl()
         self.neighbours, self.bordering = self.neighbourCheck()
-
+        self.AITarget = False
     def neighbourCheck(self):
         #This function will return a list of the indexes of the neighbours based on the current list of border
         # No inputs are needed
@@ -1178,6 +1189,9 @@ class Tile:
 
     def draw(self, screen):
         pygame.draw.rect(screen, self.color, [self.x, self.y, tileSize, tileSize])
+        if self.AITarget:
+            pygame.draw.rect(screen, (247, 111, 49), [self.x, self.y, tileSize, tileSize]) # Random orange color
+            
         #Draw the border
         if self.border[0]:
             pygame.draw.line(screen, c.geT("BLACK"), [self.x, self.y], [self.x+tileSize, self.y], self.borderWidth)
@@ -1202,9 +1216,28 @@ class Tile:
     def setColor(self):
         self.color = c.geT("WHITE")
 
+    def getCorners(self):
+        return [(self.x, self.y), (self.x + tileSize, self.y), (self.x + tileSize, self.y + tileSize), (self.x, self.y + tileSize)]
+
+    def isWithin(self):
+        # This function will check if the mouse is within the tile
+        # Inputs: None
+        # Outputs: Boolean value representing whether the mouse is within the tile
+        mouseX, mouseY = pygame.mouse.get_pos()
+        if mouseX >= self.x and mouseX <= self.x + tileSize and mouseY >= self.y and mouseY <= self.y + tileSize:
+            return True
+        return False
+
     def setBorder(self, borderidx, value = True):
         self.border[borderidx] = value
         self.neighbours, self.bordering = self.neighbourCheck() # Update the neighbours list
+
+    def setTarget(self, value = True):
+        self.AITarget = value
+
+    def getCenter(self):
+        return (self.x + tileSize//2, self.y + tileSize//2)
+    
 
 class Explosion(pygame.sprite.Sprite):
 
@@ -1266,6 +1299,111 @@ class GameMode(Enum):
 
 #Turrets
 
+class AIGun(Gun):
+    def __init__(self, tank, controls, name):
+        super().__init__(tank, controls, name)
+        self.setCooldown(500)
+        self.setDamage(1)
+
+    def update(self):
+        """
+        Updates the gun's position, rotation, and shooting state based on the current controls and time.
+
+        This method checks for key presses to rotate the gun, 
+        handles shooting if the fire key is pressed, 
+        and updates the gun's visual position and rotation. 
+        It also manages the shooting cooldown.
+
+        Inputs:
+        -------
+        None
+
+        Outputs:
+        --------
+        None
+        """
+
+        self.angle = self.tank.getAngle() # update the position of the gun to match the tank
+
+        #self.canShoot
+
+
+        angleRad = math.radians(self.angle)
+        gunEndX, gunEndY = self.tank.getGunCenter()
+
+        rotatedGunImage = pygame.transform.rotate(self.originalGunImage, self.angle)
+        self.image = rotatedGunImage
+        self.rect = self.image.get_rect(center=(gunEndX + self.gunH * math.cos(angleRad), gunEndY - self.gunH * math.sin(angleRad)))
+
+        # we are looking for when tank2 appears in the cross hairs of the gun
+        # then the AI will shoot
+        tank2x, tank2y = tank2.getCenter() # get the center
+        
+        c = self.tank.getCorners() # Our center
+
+        tank1x, tank1y = (c[0][0] + c[1][0])//2, (c[0][1] + c[2][1])//2
+
+        # Line of sight for the tank to shoot
+        if self.canShoot:
+            dx, dy = tank2x - tank1x, tank2y - tank1y
+            a = math.degrees(math.atan2(dx, dy))//1
+            a = (a + 360 - 90) % 360
+            # print(f"Angle: {a} and self.angle: {self.angle} Conditions: {a <=((self.angle + 5)+360)%360} and {a >= ((self.angle - 5)+360)%360 }")
+            if a <=((self.angle + 5)+360)%360 and a >= ((self.angle - 5)+360)%360:
+                distance = math.hypot(dx, dy)
+                steps = int(distance)
+                for i in range(steps):
+                    x = tank1x + (dx/distance) * i
+                    y = tank1y + (dy/distance) * i
+                    #using tank2.getCorners()
+                    # print(f"Corners: {tank2.getCorners()}")
+                    if x >= tank2.getCorners()[0][0] and x <= tank2.getCorners()[1][0] and y >= tank2.getCorners()[0][1] and y <= tank2.getCorners()[2][1]:
+                        self.fire()
+                        print("Boom")
+                        break
+                    #check the tile it is in
+                    row = math.ceil((y - mazeY)/tileSize)
+                    col = math.ceil((x - mazeX)/tileSize)
+                    index = (row-1)*colAmount + col
+                    tile = tileList[index-1]
+
+                    if tile.border[0] and y - 1 <= tile.y:
+                        break
+                    if tile.border[1] and x + 1 >= tile.x + tileSize:
+                        break
+                    if tile.border[2] and y + 1 >= tile.y + tileSize:
+                        break
+                    if tile.border[3] and x - 1 <= tile.x:
+                        break
+                    if x <= mazeX or y <= mazeY or x >= mazeWidth + mazeX or y >= mazeHeight + mazeY:
+                        break
+
+        if self.shootCooldown > 0:
+            self.shootCooldown -= pygame.time.get_ticks() - self.lastUpdateTime
+        else:
+            self.shootCooldown = 0
+            self.canShoot = True
+
+        self.lastUpdateTime = pygame.time.get_ticks()
+
+    def fire(self):
+        # This function completely handles the bullet generation when firing a bullet
+        # Inputs: None
+        # Outputs: None
+
+        # Calculating where the bullet should spawn
+        bulletX, bulletY = self.getTank().getGunCenter()
+        bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
+        bullet.setDamage(self.damage)
+        bullet.setBounce(5)
+        bullet.setName(self.getTank().getName())
+        bulletSprites.add(bullet)
+        self.canShoot = False
+        self.shootCooldown = self.cooldownDuration
+        self.playSFX()
+
+
+
 class Chamber(Gun):
 
     def __init__(self, tank, controls, name):
@@ -1319,7 +1457,7 @@ class DefaultGun(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(400) # 500 ms
-        self.setDamage(10000) # 10000
+        self.setDamage(1) # 10000
 
     def setImage(self, imageNum = 1):
         # Setup a new image if the selected one isn't the default
@@ -1933,6 +2071,129 @@ class Watcher(Gun):
         soundDictionary["Watcher"].play()
 
 #Hulls
+class AITank(Tank):
+
+
+    def __init__(self, x, y, controls, name):
+        super().__init__(x, y, controls, name)
+        self.setMaxHealth(1)
+        self.setSpeedStatistic(1)
+        self.setHealthStatistic(1)
+        self.setTopSpeed(0.1)
+        self.setTopRotationalSpeed(0.5)
+        self.setTankName("AI")
+        self.lastTarget = x * 14 + y
+        self.pseudoTargetarray = []
+        self.lastTargetPackage = currentTargetPackage
+        self.aim = currentTargetPackage
+        self.BFSRefresh = True
+        self.aimTime = 0
+    def update(self):
+        # This function updates the tank's position and rotation based on the controls detected
+        # from the keyboard sound effects will be played as well as the sound effects
+        # Inputs: None
+        # # Outputs: None
+        global tileList
+        # current tile
+        (currentTiley, currentTilex) = ((self.getCenter()[0]-tileSize)//tileSize + 1, (self.getCenter()[1]-tileSize)//tileSize)
+        currentTile = currentTilex * 14 + currentTiley
+        
+        
+        
+        currentTarget = self.lastTargetPackage[0]
+
+        for tile in tileList:
+            tile.setTarget(tile.getIndex() == self.aim[0])
+
+        targetTilex, targetTiley = self.lastTargetPackage[1], self.lastTargetPackage[2]
+
+        if currentTile != self.aim[0] and self.BFSRefresh:
+            self.BFSRefresh = False
+            # we haven't reached the goal
+            self.pseudoTargetarray = breathFirstSearchShort(tileList, [currentTile, self.aim[0]], 0)
+            # needs to wait to be in center of tile
+            if self.pseudoTargetarray==[] or self.pseudoTargetarray==None:
+                pass
+            else:
+                currentTarget = self.pseudoTargetarray.pop(0) # we have an elemnt in the list
+            self.lastTargetPackage = (currentTarget, currentTarget%14*tileSize + tileSize//2, ((currentTarget)//14 + 1)*tileSize + tileSize//2)
+
+        # drive forward
+        if (targetTilex == self.getCenter()[0] and targetTiley == self.getCenter()[1]): # if we match our target tile
+            self.speed = 0
+            self.rotationSpeed = 0
+            self.BFSRefresh = True
+            if self.pseudoTargetarray==[] or self.pseudoTargetarray==None:
+                pass
+            else:
+                currentTarget = self.pseudoTargetarray.pop(0) # we have an elemnt in the list
+            self.lastTargetPackage = (currentTarget, currentTarget%14*tileSize + tileSize//2, ((currentTarget)//14 + 1)*tileSize + tileSize//2)
+        else:
+            # we are not on the target tile
+
+            # if we are below the target tile, turn the tank so it will face upwards
+            vAngle = math.atan2(targetTilex - self.getCenter()[0], targetTiley - self.getCenter()[1])
+            vAngle = math.degrees(vAngle)
+            vAngle = (vAngle + 360 - 90) % 360 # we have a rotate coordinate system
+            
+            # make it so that the tank will go forward if it is facing the target
+            difference = (vAngle - self.angle) % 360
+            if difference >180:
+                difference -= 360
+            if difference < 0:
+                self.rotationSpeed = -1
+            elif difference > 0:
+                self.rotationSpeed = 1
+            else:
+                self.rotationSpeed = 0
+            # if we are facing the target, go forward
+            if (vAngle == self.angle):
+                self.speed = 0.25
+
+
+
+
+
+            # print(f"Current tile: {currentTile}, Target tile: {currentTarget}, TargetX: {targetTilex}, TargetY: {targetTiley}, CurrentX: {self.getCenter()[0]}, CurrentY: {self.getCenter()[1]}, Angle: {self.angle}, Vangle: {vAngle}")
+
+        #if we are below the target tile, turn the tank so it will face upwards
+        # N is 90
+        # E is 0
+        # S is 270
+        # W is 180
+
+
+        #find where we are in relation to the target
+        #where is the current tile in relation to us
+
+        #we know where we are in relation to the target
+
+
+        # if we are looking at the targetTile, stop rotating
+
+        self.angle += self.rotationSpeed
+        self.angle %= 360
+
+        self.image = pygame.transform.rotate(self.originalTankImage, self.angle)
+        self.rect = self.image.get_rect(center=(self.x, self.y))
+
+        angleRad = math.radians(self.angle)
+        dx = math.cos(angleRad) * self.speed
+        dy = math.sin(angleRad) * self.speed
+        self.x, self.y = self.fixMovement(dx,dy) # Adjust the movement
+
+    def setAim(self, aim):
+        print("Setting aim")
+        self.aimTime = pygame.time.get_ticks()
+        self.aim = aim
+        self.BFSRefresh = True
+        self.lastTargetPackage = aim
+
+    def getAimTime(self):
+        return self.aimTime
+
+    
+
 class Bonsai(Tank):
 
     def __init__(self, x, y, controls, name):
@@ -2149,82 +2410,118 @@ class Panther(Tank):
         return self.rotate_point((self.rect.centerx, self.rect.centery), -4, 0, self.angle)
 
 #Functions
+def validateChoice(option, choices):
+    # This function validates whether or not a spawn location is valid with some arbitrary parameters
+    # Inputs: option: the current proposed spawn location
+    # Inputs: choices: the current list of spawn locations
+    # Outputs: True if the spawn location is valid, False otherwise
+
+    #Make sure the spawns are far away from each other
+    columnOffset = 6 # Max = 14
+    rowOffset = 3 # Max = 8
+    if len(choices)>0: # We have elements in the list
+        #We need to check how close it is to the other spawn
+        if option in choices:
+            return False
+        
+        #Extracting the row/col
+        # print("rowAmount: ", rowAmount, "colAmount: ", colAmount)
+        row1, col1 = choices[0]//colAmount, choices[0]%colAmount
+        row2, col2 = option//colAmount, option%colAmount
+
+        if abs(col1-col2) < columnOffset:
+            print("Column Check Failed, ", col1, col2, "Difference: ", abs(col1-col2), "Offset: ", columnOffset)
+            return False
+        if abs(row1-row2) < rowOffset:
+            print("Row Check Failed, ", row1, row2, "Difference: ", abs(row1-row2), "Offset: ", rowOffset)
+            return False
+        #If they are edge cases, try the other side
+        if col1 == 0:
+            col1 = rowAmount
+        if col2 == 0:
+            col2 = rowAmount
+        if row1 == 0:
+            row1 = colAmount
+        if row2 == 0:
+            row2 = colAmount
+
+        #Sanity check with edge cases
+        if abs(col1-col2) < columnOffset:
+            print("Column Check Failed, ", col1, col2, "Difference: ", abs(col1-col2), "Offset: ", columnOffset)
+            return False
+        if abs(row1-row2) < rowOffset:
+            print("Row Check Failed, ", row1, row2, "Difference: ", abs(row1-row2), "Offset: ", rowOffset)
+            return False
+        return True # If we pass both checks then there is no other concern
+    else:
+        return True
+
+def breathFirstSearch(tileList, choices, option):
+    # This function will search the maze in a breath first manner to see if we can reach the second spawn
+    # Inputs: tileList: The current list of tiles
+    # Inputs: Choices: The locations of both spawns
+    # Outputs: True if the second spawn is reachable, False otherwise
+
+
+    #Setting up the BFS
+    visitedQueue = []
+    tracking = [False for _ in range(rowAmount*colAmount+1)]
+    queue = [choices[option]]
+    visitedQueue.append(choices[option])
+    tracking[choices[option]] = True
+    while len(queue) > 0: # While there are still elements to check
+        current = queue.pop(0)
+        for neighbour in tileList[current-1].getNeighbours():
+            if not tracking[neighbour]:
+                queue.append(neighbour)
+                visitedQueue.append(neighbour)
+                tracking[neighbour] = True
+
+    if choices[(option +1) % 2] in visitedQueue: # If the second spawn is reachable
+        return True
+    else:
+        return False
+
+def breathFirstSearchShort(tileList, choices, option):
+    # This function will search the maze in a breath first manner to see if we can reach the second spawn
+    # Inputs: tileList: The current list of tiles
+    # Inputs: Choices: The locations of both spawns
+    # Outputs: True if the second spawn is reachable, False otherwise
+
+
+    #Setting up the BFS
+    visitedQueue = []
+    tracking = [False for _ in range(rowAmount*colAmount+1)]
+    queue = [choices[option]]
+    predecessors = {}
+    visitedQueue.append(choices[option])
+    tracking[choices[option]] = True
+    predecessors[choices[option]] = None
+    while len(queue) > 0: # While there are still elements to check
+        current = queue.pop(0)
+        if current == choices[(option +1) % 2]:
+            break
+        for neighbour in tileList[current-1].getNeighbours():
+            if not tracking[neighbour]:
+                queue.append(neighbour)
+                visitedQueue.append(neighbour)
+                tracking[neighbour] = True
+                predecessors[neighbour] = tileList[current-1].getIndex()  # Record the predecessor
+    # Reconstruct the path from endNode to startNode
+    path = []
+    currentNode = choices[(option +1) % 2]
+    while currentNode is not None:
+        path.insert(0, currentNode)  # Insert at the beginning to avoid reversing later
+        currentNode = predecessors[currentNode]
+    # remove the first element
+    path.pop(0)
+    return path
+
 def tileGen():
     # This function is responsible for generating the tiles for the maze
     # Inputs: No inputs
     # Outputs: A list of tiles that make up the maze
     #
-    def validateChoice(option, choices):
-        # This function validates whether or not a spawn location is valid with some arbitrary parameters
-        # Inputs: option: the current proposed spawn location
-        # Inputs: choices: the current list of spawn locations
-        # Outputs: True if the spawn location is valid, False otherwise
-
-        #Make sure the spawns are far away from each other
-        columnOffset = 6 # Max = 14
-        rowOffset = 3 # Max = 8
-        if len(choices)>0: # We have elements in the list
-            #We need to check how close it is to the other spawn
-            if option in choices:
-                return False
-            
-            #Extracting the row/col
-            # print("rowAmount: ", rowAmount, "colAmount: ", colAmount)
-            row1, col1 = choices[0]//colAmount, choices[0]%colAmount
-            row2, col2 = option//colAmount, option%colAmount
-
-            if abs(col1-col2) < columnOffset:
-                print("Column Check Failed, ", col1, col2, "Difference: ", abs(col1-col2), "Offset: ", columnOffset)
-                return False
-            if abs(row1-row2) < rowOffset:
-                print("Row Check Failed, ", row1, row2, "Difference: ", abs(row1-row2), "Offset: ", rowOffset)
-                return False
-            #If they are edge cases, try the other side
-            if col1 == 0:
-                col1 = rowAmount
-            if col2 == 0:
-                col2 = rowAmount
-            if row1 == 0:
-                row1 = colAmount
-            if row2 == 0:
-                row2 = colAmount
-
-            #Sanity check with edge cases
-            if abs(col1-col2) < columnOffset:
-                print("Column Check Failed, ", col1, col2, "Difference: ", abs(col1-col2), "Offset: ", columnOffset)
-                return False
-            if abs(row1-row2) < rowOffset:
-                print("Row Check Failed, ", row1, row2, "Difference: ", abs(row1-row2), "Offset: ", rowOffset)
-                return False
-            return True # If we pass both checks then there is no other concern
-        else:
-            return True
-
-    def breathFirstSearch(tileList, choices, option):
-        # This function will search the maze in a breath first manner to see if we can reach the second spawn
-        # Inputs: tileList: The current list of tiles
-        # Inputs: Choices: The locations of both spawns
-        # Outputs: True if the second spawn is reachable, False otherwise
-
-
-        #Setting up the BFS
-        visitedQueue = []
-        tracking = [False for _ in range(rowAmount*colAmount+1)]
-        queue = [choices[option]]
-        visitedQueue.append(choices[option])
-        tracking[choices[option]] = True
-        while len(queue) > 0: # While there are still elements to check
-            current = queue.pop(0)
-            for neighbour in tileList[current-1].getNeighbours():
-                if not tracking[neighbour]:
-                    queue.append(neighbour)
-                    visitedQueue.append(neighbour)
-                    tracking[neighbour] = True
-
-        if choices[(option +1) % 2] in visitedQueue: # If the second spawn is reachable
-            return True
-        else:
-            return False
 
     validMaze = False
     while not validMaze: # While our maze isn't valid
@@ -2347,12 +2644,11 @@ def setUpPlayers():
     player1PackageGun = [controlsTank1, p1GunName]
     player2PackageTank = [spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName]
     player2PackageGun = [controlsTank2, p2GunName]
+
     #Setup the tanks
-    print(f"Difficulty Type: {DifficultyType}")
-    if DifficultyType:
+    if DifficultyType == 1:
         # easy
-        # tank1 = copy.copy(hullList[p1J]) # Tank 1 setup
-        tank1 = DefaultTank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
+        tank1 = AITank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
         tank1.setData(player1PackageTank)
         tank1.setImage(p1L + 1)
 
@@ -2360,7 +2656,7 @@ def setUpPlayers():
         tank2.setData(player2PackageTank)
         tank2.setImage(p2L + 1)
 
-        gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
+        gun1 = AIGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
         gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1])
         gun1.setImage(p1K + 1)
 
@@ -2540,6 +2836,12 @@ def playGame():
         screen.blit(pos[0], pos[1])
     # pygame.draw.polygon(screen, GREEN, tank1.getCorners(), 2) #Hit box outline
     # pygame.draw.polygon(screen, GREEN, tank2.getCorners(), 2) #Hit box outline
+    # if we are using AI we need to set the target to go to the other tank
+    if DifficultyType == 1 and pygame.time.get_ticks() - tank1.getAimTime() > 2000:
+        # AI difficulty
+        if not tank2Dead: # if the tank is still alive
+            temp = tank2.getCurrentTile().getIndex()
+            tank1.setAim((temp, temp%14*tileSize + tileSize//2, ((temp)//14 + 1)*tileSize + tileSize//2))
     allSprites.update()
     bulletSprites.update()
     explosionGroup.update()
@@ -3109,7 +3411,7 @@ def checkHomeButtons(mouse):
         print("One Player Easy")
         constantPlayGame()
     if twoPlayerButtonHomeN.buttonClick(mouse):
-        DifficultyType = 1
+        DifficultyType = 2
         setUpPlayers()
         gameMode=GameMode.play
         #Switch the the play screen
@@ -3118,12 +3420,12 @@ def checkHomeButtons(mouse):
     if onePlayerButtonHomeH.buttonClick(mouse):
         print("One Player Hard")
         gameMode = GameMode.selection
-        DifficultyType = 0
+        DifficultyType = 3
         constantSelectionScreen()
     if twoPlayerButtonHomeH.buttonClick(mouse):
         print("Two Player Hard")
         gameMode = GameMode.selection
-        DifficultyType = 0
+        DifficultyType = 4
         constantSelectionScreen()
 
 
@@ -3330,11 +3632,11 @@ for sound in soundDictionary:
 
 spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
 spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
-
 global tank1Dead, tank2Dead
 tank1Dead = False
 tank2Dead = False
 
+currentTargetPackage = (spawnpoint[0]-1, tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2)
 player1PackageTank = [spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName]
 player1PackageGun = [controlsTank1, p1GunName]
 player2PackageTank = [spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName]
@@ -3360,8 +3662,20 @@ while not done:
 
             mouse = pygame.mouse.get_pos() # Update on button press
             if event.button != 1:
-                #Not left click
-                break
+                #if it is right click
+                if event.button == 3 and gameMode == GameMode.play:
+                    #if the mosue is within the maze, make the tile the target
+                    for tile in tileList:
+                        if DifficultyType == 1:
+                            if tile.isWithin(): # If the mouse is within the tile
+                                # tile.setTarget(True)
+                                (targetx, targety) = tile.getCenter()
+                                currentTargetPackage = (tile.getIndex(), targetx, targety)
+                                # if we have the AI we need to update the target
+                                # We have the AI
+                                tank1.setAim(currentTargetPackage)
+                                break
+
             if gameMode == GameMode.pause:
                 #We are paused
                 if (unPause.getCorners()[0] <= mouse[0] <= unPause.getCorners()[2] and
