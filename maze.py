@@ -1315,6 +1315,110 @@ class Chamber(Gun):
         # Outputs: None
         soundDictionary["Chamber"].play()
 
+class DefaultGun(Gun):
+    def __init__(self, tank, controls, name):
+        super().__init__(tank, controls, name)
+        self.setCooldown(400) # 500 ms
+        self.setDamage(10000) # 10000
+
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imagePath: The filepath the points to the required image
+        # Outputs: None        
+        currentDir = os.path.dirname(__file__)
+        gunPath = os.path.join(currentDir,'Sprites', 'gun' + str(imageNum) + '.png')
+        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
+        width, height = self.originalGunImage.get_size()
+        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
+        self.gunImage = self.originalGunImage
+        self.image = self.gunImage
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
+    def update(self):
+        """
+        Updates the gun's position, rotation, and shooting state based on the current controls and time.
+
+        This method checks for key presses to rotate the gun, 
+        handles shooting if the fire key is pressed, 
+        and updates the gun's visual position and rotation. 
+        It also manages the shooting cooldown.
+
+        Inputs:
+        -------
+        None
+
+        Outputs:
+        --------
+        None
+        """
+        keys = pygame.key.get_pressed()
+        #Checks what keys are pressed, and changes speed accordingly
+        #If tank hull moves left or right, the gun will also move simultaneously
+        #with the tank hull at the same speed and direction.
+        self.rotationSpeed = 0
+        if  keys[self.controls['left']]:
+            self.rotationSpeed += self.tank.getRotationalSpeed()
+        elif keys[self.controls['right']]:
+            self.rotationSpeed += -self.tank.getRotationalSpeed()                
+    
+        self.angle += self.rotationSpeed
+        self.angle %= 360
+        
+        #This if statement checks to see if speed or rotation of speed is 0,
+        #if so it will stop playing moving sound, otherwise, sound will play
+        #indefinitely
+        # <SOUND REWORK>
+        if keys[self.controls['rotate_left']] or keys[self.controls['rotate_right']]:
+            if self.rotationSpeed != 0:
+                if not self.soundPlaying:
+                    soundDictionary["turretRotate"].play(loops = -1, fade_ms = 100)  # Play sound indefinitely
+                    self.soundPlaying = True
+            else:
+                if self.soundPlaying:
+                    soundDictionary["turretRotate"].stop()
+                    self.soundPlaying = False
+        else:
+            if self.soundPlaying:
+                soundDictionary["turretRotate"].stop()
+                self.soundPlaying = False
+
+        #Reload cooldown of bullet and determines the angle to fire the bullet,
+        #which is relative to the posistion of the tank gun.
+        if keys[self.controls['fire']] and self.canShoot:
+            self.fire()
+
+        angleRad = math.radians(self.angle)
+        gunEndX, gunEndY = self.tank.getGunCenter()
+
+        rotatedGunImage = pygame.transform.rotate(self.originalGunImage, self.angle)
+        self.image = rotatedGunImage
+        self.rect = self.image.get_rect(center=(gunEndX + self.gunH * math.cos(angleRad), gunEndY - self.gunH * math.sin(angleRad)))
+        if self.shootCooldown > 0:
+            self.shootCooldown -= pygame.time.get_ticks() - self.lastUpdateTime
+        else:
+            self.shootCooldown = 0
+            self.canShoot = True
+
+        self.lastUpdateTime = pygame.time.get_ticks()
+
+    def fire(self):
+        # This function completely handles the bullet generation when firing a bullet
+        # Inputs: None
+        # Outputs: None
+
+        # Calculating where the bullet should spawn
+        bulletX, bulletY = self.getTank().getGunCenter()
+        bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
+        bullet.setDamage(self.damage)
+        bullet.setBounce(5)
+        bullet.setName(self.getTank().getName())
+        bulletSprites.add(bullet)
+        self.canShoot = False
+        self.shootCooldown = self.cooldownDuration
+        self.playSFX()
+
 class Judge(Gun):
 
     def __init__(self, tank, controls, name):
@@ -1903,6 +2007,36 @@ class Cicada(Tank):
         # Outputs: The center of the gun
         return self.rotate_point((self.rect.centerx, self.rect.centery), -4, 0, self.angle)
 
+class DefaultTank(Tank):
+    def __init__(self, x, y, controls, name):
+        super().__init__(x, y, controls, name)
+        self.setMaxHealth(1)
+        self.setSpeedStatistic(2)
+        self.setHealthStatistic(2)
+        self.setTopSpeed(0.25)
+        self.setTopRotationalSpeed(0.5)
+        self.setTankName("tank")
+
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imageNum: The index that points to the required image
+        # Outputs: None
+        # Load the tank image
+        currentDir = os.path.dirname(__file__)
+        tankPath = os.path.join(currentDir, 'Sprites', 'tank' + str(imageNum) + '.png')
+        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
+
+        # Scale the tank image to a smaller size
+        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
+        self.image = self.tankImage
+        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
+        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
+        self.x = float(self.rect.centerx)
+        self.y = float(self.rect.centery)
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
 class Fossil(Tank):
 
     def __init__(self, x, y, controls, name):
@@ -2200,7 +2334,7 @@ def satCollision(rect1, rect2):
 
 def setUpPlayers():
     global tileList, spawnpoint, tank1, tank2, gun1, gun2, allSprites, bulletSprites
-    global p1I, p1J, p2I, p2J, p1K, p2K, p1L, p2L
+    global p1I, p1J, p2I, p2J, p1K, p2K, p1L, p2L, DifficultyType
     # This function sets up the players for the game including reseting the respective global veriables
     #This function has no real dependencies on things outside of its control
     # Inputs: None
@@ -2214,21 +2348,42 @@ def setUpPlayers():
     player2PackageTank = [spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName]
     player2PackageGun = [controlsTank2, p2GunName]
     #Setup the tanks
-    tank1 = copy.copy(hullList[p1J]) # Tank 1 setup
-    tank1.setData(player1PackageTank)
-    tank1.setImage(p1L + 1)
+    print(f"Difficulty Type: {DifficultyType}")
+    if DifficultyType:
+        # easy
+        # tank1 = copy.copy(hullList[p1J]) # Tank 1 setup
+        tank1 = DefaultTank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
+        tank1.setData(player1PackageTank)
+        tank1.setImage(p1L + 1)
 
-    tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
-    tank2.setData(player2PackageTank)
-    tank2.setImage(p2L + 1)
+        tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
+        tank2.setData(player2PackageTank)
+        tank2.setImage(p2L + 1)
 
-    gun1 = copy.copy(turretList[p1I]) # Gun 1 setup
-    gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1])
-    gun1.setImage(p1K + 1)
+        gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
+        gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1])
+        gun1.setImage(p1K + 1)
 
-    gun2 = copy.copy(turretList[p2I]) # Gun 2 setup
-    gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1])
-    gun2.setImage(p2K + 1)
+        gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
+        gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1])
+        gun2.setImage(p2K + 1)
+    else:
+        #normal
+        tank1 = copy.copy(hullList[p1J]) # Tank 1 setup
+        tank1.setData(player1PackageTank)
+        tank1.setImage(p1L + 1)
+
+        tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
+        tank2.setData(player2PackageTank)
+        tank2.setImage(p2L + 1)
+
+        gun1 = copy.copy(turretList[p1I]) # Gun 1 setup
+        gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1])
+        gun1.setImage(p1K + 1)
+
+        gun2 = copy.copy(turretList[p2I]) # Gun 2 setup
+        gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1])
+        gun2.setImage(p2K + 1)
     #Updating the groups
     for sprite in allSprites:
         sprite.kill()
@@ -2598,6 +2753,8 @@ turretList = [Tempest(Tank(0,0,None, "Default"), None, "Tempest"), Silencer(Tank
 hullList = [Panther(0, 0, None, "Panther"), Cicada(0, 0, None, "Cicada"), Gater(0, 0, None, "Gater"), Bonsai(0, 0, None, "Bonsai"),
             Fossil(0, 0, None, "Fossil")]
 
+DifficultyType = 0
+
 turretListLength = len(turretList)
 hullListLength = len(hullList)
 
@@ -2938,23 +3095,35 @@ def checkHomeButtons(mouse):
     # This function checks all the buttons of the mouse in the home screen
     # Inputs: Mouse: The current location of the mouse
     # Outputs: None
-    global gameMode
+    global gameMode, DifficultyType
 
 # homeButtonList.append(onePlayerButtonHomeN)
 # homeButtonList.append(onePlayerButtonHomeH)
 # homeButtonList.append(twoPlayerButtonHomeN)
 # homeButtonList.append(twoPlayerButtonHomeH)
     if onePlayerButtonHomeN.buttonClick(mouse):
+        DifficultyType = 1
+        setUpPlayers()
+        gameMode=GameMode.play
+        #Switch the the play screen
         print("One Player Easy")
+        constantPlayGame()
     if twoPlayerButtonHomeN.buttonClick(mouse):
+        DifficultyType = 1
+        setUpPlayers()
+        gameMode=GameMode.play
+        #Switch the the play screen
         print("Two Player Easy")
+        constantPlayGame()
     if onePlayerButtonHomeH.buttonClick(mouse):
         print("One Player Hard")
         gameMode = GameMode.selection
+        DifficultyType = 0
         constantSelectionScreen()
     if twoPlayerButtonHomeH.buttonClick(mouse):
-        print("Two Player")
+        print("Two Player Hard")
         gameMode = GameMode.selection
+        DifficultyType = 0
         constantSelectionScreen()
 
 
@@ -3078,10 +3247,10 @@ originalTankImage = pygame.image.load(tankPath).convert_alpha()
 
 
 # Create buttons with specified positions and text
-onePlayerButtonHomeN = Button(c.geT("BLACK"),c.geT("BLACK"), 50, 470, 140, 80, 'One Player Easy', (255, 255, 255), 15, hoverColor=(100, 100, 255))
-onePlayerButtonHomeH = Button(c.geT("BLACK"),c.geT("BLACK"), 250, 470, 140, 80, 'One Player Hard', (255, 255, 255), 15, hoverColor=(100, 100, 255))
-twoPlayerButtonHomeN = Button(c.geT("BLACK"),c.geT("BLACK"), 400, 470, 140, 80, 'Two Player Easy', (255, 255, 255), 15, hoverColor=(100, 100, 255))
-twoPlayerButtonHomeH = Button(c.geT("BLACK"),c.geT("BLACK"), 600, 470, 140, 80, 'Two Player Hard', (255, 255, 255), 15, hoverColor=(100, 100, 255))
+onePlayerButtonHomeN = Button(c.geT("BLACK"),c.geT("BLACK"), 30, 470, 140, 80, '1P Easy', (255, 255, 255), 15, hoverColor=(100, 100, 255))
+onePlayerButtonHomeH = Button(c.geT("BLACK"),c.geT("BLACK"), 230, 470, 140, 80, '1P Hard', (255, 255, 255), 15, hoverColor=(100, 100, 255))
+twoPlayerButtonHomeN = Button(c.geT("BLACK"),c.geT("BLACK"), 430, 470, 140, 80, '2P Easy', (255, 255, 255), 15, hoverColor=(100, 100, 255))
+twoPlayerButtonHomeH = Button(c.geT("BLACK"),c.geT("BLACK"), 630, 470, 140, 80, '2P Hard', (255, 255, 255), 15, hoverColor=(100, 100, 255))
 quitButtonHome = Button(c.geT("BLACK"), c.geT("BLACK"), 30, 30, 140, 80, 'Quit', (255, 255, 255), 25, hoverColor=(100, 100, 255))
 settingsButton = Button(c.geT("BLACK"), c.geT("BLACK"), 600, 30, 210, 80, 'Settings', (255, 255, 255), 25, hoverColor=(100, 100, 255))
 
