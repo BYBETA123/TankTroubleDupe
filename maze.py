@@ -279,6 +279,7 @@ class Tank(pygame.sprite.Sprite):
         self.controls = data[2]
         self.name = data[3]
         self.rect = self.tankImage.get_rect(center=(data[0], data[1]))
+        print(f"Setting data: {data[0]}, {data[1]}")
         self.x = float(self.rect.centerx)
         self.y = float(self.rect.centery)
 
@@ -2118,7 +2119,6 @@ class AITank(Tank):
                 currentTarget = self.pseudoTargetarray.pop(0) # we have an elemnt in the list
             self.lastTargetPackage = (currentTarget, currentTarget%14*tileSize + tileSize//2, ((currentTarget)//14 + 1)*tileSize + tileSize//2)
 
-        # drive forward
         if (targetTilex == self.getCenter()[0] and targetTiley == self.getCenter()[1]): # if we match our target tile
             self.speed = 0
             self.rotationSpeed = 0
@@ -2147,8 +2147,8 @@ class AITank(Tank):
             else:
                 self.rotationSpeed = 0
             # if we are facing the target, go forward
-            if (vAngle == self.angle):
-                self.speed = 0.25
+            # if (vAngle == self.angle):
+            self.speed = 0.25 # we move
 
 
 
@@ -2183,7 +2183,6 @@ class AITank(Tank):
         self.x, self.y = self.fixMovement(dx,dy) # Adjust the movement
 
     def setAim(self, aim):
-        print("Setting aim")
         self.aimTime = pygame.time.get_ticks()
         self.aim = aim
         self.BFSRefresh = True
@@ -2681,6 +2680,11 @@ def setUpPlayers():
         gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1])
         gun2.setImage(p2K + 1)
     #Updating the groups
+    #Starting location
+    temp = tank2.getCurrentTile().getIndex()
+    tank1.setAim((temp, temp%14*tileSize + tileSize//2, ((temp)//14 + 1)*tileSize + tileSize//2))
+    
+
     for sprite in allSprites:
         sprite.kill()
     allSprites = pygame.sprite.Group() # Wipe the current Sprite Group
@@ -3635,8 +3639,10 @@ spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-
 global tank1Dead, tank2Dead
 tank1Dead = False
 tank2Dead = False
-
-currentTargetPackage = (spawnpoint[0]-1, tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2)
+print(f"Spawnpoint 1: {spawnpoint[0]}")
+print(f"Starting the Player 1 (AI) at: {spawnpoint[0]}, {tileList[spawnpoint[0]-1].x + tileSize//2}, {tileList[spawnpoint[0]-1].y + tileSize//2}")
+print(f"Starting the Player 2 (Human) at: {spawnpoint[1]}, {tileList[spawnpoint[1]-1].x + tileSize//2}, {tileList[spawnpoint[1]-1].y + tileSize//2}")
+currentTargetPackage = (spawnpoint[1]-1, tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2)
 player1PackageTank = [spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName]
 player1PackageGun = [controlsTank1, p1GunName]
 player2PackageTank = [spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName]
