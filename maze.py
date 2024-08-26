@@ -1291,6 +1291,7 @@ class GameMode(Enum):
     home = 2
     settings = 3
     selection = 4
+    credit = 5
 
 #Turrets
 
@@ -2871,7 +2872,8 @@ def pauseScreen():
     #Buttons
     if not fromHome: # We haven't started the game
         unPause.draw(screen, outline = True)
-
+    else: # we came from home, add the credits button
+        creditButton.draw(screen, outline = True)
     home.draw(screen, outline = True)
     quitButton.draw(screen, outline = True)
     mute.draw(screen, outline = False)
@@ -3018,10 +3020,31 @@ mute = ButtonSlider(c.geT("BLACK"), c.geT("BLUE"), sliderX, sliderY*3, tileSize,
                     tileSize*2, 'mute', c.geT("WHITE"), c.geT("BLACK"), c.geT("RED"))
 sfx = ButtonSlider(c.geT("BLACK"), c.geT("BLUE"), sliderX, sliderY*5 - tileSize, tileSize, tileSize,
                    tileSize*8, tileSize*2, 'SFX', c.geT("WHITE"), c.geT("BLACK"), c.geT("RED"))
-
+creditButton = Button(c.geT("GREEN"), c.geT("WHITE"), windowWidth/2 - 200, 0.8 * windowHeight, 400, tileSize, 'Credits')
 selectionBackground = c.geT("SOFT_WHITE")
 selectionFont = 'Londrina Solid'
 monoFont = 'Courier New'
+
+#Credits Screen
+creditsBackButton = Button(c.geT("GREEN"), c.geT("WHITE"), windowWidth - 175, 75, 100, tileSize, 'Back', c.geT("BLACK"), 20, (100, 100, 255))
+creditsTitle = TextBox(windowWidth//2 - 175, 100, font=selectionFont,fontSize=104, text="Credits", textColor=c.geT("BLACK"))
+creditsTitle.selectable(False)
+creditsTitle.setBoxColor(c.geT("OFF_WHITE"))
+
+disclaimer = TextBox(57, windowHeight - 110, font=selectionFont,fontSize=35, text="ALL RIGHTS BELONG TO THEIR RESPECTIVE OWNERS", textColor=c.geT("BLACK"))
+disclaimer.selectable(False)
+disclaimer.setBoxColor(c.geT("OFF_WHITE"))
+
+creditbox = [
+    "Lead Developer: Beta",
+    "UI Design: Bin-Coder14",
+    "Sounds: Beta",
+    "Music: Beta, Goodnews888",
+    "Art: Beta, Goodnews888",
+]
+
+cFont = pygame.font.SysFont('Courier New', 36)
+creditsurfaces = [cFont.render(line, True, c.geT("BLACk")) for line in creditbox]
 
 
 #Selection Screen
@@ -3439,7 +3462,7 @@ def checkHomeButtons(mouse):
     #     print("Selection")
     #     constantSelectionScreen()
     if settingsButton.buttonClick(mouse):
-        print("Unimplmented")
+        print("Settings")
         gameMode = GameMode.pause
     if quitButtonHome.buttonClick(mouse):
         global done
@@ -3540,6 +3563,26 @@ def selectionScreen():
     gunImage2 = pygame.transform.scale(originalGunImage2, (15*gunScale, 15*gunScale))
     gunImage2 = pygame.transform.flip(gunImage2, True, False) # Flipped
     screen.blit(gunImage2, (windowWidth - gunImageX - gunScale * 15 - (centerX - gX)*gunScale, gunImageY + centerY*gunScale - 6*gunScale))
+
+def creditDraw():
+    # Draw the credits screen
+    # Inputs: None
+    # Outputs: None
+    #Draw a box
+    global mazeX, mazeY, windowWidth, windowHeight, c
+    pauseWidth = windowWidth - mazeX * 2
+    pauseHeight = windowHeight - mazeY * 2
+    pygame.draw.rect(screen, c.geT("OFF_WHITE"), [mazeX, mazeY, pauseWidth, pauseHeight])
+    pygame.draw.rect(screen, c.geT("BLACK"), [mazeX, mazeY, pauseWidth, pauseHeight], 5)
+    creditsBackButton.draw(screen = screen, outline = True)
+    creditsTitle.draw(screen = screen, outline= True)
+    disclaimer.draw(screen = screen, outline = True)
+    
+    startY = 200
+    gap = 50
+    for c in creditsurfaces:
+        screen.blit(c, (mazeX + 50, startY))
+        startY += gap
 
 #Menu screen
 homeButtonList = []
@@ -3684,9 +3727,14 @@ while not done:
             if gameMode == GameMode.pause:
                 #We are paused
                 if (unPause.getCorners()[0] <= mouse[0] <= unPause.getCorners()[2] and
-                    unPause.getCorners()[1] <= mouse[1] <= unPause.getCorners()[3]): #If we click the return to game button
+                    unPause.getCorners()[1] <= mouse[1] <= unPause.getCorners()[3] and not fromHome): #If we click the return to game button
                     constantPlayGame()
                     gameMode = GameMode.play # Return to game if button was clicked
+                if (creditButton.getCorners()[0] <= mouse[0] <= creditButton.getCorners()[2] and
+                    creditButton.getCorners()[1] <= mouse[1] <= creditButton.getCorners()[3] and fromHome): #If we click the return to game button
+                    print("The credits button was clicked, but is unimplmented")
+                    creditDraw()
+                    gameMode = GameMode.credit
                 if (home.getCorners()[0] <= mouse[0] <= home.getCorners()[2] and
                     home.getCorners()[1] <= mouse[1] <= home.getCorners()[3]): # Home button
                     constantHomeScreen()
@@ -3793,7 +3841,8 @@ while not done:
         for button in homeButtonList:
             button.update_display(mouse)
             button.draw(screen, outline=True)
-    
+    elif gameMode == GameMode.credit:
+        pass # Blocker until window is implemented
     else:
         screen.fill(c.geT("WHITE")) # Errornous state
     clock.tick(240) # Set the FPS
