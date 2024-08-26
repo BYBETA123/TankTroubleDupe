@@ -3569,11 +3569,11 @@ def creditDraw():
     # Inputs: None
     # Outputs: None
     #Draw a box
-    global mazeX, mazeY, windowWidth, windowHeight, c
+    global mazeX, mazeY, windowWidth, windowHeight
     pauseWidth = windowWidth - mazeX * 2
     pauseHeight = windowHeight - mazeY * 2
-    pygame.draw.rect(screen, c.geT("OFF_WHITE"), [mazeX, mazeY, pauseWidth, pauseHeight])
-    pygame.draw.rect(screen, c.geT("BLACK"), [mazeX, mazeY, pauseWidth, pauseHeight], 5)
+    pygame.draw.rect(screen, (240, 240, 240), [mazeX, mazeY, pauseWidth, pauseHeight])
+    pygame.draw.rect(screen, (0,0,0), [mazeX, mazeY, pauseWidth, pauseHeight], 5)
     creditsBackButton.draw(screen = screen, outline = True)
     creditsTitle.draw(screen = screen, outline= True)
     disclaimer.draw(screen = screen, outline = True)
@@ -3768,6 +3768,12 @@ while not done:
                 if pauseButton.buttonClick(mouse):
                     gameMode = GameMode.pause
                     print("Pause button clicked")
+            elif gameMode == GameMode.credit:
+                if (creditsBackButton.getCorners()[0] <= mouse[0] <= creditsBackButton.getCorners()[2] and 
+                    creditsBackButton.getCorners()[1] <= mouse[1] <= creditsBackButton.getCorners()[3]): # If we hit the sfx button
+                    # fromHome = True
+                    print("Returning to the settings menu")
+                    gameMode = GameMode.pause
         elif event.type == pygame.KEYDOWN: # Any key pressed
             if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
                 done = True
@@ -3842,7 +3848,7 @@ while not done:
             button.update_display(mouse)
             button.draw(screen, outline=True)
     elif gameMode == GameMode.credit:
-        pass # Blocker until window is implemented
+        pass # Do nothing
     else:
         screen.fill(c.geT("WHITE")) # Errornous state
     clock.tick(240) # Set the FPS
