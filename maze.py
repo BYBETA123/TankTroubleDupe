@@ -1326,7 +1326,10 @@ class AIGun(Gun):
         dx, dy = tank2x - tank1x, tank2y - tank1y
         a = math.degrees(math.atan2(dx, dy))//1
         a = (a + 360 - 90) % 360
+
+
         # self.angle = a # this line will cause the tank to always aim at the player
+
         self.angle = self.tank.getAngle() # update the position of the gun to match the tank
 
 
@@ -2858,14 +2861,17 @@ def pauseScreen():
     # This function will draw the pause screen
     # Inputs: None
     # Outputs: None
+
+    global fromHome
     pauseWidth = windowWidth - mazeX * 2
     pauseHeight = windowHeight - mazeY * 2
     pygame.draw.rect(screen, c.geT("OFF_WHITE"), [mazeX, mazeY, pauseWidth, pauseHeight])
     pygame.draw.rect(screen, c.geT("BLACK"), [mazeX, mazeY, pauseWidth, pauseHeight], 5)
 
     #Buttons
+    if not fromHome: # We haven't started the game
+        unPause.draw(screen, outline = True)
 
-    unPause.draw(screen, outline = True)
     home.draw(screen, outline = True)
     quitButton.draw(screen, outline = True)
     mute.draw(screen, outline = False)
@@ -2907,7 +2913,7 @@ def updateTankHealth():
     if tank1.getHealth() <= 0:
         if not tank1Dead:
             print("Player 2 Wins")
-            p2Score += 1
+            p2Score = (p2Score + 1) % 99 # Fix the maximum to 99
             tank1Dead = True
             explosionGroup.add(Explosion(tank1.getCenter()[0], tank1.getCenter()[1]))
         tank1.setCentre(2000, 2000)
@@ -2921,7 +2927,7 @@ def updateTankHealth():
     if tank2.getHealth() <= 0:
         if not tank2Dead:
             print("Player 1 Wins")
-            p1Score += 1
+            p1Score = (p1Score + 1) % 99 # Fix the maximum to 99
             tank2Dead = True
             explosionGroup.add(Explosion(tank2.getCenter()[0], tank2.getCenter()[1]))
         tank2.setCentre(-2000, -2000)
@@ -2958,7 +2964,8 @@ global startTreads
 startTreads = 0
 global gameOverFlag
 gameOverFlag = False
-
+global fromHome
+fromHome = True
 #Colors
 c = ColorDicionary() # All the colors we will use
 
@@ -3433,7 +3440,7 @@ def checkHomeButtons(mouse):
     #     constantSelectionScreen()
     if settingsButton.buttonClick(mouse):
         print("Unimplmented")
-        # gameMode = GameMode.settings
+        gameMode = GameMode.pause
     if quitButtonHome.buttonClick(mouse):
         global done
         done = True
@@ -3699,14 +3706,17 @@ while not done:
                     gameMode = GameMode.play
                     print("Pause button clicked")
             elif gameMode == GameMode.selection: # Selection screen
+                fromHome = False
                 textP1Turret.setText(turretList[p1I].getGunName())
                 textP2Turret.setText(turretList[p2I].getGunName())
                 textP1Hull.setText(hullList[p1J].getTankName())
                 textP2Hull.setText(hullList[p2J].getTankName())
                 checkButtons(mouse)
             elif gameMode == GameMode.home: # Home screen
+                fromHome = True
                 checkHomeButtons(mouse)
             elif gameMode == GameMode.play:
+                fromHome = False
                 if pauseButton.buttonClick(mouse):
                     gameMode = GameMode.pause
                     print("Pause button clicked")
@@ -3759,7 +3769,7 @@ while not done:
         playGame() # Play the game
     elif gameMode == GameMode.pause:
         pauseScreen() # Pause screen
-        if mouse[0]:
+        if mouse[0] and pygame.mouse.get_pressed()[0]:
             mute.updateSlider(mouse[0], mouse[1])
             sfx.updateSlider(mouse[0], mouse[1])
             for sound in soundDictionary:
