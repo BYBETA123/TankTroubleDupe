@@ -1190,9 +1190,6 @@ class Tile:
 
     def draw(self, screen):
         pygame.draw.rect(screen, self.color, [self.x, self.y, tileSize, tileSize])
-        if self.AITarget:
-            pygame.draw.rect(screen, (247, 111, 49), [self.x, self.y, tileSize, tileSize]) # Random orange color
-            
         #Draw the border
         if self.border[0]:
             pygame.draw.line(screen, c.geT("BLACK"), [self.x, self.y], [self.x+tileSize, self.y], self.borderWidth)
@@ -1232,9 +1229,6 @@ class Tile:
     def setBorder(self, borderidx, value = True):
         self.border[borderidx] = value
         self.neighbours, self.bordering = self.neighbourCheck() # Update the neighbours list
-
-    def setTarget(self, value = True):
-        self.AITarget = value
 
     def getCenter(self):
         return (self.x + tileSize//2, self.y + tileSize//2)
@@ -1324,9 +1318,16 @@ class AIGun(Gun):
         None
         """
 
-        self.angle = self.tank.getAngle() # update the position of the gun to match the tank
+        tank2x, tank2y = tank2.getCenter() # get the center
+        
+        c = self.tank.getCorners() # Our center
 
-        #self.canShoot
+        tank1x, tank1y = (c[0][0] + c[1][0])//2, (c[0][1] + c[2][1])//2
+        dx, dy = tank2x - tank1x, tank2y - tank1y
+        a = math.degrees(math.atan2(dx, dy))//1
+        a = (a + 360 - 90) % 360
+        # self.angle = a # this line will cause the tank to always aim at the player
+        self.angle = self.tank.getAngle() # update the position of the gun to match the tank
 
 
         angleRad = math.radians(self.angle)
@@ -1338,30 +1339,25 @@ class AIGun(Gun):
 
         # we are looking for when tank2 appears in the cross hairs of the gun
         # then the AI will shoot
-        tank2x, tank2y = tank2.getCenter() # get the center
-        
-        c = self.tank.getCorners() # Our center
 
-        tank1x, tank1y = (c[0][0] + c[1][0])//2, (c[0][1] + c[2][1])//2
-
+        # print(f"Angle: {a} should be between {((self.angle - 5)+360)%360} and {((self.angle + 5)+360)%360}")
+        # print(f"Angle: {a} and self.angle: {self.angle} Conditions: {a <=((self.angle + 5)+360)%360} and {a >= ((self.angle - 5)+360)%360 }")
         # Line of sight for the tank to shoot
+
+
+        lowerlimit = ((self.angle + 5) + 360) % 360
+        upperlimit = ((self.angle - 5) + 360) % 360
+
+
+
+
         if self.canShoot:
-            dx, dy = tank2x - tank1x, tank2y - tank1y
-            a = math.degrees(math.atan2(dx, dy))//1
-            a = (a + 360 - 90) % 360
-            # print(f"Angle: {a} and self.angle: {self.angle} Conditions: {a <=((self.angle + 5)+360)%360} and {a >= ((self.angle - 5)+360)%360 }")
-            if a <=((self.angle + 5)+360)%360 and a >= ((self.angle - 5)+360)%360:
+            if ((a <=lowerlimit and a >= upperlimit) or (0 <= a <= lowerlimit) or (upperlimit <= a <= 360)):
                 distance = math.hypot(dx, dy)
                 steps = int(distance)
                 for i in range(steps):
                     x = tank1x + (dx/distance) * i
                     y = tank1y + (dy/distance) * i
-                    #using tank2.getCorners()
-                    # print(f"Corners: {tank2.getCorners()}")
-                    if x >= tank2.getCorners()[0][0] and x <= tank2.getCorners()[1][0] and y >= tank2.getCorners()[0][1] and y <= tank2.getCorners()[2][1]:
-                        self.fire()
-                        print("Boom")
-                        break
                     #check the tile it is in
                     row = math.ceil((y - mazeY)/tileSize)
                     col = math.ceil((x - mazeX)/tileSize)
@@ -1378,6 +1374,10 @@ class AIGun(Gun):
                         break
                     if x <= mazeX or y <= mazeY or x >= mazeWidth + mazeX or y >= mazeHeight + mazeY:
                         break
+                if i == steps - 1:
+                    self.fire()
+                    print("Boom")
+
 
         if self.shootCooldown > 0:
             self.shootCooldown -= pygame.time.get_ticks() - self.lastUpdateTime
@@ -2099,12 +2099,7 @@ class AITank(Tank):
         (currentTiley, currentTilex) = ((self.getCenter()[0]-tileSize)//tileSize + 1, (self.getCenter()[1]-tileSize)//tileSize)
         currentTile = currentTilex * 14 + currentTiley
         
-        
-        
         currentTarget = self.lastTargetPackage[0]
-
-        for tile in tileList:
-            tile.setTarget(tile.getIndex() == self.aim[0])
 
         targetTilex, targetTiley = self.lastTargetPackage[1], self.lastTargetPackage[2]
 
@@ -2147,29 +2142,7 @@ class AITank(Tank):
             else:
                 self.rotationSpeed = 0
             # if we are facing the target, go forward
-            # if (vAngle == self.angle):
             self.speed = 0.25 # we move
-
-
-
-
-
-            # print(f"Current tile: {currentTile}, Target tile: {currentTarget}, TargetX: {targetTilex}, TargetY: {targetTiley}, CurrentX: {self.getCenter()[0]}, CurrentY: {self.getCenter()[1]}, Angle: {self.angle}, Vangle: {vAngle}")
-
-        #if we are below the target tile, turn the tank so it will face upwards
-        # N is 90
-        # E is 0
-        # S is 270
-        # W is 180
-
-
-        #find where we are in relation to the target
-        #where is the current tile in relation to us
-
-        #we know where we are in relation to the target
-
-
-        # if we are looking at the targetTile, stop rotating
 
         self.angle += self.rotationSpeed
         self.angle %= 360
@@ -2662,6 +2635,28 @@ def setUpPlayers():
         gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
         gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1])
         gun2.setImage(p2K + 1)
+        #Starting location
+        temp = tank2.getCurrentTile().getIndex()
+        tank1.setAim((temp, temp%14*tileSize + tileSize//2, ((temp)//14 + 1)*tileSize + tileSize//2))
+
+    elif DifficultyType == 2:
+        # easy
+        tank1 = DefaultTank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
+        tank1.setData(player1PackageTank)
+        tank1.setImage(p1L + 1)
+
+        tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
+        tank2.setData(player2PackageTank)
+        tank2.setImage(p2L + 1)
+
+        gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
+        gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1])
+        gun1.setImage(p1K + 1)
+
+        gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
+        gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1])
+        gun2.setImage(p2K + 1)
+
     else:
         #normal
         tank1 = copy.copy(hullList[p1J]) # Tank 1 setup
@@ -2680,9 +2675,6 @@ def setUpPlayers():
         gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1])
         gun2.setImage(p2K + 1)
     #Updating the groups
-    #Starting location
-    temp = tank2.getCurrentTile().getIndex()
-    tank1.setAim((temp, temp%14*tileSize + tileSize//2, ((temp)//14 + 1)*tileSize + tileSize//2))
     
 
     for sprite in allSprites:
