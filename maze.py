@@ -1361,7 +1361,7 @@ class AIGun(Gun):
 
 
         if self.canShoot:
-            if ((a <=lowerlimit and a >= upperlimit) or (0 <= a <= lowerlimit) or (upperlimit <= a <= 360)):
+            if ((a <=lowerlimit and a >= upperlimit) or ((lowerlimit <= 5) and (upperlimit >= 355) and (a >= 355 or a <= 5))):
                 distance = math.hypot(dx, dy)
                 steps = int(distance)
                 for i in range(steps):
