@@ -9,6 +9,10 @@ from enum import Enum
 from UIUtility import Button, ButtonSlider, TextBox
 from music import Music
 import copy
+
+#Colors
+c = ColorDicionary() # All the colors we will use
+
 #Classes
 
 # Tank sprite class
@@ -1292,6 +1296,7 @@ class GameMode(Enum):
     settings = 3
     selection = 4
     credit = 5
+    info = 6
 
 #Turrets
 
@@ -2941,6 +2946,22 @@ def updateTankHealth():
             allSprites = pygame.sprite.Group()
         gameOverFlag = True #The game is over
 
+def infoScreen():
+
+    global mazeX, mazeY, windowWidth, windowHeight
+    pauseWidth = windowWidth - mazeX * 2
+    pauseHeight = windowHeight - mazeY * 2
+    pygame.draw.rect(screen, (240, 240, 240), [mazeX, mazeY, pauseWidth, pauseHeight])
+    pygame.draw.rect(screen, (0,0,0), [mazeX, mazeY, pauseWidth, pauseHeight], 5)
+
+    for i in infoButtons:
+        i.draw(screen = screen, outline = True)
+    
+    startY = 350
+    gap = 25
+    for i in range(len(iListRender[iIndex])):
+        screen.blit(iListRender[iIndex][i], (mazeX + 50, startY + i*gap))
+
 
 #Game setup
 #Start the game setup
@@ -2968,9 +2989,6 @@ global gameOverFlag
 gameOverFlag = False
 global fromHome
 fromHome = True
-#Colors
-c = ColorDicionary() # All the colors we will use
-
 #Constants
 done = False
 windowWidth = 800
@@ -3045,6 +3063,33 @@ creditbox = [
 
 cFont = pygame.font.SysFont('Courier New', 36)
 creditsurfaces = [cFont.render(line, True, c.geT("BLACk")) for line in creditbox]
+
+# info screen
+infoButtons = []
+iList = ["Tempest", "Silencer", "Watcher", "Chamber", "Huntsman", "Judge", "Sidewinder", "Panther", "Cicada", "Gater", "Bonsai", "Fossil"] # This list contains all the changing elements
+iListDesc = [["Type: Turret", "Default Tempest Description"], ["Type: Turret","Default Silencer Description"], ["Type: Turret","Default Watcher Description"], ["Type: Turret","Default Chamber Description"], ["Type: Turret","Default Huntsman Description"], ["Type: Turret", "Default Judge Description"], ["Type: Turret", "Default Sidewinder Description"], ["Type: Hull", "Default Panther Description"], ["Type: Hull", "Default Cicada Description"], ["Type: Hull", "Default Gater Description"], ["Type: Hull","Default Bonsai Description"], ["Type: Hull","Default Fossil Description"], ] # Description of all the elements
+iIndex = 0
+infoLArrow = Button(c.geT("BLACK"), c.geT("BLACK"), 100, 200, 100, 100, '<', c.geT("WHITE"), 100, c.geT("BLACK"))
+infoButtons.append(infoLArrow)
+infoText = TextBox(windowWidth//2 - 125, 75, font="Courier New",fontSize=30, text="Information", textColor=c.geT("BLACK"))
+infoText.selectable(False)
+infoText.setBoxColor(c.geT("OFF_WHITE"))
+infoButtons.append(infoText)
+iBox = TextBox(200, 201, font="Courier New",fontSize=46, text=iList[iIndex], textColor=c.geT("BLACK"))
+iBox.selectable(False)
+iBox.setCharacterPad(14)
+iBox.setPaddingHeight(23)
+iBox.setText(iList[iIndex])
+iBox.setBoxColor(c.geT("OFF_WHITE"))
+infoButtons.append(iBox)
+infoRArrow = Button(c.geT("BLACK"), c.geT("BLACK"), windowWidth - 200, 200, 100, 100, '>', c.geT("WHITE"), 100, c.geT("BLACK"))
+infoButtons.append(infoRArrow)
+infoBackButton = Button(c.geT("GREEN"), c.geT("WHITE"), windowWidth - 175, 75, 100, tileSize, 'Back', c.geT("BLACK"), 20, (100, 100, 255))
+infoButtons.append(infoBackButton)
+
+cFont = pygame.font.SysFont('Courier New', 20)
+iListRender = [[cFont.render(line, True, c.geT("BLACk")) for line in iListDesc[i]] for i in range(len(iListDesc))]
+
 
 
 #Selection Screen
@@ -3418,6 +3463,8 @@ def checkButtons(mouse):
         gameMode = GameMode.home
     if howToPlayButton.buttonClick(mouse):
         print("How to Play")
+        gameMode = GameMode.info # Switch to the info screen
+        infoScreen()
 
 def checkHomeButtons(mouse):
     # This function checks all the buttons of the mouse in the home screen
@@ -3425,10 +3472,6 @@ def checkHomeButtons(mouse):
     # Outputs: None
     global gameMode, DifficultyType
 
-# homeButtonList.append(onePlayerButtonHomeN)
-# homeButtonList.append(onePlayerButtonHomeH)
-# homeButtonList.append(twoPlayerButtonHomeN)
-# homeButtonList.append(twoPlayerButtonHomeH)
     if onePlayerButtonHomeN.buttonClick(mouse):
         DifficultyType = 1
         setUpPlayers()
@@ -3453,14 +3496,6 @@ def checkHomeButtons(mouse):
         gameMode = GameMode.selection
         DifficultyType = 4
         constantSelectionScreen()
-
-
-
-    # if playButtonHome.buttonClick(mouse):
-    #     #Switch to the selection screen
-    #     gameMode = GameMode.selection
-    #     print("Selection")
-    #     constantSelectionScreen()
     if settingsButton.buttonClick(mouse):
         print("Settings")
         gameMode = GameMode.pause
@@ -3774,6 +3809,23 @@ while not done:
                     # fromHome = True
                     print("Returning to the settings menu")
                     gameMode = GameMode.pause
+
+            elif gameMode == GameMode.info:
+                # L/R/ buttons
+                if (infoBackButton.getCorners()[0] <= mouse[0] <= infoBackButton.getCorners()[2] and
+                    infoBackButton.getCorners()[1] <= mouse[1] <= infoBackButton.getCorners()[3]):
+                    gameMode = GameMode.selection
+                    constantSelectionScreen()
+                if (infoLArrow.buttonClick(mouse)):
+                    # Update the list
+                    iIndex = (iIndex - 1) % len(iList)
+                    iBox.setText(iList[iIndex])
+                if (infoRArrow.buttonClick(mouse)):
+                    # Update the list
+                    iIndex = (iIndex + 1) % len(iList)
+                    iBox.setText(iList[iIndex])
+
+
         elif event.type == pygame.KEYDOWN: # Any key pressed
             if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
                 done = True
@@ -3834,8 +3886,6 @@ while not done:
             button.update_display(mouse)
             button.draw(screen, outline = False)
         selectionScreen()
-
-
     elif gameMode == GameMode.home:
         # Draw the tank image
         screen.blit(originalTankImage, (230, 65))  # Adjust the coordinates as needed
@@ -3849,6 +3899,9 @@ while not done:
             button.draw(screen, outline=True)
     elif gameMode == GameMode.credit:
         pass # Do nothing
+    elif gameMode == GameMode.info:
+        infoScreen() # Info screen
+        # we need to update the info screen if the user changes the input # however there may be the case where we don't need to do it and only update once ever click
     else:
         screen.fill(c.geT("WHITE")) # Errornous state
     clock.tick(240) # Set the FPS
