@@ -98,12 +98,6 @@ class Tank(pygame.sprite.Sprite):
         if tempY > mazeHeight + mazeY - self.originalTankImage.get_size()[0]/2:
             tempY = mazeHeight + mazeY - self.originalTankImage.get_size()[0]/2
 
-    
-
-
-
-        # if pygame.sprite.collide_rect(tank1, tank2):
-
         if satCollision(tank1, tank2): #If the tanks are colliding
             if self.name == p1TankName:
                 #If there is a collision here, move the other tank
