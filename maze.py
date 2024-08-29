@@ -60,7 +60,8 @@ class Tank(pygame.sprite.Sprite):
         self.drawable = False
         self.topSpeed = self.maxSpeed
         self.topRotation = self.rotationalSpeed
-
+        self.channelListBusy = [False, False, False, False] # The channels that the sound effects will be played on
+        self.channelDict = {} # The dictionary that will store the sound effects
     def updateCorners(self):
         # This function will update the corners of the tank based on the new position
         # This is to make sure that the coliisions detection is accurate
@@ -164,13 +165,11 @@ class Tank(pygame.sprite.Sprite):
         #if so it will stop playing moving sound, otherwise, sound will play
         #indefinitely
         if self.speed != 0 or self.rotationSpeed != 0:
-            if not self.soundPlaying:
-                soundDictionary["tankMove"].play(-1)  # Play sound indefinitely
-                self.soundPlaying = True
+            if not self.channelDict["move"]["channel"].get_busy(): # if the sound isn't playing
+                self.channelDict["move"]["channel"].play(soundDictionary["tankMove"], loops = -1)  # Play sound indefinitely
         else:
-            if self.soundPlaying:
-                soundDictionary["tankMove"].stop()  # Play sound indefinitely
-                self.soundPlaying = False
+            if self.channelDict["move"]["channel"].get_busy(): # if the sound is playing
+                self.channelDict["move"]["channel"].stop()  # Stop playin the sound
 
         self.angle += self.rotationSpeed
         self.angle %= 360
@@ -188,6 +187,21 @@ class Tank(pygame.sprite.Sprite):
         # Inputs: damage: The amount of damage that the tank has taken
         # Outputs: None
         self.health -= damage
+        if self.health > 0:
+            if not self.channelDict["death"]["channel"].get_busy(): # if the sound isn't playing
+                self.channelDict["death"]["channel"].play(soundDictionary["tankHurt"])  # Play sound indefinitely
+            else:
+                spareChannels(soundDictionary["tankHurt"])
+        else: # if tank is dead
+            # if the tank is dead everything should stop
+            for channel in self.channelDict:
+                if self.channelDict[channel]["channel"].get_busy():
+                    self.channelDict[channel]["channel"].stop()
+            # last sound to be played
+            if not self.channelDict["death"]["channel"].get_busy():
+                self.channelDict["death"]["channel"].play(soundDictionary["tankDeath"])
+            else:
+                spareChannels(soundDictionary["tankDeath"])
         updateTankHealth() # Manage the healthbar outside of the code
 
     def getCoords(self):
@@ -277,9 +291,10 @@ class Tank(pygame.sprite.Sprite):
         self.controls = data[2]
         self.name = data[3]
         self.rect = self.tankImage.get_rect(center=(data[0], data[1]))
-        print(f"Setting data: {data[0]}, {data[1]}")
         self.x = float(self.rect.centerx)
         self.y = float(self.rect.centery)
+        # set up the audio channels
+        self.channelDict = data[4]
 
     def draw(self, screen): # A manual entry of the draw screen so that we can update it with anything else we may need to draw
         screen.blit(self.image, self.rect)
@@ -415,6 +430,8 @@ class Gun(pygame.sprite.Sprite):
         self.topTurretSpeed = self.turretSpeed
         self.gunH = 7
         self.imgScaler = 1.5
+        self.channelListBusy = [False, False, False, False] # The channels that the sound effects will be played on
+        self.channelDict = {} # The dictionary that will store the sound effects
         angleRad = math.radians(self.angle)
         gunEndX, gunEndY = self.tank.getGunCenter()
         self.rect = self.image.get_rect(center=(gunEndX + self.gunH * math.cos(angleRad), gunEndY - self.gunH * math.sin(angleRad)))
@@ -457,21 +474,13 @@ class Gun(pygame.sprite.Sprite):
         #This if statement checks to see if speed or rotation of speed is 0,
         #if so it will stop playing moving sound, otherwise, sound will play
         #indefinitely
-        # <SOUND REWORK>
-        if keys[self.controls['rotate_left']] or keys[self.controls['rotate_right']]:
-            if self.rotationSpeed != 0:
-                if not self.soundPlaying:
-                    soundDictionary["turretRotate"].play(loops = -1, fade_ms = 100)  # Play sound indefinitely
-                    self.soundPlaying = True
-            else:
-                if self.soundPlaying:
-                    soundDictionary["turretRotate"].stop()
-                    self.soundPlaying = False
-        else:
-            if self.soundPlaying:
-                soundDictionary["turretRotate"].stop()
-                self.soundPlaying = False
 
+        if self.rotationSpeed != 0: # This should be made so that it doesn't rotate if the hull is turning
+            if not self.channelDict["rotate"]["channel"].get_busy(): # if the sound isn't playing
+                self.channelDict["rotate"]["channel"].play(soundDictionary["turretRotate"], loops = -1)  # Play sound indefinitely
+        else:
+            if self.channelDict["rotate"]["channel"].get_busy(): # if the sound is playing
+                self.channelDict["rotate"]["channel"].stop()  # Stop playing the sound
         #Reload cooldown of bullet and determines the angle to fire the bullet,
         #which is relative to the posistion of the tank gun.
         if keys[self.controls['fire']] and self.canShoot:
@@ -560,7 +569,7 @@ class Gun(pygame.sprite.Sprite):
     def isDrawable(self):
         return self.drawable
 
-    def setData(self, tank, controls, name):
+    def setData(self, tank, controls, name, channel):
         # This function will set up the gun that is being used
         # Inputs: tank: The tank object that the gun is attached to
         #         controls: The controls that are being used to control the gun
@@ -570,6 +579,7 @@ class Gun(pygame.sprite.Sprite):
         self.controls = controls
         self.name = name
         self.rect = self.gunImage.get_rect(center=(tank.rect.center))
+        self.channelDict = channel
         self.x = float(self.rect.centerx)
         self.y = float(self.rect.centery)
 
@@ -587,7 +597,6 @@ class Gun(pygame.sprite.Sprite):
         self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
         self.gunImage = self.originalGunImage
         self.image = self.gunImage
-
         spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
         self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
@@ -610,7 +619,10 @@ class Gun(pygame.sprite.Sprite):
         # This function will play the sound effect of the gun firing
         # Inputs: None
         # Outputs: None
-        soundDictionary["Empty"].play()
+        if not self.channelDict["fire"]["channel"].get_busy(): # if the sound isn't playing
+            self.channelDict["fire"]["channel"].play(soundDictionary["Empty"])  # Play sound indefinitely
+        else:
+            spareChannels(soundDictionary["Empty"])
 
 class Bullet(pygame.sprite.Sprite):
 
@@ -702,21 +714,17 @@ class Bullet(pygame.sprite.Sprite):
         tank2Collision = satCollision(self, tank2)
 
         if self.name == tank1.getName() and tank2Collision:
-                soundDictionary["tankDeath"].play()
                 tank2.damage(self.damage)
                 self.kill()
         if self.name == tank2.getName() and tank1Collision:
-                soundDictionary["tankDeath"].play()
                 tank1.damage(self.damage)
                 self.kill()
 
         if self.selfCollision:
             if tank1Collision:
-                soundDictionary["tankDeath"].play()
                 tank1.damage(self.damage)
                 self.kill()
             if tank2Collision:
-                soundDictionary["tankDeath"].play()
                 tank2.damage(self.damage)
                 self.kill()
 
@@ -916,11 +924,9 @@ class WatcherBullet(Bullet):
         tank2Collision = satCollision(self, tank2)
 
         if self.name == tank1.getName() and tank2Collision:
-                soundDictionary["tankDeath"].play()
                 tank2.damage(self.damage)
                 self.kill()
         if self.name == tank2.getName() and tank1Collision:
-                soundDictionary["tankDeath"].play()
                 tank1.damage(self.damage)
                 self.kill()
 
@@ -1014,11 +1020,9 @@ class ChamberBullet(Bullet):
         tank2Collision = satCollision(self, tank2)
 
         if self.name == tank1.getName() and tank2Collision:
-                soundDictionary["tankDeath"].play()
                 tank2.damage(self.damage)
                 self.explode()
         if self.name == tank2.getName() and tank1Collision:
-                soundDictionary["tankDeath"].play()
                 tank1.damage(self.damage)
                 self.explode()
 
@@ -1040,12 +1044,10 @@ class ChamberBullet(Bullet):
             self.angle = 360 - self.angle
         if wallCollision:
             if self.name == tank1.getName() and tank1Collision:
-                soundDictionary["tankDeath"].play()
                 tank1.damage(self.damage)
                 self.explode()
                 return
             if self.name == tank2.getName() and tank2Collision:
-                soundDictionary["tankDeath"].play()
                 tank2.damage(self.damage)
                 self.explode()
                 return
@@ -1229,8 +1231,7 @@ class Tile:
         self.neighbours, self.bordering = self.neighbourCheck() # Update the neighbours list
 
     def getCenter(self):
-        return (self.x + tileSize//2, self.y + tileSize//2)
-    
+        return (self.x + tileSize//2, self.y + tileSize//2) 
 
 class Explosion(pygame.sprite.Sprite):
 
@@ -1340,19 +1341,10 @@ class AIGun(Gun):
         self.image = rotatedGunImage
         self.rect = self.image.get_rect(center=(gunEndX + self.gunH * math.cos(angleRad), gunEndY - self.gunH * math.sin(angleRad)))
 
-        # we are looking for when tank2 appears in the cross hairs of the gun
-        # then the AI will shoot
-
-        # print(f"Angle: {a} should be between {((self.angle - 5)+360)%360} and {((self.angle + 5)+360)%360}")
-        # print(f"Angle: {a} and self.angle: {self.angle} Conditions: {a <=((self.angle + 5)+360)%360} and {a >= ((self.angle - 5)+360)%360 }")
         # Line of sight for the tank to shoot
-
 
         lowerlimit = ((self.angle + 5) + 360) % 360
         upperlimit = ((self.angle - 5) + 360) % 360
-
-
-
 
         if self.canShoot:
             if ((a <=lowerlimit and a >= upperlimit) or ((lowerlimit <= 5) and (upperlimit >= 355) and (a >= 355 or a <= 5))):
@@ -1455,7 +1447,10 @@ class Chamber(Gun):
         # This function will play the sound effect of the gun firing
         # Inputs: None
         # Outputs: None
-        soundDictionary["Chamber"].play()
+        if not self.channelDict["fire"]["channel"].get_busy(): # if the sound isn't playing
+            self.channelDict["fire"]["channel"].play(soundDictionary["Chamber"])  # Play sound indefinitely
+        else:
+            spareChannels(soundDictionary["Chamber"])
 
 class DefaultGun(Gun):
     def __init__(self, tank, controls, name):
@@ -1511,20 +1506,12 @@ class DefaultGun(Gun):
         #This if statement checks to see if speed or rotation of speed is 0,
         #if so it will stop playing moving sound, otherwise, sound will play
         #indefinitely
-        # <SOUND REWORK>
-        if keys[self.controls['rotate_left']] or keys[self.controls['rotate_right']]:
-            if self.rotationSpeed != 0:
-                if not self.soundPlaying:
-                    soundDictionary["turretRotate"].play(loops = -1, fade_ms = 100)  # Play sound indefinitely
-                    self.soundPlaying = True
-            else:
-                if self.soundPlaying:
-                    soundDictionary["turretRotate"].stop()
-                    self.soundPlaying = False
+        if self.rotationSpeed != 0:
+            if not self.channelDict["rotate"]["channel"].get_busy(): # if the sound isn't playing
+                self.channelDict["rotate"]["channel"].play(soundDictionary["turretRotate"], loops = -1)  # Play sound indefinitely
         else:
-            if self.soundPlaying:
-                soundDictionary["turretRotate"].stop()
-                self.soundPlaying = False
+            if self.channelDict["rotate"]["channel"].get_busy(): # if the sound is playing
+                self.channelDict["rotate"]["channel"].stop()  # Stop playing the sound
 
         #Reload cooldown of bullet and determines the angle to fire the bullet,
         #which is relative to the posistion of the tank gun.
@@ -1560,6 +1547,54 @@ class DefaultGun(Gun):
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
         self.playSFX()
+
+class Huntsman(Gun):
+
+    def __init__(self, tank, controls, name):
+        super().__init__(tank, controls, name)
+        self.setCooldown(1000) # 1000 ms
+        self.setDamage(600)
+        self.setDamageStatistic(2)
+        self.setReloadStatistic(2)
+        self.setGunBackDuration(300)
+
+    def fire(self):
+        bulletX, bulletY = self.getTank().getGunCenter()
+        bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
+        bullet.setName(self.getTank().getName())
+        if random.random() < 0.05:  # 5% chance
+            bullet.setDamage(self.damage * 2)
+        else:
+            bullet.setDamage(self.damage)
+        bullet.setBulletSpeed(2)
+        bulletSprites.add(bullet)
+        self.canShoot = False
+        self.shootCooldown = self.cooldownDuration
+        self.playSFX()
+
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imagePath: The filepath the points to the required image
+        # Outputs: None
+        currentDir = os.path.dirname(__file__)
+        gunPath = os.path.join(currentDir,'Sprites', 'Huntsman' + str(imageNum) + '.png')
+        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
+        width, height = self.originalGunImage.get_size()
+        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
+        self.gunImage = self.originalGunImage
+        self.image = self.gunImage
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
+    def playSFX(self):
+        # This function will play the sound effect of the gun firing
+        # Inputs: None
+        # Outputs: None
+        if not self.channelDict["fire"]["channel"].get_busy(): # if the sound isn't playing
+            self.channelDict["fire"]["channel"].play(soundDictionary["Huntsman"])  # Play sound indefinitely
+        else:
+            spareChannels(soundDictionary["Huntsman"])
 
 class Judge(Gun):
 
@@ -1627,52 +1662,10 @@ class Judge(Gun):
         # This function will play the sound effect of the gun firing
         # Inputs: None
         # Outputs: None
-        soundDictionary["Judge"].play()
-
-class Huntsman(Gun):
-
-    def __init__(self, tank, controls, name):
-        super().__init__(tank, controls, name)
-        self.setCooldown(1000) # 1000 ms
-        self.setDamage(600)
-        self.setDamageStatistic(2)
-        self.setReloadStatistic(2)
-        self.setGunBackDuration(300)
-
-    def fire(self):
-        bulletX, bulletY = self.getTank().getGunCenter()
-        bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
-        bullet.setName(self.getTank().getName())
-        if random.random() < 0.05:  # 5% chance
-            bullet.setDamage(self.damage * 2)
+        if not self.channelDict["fire"]["channel"].get_busy(): # if the sound isn't playing
+            self.channelDict["fire"]["channel"].play(soundDictionary["Judge"])  # Play sound indefinitely
         else:
-            bullet.setDamage(self.damage)
-        bullet.setBulletSpeed(2)
-        bulletSprites.add(bullet)
-        self.canShoot = False
-        self.shootCooldown = self.cooldownDuration
-        self.playSFX()
-
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imagePath: The filepath the points to the required image
-        # Outputs: None
-        currentDir = os.path.dirname(__file__)
-        gunPath = os.path.join(currentDir,'Sprites', 'Huntsman' + str(imageNum) + '.png')
-        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
-        width, height = self.originalGunImage.get_size()
-        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
-        self.gunImage = self.originalGunImage
-        self.image = self.gunImage
-
-        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
-
-    def playSFX(self):
-        # This function will play the sound effect of the gun firing
-        # Inputs: None
-        # Outputs: None
-        soundDictionary["Huntsman"].play()
+            spareChannels(soundDictionary["Judge"])
 
 class Sidewinder(Gun):
 
@@ -1714,8 +1707,11 @@ class Sidewinder(Gun):
         # This function will play the sound effect of the gun firing
         # Inputs: None
         # Outputs: None
+        if not self.channelDict["fire"]["channel"].get_busy(): # if the sound isn't playing
+            self.channelDict["fire"]["channel"].play(soundDictionary["Sidewinder"])  # Play sound indefinitely
+        else:
+            spareChannels(soundDictionary["Sidewinder"])
         print("No sound effect smh")
-        soundDictionary["Empty"].play()
 
 class Silencer(Gun):
 
@@ -1771,19 +1767,12 @@ class Silencer(Gun):
         #This if statement checks to see if speed or rotation of speed is 0,
         #if so it will stop playing moving sound, otherwise, sound will play
         #indefinitely
-        if keys[self.controls['rotate_left']] or keys[self.controls['rotate_right']]:
-            if self.rotationSpeed != 0:
-                if not self.soundPlaying:
-                    soundDictionary["turretRotate"].play(loops = -1, fade_ms = 100)  # Play sound indefinitely
-                    self.soundPlaying = True
-            else:
-                if self.soundPlaying:
-                    soundDictionary["turretRotate"].stop()
-                    self.soundPlaying = False
+        if self.rotationSpeed != 0:
+            if not self.channelDict["rotate"]["channel"].get_busy(): # if the sound isn't playing
+                self.channelDict["rotate"]["channel"].play(soundDictionary["turretRotate"], loops = -1)  # Play sound indefinitely
         else:
-            if self.soundPlaying:
-                soundDictionary["turretRotate"].stop()
-                self.soundPlaying = False
+            if self.channelDict["rotate"]["channel"].get_busy(): # if the sound is playing
+                self.channelDict["rotate"]["channel"].stop()  # Stop playing the sound
 
         #Reload cooldown of bullet and determines the angle to fire the bullet,
         #which is relative to the posistion of the tank gun.
@@ -1873,7 +1862,10 @@ class Silencer(Gun):
         # This function will play the sound effect of the gun firing
         # Inputs: None
         # Outputs: None
-        soundDictionary["Silencer"].play()
+        if not self.channelDict["fire"]["channel"].get_busy(): # if the sound isn't playing
+            self.channelDict["fire"]["channel"].play(soundDictionary["Silencer"])  # Play sound indefinitely
+        else:
+            spareChannels(soundDictionary["Silencer"])
 
 class Tempest(Gun):
 
@@ -1905,7 +1897,10 @@ class Tempest(Gun):
         # This function will play the sound effect of the gun firing
         # Inputs: None
         # Outputs: None
-        soundDictionary["Tempest"].play()
+        if not self.channelDict["fire"]["channel"].get_busy(): # if the sound isn't playing
+            self.channelDict["fire"]["channel"].play(soundDictionary["Tempest"])  # Play sound indefinitely
+        else:
+            spareChannels(soundDictionary["Tempest"])
 
 class Watcher(Gun):
 
@@ -1963,20 +1958,12 @@ class Watcher(Gun):
         #This if statement checks to see if speed or rotation of speed is 0,
         #if so it will stop playing moving sound, otherwise, sound will play
         #indefinitely
-        if keys[self.controls['rotate_left']] or keys[self.controls['rotate_right']]:
-            if self.rotationSpeed != 0:
-                if not self.soundPlaying:
-                    soundDictionary["turretRotate"].play(loops = -1, fade_ms = 100)  # Play sound indefinitely
-                    self.soundPlaying = True
-            else:
-                if self.soundPlaying:
-                    soundDictionary["turretRotate"].stop()
-                    self.soundPlaying = False
+        if self.rotationSpeed != 0:
+            if not self.channelDict["rotate"]["channel"].get_busy(): # if the sound isn't playing
+                self.channelDict["rotate"]["channel"].play(soundDictionary["turretRotate"], loops = -1)  # Play sound indefinitely
         else:
-            if self.soundPlaying:
-                soundDictionary["turretRotate"].stop()
-                self.soundPlaying = False
-
+            if self.channelDict["rotate"]["channel"].get_busy(): # if the sound is playing
+                self.channelDict["rotate"]["channel"].stop()  # Stop playing the sound
 
         #Reload cooldown of bullet and determines the angle to fire the bullet,
         #which is relative to the posistion of the tank gun.
@@ -2072,7 +2059,10 @@ class Watcher(Gun):
         # This function will play the sound effect of the gun firing
         # Inputs: None
         # Outputs: None
-        soundDictionary["Watcher"].play()
+        if not self.channelDict["fire"]["channel"].get_busy(): # if the sound isn't playing
+            self.channelDict["fire"]["channel"].play(soundDictionary["Watcher"])  # Play sound indefinitely
+        else:
+            spareChannels(soundDictionary["Watcher"])
 
 #Hulls
 class AITank(Tank):
@@ -2492,6 +2482,15 @@ def breathFirstSearchShort(tileList, choices, option):
     path.pop(0)
     return path
 
+def spareChannels(sound):
+    soundList = [pygame.mixer.Channel(i) for i in range(11, pygame.mixer.get_num_channels())]
+    for channel in soundList:
+        if not channel.get_busy():
+            channel.play(sound) # attempt to play the sound
+            return
+    print("No available channels")
+    return
+
 def tileGen():
     # This function is responsible for generating the tiles for the maze
     # Inputs: No inputs
@@ -2614,11 +2613,13 @@ def setUpPlayers():
     tileList = tileGen() # Get a new board
     spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
     spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
+    player1Channels = {"move": {"channel": pygame.mixer.Channel(3), "volume": 0.05}, "rotate": {"channel": pygame.mixer.Channel(4), "volume": 0.2}, "death": {"channel" : pygame.mixer.Channel(5), "volume": 0.5}, "fire": {"channel": pygame.mixer.Channel(6), "volume": 1}}
+    player2Channels = {"move": {"channel": pygame.mixer.Channel(7), "volume": 0.05}, "rotate": {"channel": pygame.mixer.Channel(8), "volume": 0.3}, "death": {"channel" : pygame.mixer.Channel(9), "volume": 0.5}, "fire": {"channel": pygame.mixer.Channel(10), "volume": 1}}
     #Updating the packages
-    player1PackageTank = [spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName]
-    player1PackageGun = [controlsTank1, p1GunName]
-    player2PackageTank = [spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName]
-    player2PackageGun = [controlsTank2, p2GunName]
+    player1PackageTank = [spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName, player1Channels]
+    player1PackageGun = [controlsTank1, p1GunName, player1Channels]
+    player2PackageTank = [spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName, player2Channels]
+    player2PackageGun = [controlsTank2, p2GunName, player2Channels]
 
     #Setup the tanks
     if DifficultyType == 1:
@@ -2632,11 +2633,11 @@ def setUpPlayers():
         tank2.setImage(p2L + 1)
 
         gun1 = AIGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
-        gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1])
+        gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
         gun1.setImage(p1K + 1)
 
         gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
-        gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1])
+        gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
         gun2.setImage(p2K + 1)
         #Starting location
         temp = tank2.getCurrentTile().getIndex()
@@ -2653,11 +2654,11 @@ def setUpPlayers():
         tank2.setImage(p2L + 1)
 
         gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
-        gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1])
+        gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
         gun1.setImage(p1K + 1)
 
         gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
-        gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1])
+        gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
         gun2.setImage(p2K + 1)
 
     else:
@@ -2671,11 +2672,11 @@ def setUpPlayers():
         tank2.setImage(p2L + 1)
 
         gun1 = copy.copy(turretList[p1I]) # Gun 1 setup
-        gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1])
+        gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
         gun1.setImage(p1K + 1)
 
         gun2 = copy.copy(turretList[p2I]) # Gun 2 setup
-        gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1])
+        gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
         gun2.setImage(p2K + 1)
     #Updating the groups
     
@@ -3775,6 +3776,7 @@ volume = {
     'game': 0.2,
     'tankShoot': 1,
     'tankDeath': 0.5,
+    'tankHurt': 0.5,
     'turretRotate': 0.2,
     'tankMove': 0.05,
     'Chamber': 0.5,
@@ -3789,6 +3791,7 @@ volume = {
 
 soundDictionary = {
     'tankDeath' : pygame.mixer.Sound('Sounds/tank_dead.wav'),
+    'tankHurt' : pygame.mixer.Sound('Sounds/tank_dead.wav'),
     'tankMove' : pygame.mixer.Sound('Sounds/tank_moving.wav'),
     'tankShoot' : pygame.mixer.Sound('Sounds/tank_shoot.wav'),
     'turretRotate' : pygame.mixer.Sound('Sounds/tank_turret_rotate.wav'),
@@ -3802,7 +3805,7 @@ soundDictionary = {
     'Watcher' : pygame.mixer.Sound('Sounds/Watcher.wav'),
 }
 
-
+pygame.mixer.set_num_channels(16)
 
 for sound in soundDictionary:
     soundDictionary[sound].set_volume(volume[sound])
