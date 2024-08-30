@@ -154,6 +154,7 @@ class Tank(pygame.sprite.Sprite):
             self.speed = -self.maxSpeed
         else:
             self.speed = 0
+
         if keys[self.controls['left']]:
             self.rotationSpeed = self.rotationalSpeed
         elif keys[self.controls['right']]:
@@ -462,15 +463,8 @@ class Gun(pygame.sprite.Sprite):
         if keys[self.controls['rotate_left']]:
             self.rotationSpeed += self.turretSpeed
         elif keys[self.controls['rotate_right']]:
-            self.rotationSpeed += -self.turretSpeed
-        if  keys[self.controls['left']]:
-            self.rotationSpeed += self.tank.getRotationalSpeed()
-        elif keys[self.controls['right']]:
-            self.rotationSpeed += -self.tank.getRotationalSpeed()                
-    
-        self.angle += self.rotationSpeed
-        self.angle %= 360
-        
+            self.rotationSpeed += -self.turretSpeed         
+            
         #This if statement checks to see if speed or rotation of speed is 0,
         #if so it will stop playing moving sound, otherwise, sound will play
         #indefinitely
@@ -481,6 +475,15 @@ class Gun(pygame.sprite.Sprite):
         else:
             if self.channelDict["rotate"]["channel"].get_busy(): # if the sound is playing
                 self.channelDict["rotate"]["channel"].stop()  # Stop playing the sound
+
+        if  keys[self.controls['left']]:
+            self.rotationSpeed += self.tank.getRotationalSpeed()
+        elif keys[self.controls['right']]:
+            self.rotationSpeed += -self.tank.getRotationalSpeed()
+
+        self.angle += self.rotationSpeed
+        self.angle %= 360
+
         #Reload cooldown of bullet and determines the angle to fire the bullet,
         #which is relative to the posistion of the tank gun.
         if keys[self.controls['fire']] and self.canShoot:
@@ -1300,7 +1303,7 @@ class AIGun(Gun):
         super().__init__(tank, controls, name)
         self.setCooldown(500)
         self.setDamage(1)
-
+        self.hard = False
     def update(self):
         """
         Updates the gun's position, rotation, and shooting state based on the current controls and time.
@@ -1328,10 +1331,10 @@ class AIGun(Gun):
         a = math.degrees(math.atan2(dx, dy))//1
         a = (a + 360 - 90) % 360
 
-
-        # self.angle = a # this line will cause the tank to always aim at the player
-
-        self.angle = self.tank.getAngle() # update the position of the gun to match the tank
+        if self.hard:
+            self.angle = a # this line will cause the tank to always aim at the player
+        else:
+            self.angle = self.tank.getAngle() # update the position of the gun to match the tank
 
 
         angleRad = math.radians(self.angle)
@@ -1371,8 +1374,6 @@ class AIGun(Gun):
                         break
                 if i == steps - 1:
                     self.fire()
-                    print("Boom")
-
 
         if self.shootCooldown > 0:
             self.shootCooldown -= pygame.time.get_ticks() - self.lastUpdateTime
@@ -1398,7 +1399,235 @@ class AIGun(Gun):
         self.shootCooldown = self.cooldownDuration
         self.playSFX()
 
+class AIChamber(AIGun):
+    def __init__(self, tank, controls, name):
+        super().__init__(tank, controls, name)
+        self.setCooldown(1500) # 200 ms
+        self.setDamage(270) # Should be 900 but because of the 3 step effect it will be split into 3x 300
+        self.setDamageStatistic(2)
+        self.setReloadStatistic(2)
+        self.setGunBackDuration(500)
+        self.setGunCenter(0, -4)
+        self.hard = True
 
+    def fire(self):
+        # This function is responsible for all the firing mechanics of the gun
+        # The Bullet is custom here as it is tailored for the Chamber
+        # Inputs: None
+        # Outputs: None
+
+        bulletX, bulletY = self.getTank().getGunCenter()
+        bullet = ChamberBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
+        bullet.setName(self.getTank().getName())
+        bullet.setDamage(self.damage)
+        bullet.setBulletSpeed(5)
+        bulletSprites.add(bullet)
+        self.canShoot = False
+        self.shootCooldown = self.cooldownDuration
+        #If either tank shoots, play this sound effect.
+        self.playSFX()
+
+class AITempest(AIGun):
+    def __init__(self, tank, controls, name):
+        super().__init__(tank, controls, name)
+        self.setCooldown(200) # 200 ms
+        self.setDamage(200)
+        self.setDamageStatistic(1)
+        self.setReloadStatistic(3)
+        self.setGunBackDuration(50)
+        self.setGunCenter(0, -2)
+        self.hard = True
+
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imagePath: The filepath the points to the required image
+        # Outputs: None
+        currentDir = os.path.dirname(__file__)
+        gunPath = os.path.join(currentDir,'Sprites', 'Tempest' + str(imageNum) + '.png')
+        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
+        width, height = self.originalGunImage.get_size()
+        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
+        self.gunImage = self.originalGunImage
+        self.image = self.gunImage
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
+    def playSFX(self):
+        # This function will play the sound effect of the gun firing
+        # Inputs: None
+        # Outputs: None
+        if not self.channelDict["fire"]["channel"].get_busy(): # if the sound isn't playing
+            self.channelDict["fire"]["channel"].play(soundDictionary["Tempest"])  # Play sound indefinitely
+        else:
+            spareChannels(soundDictionary["Tempest"])
+
+class AIJudge(AIGun):
+
+    def __init__(self, tank, controls, name):
+        super().__init__(tank, controls, name)
+        self.setCooldown(800)  # 800 ms
+        self.setDamage(76)
+        self.setDamageStatistic(2)
+        self.setReloadStatistic(2)
+        self.setGunBackDuration(300)
+        self.setTipOffset(28)
+        self.bulletInterval = 15
+        self.scatterRange = 13
+        self.maxUses = 3
+        self.currentUses = 0
+        self.reloadTime = 2  # 2 seconds
+        self.setGunCenter(0, -3)
+        self.hard = True
+
+    def fire(self):
+        if self.currentUses < self.maxUses:
+            self.canShoot = False
+            self.shootCooldown = self.cooldownDuration
+
+            for i in range(1, 11):
+                Timer(self.bulletInterval * i / 1000.0, self.fireBullet).start() # Threaded???
+            self.playSFX()
+            self.currentUses += 1
+            if self.currentUses >= self.maxUses:
+                self.currentUses = 0
+                #This needs to be fixed a little bit
+                # self.canShoot = False
+                # Timer(self.reloadTime, self.reload).start()
+
+    def fireBullet(self):
+        scatterAngle = random.uniform(-self.scatterRange, self.scatterRange)
+        bulletAngle = self.angle + scatterAngle
+        bulletX, bulletY = self.getTank().getGunCenter()
+        bullet = JudgeBullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
+        bullet.setName(self.getTank().getName())
+        bullet.setDamage(self.damage)
+        bullet.setBulletSpeed(0.5)
+        bulletSprites.add(bullet)
+        Timer(2, lambda: bullet.kill()).start() # Dies after a while
+
+    def reload(self):
+        self.currentUses = 0
+        self.canShoot = True
+
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imagePath: The filepath the points to the required image
+        # Outputs: None        
+        currentDir = os.path.dirname(__file__)
+        gunPath = os.path.join(currentDir,'Sprites', 'Judge' + str(imageNum) + '.png')
+        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
+        width, height = self.originalGunImage.get_size()
+        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
+        self.gunImage = self.originalGunImage
+        self.image = self.gunImage
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
+    def playSFX(self):
+        # This function will play the sound effect of the gun firing
+        # Inputs: None
+        # Outputs: None
+        if not self.channelDict["fire"]["channel"].get_busy(): # if the sound isn't playing
+            self.channelDict["fire"]["channel"].play(soundDictionary["Judge"])  # Play sound indefinitely
+        else:
+            spareChannels(soundDictionary["Judge"])
+
+class AIHuntsman(AIGun):
+    def __init__(self, tank, controls, name):
+        super().__init__(tank, controls, name)
+        self.setCooldown(1000) # 1000 ms
+        self.setDamage(600)
+        self.setDamageStatistic(2)
+        self.setReloadStatistic(2)
+        self.setGunBackDuration(300)
+        self.hard = True
+
+    def fire(self):
+        bulletX, bulletY = self.getTank().getGunCenter()
+        bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
+        bullet.setName(self.getTank().getName())
+        if random.random() < 0.12:  # 5% chance
+            bullet.setDamage(self.damage * 2)
+        else:
+            bullet.setDamage(self.damage)
+        bullet.setBulletSpeed(2)
+        bulletSprites.add(bullet)
+        self.canShoot = False
+        self.shootCooldown = self.cooldownDuration
+        self.playSFX()
+
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imagePath: The filepath the points to the required image
+        # Outputs: None
+        currentDir = os.path.dirname(__file__)
+        gunPath = os.path.join(currentDir,'Sprites', 'Huntsman' + str(imageNum) + '.png')
+        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
+        width, height = self.originalGunImage.get_size()
+        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
+        self.gunImage = self.originalGunImage
+        self.image = self.gunImage
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
+    def playSFX(self):
+        # This function will play the sound effect of the gun firing
+        # Inputs: None
+        # Outputs: None
+        if not self.channelDict["fire"]["channel"].get_busy(): # if the sound isn't playing
+            self.channelDict["fire"]["channel"].play(soundDictionary["Huntsman"])  # Play sound indefinitely
+        else:
+            spareChannels(soundDictionary["Huntsman"])
+
+class AISidewinder(AIGun):
+
+    def __init__(self, tank, controls, name):
+        super().__init__(tank, controls, name)
+        self.setCooldown(500)  # 500 ms
+        self.setDamage(350)
+        self.setDamageStatistic(1)
+        self.setReloadStatistic(2)
+        self.setGunBackDuration(300)
+        self.setGunCenter(0, 1)
+        self.hard = True
+        
+    def fire(self):
+        bulletX, bulletY = self.getTank().getGunCenter()
+        bullet = SidewinderBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
+        bullet.setName(self.getTank().getName())
+        bullet.setBulletSpeed(1)
+        bulletSprites.add(bullet)
+        self.canShoot = False
+        self.shootCooldown = self.cooldownDuration
+        self.playSFX()
+
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imagePath: The filepath the points to the required image
+        # Outputs: None        
+        currentDir = os.path.dirname(__file__)
+        gunPath = os.path.join(currentDir,'Sprites', 'Sidewinder' + str(imageNum) + '.png')
+        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
+        width, height = self.originalGunImage.get_size()
+        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
+        self.gunImage = self.originalGunImage
+        self.image = self.gunImage
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
+    def playSFX(self):
+        # This function will play the sound effect of the gun firing
+        # Inputs: None
+        # Outputs: None
+        if not self.channelDict["fire"]["channel"].get_busy(): # if the sound isn't playing
+            self.channelDict["fire"]["channel"].play(soundDictionary["Sidewinder"])  # Play sound indefinitely
+        else:
+            spareChannels(soundDictionary["Sidewinder"])
+        print("No sound effect smh")
 
 class Chamber(Gun):
 
@@ -1502,16 +1731,6 @@ class DefaultGun(Gun):
     
         self.angle += self.rotationSpeed
         self.angle %= 360
-        
-        #This if statement checks to see if speed or rotation of speed is 0,
-        #if so it will stop playing moving sound, otherwise, sound will play
-        #indefinitely
-        if self.rotationSpeed != 0:
-            if not self.channelDict["rotate"]["channel"].get_busy(): # if the sound isn't playing
-                self.channelDict["rotate"]["channel"].play(soundDictionary["turretRotate"], loops = -1)  # Play sound indefinitely
-        else:
-            if self.channelDict["rotate"]["channel"].get_busy(): # if the sound is playing
-                self.channelDict["rotate"]["channel"].stop()  # Stop playing the sound
 
         #Reload cooldown of bullet and determines the angle to fire the bullet,
         #which is relative to the posistion of the tank gun.
@@ -1562,7 +1781,7 @@ class Huntsman(Gun):
         bulletX, bulletY = self.getTank().getGunCenter()
         bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
-        if random.random() < 0.05:  # 5% chance
+        if random.random() < 0.12:  # 5% chance
             bullet.setDamage(self.damage * 2)
         else:
             bullet.setDamage(self.damage)
@@ -2082,6 +2301,7 @@ class AITank(Tank):
         self.aim = currentTargetPackage
         self.BFSRefresh = True
         self.aimTime = 0
+
     def update(self):
         # This function updates the tank's position and rotation based on the controls detected
         # from the keyboard sound effects will be played as well as the sound effects
@@ -2135,7 +2355,7 @@ class AITank(Tank):
             else:
                 self.rotationSpeed = 0
             # if we are facing the target, go forward
-            self.speed = 0.25 # we move
+            self.speed = self.topSpeed # we move
 
         self.angle += self.rotationSpeed
         self.angle %= 360
@@ -2157,7 +2377,187 @@ class AITank(Tank):
     def getAimTime(self):
         return self.aimTime
 
+class AIPanther(AITank):
     
+    def __init__(self, x, y, controls, name):
+        super().__init__(x, y, controls, name)
+        self.setMaxHealth(1500)
+        self.setSpeedStatistic(3)
+        self.setHealthStatistic(1)
+        self.setTopSpeed(0.3)
+        self.setTopRotationalSpeed(0.8)
+        self.setTankName("Panther")
+
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imageNum: The index that points to the required image
+        # Outputs: None
+        # Load the tank image
+        currentDir = os.path.dirname(__file__)
+        tankPath = os.path.join(currentDir, 'Sprites', 'Panther' + str(imageNum) + '.png')
+        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
+
+        # Scale the tank image to a smaller size
+        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
+        self.image = self.tankImage
+        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
+        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
+        self.x = float(self.rect.centerx)
+        self.y = float(self.rect.centery)
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
+    def getGunCenter(self):
+        #Since the point is not in the center of the tank, we need to adjust the gun position
+        # Inputs: None
+        # Outputs: The center of the gun
+        return self.rotate_point((self.rect.centerx, self.rect.centery), -4, 0, self.angle)
+
+class AICicada(AITank):
+    
+    def __init__(self, x, y, controls, name):
+        super().__init__(x, y, controls, name)
+        self.setMaxHealth(2000)
+        self.setSpeedStatistic(3)
+        self.setHealthStatistic(1)
+        self.setTopSpeed(0.25)
+        self.setTopRotationalSpeed(0.75)
+        self.setTankName("Cicada")
+
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imageNum: The index that points to the required image
+        # Outputs: None
+        # Load the tank image
+        currentDir = os.path.dirname(__file__)
+        tankPath = os.path.join(currentDir, 'Sprites', 'Cicada' + str(imageNum) + '.png')
+        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
+
+        # Scale the tank image to a smaller size
+        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
+        self.image = self.tankImage
+        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
+        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
+        self.x = float(self.rect.centerx)
+        self.y = float(self.rect.centery)
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
+    def getGunCenter(self):
+        #Since the point is not in the center of the tank, we need to adjust the gun position
+        # Inputs: None
+        # Outputs: The center of the gun
+        return self.rotate_point((self.rect.centerx, self.rect.centery), -4, 0, self.angle)
+
+class AIBonsai(AITank):
+    def __init__(self, x, y, controls, name):
+        super().__init__(x, y, controls, name)
+        self.setMaxHealth(3500)
+        self.setSpeedStatistic(2)
+        self.setHealthStatistic(2)
+        self.setTopSpeed(0.15)
+        self.setTopRotationalSpeed(0.5)
+        self.setTankName("Bonsai")
+
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imageNum: The index that points to the required image
+        # Outputs: None
+        # Load the tank image
+        currentDir = os.path.dirname(__file__)
+        tankPath = os.path.join(currentDir, 'Sprites', 'Bonsai' + str(imageNum) + '.png')
+        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
+
+        # Scale the tank image to a smaller size
+        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
+        self.image = self.tankImage
+        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
+        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
+        self.x = float(self.rect.centerx)
+        self.y = float(self.rect.centery)
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
+    def getGunCenter(self):
+        #Since the point is not in the center of the tank, we need to adjust the gun position
+        # Inputs: None
+        # Outputs: The center of the gun
+        return self.rotate_point((self.rect.centerx, self.rect.centery), -5, 0, self.angle)
+
+class AIGater(AITank):
+    def __init__(self, x, y, controls, name):
+        super().__init__(x, y, controls, name)
+        self.setMaxHealth(3000)
+        self.setSpeedStatistic(2)
+        self.setHealthStatistic(2)
+        self.setTopSpeed(0.2)
+        self.setTopRotationalSpeed(0.5)
+        self.setTankName("Gater")
+
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imageNum: The index that points to the required image
+        # Outputs: None
+        # Load the tank image
+        currentDir = os.path.dirname(__file__)
+        tankPath = os.path.join(currentDir, 'Sprites', 'Gater' + str(imageNum) + '.png')
+        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
+
+        # Scale the tank image to a smaller size
+        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
+        self.image = self.tankImage
+        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
+        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
+        self.x = float(self.rect.centerx)
+        self.y = float(self.rect.centery)
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
+    def getGunCenter(self):
+        #Since the point is not in the center of the tank, we need to adjust the gun position
+        # Inputs: None
+        # Outputs: The center of the gun
+        return self.rotate_point((self.rect.centerx, self.rect.centery), 0, 0, self.angle)
+
+class AIFossil(AITank):
+    def __init__(self, x, y, controls, name):
+        super().__init__(x, y, controls, name)
+        self.setMaxHealth(4000)
+        self.setSpeedStatistic(1)
+        self.setHealthStatistic(3)
+        self.setTopSpeed(0.1)
+        self.setTopRotationalSpeed(0.25)
+        self.setTankName("Fossil")
+
+    def setImage(self, imageNum = 1):
+        # Setup a new image if the selected one isn't the default
+        # Inputs: imageNum: The index that points to the required image
+        # Outputs: None
+        # Load the tank image
+        currentDir = os.path.dirname(__file__)
+        tankPath = os.path.join(currentDir, 'Sprites', 'Fossil' + str(imageNum) + '.png')
+        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
+
+        # Scale the tank image to a smaller size
+        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
+        self.image = self.tankImage
+        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
+        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
+        self.x = float(self.rect.centerx)
+        self.y = float(self.rect.centery)
+
+        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
+        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
+    def getGunCenter(self):
+        #Since the point is not in the center of the tank, we need to adjust the gun position
+        # Inputs: None
+        # Outputs: The center of the gun
+        return self.rotate_point((self.rect.centerx, self.rect.centery), 4, 0, self.angle)
 
 class Bonsai(Tank):
 
@@ -2623,7 +3023,7 @@ def setUpPlayers():
 
     #Setup the tanks
     if DifficultyType == 1:
-        # easy
+        # easy AI, 1 Player
         tank1 = AITank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
         tank1.setData(player1PackageTank)
         tank1.setImage(p1L + 1)
@@ -2658,6 +3058,24 @@ def setUpPlayers():
         gun1.setImage(p1K + 1)
 
         gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
+        gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
+        gun2.setImage(p2K + 1)
+
+    elif DifficultyType == 3:
+        # normal AI, 1 Player
+        tank1 = AIFossil(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
+        tank1.setData(player1PackageTank)
+        tank1.setImage(p1L + 1)
+
+        tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
+        tank2.setData(player2PackageTank)
+        tank2.setImage(p2L + 1)
+
+        gun1 = AISidewinder(tank1, controlsTank1, p1GunName) # Gun 1 setup
+        gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
+        gun1.setImage(p1K + 1)
+
+        gun2 = copy.copy(turretList[p2I]) # Gun 2 setup
         gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
         gun2.setImage(p2K + 1)
 
@@ -2837,7 +3255,7 @@ def playGame():
     # pygame.draw.polygon(screen, GREEN, tank1.getCorners(), 2) #Hit box outline
     # pygame.draw.polygon(screen, GREEN, tank2.getCorners(), 2) #Hit box outline
     # if we are using AI we need to set the target to go to the other tank
-    if DifficultyType == 1 and pygame.time.get_ticks() - tank1.getAimTime() > 2000:
+    if (DifficultyType == 1 or DifficultyType == 3) and pygame.time.get_ticks() - tank1.getAimTime() > 2000:
         # AI difficulty
         if not tank2Dead: # if the tank is still alive
             temp = tank2.getCurrentTile().getIndex()
@@ -3845,7 +4263,7 @@ while not done:
                 if event.button == 3 and gameMode == GameMode.play:
                     #if the mosue is within the maze, make the tile the target
                     for tile in tileList:
-                        if DifficultyType == 1:
+                        if DifficultyType == 1 or DifficultyType == 3:
                             if tile.isWithin(): # If the mouse is within the tile
                                 # tile.setTarget(True)
                                 (targetx, targety) = tile.getCenter()
@@ -3863,7 +4281,6 @@ while not done:
                     gameMode = GameMode.play # Return to game if button was clicked
                 if (creditButton.getCorners()[0] <= mouse[0] <= creditButton.getCorners()[2] and
                     creditButton.getCorners()[1] <= mouse[1] <= creditButton.getCorners()[3] and fromHome): #If we click the return to game button
-                    print("The credits button was clicked, but is unimplmented")
                     creditDraw()
                     gameMode = GameMode.credit
                 if (home.getCorners()[0] <= mouse[0] <= home.getCorners()[2] and
