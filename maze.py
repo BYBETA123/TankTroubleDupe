@@ -1976,7 +1976,7 @@ class Watcher(Gun):
             self.getTank().setSpeed(self.getTank().getSpeed()/2)
             self.getTank().setRotationalSpeed(self.getTank().getTopRotationalSpeed()/25)
             #Scale the damage of the bullet
-            self.scopeDamage += 10
+            self.scopeDamage += 2
             if self.scopeDamage >= 3300: # Max damage
                 self.scopeDamage = 3300
 
@@ -2019,7 +2019,7 @@ class Watcher(Gun):
         bulletSprites.add(bullet)
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
-        self.scopeDamage = 700 # Reset the damage
+        self.scopeDamage = 350 # Reset the damage
         self.playSFX()
 
     def getDamage(self):
