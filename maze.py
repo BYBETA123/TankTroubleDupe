@@ -60,8 +60,8 @@ class Tank(pygame.sprite.Sprite):
         self.drawable = False
         self.topSpeed = self.maxSpeed
         self.topRotation = self.rotationalSpeed
-        self.channelListBusy = [False, False, False, False] # The channels that the sound effects will be played on
         self.channelDict = {} # The dictionary that will store the sound effects
+
     def updateCorners(self):
         # This function will update the corners of the tank based on the new position
         # This is to make sure that the coliisions detection is accurate
@@ -3791,17 +3791,17 @@ volume = {
 
 soundDictionary = {
     'tankDeath' : pygame.mixer.Sound('Sounds/tank_dead.wav'),
-    'tankHurt' : pygame.mixer.Sound('Sounds/tank_dead.wav'),
+    'tankHurt' : pygame.mixer.Sound('Sounds/tank_dead.wav'), # replace
     'tankMove' : pygame.mixer.Sound('Sounds/tank_moving.wav'),
     'tankShoot' : pygame.mixer.Sound('Sounds/tank_shoot.wav'),
     'turretRotate' : pygame.mixer.Sound('Sounds/tank_turret_rotate.wav'),
-    'Chamber' : pygame.mixer.Sound('Sounds/Empty.wav'),
+    'Chamber' : pygame.mixer.Sound('Sounds/Chamber.wav'),
     'Empty' : pygame.mixer.Sound('Sounds/Empty.wav'),
     'Huntsman' : pygame.mixer.Sound('Sounds/Huntsman.wav'),
     'Judge' : pygame.mixer.Sound('Sounds/Judge.wav'),
     'Silencer' : pygame.mixer.Sound('Sounds/Silencer.wav'),
-    'Sidewinder' : pygame.mixer.Sound('Sounds/Empty.wav'),
-    'Tempest' : pygame.mixer.Sound('Sounds/Empty.wav'),
+    'Sidewinder' : pygame.mixer.Sound('Sounds/Empty.wav'), # replace
+    'Tempest' : pygame.mixer.Sound('Sounds/Tempest.wav'),
     'Watcher' : pygame.mixer.Sound('Sounds/Watcher.wav'),
 }
 
