@@ -1713,20 +1713,13 @@ class Silencer(Gun):
         #Checks what keys are pressed, and changes speed accordingly
         #If tank hull moves left or right, the gun will also move simultaneously
         #with the tank hull at the same speed and direction.
+        self.rotationSpeed = 0
+        
         if keys[self.controls['rotate_left']]:
-            self.rotationSpeed = self.turretSpeed
+            self.rotationSpeed += self.turretSpeed
         elif keys[self.controls['rotate_right']]:
-            self.rotationSpeed = -self.turretSpeed
-        elif  keys[self.controls['left']]:
-            self.rotationSpeed = self.tank.getRotationalSpeed()
-        elif keys[self.controls['right']]:
-            self.rotationSpeed = -self.tank.getRotationalSpeed()
-        else:
-            self.rotationSpeed = 0                
-    
-        self.angle += self.rotationSpeed
-        self.angle %= 360
-
+            self.rotationSpeed += -self.turretSpeed
+      
         #This if statement checks to see if speed or rotation of speed is 0,
         #if so it will stop playing moving sound, otherwise, sound will play
         #indefinitely
@@ -1736,6 +1729,14 @@ class Silencer(Gun):
         else:
             if self.channelDict["rotate"]["channel"].get_busy(): # if the sound is playing
                 self.channelDict["rotate"]["channel"].stop()  # Stop playing the sound
+
+        if  keys[self.controls['left']]:
+            self.rotationSpeed += self.tank.getRotationalSpeed()
+        elif keys[self.controls['right']]:
+            self.rotationSpeed += -self.tank.getRotationalSpeed()
+
+        self.angle += self.rotationSpeed
+        self.angle %= 360
 
         #Reload cooldown of bullet and determines the angle to fire the bullet,
         #which is relative to the posistion of the tank gun.
@@ -1904,19 +1905,12 @@ class Watcher(Gun):
         #Checks what keys are pressed, and changes speed accordingly
         #If tank hull moves left or right, the gun will also move simultaneously
         #with the tank hull at the same speed and direction.
+        self.rotationSpeed = 0
+
         if keys[self.controls['rotate_left']]:
-            self.rotationSpeed = self.turretSpeed
+            self.rotationSpeed += self.turretSpeed
         elif keys[self.controls['rotate_right']]:
-            self.rotationSpeed = -self.turretSpeed
-        elif  keys[self.controls['left']]:
-            self.rotationSpeed = self.tank.getRotationalSpeed()
-        elif keys[self.controls['right']]:
-            self.rotationSpeed = -self.tank.getRotationalSpeed()
-        else:
-            self.rotationSpeed = 0               
-    
-        self.angle += self.rotationSpeed
-        self.angle %= 360
+            self.rotationSpeed += -self.turretSpeed
         
         #This if statement checks to see if speed or rotation of speed is 0,
         #if so it will stop playing moving sound, otherwise, sound will play
@@ -1927,7 +1921,14 @@ class Watcher(Gun):
         else:
             if self.channelDict["rotate"]["channel"].get_busy(): # if the sound is playing
                 self.channelDict["rotate"]["channel"].stop()  # Stop playing the sound
-
+        
+        if  keys[self.controls['left']]:
+            self.rotationSpeed += self.tank.getRotationalSpeed()
+        elif keys[self.controls['right']]:
+            self.rotationSpeed += -self.tank.getRotationalSpeed()
+    
+        self.angle += self.rotationSpeed
+        self.angle %= 360
         #Reload cooldown of bullet and determines the angle to fire the bullet,
         #which is relative to the posistion of the tank gun.
         if keys[self.controls['fire']] and self.canShoot:
@@ -2859,7 +2860,7 @@ def infoScreen():
 pygame.init()
 mixer = Music()
 mixer.play()
-pygame.display.set_caption("TankTroubleDupe") # Name the window
+pygame.display.set_caption("Flanki") # Name the window
 clock = pygame.time.Clock() # Start the clock
 
 initialStartTime = pygame.time.get_ticks()
@@ -3639,7 +3640,7 @@ homeButtonList.append(quitButtonHome)
 
 # Define title text properties
 titleFont = pygame.font.SysFont('Arial', 60)
-titleText = titleFont.render('Tank Game Menu', True, (0, 0, 0))  # Render the title text
+titleText = titleFont.render('FLANKI', True, (0, 0, 0))  # Render the title text
 
 pauseButton = Button(bg ,bg, windowWidth-tileSize*3, tileSize//5,tileSize*2,tileSize//2, "PAUSE", c.geT("BLACK"), 20, c.geT("OFF_WHITE"))
 pauseButton.setOutline(True, 2)
