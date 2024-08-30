@@ -509,6 +509,8 @@ class Gun(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=(gunEndX + self.gunH * math.cos(angleRad), gunEndY - self.gunH * math.sin(angleRad)))
         self.AI = False
         self.hard = False
+        self.default = False
+        self.reload = False
 
     def update(self):
         """
@@ -580,22 +582,22 @@ class Gun(pygame.sprite.Sprite):
             #If tank hull moves left or right, the gun will also move simultaneously
             #with the tank hull at the same speed and direction.
             self.rotationSpeed = 0
-            
-            if keys[self.controls['rotate_left']]:
-                self.rotationSpeed += self.turretSpeed
-            elif keys[self.controls['rotate_right']]:
-                self.rotationSpeed += -self.turretSpeed         
+            if not self.default:
+                if keys[self.controls['rotate_left']]:
+                    self.rotationSpeed += self.turretSpeed
+                elif keys[self.controls['rotate_right']]:
+                    self.rotationSpeed += -self.turretSpeed         
                 
-            #This if statement checks to see if speed or rotation of speed is 0,
-            #if so it will stop playing moving sound, otherwise, sound will play
-            #indefinitely
+                #This if statement checks to see if speed or rotation of speed is 0,
+                #if so it will stop playing moving sound, otherwise, sound will play
+                #indefinitely
 
-            if self.rotationSpeed != 0: # This should be made so that it doesn't rotate if the hull is turning
-                if not self.channelDict["rotate"]["channel"].get_busy(): # if the sound isn't playing
-                    self.channelDict["rotate"]["channel"].play(soundDictionary["turretRotate"], loops = -1)  # Play sound indefinitely
-            else:
-                if self.channelDict["rotate"]["channel"].get_busy(): # if the sound is playing
-                    self.channelDict["rotate"]["channel"].stop()  # Stop playing the sound
+                if self.rotationSpeed != 0: # This should be made so that it doesn't rotate if the hull is turning
+                    if not self.channelDict["rotate"]["channel"].get_busy(): # if the sound isn't playing
+                        self.channelDict["rotate"]["channel"].play(soundDictionary["turretRotate"], loops = -1)  # Play sound indefinitely
+                else:
+                    if self.channelDict["rotate"]["channel"].get_busy(): # if the sound is playing
+                        self.channelDict["rotate"]["channel"].stop()  # Stop playing the sound
 
             if  keys[self.controls['left']]:
                 self.rotationSpeed += self.tank.getRotationalSpeed()
@@ -620,6 +622,7 @@ class Gun(pygame.sprite.Sprite):
         if self.shootCooldown > 0:
             self.shootCooldown -= pygame.time.get_ticks() - self.lastUpdateTime
         else:
+            self.tryReload()
             self.shootCooldown = 0
             self.canShoot = True
 
@@ -749,11 +752,23 @@ class Gun(pygame.sprite.Sprite):
         else:
             spareChannels(soundDictionary["Empty"])
 
+    def setReload(self, b = False):
+        self.reload = b
+
     def setAI(self, AI):
         self.AI = AI
 
     def setHard(self, hard = True):
         self.hard = hard
+
+    def setDefault(self, default = True):
+        self.default = default
+
+    def tryReload(self):
+        if self.reload == False or self.canShoot == True:
+            return
+        if not self.channelDict["reload"]["channel"].get_busy():
+            self.channelDict["reload"]["channel"].play(soundDictionary["Reload"])
 
 class Bullet(pygame.sprite.Sprite):
 
@@ -1436,6 +1451,7 @@ class Chamber(Gun):
         self.setReloadStatistic(2)
         self.setGunBackDuration(500)
         self.setGunCenter(0, -4)
+        self.setReload(True)
 
     def fire(self):
         # This function is responsible for all the firing mechanics of the gun
@@ -1483,6 +1499,7 @@ class DefaultGun(Gun):
         super().__init__(tank, controls, name)
         self.setCooldown(400) # 500 ms
         self.setDamage(1) # 10000
+        self.setDefault(True)
 
     def setImage(self, imageNum = 1):
         # Setup a new image if the selected one isn't the default
@@ -1524,6 +1541,7 @@ class Huntsman(Gun):
         self.setDamageStatistic(2)
         self.setReloadStatistic(2)
         self.setGunBackDuration(300)
+        self.setReload(True)
 
     def fire(self):
         bulletX, bulletY = self.getTank().getGunCenter()
@@ -1579,7 +1597,8 @@ class Judge(Gun):
         self.currentUses = 0
         self.reloadTime = 2  # 2 seconds
         self.setGunCenter(0, -3)
-
+        self.setReload(True)
+        
     def fire(self):
         if self.currentUses < self.maxUses:
             self.canShoot = False
@@ -1690,7 +1709,7 @@ class Silencer(Gun):
         self.setReloadStatistic(1)
         self.drawable = True
         self.setGunCenter(0, -3)
-
+        self.setReload(True)
     def update(self):
         """
         Updates the gun's position, rotation, and shooting state based on the current controls and time.
@@ -1766,6 +1785,7 @@ class Silencer(Gun):
             self.shootCooldown -= pygame.time.get_ticks() - self.lastUpdateTime
         else:
             self.shootCooldown = 0
+            self.tryReload()
             self.canShoot = True
 
         self.lastUpdateTime = pygame.time.get_ticks()
@@ -1882,6 +1902,7 @@ class Watcher(Gun):
         self.setTipOffset(25)
         self.drawable = True
         self.setGunCenter(0, -3)
+        self.setReload(True)
 
     def update(self):
         """
@@ -1964,6 +1985,7 @@ class Watcher(Gun):
             self.shootCooldown -= pygame.time.get_ticks() - self.lastUpdateTime
         else:
             self.shootCooldown = 0
+            self.tryReload()
             self.canShoot = True
 
         self.lastUpdateTime = pygame.time.get_ticks()
@@ -2353,7 +2375,7 @@ def breathFirstSearchShort(tileList, choices, option):
     return path
 
 def spareChannels(sound):
-    soundList = [pygame.mixer.Channel(i) for i in range(11, pygame.mixer.get_num_channels())]
+    soundList = [pygame.mixer.Channel(i) for i in range(15, pygame.mixer.get_num_channels())]
     for channel in soundList:
         if not channel.get_busy():
             channel.play(sound) # attempt to play the sound
@@ -2483,8 +2505,8 @@ def setUpPlayers():
     tileList = tileGen() # Get a new board
     spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
     spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
-    player1Channels = {"move": {"channel": pygame.mixer.Channel(3), "volume": 0.05}, "rotate": {"channel": pygame.mixer.Channel(4), "volume": 0.2}, "death": {"channel" : pygame.mixer.Channel(5), "volume": 0.5}, "fire": {"channel": pygame.mixer.Channel(6), "volume": 1}}
-    player2Channels = {"move": {"channel": pygame.mixer.Channel(7), "volume": 0.05}, "rotate": {"channel": pygame.mixer.Channel(8), "volume": 0.3}, "death": {"channel" : pygame.mixer.Channel(9), "volume": 0.5}, "fire": {"channel": pygame.mixer.Channel(10), "volume": 1}}
+    player1Channels = {"move": {"channel": pygame.mixer.Channel(3), "volume": 0.05}, "rotate": {"channel": pygame.mixer.Channel(4), "volume": 0.2}, "death": {"channel" : pygame.mixer.Channel(5), "volume": 0.5}, "fire": {"channel": pygame.mixer.Channel(6), "volume": 1}, "hit": {"channel": pygame.mixer.Channel(7), "volume": 1}, "reload": {"channel": pygame.mixer.Channel(8), "volume": 0.5}}
+    player2Channels = {"move": {"channel": pygame.mixer.Channel(9), "volume": 0.05}, "rotate": {"channel": pygame.mixer.Channel(10), "volume": 0.3}, "death": {"channel" : pygame.mixer.Channel(11), "volume": 0.5}, "fire": {"channel": pygame.mixer.Channel(12), "volume": 1}, "hit": {"channel": pygame.mixer.Channel(13), "volume": 1}, "reload": {"channel": pygame.mixer.Channel(14), "volume": 0.5}}
     #Updating the packages
     player1PackageTank = [spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName, player1Channels]
     player1PackageGun = [controlsTank1, p1GunName, player1Channels]
@@ -3680,6 +3702,7 @@ volume = {
     'Empty': 1,
     'Huntsman': 1,
     'Judge': 0.38,
+    'Reload': 0.2,
     'Silencer': 0.25,
     'Sidewinder': 1,
     'Tempest': 1,
@@ -3696,13 +3719,14 @@ soundDictionary = {
     'Empty' : pygame.mixer.Sound('Sounds/Empty.wav'),
     'Huntsman' : pygame.mixer.Sound('Sounds/Huntsman.wav'),
     'Judge' : pygame.mixer.Sound('Sounds/Judge.wav'),
+    'Reload' : pygame.mixer.Sound('Sounds/Reload.wav'),
     'Silencer' : pygame.mixer.Sound('Sounds/Silencer.wav'),
     'Sidewinder' : pygame.mixer.Sound('Sounds/Empty.wav'), # replace
     'Tempest' : pygame.mixer.Sound('Sounds/Tempest.wav'),
     'Watcher' : pygame.mixer.Sound('Sounds/Watcher.wav'),
 }
 
-pygame.mixer.set_num_channels(16)
+pygame.mixer.set_num_channels(32)
 
 for sound in soundDictionary:
     soundDictionary[sound].set_volume(volume[sound])
