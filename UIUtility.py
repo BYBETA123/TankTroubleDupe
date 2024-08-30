@@ -1,7 +1,10 @@
 import pygame
+import random
 
 class Button:
     buttonState = False  # False = Not clicked, True = Clicked
+    outline = False
+    outlineWidth = 1
     def __init__(self, color=(0, 0, 0), secondaryColor=(255, 255, 255), x=0, y=0, width=0, height=0, text='', textColor=(0, 0, 0), textSize=20, hoverColor=(200, 200, 200)):
         self.color = color
         self.x = x
@@ -18,8 +21,8 @@ class Button:
 
     def draw(self, screen, outline=None):
         pygame.draw.rect(screen, self.display, (self.x, self.y, self.width, self.height), 0)
-        if outline:
-            pygame.draw.rect(screen, (0, 0, 0), (self.x, self.y, self.width, self.height), 1)
+        if outline or self.outline:
+            pygame.draw.rect(screen, (0, 0, 0), (self.x, self.y, self.width, self.height), self.outlineWidth)
 
         if self.text != '':
             font = pygame.font.SysFont('Courier New', self.textSize)
@@ -55,6 +58,16 @@ class Button:
 
     def selectable(self, value):
         self.hover = value
+
+    def setOutline(self, outline, outlineWidth = 1):
+        self.outline = outline
+        self.outlineWidth = outlineWidth
+
+    def getText(self):
+        return self.text
+
+    def setText(self, text):
+        self.text = text
 
 class ButtonSlider:
     carrierX = 20
@@ -136,6 +149,8 @@ class TextBox:
     paddingWidth, paddingHeight = 10, 10
     characterPad = 10
     hover = False # Whether or not we want to show a hover effect
+    outline = False
+    outlineWidth = 1
     def __init__(self, x, y, font, text='Click me!', fontSize = 20, textColor = (0,0,0)):
         self.x=x
         self.y=y
@@ -147,7 +162,6 @@ class TextBox:
         self.fontSize = fontSize
 
         # Get the text surface and its dimensions
-        # self.text_surface = self.font.render(self.text, True, self.text_color)
         self.text_surface = pygame.font.SysFont(self.font,fontSize, bold=True).render(self.text, True, self.text_color)
         self.text_width, self.text_height = self.text_surface.get_size()
 
@@ -161,12 +175,14 @@ class TextBox:
 
 
         pygame.draw.rect(screen, self.box_color, self.rect)
-        if outline:
-            pygame.draw.rect(screen, (0,0,0), self.rect, 1)
 
         if self.rect.x < mouse[0] < self.rect.x + self.rect.width and self.rect.y < mouse[1] < self.rect.y + self.rect.height and self.hover:
             pygame.draw.rect(screen, (100,100,255), self.rect)
             #We are hovering
+
+        if outline or self.outline:
+            pygame.draw.rect(screen, (0,0,0), self.rect, self.outlineWidth)
+
 
         # Center the text within the box
         text_x = self.rect.x + (self.rect.width - self.text_width) / 2
@@ -194,10 +210,15 @@ class TextBox:
         self.rect = pygame.Rect(self.x, self.y, self.text_width + 2 * self.paddingWidth, self.text_height + 2 * self.paddingHeight)
 
 
-    def setText(self, text):
-        # Pad the text to at least 10 characters
-        self.text = text.center(self.characterPad)
-        
+    def setText(self, text, padType = 'center'):
+        # Pad the text to at least 10 characters        
+        if padType == 'left':
+            self.text = text.ljust(self.characterPad)
+        elif padType == 'right':
+            self.text = text.rjust(self.characterPad)
+        else:
+            self.text = text.center(self.characterPad)
+
         # Update the text surface and its dimensions
         self.text_surface = pygame.font.SysFont(self.font,self.fontSize, bold = True).render(self.text, True, self.text_color)
         self.text_width, self.text_height = self.text_surface.get_size()
@@ -225,3 +246,79 @@ class TextBox:
 
     def update_display(self, mouse):
         return
+    
+    def setOutline(self, outline, outlineWidth = 1):
+        self.outline = outline
+        self.outlineWidth = outlineWidth
+
+
+
+class Dropdown:
+    def __init__(self, x, y, width, height, options):
+        self.x = x
+        self.y = y
+        self.width = width
+        self.height = height
+        self.options = options
+        self.open = False
+        self.buttonList = []
+        self.options = options
+        for i in range(len(options)):
+            self.buttonList.append(Button((106, 76, 165), (106, 76, 165), x, y + height*i, width, height, options[i], (255, 255, 255), 20, (255, 255, 0)))
+        self.arrow = Button((106, 76, 165), (106, 76, 165), x + width, y, height, height, "▼", (255, 255, 255), 30, (255, 255, 0))
+
+    def draw(self, screen):
+        if self.open:
+            for i in range(len(self.options)):
+                self.buttonList[i].draw(screen)
+        else:
+            self.buttonList[0].draw(screen)
+        self.arrow.draw(screen)
+
+    def getButtonList(self):
+        return self.buttonList
+
+    def click(self, mousepos):
+        x, y = mousepos
+        if not(x<self.x or x>self.x+self.width or y<self.y or y>self.y+self.height*len(self.options)) and self.open:
+            for button in self.buttonList:
+                if button.buttonClick(mousepos):
+                    self.open = False
+                    index = self.buttonList.index(button)
+                    cindex = 0
+
+                    t = self.buttonList[index].text
+                    self.buttonList[index].text = self.buttonList[cindex].text
+                    self.buttonList[cindex].text = t
+                    return True
+
+            self.open = False
+
+        if x<self.arrow.x+self.arrow.width and x>self.arrow.x and y<self.arrow.y+self.arrow.height and y>self.arrow.y:
+            self.open = not self.open
+            return True
+        return False
+
+    def setTextSize(self, size):
+        for button in self.buttonList:
+            button.textSize = size
+        self.arrow.textSize = size
+    
+    def setRect(self, width, height):
+        for button in self.buttonList:
+            button.width = width
+            button.height = height
+        self.width = width
+        self.height = height
+        for i in range(len(self.options)):
+            self.buttonList[i].y = self.y + height*i
+        self.arrow.x = self.x + width
+        self.arrow.y = self.y
+        self.arrow.width = 50
+        self.arrow.height = 50
+
+    def getValue(self):
+        return self.buttonList[0].text
+    
+    def getState(self):
+        return self.open
