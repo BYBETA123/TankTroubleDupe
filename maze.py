@@ -13,6 +13,38 @@ import copy
 #Colors
 c = ColorDicionary() # All the colors we will use
 
+# Safety Checks
+# TODO: Should check that all the sprites are in the folder
+tempList = os.listdir('sprites')
+comparisonList = [] # This list is to contain all of the different types of sprites that are involved
+nameList = ["Bonsai", "Chamber", "Cicada", "Fossil", "Gater", "gun", "Hull", "Huntsman", "Judge", "Panther", "playerGunSprite", "playerTankSprite", "Sidewinder", "Silencer", "tank", "Tempest", "Turret", "Watcher"]
+nonConstantList = ["ZTreads"]
+for i in range(len(nameList)):
+    for j in range(8): # There are 8 different types of sprites
+        comparisonList.append(nameList[i] + str(j+1) + ".png")
+
+for i in range(len(nonConstantList)):
+    comparisonList.append(nonConstantList[i] + ".png")
+
+#Check that all the sprites are present
+found = False
+anyMissing = False
+for i in tempList:
+    found = False # Reset the found variable
+    for j in comparisonList:
+        if i == j:
+            # If they are the same then the sprite is present
+            found = True
+            break
+    if not found:
+        print(f"Error: {i} is missing")
+        anyMissing = True
+
+
+if (anyMissing):
+    pygame.quit()
+    exit()
+
 #Classes
 
 # Tank sprite class
@@ -2875,7 +2907,6 @@ def infoScreen():
     gap = 25
     for i in range(len(iListRender[iIndex])):
         screen.blit(iListRender[iIndex][i], (mazeX + 50, startY + i*gap))
-
 
 #Game setup
 #Start the game setup
