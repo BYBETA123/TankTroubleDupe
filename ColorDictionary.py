@@ -1,5 +1,5 @@
-class ColorDicionary:
-    
+class ColourDictionary:
+
     COLORS = {
         "BLACK": '#000000',
         "WHITE": '#FFFFFF',
@@ -28,31 +28,35 @@ class ColorDicionary:
     def __init__(self):
         # Empty constructor as we are holding colors only
         print("Using Beta's Color class")
+        raise ValueError("Dont use this class")
 
-    def getHex(self, color = "BLACK"):
+    @staticmethod
+    def getHex(color = "BLACK"):
         # This function returns the HEX value of the color
         # Inputs: color (string) This should match with one of the colors in the dictionary
         # Outputs: HEX value of the color
 
-        if color.upper() not in self.COLORS:
+        if color.upper() not in ColourDictionary.COLORS:
             print("The requested color isn't in the dictionary")
             return '#000000'
         # Return the HEX value of the color
-        return self.COLORS[color.upper()]
+        return ColourDictionary.COLORS[color.upper()]
     
-    def getRGB(self, color="BLACK"):
+    @staticmethod
+    def getRGB(color="BLACK"):
         #This function returns the RGB value of the color
         # Inputs: color (string) This should match with one of the colors in the dictionary
         # Outputs: Tuple of 3 integers (R, G, B)
-        if color.upper() not in self.COLORS:
+        if color.upper() not in ColourDictionary.COLORS:
             print("The requested color isn't in the dictionary")
             return (0, 0, 0)
         # Return the RGB value of the color
-        hex_value = self.COLORS[color.upper()].lstrip('#')
+        hex_value = ColourDictionary.COLORS[color.upper()].lstrip('#')
         return tuple(int(hex_value[i:i+2], 16) for i in (0, 2, 4))
     
-    def geT(self, color="BLACK"):
+    @staticmethod
+    def geT(color="BLACK"):
         # This function is just a faster way of returning the tuple
         # Inputs: color (string) This should match with one of the colors in the dictionary
         # Outputs: Tuple of 3 integers (R, G, B)
-        return self.getRGB(color)
+        return ColourDictionary.getRGB(color)

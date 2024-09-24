@@ -3,18 +3,14 @@ import random
 import math
 import time
 import os
-from ColorDictionary import ColorDicionary
+from ColorDictionary import ColourDictionary as c # colors
 from threading import Timer
 from enum import Enum
 from UIUtility import Button, ButtonSlider, TextBox
 from music import Music
 import copy
 
-#Colors
-c = ColorDicionary() # All the colors we will use
-
 # Safety Checks
-# TODO: Should check that all the sprites are in the folder
 tempList = os.listdir('sprites')
 comparisonList = [] # This list is to contain all of the different types of sprites that are involved
 nameList = ["Bonsai", "Chamber", "Cicada", "Fossil", "Gater", "gun", "Hull", "Huntsman", "Judge", "Panther", "playerGunSprite", "playerTankSprite", "Sidewinder", "Silencer", "tank", "Tempest", "Turret", "Watcher"]
@@ -29,21 +25,56 @@ for i in range(len(nonConstantList)):
 #Check that all the sprites are present
 found = False
 anyMissing = False
-for i in tempList:
+for j in comparisonList:
     found = False # Reset the found variable
-    for j in comparisonList:
+    for i in tempList:
         if i == j:
             # If they are the same then the sprite is present
+            found = True
+            break
+    if not found:
+        print(f"Error: {j} is missing")
+        anyMissing = True
+
+# check bullet.png
+if not os.path.exists("bullet.png"):
+    print("Error: bullet.png is missing")
+    anyMissing = True
+
+# check explosion.png
+if not os.path.exists("explosion.png"):
+    print("Error: explosion.png is missing")
+    anyMissing = True
+
+if (anyMissing):
+    # In case there are missing sprites
+    print("Error: Missing sprites")
+    pygame.quit()
+    exit()
+else:
+    print("All sprites are present")
+
+# check the audio
+tempList = os.listdir('Sounds')
+comparisonList = ["Chamber.wav", "Empty.wav", "game_music.wav", "Huntsman.wav", "Judge.wav", "lobby_music.wav", "Reload.wav", "selection_music.wav", "Silencer.wav", "tank_dead.wav", "tank_moving.wav", "tank_shoot.wav", "tank_turret_rotate.wav", "Tempest.wav", "Watcher.wav"]
+print("Checking audio files")
+for i in comparisonList:
+    found = False # Reset the found variable
+    for j in tempList:
+        if j == i:
             found = True
             break
     if not found:
         print(f"Error: {i} is missing")
         anyMissing = True
 
-
 if (anyMissing):
+    # In case there are missing sprites
+    print("Error: Missing audio files")
     pygame.quit()
     exit()
+else:
+    print("All audio files are present")
 
 #Classes
 
@@ -123,6 +154,7 @@ class Tank(pygame.sprite.Sprite):
         # This function checks if the tank is moving into illegeal locations and corrects it
         # Inputs: dx, dy: The change in x and y coordinates
         # Outputs: The corrected x and y coordinates
+        # Notes: This function should probably be extracted into maze.py rather than a class due to the need of other tanks and the maze dimensions
 
         tempX = self.x + dx
         tempY = self.y - dy
@@ -2928,6 +2960,7 @@ explosionGroup = pygame.sprite.Group() #All the explosions
 resetFlag = True
 startTime = 0
 cooldownTimer = False
+
 global startTreads
 startTreads = 0
 global gameOverFlag
@@ -2938,7 +2971,10 @@ fromHome = True
 done = False
 windowWidth = 800
 windowHeight = 600
-screen = pygame.display.set_mode((windowWidth,windowHeight))
+screen = pygame.display.set_mode((windowWidth,windowHeight))  # Windowed (safer/ superior)
+
+# Fullscreen but it renders your computer useless otherwise
+# screen = pygame.display.set_mode((windowWidth,windowHeight), pygame.FULLSCREEN)
 tileSize = 50
 weightTrue = 0.16 # The percentage change that side on a tile will have a border
 rowAmount = 14
@@ -3192,6 +3228,7 @@ ColorIndex = ["TANK_GREEN", "BURGUNDY", "ORANGE", "YELLOW", "SKY_BLUE", "LIGHT_B
 
 tankMultiple = 4
 gunMultiple = 4
+
 for i in range(8): # Generate all the tanks, this needs to be removed as it's not needed anymore
     tankPath = os.path.join(currentDir, 'Sprites', 'tank' + str(i+1) + '.png')
     originalTankImage = pygame.image.load(tankPath).convert_alpha()
@@ -3216,7 +3253,8 @@ p2K = 1
 
 p1L = 1
 p2L = 0
-verticalSpacing =40
+
+verticalSpacing = 40
 choicesX = 420
 
 TurretX = choicesX
@@ -3348,9 +3386,8 @@ textP2.setOutline(True, outlineWidth = 5)
 buttonList.append(textP2)
 
 offset = 35
-tankValue = 3
-
 speedBarX = 250
+
 healthBarX = speedBarX + offset
 damageBarX = healthBarX + offset
 reloadBarX = damageBarX + offset
@@ -3360,6 +3397,7 @@ reloadBarX = damageBarX + offset
 rectX = 280
 rectY = 25
 barFontSize = 36
+
 speedText = TextBox(50, speedBarX, font=selectionFont,fontSize=barFontSize, text="SPEED", textColor=c.geT("BLACK"))
 speedText.setPaddingHeight(0)
 speedText.setPaddingWidth(0)
@@ -3674,15 +3712,13 @@ currentDir = os.path.dirname(__file__)
 tankPath = os.path.join(currentDir, 'tank_menu_logo.png')
 originalTankImage = pygame.image.load(tankPath).convert_alpha()
 
-
-
 # Create buttons with specified positions and text
 onePlayerButtonHomeN = Button(c.geT("BLACK"),c.geT("BLACK"), 30, 470, 140, 80, '1P Easy', (255, 255, 255), 15, hoverColor=(100, 100, 255))
 onePlayerButtonHomeH = Button(c.geT("BLACK"),c.geT("BLACK"), 230, 470, 140, 80, '1P Hard', (255, 255, 255), 15, hoverColor=(100, 100, 255))
 twoPlayerButtonHomeN = Button(c.geT("BLACK"),c.geT("BLACK"), 430, 470, 140, 80, '2P Easy', (255, 255, 255), 15, hoverColor=(100, 100, 255))
 twoPlayerButtonHomeH = Button(c.geT("BLACK"),c.geT("BLACK"), 630, 470, 140, 80, '2P Hard', (255, 255, 255), 15, hoverColor=(100, 100, 255))
 quitButtonHome = Button(c.geT("BLACK"), c.geT("BLACK"), 30, 30, 140, 80, 'Quit', (255, 255, 255), 25, hoverColor=(100, 100, 255))
-settingsButton = Button(c.geT("BLACK"), c.geT("BLACK"), 600, 30, 210, 80, 'Settings', (255, 255, 255), 25, hoverColor=(100, 100, 255))
+settingsButton = Button(c.geT("BLACK"), c.geT("BLACK"), 570, 30, 210, 80, 'Settings', (255, 255, 255), 25, hoverColor=(100, 100, 255))
 
 homeButtonList.append(onePlayerButtonHomeN)
 homeButtonList.append(onePlayerButtonHomeH)

@@ -1,5 +1,4 @@
 import pygame
-import random
 
 class Button:
     buttonState = False  # False = Not clicked, True = Clicked
