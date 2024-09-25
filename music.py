@@ -1,25 +1,13 @@
 import pygame
 class Music:
-    # global tankShootSFX, tankDeadSFX, turretRotateSFX, tankMoveSFX
-    # tankShootSFX = pygame.mixer.Sound("Sounds/tank_shoot.mp3")
-    # tankShootMax = 1
 
-    # tankDeadSFX = pygame.mixer.Sound("Sounds/tank_dead.mp3")
-    # tankDeadMax = 0.5
+    # This class will be used to handle all the music in the game
+    # This class is built specifically for this project and generally will not work outside of the project
 
-    # turretRotateSFX = pygame.mixer.Sound("Sounds/tank_turret_rotate.wav")
-    # turretRotateMax = 0.2
-
-    # tankMoveSFX = pygame.mixer.Sound("Sounds/tank_moving.mp3")
-    # tankMoveMax = 0.05
-
-    # lobbyMusic = pygame.mixer.Sound("Sounds/lobby_music.wav")
     lobbyMusicMax = 0.2
 
-    # selectionMusic = pygame.mixer.Sound("Sounds/selection_music.mp3")
     selectionMusicMax = 1
 
-    # gameMusic = pygame.mixer.Sound("Sounds/game_music.mp3")
     gameMusicMax = 0.2
 
     tankShootMax = 1
@@ -82,15 +70,12 @@ class Music:
         if self.currentTrackString == nextTrack:
             return # Do nothing if the next track is the same as the current track
         self.trigger = True
-
-
         self.nextTrack = self.tracks[nextTrack]
         self.nextTrackString = nextTrack
         self.fadeTrack = 0
 
     def update(self, newVolumes=1):
 
-        # print(newVolumes)
         if self.trigger:
             self.channels[self.nextTrackString].set_volume(self.fadeTrack * self.volume[self.nextTrackString]*newVolumes)
             self.channels[self.currentTrackString].set_volume((1 - self.fadeTrack) * self.volume[self.currentTrackString]*newVolumes)

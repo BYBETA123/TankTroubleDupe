@@ -1611,7 +1611,7 @@ class Huntsman(Gun):
         bulletX, bulletY = self.getTank().getGunCenter()
         bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
-        if random.random() < 0.12:  # 5% chance
+        if random.random() < 0.12:  # 12% chance
             bullet.setDamage(self.damage * 2)
         else:
             bullet.setDamage(self.damage)
@@ -2950,7 +2950,6 @@ clock = pygame.time.Clock() # Start the clock
 
 initialStartTime = pygame.time.get_ticks()
 soundPlayed = False
-
 global animationCool
 animationCool = 12
 
@@ -2974,7 +2973,8 @@ windowHeight = 600
 screen = pygame.display.set_mode((windowWidth,windowHeight))  # Windowed (safer/ superior)
 
 # Fullscreen but it renders your computer useless otherwise
-# screen = pygame.display.set_mode((windowWidth,windowHeight), pygame.FULLSCREEN)
+# screen = pygame.display.set_mode((windowWidth,windowHeight), pygame.FULLSCREEN) # For fullscreen enjoyers
+
 tileSize = 50
 weightTrue = 0.16 # The percentage change that side on a tile will have a border
 rowAmount = 14
@@ -3238,7 +3238,6 @@ for i in range(8): # Generate all the tanks, this needs to be removed as it's no
     originalGunImage = pygame.image.load(gunPath).convert_alpha()
     gunImage = pygame.transform.scale(originalGunImage, (15*gunMultiple, 2*gunMultiple))
     gunColors.append(gunImage)    
-
 
 #List indexes for player selection
 #Turret index
@@ -3816,7 +3815,6 @@ constantHomeScreen()
 totalfps = 0
 fpsCounter = 0
 
-
 #Main loop
 while not done:
     # Early define probably not a good idea, but will help with reducing function calls
@@ -3835,7 +3833,6 @@ while not done:
                     for tile in tileList:
                         if DifficultyType == 1 or DifficultyType == 3:
                             if tile.isWithin(): # If the mouse is within the tile
-                                # tile.setTarget(True)
                                 (targetx, targety) = tile.getCenter()
                                 currentTargetPackage = (tile.getIndex(), targetx, targety)
                                 # if we have the AI we need to update the target
@@ -3953,6 +3950,7 @@ while not done:
                     reset()
             if event.key == pygame.K_m:
                 mute.mute()
+                sfx.mute()
 
     if gameMode == GameMode.play:
         playGame() # Play the game
