@@ -46,6 +46,10 @@ if not os.path.exists("explosion.png"):
     print("Error: explosion.png is missing")
     anyMissing = True
 
+if not os.path.exists("tank_menu_logo.png"):
+    print("Error: tank_menu_logo.png is missing")
+    anyMissing = True
+
 if (anyMissing):
     # In case there are missing sprites
     print("Error: Missing sprites")
@@ -75,6 +79,10 @@ if (anyMissing):
     exit()
 else:
     print("All audio files are present")
+
+
+#Verification done
+
 
 #Classes
 
@@ -604,7 +612,11 @@ class Gun(pygame.sprite.Sprite):
             a = (a + 360 - 90) % 360
 
             if self.hard:
-                self.angle = a # this line will cause the tank to always aim at the player
+                # make it find the shortest path and store in self.angle
+                if abs(a - self.angle) > 180:
+                    self.angle = (self.angle + math.copysign(1, self.angle - a)) % 360
+                else:
+                    self.angle = (self.angle + math.copysign(1, a -self.angle)) % 360
             else:
                 self.angle = self.tank.getAngle() # update the position of the gun to match the tank
 
