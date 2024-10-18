@@ -9,6 +9,7 @@ from enum import Enum
 from UIUtility import Button, ButtonSlider, TextBox
 from music import Music
 import copy
+from tanks import *
 
 # Safety Checks
 tempList = os.listdir('sprites')
@@ -85,450 +86,6 @@ else:
 
 
 #Classes
-
-# Tank sprite class
-class Tank(pygame.sprite.Sprite):
-    topSpeed = 0
-    topRotation = 0
-    spriteImage = None
-    def __init__(self, x, y, controls, name = "Default"):
-
-        super().__init__()
-        try:
-            # Load the tank image
-            currentDir = os.path.dirname(__file__)
-            tankPath = os.path.join(currentDir, 'Sprites', 'tank1.png')
-            self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
-
-            # Scale the tank image to a smaller size
-            self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
-        except pygame.error as e: # In case there is an issue opening the file
-            print(f"Failed to load image: {e}")
-            pygame.quit()
-            exit()
-
-        # Setting variables
-        self.angle = 0
-        self.center = (x, y)
-        self.controls = controls
-        self.health = 3000
-        self.maxHealth = 3000
-        self.name = name
-        self.rotationSpeed = 0
-        self.rotationalSpeed = 0.5
-        self.speed = 0
-        self.image = self.tankImage
-        self.rect = self.tankImage.get_rect(center=(x, y))
-        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
-        self.x = float(self.rect.centerx)
-        self.y = float(self.rect.centery)
-        self.updateCorners() #Set the corners
-        self.soundPlaying = False
-        self.speedStatistic = 1
-        self.healthStatistic = 1
-        self.maxSpeed = 0.15
-        self.tankName = "Default"
-        self.drawable = False
-        self.topSpeed = self.maxSpeed
-        self.topRotation = self.rotationalSpeed
-        self.channelDict = {} # The dictionary that will store the sound effects
-        self.AI = False
-        self.lastTarget = x * 14 + y
-        self.pseudoTargetarray = []
-        self.BFSRefresh = True
-        self.aimTime = 0
-
-
-    def updateCorners(self):
-        # This function will update the corners of the tank based on the new position
-        # This is to make sure that the coliisions detection is accurate
-        # Inputs: None
-        # Outputs: None
-        cx, cy = self.rect.center
-        w, h = self.width / 2, self.height / 2
-        rad = math.radians(self.angle)
-        rad = math.pi * 2 - rad
-        cosA = math.cos(rad)
-        sinA = math.sin(rad)
-        # assign the new corners
-        self.corners = [
-            (cx + cosA * -w - sinA * -h, cy + sinA * -w + cosA * -h),
-            (cx + cosA * w - sinA * -h, cy + sinA * w + cosA * -h),
-            (cx + cosA * w - sinA * h, cy + sinA * w + cosA * h),
-            (cx + cosA * -w - sinA * h, cy + sinA * -w + cosA * h),
-        ] # Using trigonomety to calculate the corners
-
-    def fixMovement(self, dx, dy):
-        # This function checks if the tank is moving into illegeal locations and corrects it
-        # Inputs: dx, dy: The change in x and y coordinates
-        # Outputs: The corrected x and y coordinates
-        # Notes: This function should probably be extracted into maze.py rather than a class due to the need of other tanks and the maze dimensions
-
-        tempX = self.x + dx
-        tempY = self.y - dy
-
-        #We are outside of the maze
-        if tempX <= mazeX + self.originalTankImage.get_size()[0]/2:
-            tempX = mazeX + self.originalTankImage.get_size()[0]/2
-        if tempY <= mazeY + self.originalTankImage.get_size()[0]/2:
-            tempY = mazeY + self.originalTankImage.get_size()[0]/2
-        if tempX > mazeWidth + mazeX - self.originalTankImage.get_size()[0]/2:
-            tempX = mazeWidth + mazeX - self.originalTankImage.get_size()[0]/2
-        if tempY > mazeHeight + mazeY - self.originalTankImage.get_size()[0]/2:
-            tempY = mazeHeight + mazeY - self.originalTankImage.get_size()[0]/2
-
-        if satCollision(tank1, tank2): #If the tanks are colliding
-            if self.name == p1TankName:
-                #If there is a collision here, move the other tank
-                    #This player is being pushed
-                    tank2.setCoords(tank2.x + dx, tank2.y - dy)
-                    tempX = self.x - dx * 1.5
-                    tempY = self.y + dy * 1.5
-            elif self.name == p2TankName:
-                #If there is a collision here, move the other tank
-                    #This player is being pushed
-                    tank1.setCoords(tank1.x + dx, tank1.y - dy)
-                    tempX = self.x - dx * 1.5
-                    tempY = self.y + dy * 1.5
-            else:
-                print("Error: Invalid tank name")
-
-        #Check for collision with walls
-        #We are going to calculate the row and column
-        row = math.ceil((self.getCenter()[1] - mazeY)/tileSize)
-        col = math.ceil((self.getCenter()[0] - mazeX)/tileSize)
-        #Find the file at the exact index
-        index = (row-1)*colAmount + col
-
-        #Check if the tank is colliding with the walls
-        if index not in range(1, rowAmount*colAmount+1): #If we are outside of the maze
-            return self.x, self.y
-        tile = tileList[index-1]
-        if tile.border[0] and tempY - self.originalTankImage.get_size()[1] <= tile.y: #If the top border is present
-            tempY = tile.y + self.originalTankImage.get_size()[1]
-        if tile.border[1] and tempX + self.originalTankImage.get_size()[0]/2 >= tile.x + tileSize: #If the right border is present
-            tempX = tile.x + tileSize - self.originalTankImage.get_size()[0]/2
-        if tile.border[2] and tempY + self.originalTankImage.get_size()[1] > tile.y + tileSize: #If the bottom border is present
-            tempY = tile.y + tileSize - self.originalTankImage.get_size()[1]
-        if tile.border[3] and tempX - self.originalTankImage.get_size()[0]/2 < tile.x: #If the left border is present
-            tempX = tile.x + self.originalTankImage.get_size()[0]/2
-
-        #finalise the changes
-        self.rect.centerx = int(tempX)
-        self.rect.centery = int(tempY)
-        return tempX, tempY
-
-    def update(self):
-        # This function updates the tank's position and rotation based on the controls detected
-        # from the keyboard sound effects will be played as well as the sound effects
-        # Inputs: None
-        # Outputs: None
-        if self.AI:
-            #If the tank is an AI, it will move based on the AI's logic
-            global tileList
-            # current tile
-            (currentTiley, currentTilex) = ((self.getCenter()[0]-tileSize)//tileSize + 1, (self.getCenter()[1]-tileSize)//tileSize)
-            currentTile = currentTilex * 14 + currentTiley
-            
-            currentTarget = self.lastTargetPackage[0]
-
-            targetTilex, targetTiley = self.lastTargetPackage[1], self.lastTargetPackage[2]
-
-            if currentTile != self.aim[0] and self.BFSRefresh:
-                self.BFSRefresh = False
-                # we haven't reached the goal
-                self.pseudoTargetarray = breathFirstSearchShort(tileList, [currentTile, self.aim[0]], 0)
-                # needs to wait to be in center of tile
-                if self.pseudoTargetarray==[] or self.pseudoTargetarray==None:
-                    pass
-                else:
-                    currentTarget = self.pseudoTargetarray.pop(0) # we have an elemnt in the list
-                self.lastTargetPackage = (currentTarget, currentTarget%14*tileSize + tileSize//2, ((currentTarget)//14 + 1)*tileSize + tileSize//2)
-
-            if (targetTilex == self.getCenter()[0] and targetTiley == self.getCenter()[1]): # if we match our target tile
-                self.speed = 0
-                self.rotationSpeed = 0
-                self.BFSRefresh = True
-                if self.pseudoTargetarray==[] or self.pseudoTargetarray==None:
-                    pass
-                else:
-                    currentTarget = self.pseudoTargetarray.pop(0) # we have an elemnt in the list
-                self.lastTargetPackage = (currentTarget, currentTarget%14*tileSize + tileSize//2, ((currentTarget)//14 + 1)*tileSize + tileSize//2)
-            else:
-                # we are not on the target tile
-
-                # if we are below the target tile, turn the tank so it will face upwards
-                vAngle = math.atan2(targetTilex - self.getCenter()[0], targetTiley - self.getCenter()[1])
-                vAngle = math.degrees(vAngle)
-                vAngle = (vAngle + 360 - 90) % 360 # we have a rotate coordinate system
-                
-                # make it so that the tank will go forward if it is facing the target
-                difference = (vAngle - self.angle) % 360
-                if difference >180:
-                    difference -= 360
-                if difference < 0:
-                    self.rotationSpeed = -1
-                elif difference > 0:
-                    self.rotationSpeed = 1
-                else:
-                    self.rotationSpeed = 0
-                # if we are facing the target, go forward
-                self.speed = self.topSpeed # we move
-        else:
-            keys = pygame.key.get_pressed()
-            #Movement keys
-            if keys[self.controls['up']]:
-                self.speed = self.maxSpeed
-            elif keys[self.controls['down']]:
-                self.speed = -self.maxSpeed
-            else:
-                self.speed = 0
-
-            if keys[self.controls['left']]:
-                self.rotationSpeed = self.rotationalSpeed
-            elif keys[self.controls['right']]:
-                self.rotationSpeed = -self.rotationalSpeed
-            else:
-                self.rotationSpeed = 0
-
-        #This if statement checks to see if speed or rotation of speed is 0,
-        #if so it will stop playing moving sound, otherwise, sound will play
-        #indefinitely
-        if self.speed != 0 or self.rotationSpeed != 0:
-            if not self.channelDict["move"]["channel"].get_busy(): # if the sound isn't playing
-                self.channelDict["move"]["channel"].play(soundDictionary["tankMove"], loops = -1)  # Play sound indefinitely
-        else:
-            if self.channelDict["move"]["channel"].get_busy(): # if the sound is playing
-                self.channelDict["move"]["channel"].stop()  # Stop playin the sound
-
-        self.angle += self.rotationSpeed
-        self.angle %= 360
-
-        self.image = pygame.transform.rotate(self.originalTankImage, self.angle)
-        self.rect = self.image.get_rect(center=(self.x, self.y))
-
-        angleRad = math.radians(self.angle)
-        dx = math.cos(angleRad) * self.speed
-        dy = math.sin(angleRad) * self.speed
-        self.x, self.y = self.fixMovement(dx,dy) # Adjust the movement
-
-    def damage(self, damage):
-        # This function will adjust the damage that the tank has taken
-        # Inputs: damage: The amount of damage that the tank has taken
-        # Outputs: None
-        self.health -= damage
-        if self.health > 0:
-            if not self.channelDict["death"]["channel"].get_busy(): # if the sound isn't playing
-                self.channelDict["death"]["channel"].play(soundDictionary["tankHurt"])  # Play sound indefinitely
-            else:
-                spareChannels(soundDictionary["tankHurt"])
-        else: # if tank is dead
-            # if the tank is dead everything should stop
-            for channel in self.channelDict:
-                if self.channelDict[channel]["channel"].get_busy():
-                    self.channelDict[channel]["channel"].stop()
-            # last sound to be played
-            if not self.channelDict["death"]["channel"].get_busy():
-                self.channelDict["death"]["channel"].play(soundDictionary["tankDeath"])
-            else:
-                spareChannels(soundDictionary["tankDeath"])
-        updateTankHealth() # Manage the healthbar outside of the code
-
-    def getCoords(self):
-        return [self.rect.x, self.rect.y, self.rect.x + self.originalTankImage.get_size()[0], self.rect.y + self.originalTankImage.get_size()[1]]
-
-    def getCorners(self):
-        return self.corners
-    
-    def getCenter(self):
-        return self.rect.center
-    
-    def setCoords(self, newx, newy):
-        self.x, self.y = newx, newy
-
-    def setCentre(self, x, y):
-        self.rect.center = (x, y)
-        self.x = x # Update the x and y coordinate as well
-        self.y = y
-
-    def isDrawable(self):
-        return self.drawable
-
-    def getHealth(self):
-        return self.health
-    
-    def setHealth(self, health):
-        self.health = health
-
-    def setMaxHealth(self, health):
-        self.maxHealth = health
-        self.health = health
-
-    def getMaxHealth(self):
-        return self.maxHealth
-
-    def getHealthStatistic(self):
-        return self.healthStatistic
-    
-    def setHealthStatistic(self, value):
-        self.healthStatistic = value
-
-    def getSpeedStatistic(self):
-        return self.speedStatistic
-    
-    def setSpeedStatistic(self, value):
-        self.speedStatistic = value
-
-    def setTankName(self, tankName):
-        self.tankName = tankName
-
-    def setRotationalSpeed(self, speed):
-        self.rotationalSpeed = speed
-
-    def setTopRotationalSpeed(self, speed):
-        self.topRotation = speed
-        self.rotationalSpeed = speed
-
-    def resetRotationalSpeed(self):
-        self.rotationalSpeed = self.topRotation
-
-    def getRotationalSpeed(self):
-        return self.rotationalSpeed
-
-    def getTopRotationalSpeed(self):
-        return self.topRotation
-
-    def setSpeed(self, speed):
-        self.maxSpeed = speed
-
-    def setTopSpeed(self, speed):
-        self.topSpeed = speed
-        self.maxSpeed = speed
-
-    def resetMaxSpeed(self):
-        self.maxSpeed = self.topSpeed
-
-    def getSpeed(self):
-        return self.topSpeed
-
-    def getTankName(self):
-        return self.tankName
-    
-    def setData(self, data):
-        # This function will set up the tanks that are being used
-        # Inputs: Data, all the data stored within the packages defined as global variables
-        # Outputs: None
-        self.controls = data[2]
-        self.name = data[3]
-        self.rect = self.tankImage.get_rect(center=(data[0], data[1]))
-        self.x = float(self.rect.centerx)
-        self.y = float(self.rect.centery)
-        # set up the audio channels
-        self.channelDict = data[4]
-
-    def draw(self, screen): # A manual entry of the draw screen so that we can update it with anything else we may need to draw
-        screen.blit(self.image, self.rect)
-
-    def getName(self):
-        return self.name
-
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imageNum: The index that points to the required image
-        # Outputs: None
-        # Load the tank image
-        currentDir = os.path.dirname(__file__)
-        tankPath = os.path.join(currentDir, 'Sprites', 'tank' + str(imageNum) + '.png')
-        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
-
-        # Scale the tank image to a smaller size
-        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
-        self.image = self.tankImage
-        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
-        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
-        self.x = float(self.rect.centerx)
-        self.y = float(self.rect.centery)
-
-        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
-
-    def getHealthPercentage(self):
-        return min((self.health/self.maxHealth),1)
-
-    def getSprite(self, flipped = False):
-        return pygame.transform.flip(self.spriteImage, flipped, False)
-    
-    def getGunCenter(self):
-        return (self.x, self.y)
-
-    def rotate_point(self, pivot, distance, initial_angle, rotation_angle):
-        """
-        Rotate a point around a given pivot point by a certain angle.
-        
-        :param pivot: Tuple of (x, y) for the pivot point
-        :param distance: Distance of the point from the pivot
-        :param initial_angle: Initial angle of the point from the pivot in degrees
-        :param rotation_angle: Rotation angle in degrees
-        :return: Tuple of (x', y') for the rotated point
-        """
-        initial_angle_rad = math.radians(initial_angle)  # Convert initial angle to radians
-        rotation_angle_rad = math.radians(rotation_angle)  # Convert rotation angle to radians
-        # Calculate the new angle after rotation
-        new_angle_rad = initial_angle_rad + rotation_angle_rad
-        new_angle_rad = 2 * math.pi - new_angle_rad
-
-        # Calculate new coordinates
-        x_p, y_p = pivot
-        x_prime = x_p + distance * math.cos(new_angle_rad)
-        y_prime = y_p + distance * math.sin(new_angle_rad)
-        
-        return x_prime, y_prime
-
-    def treads(self, num):
-        # This function will draw the treads of the tank
-        # Inputs: None
-        # Outputs: None
-        rect_surface = pygame.image.load("Sprites/ZTreads.png").convert_alpha()
-        rect_surface = pygame.transform.scale(rect_surface, (self.originalTankImage.get_size()))
-
-
-        rotated_surface = pygame.transform.rotate(rect_surface, self.angle)
-        rotated_rect = rotated_surface.get_rect(center = (self.x, self.y))
-
-        if num:
-            treadsp1.append((rotated_surface, rotated_rect.topleft))
-            if len(treadsp1) > 15:
-                treadsp1.pop(0)
-        if not num:
-            treadsp2.append((rotated_surface, rotated_rect.topleft))
-            if len(treadsp2) > 15:
-                treadsp2.pop(0)
-
-    def getCurrentTile(self):
-        # This function will return the tile that the tank is currently on
-        # Inputs: None
-        # Outputs: The tile that the tank is currently on
-        row = math.ceil((self.getCenter()[1] - mazeY)/tileSize)
-        col = math.ceil((self.getCenter()[0] - mazeX)/tileSize)
-        index = (row-1)*colAmount + col
-        return tileList[index-1]
-
-    def getAngle(self):
-        return self.angle
-
-    def setAim(self, aim):
-        self.aimTime = pygame.time.get_ticks()
-        self.aim = aim
-        self.BFSRefresh = True
-        self.lastTargetPackage = aim
-
-    def getAimTime(self):
-        return self.aimTime
-    
-    def setAI(self, AI):
-        self.AI = AI
-        self.lastTargetPackage = currentTargetPackage
-        self.aim = currentTargetPackage
 
 class Gun(pygame.sprite.Sprite):
 
@@ -936,18 +493,18 @@ class Bullet(pygame.sprite.Sprite):
         tank2Collision = satCollision(self, tank2)
 
         if self.name == tank1.getName() and tank2Collision:
-                tank2.damage(self.damage)
+                damage(tank2, self.damage)
                 self.kill()
         if self.name == tank2.getName() and tank1Collision:
-                tank1.damage(self.damage)
+                damage(tank1, self.damage)
                 self.kill()
 
         if self.selfCollision:
             if tank1Collision:
-                tank1.damage(self.damage)
+                damage(tank1, self.damage)
                 self.kill()
             if tank2Collision:
-                tank2.damage(self.damage)
+                damage(tank2, self.damage)
                 self.kill()
 
         # Checking for self damage
@@ -1146,10 +703,10 @@ class WatcherBullet(Bullet):
         tank2Collision = satCollision(self, tank2)
 
         if self.name == tank1.getName() and tank2Collision:
-                tank2.damage(self.damage)
+                damage(tank2, self.damage)
                 self.kill()
         if self.name == tank2.getName() and tank1Collision:
-                tank1.damage(self.damage)
+                damage(tank1, self.damage)
                 self.kill()
 
         tile = tileList[index-1]
@@ -1242,13 +799,11 @@ class ChamberBullet(Bullet):
         tank2Collision = satCollision(self, tank2)
 
         if self.name == tank1.getName() and tank2Collision:
-                tank2.damage(self.damage)
+                damage(tank2, self.damage)
                 self.explode()
         if self.name == tank2.getName() and tank1Collision:
-                tank1.damage(self.damage)
+                damage(tank1, self.damage)
                 self.explode()
-
-
 
         tile = tileList[index-1]
         wallCollision = False
@@ -1266,11 +821,11 @@ class ChamberBullet(Bullet):
             self.angle = 360 - self.angle
         if wallCollision:
             if self.name == tank1.getName() and tank1Collision:
-                tank1.damage(self.damage)
+                damage(tank1, self.damage)
                 self.explode()
                 return
             if self.name == tank2.getName() and tank2Collision:
-                tank2.damage(self.damage)
+                damage(tank2, self.damage)
                 self.explode()
                 return
 
@@ -2126,222 +1681,6 @@ class Watcher(Gun):
         else:
             spareChannels(soundDictionary["Watcher"])
 
-#Hulls
-class Bonsai(Tank):
-
-    def __init__(self, x, y, controls, name):
-        super().__init__(x, y, controls, name)
-        self.setMaxHealth(3500)
-        self.setSpeedStatistic(2)
-        self.setHealthStatistic(2)
-        self.setTopSpeed(0.15)
-        self.setTopRotationalSpeed(0.5)
-        self.setTankName("Bonsai")
-
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imageNum: The index that points to the required image
-        # Outputs: None
-        # Load the tank image
-        currentDir = os.path.dirname(__file__)
-        tankPath = os.path.join(currentDir, 'Sprites', 'Bonsai' + str(imageNum) + '.png')
-        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
-
-        # Scale the tank image to a smaller size
-        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
-        self.image = self.tankImage
-        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
-        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
-        self.x = float(self.rect.centerx)
-        self.y = float(self.rect.centery)
-
-        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
-
-    def getGunCenter(self):
-        #Since the point is not in the center of the tank, we need to adjust the gun position
-        # Inputs: None
-        # Outputs: The center of the gun
-        return self.rotate_point((self.rect.centerx, self.rect.centery), -5, 0, self.angle)
-    
-class Cicada(Tank):
-
-    def __init__(self, x, y, controls, name):
-        super().__init__(x, y, controls, name)
-        self.setMaxHealth(2000)
-        self.setSpeedStatistic(3)
-        self.setHealthStatistic(1)
-        self.setTopSpeed(0.25)
-        self.setTopRotationalSpeed(0.75)
-        self.setTankName("Cicada")
-
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imageNum: The index that points to the required image
-        # Outputs: None
-        # Load the tank image
-        currentDir = os.path.dirname(__file__)
-        tankPath = os.path.join(currentDir, 'Sprites', 'Cicada' + str(imageNum) + '.png')
-        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
-
-        # Scale the tank image to a smaller size
-        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
-        self.image = self.tankImage
-        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
-        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
-        self.x = float(self.rect.centerx)
-        self.y = float(self.rect.centery)
-
-        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
-
-    def getGunCenter(self):
-        #Since the point is not in the center of the tank, we need to adjust the gun position
-        # Inputs: None
-        # Outputs: The center of the gun
-        return self.rotate_point((self.rect.centerx, self.rect.centery), -4, 0, self.angle)
-
-class DefaultTank(Tank):
-    def __init__(self, x, y, controls, name):
-        super().__init__(x, y, controls, name)
-        self.setMaxHealth(1)
-        self.setSpeedStatistic(2)
-        self.setHealthStatistic(2)
-        self.setTopSpeed(0.25)
-        self.setTopRotationalSpeed(0.5)
-        self.setTankName("tank")
-
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imageNum: The index that points to the required image
-        # Outputs: None
-        # Load the tank image
-        currentDir = os.path.dirname(__file__)
-        tankPath = os.path.join(currentDir, 'Sprites', 'tank' + str(imageNum) + '.png')
-        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
-
-        # Scale the tank image to a smaller size
-        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
-        self.image = self.tankImage
-        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
-        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
-        self.x = float(self.rect.centerx)
-        self.y = float(self.rect.centery)
-
-        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
-
-class Fossil(Tank):
-
-    def __init__(self, x, y, controls, name):
-        super().__init__(x, y, controls, name)
-        self.setMaxHealth(4000)
-        self.setSpeedStatistic(1)
-        self.setHealthStatistic(3)
-        self.setTopSpeed(0.1)
-        self.setTopRotationalSpeed(0.25)
-        self.setTankName("Fossil")
-
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imageNum: The index that points to the required image
-        # Outputs: None
-        # Load the tank image
-        currentDir = os.path.dirname(__file__)
-        tankPath = os.path.join(currentDir, 'Sprites', 'Fossil' + str(imageNum) + '.png')
-        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
-
-        # Scale the tank image to a smaller size
-        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
-        self.image = self.tankImage
-        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
-        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
-        self.x = float(self.rect.centerx)
-        self.y = float(self.rect.centery)
-
-        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
-
-    def getGunCenter(self):
-        #Since the point is not in the center of the tank, we need to adjust the gun position
-        # Inputs: None
-        # Outputs: The center of the gun
-        return self.rotate_point((self.rect.centerx, self.rect.centery), 4, 0, self.angle)
-    
-class Gater(Tank):
-
-    def __init__(self, x, y, controls, name):
-        super().__init__(x, y, controls, name)
-        self.setMaxHealth(3000)
-        self.setSpeedStatistic(2)
-        self.setHealthStatistic(2)
-        self.setTopSpeed(0.2)
-        self.setTopRotationalSpeed(0.5)
-        self.setTankName("Gater")
-
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imageNum: The index that points to the required image
-        # Outputs: None
-        # Load the tank image
-        currentDir = os.path.dirname(__file__)
-        tankPath = os.path.join(currentDir, 'Sprites', 'Gater' + str(imageNum) + '.png')
-        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
-
-        # Scale the tank image to a smaller size
-        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
-        self.image = self.tankImage
-        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
-        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
-        self.x = float(self.rect.centerx)
-        self.y = float(self.rect.centery)
-
-        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
-
-    def getGunCenter(self):
-        #Since the point is not in the center of the tank, we need to adjust the gun position
-        # Inputs: None
-        # Outputs: The center of the gun
-        return self.rotate_point((self.rect.centerx, self.rect.centery), 0, 0, self.angle)
-
-class Panther(Tank):
-
-    def __init__(self, x, y, controls, name):
-        super().__init__(x, y, controls, name)
-        self.setMaxHealth(1500)
-        self.setSpeedStatistic(3)
-        self.setHealthStatistic(1)
-        self.setTopSpeed(0.3)
-        self.setTopRotationalSpeed(0.8)
-        self.setTankName("Panther")
-
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imageNum: The index that points to the required image
-        # Outputs: None
-        # Load the tank image
-        currentDir = os.path.dirname(__file__)
-        tankPath = os.path.join(currentDir, 'Sprites', 'Panther' + str(imageNum) + '.png')
-        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
-
-        # Scale the tank image to a smaller size
-        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
-        self.image = self.tankImage
-        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
-        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
-        self.x = float(self.rect.centerx)
-        self.y = float(self.rect.centery)
-
-        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
-
-    def getGunCenter(self):
-        #Since the point is not in the center of the tank, we need to adjust the gun position
-        # Inputs: None
-        # Outputs: The center of the gun
-        return self.rotate_point((self.rect.centerx, self.rect.centery), -4, 0, self.angle)
-
 #Functions
 def validateChoice(option, choices):
     # This function validates whether or not a spawn location is valid with some arbitrary parameters
@@ -2414,41 +1753,6 @@ def breathFirstSearch(tileList, choices, option):
         return True
     else:
         return False
-
-def breathFirstSearchShort(tileList, choices, option):
-    # This function will search the maze in a breath first manner to see if we can reach the second spawn
-    # Inputs: tileList: The current list of tiles
-    # Inputs: Choices: The locations of both spawns
-    # Outputs: True if the second spawn is reachable, False otherwise
-
-
-    #Setting up the BFS
-    visitedQueue = []
-    tracking = [False for _ in range(rowAmount*colAmount+1)]
-    queue = [choices[option]]
-    predecessors = {}
-    visitedQueue.append(choices[option])
-    tracking[choices[option]] = True
-    predecessors[choices[option]] = None
-    while len(queue) > 0: # While there are still elements to check
-        current = queue.pop(0)
-        if current == choices[(option +1) % 2]:
-            break
-        for neighbour in tileList[current-1].getNeighbours():
-            if not tracking[neighbour]:
-                queue.append(neighbour)
-                visitedQueue.append(neighbour)
-                tracking[neighbour] = True
-                predecessors[neighbour] = tileList[current-1].getIndex()  # Record the predecessor
-    # Reconstruct the path from endNode to startNode
-    path = []
-    currentNode = choices[(option +1) % 2]
-    while currentNode is not None:
-        path.insert(0, currentNode)  # Insert at the beginning to avoid reversing later
-        currentNode = predecessors[currentNode]
-    # remove the first element
-    path.pop(0)
-    return path
 
 def spareChannels(sound):
     soundList = [pygame.mixer.Channel(i) for i in range(15, pygame.mixer.get_num_channels())]
@@ -2593,13 +1897,15 @@ def setUpPlayers():
     if DifficultyType == 1:
         # easy AI, 1 Player
         tank1 = DefaultTank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
-        tank1.setAI(True)
+        tank1.setAI(True, currentTargetPackage)
         tank1.setData(player1PackageTank)
         tank1.setImage(p1L + 1)
+        tank1.setSoundDictionary(soundDictionary)
 
         tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
         tank2.setData(player2PackageTank)
         tank2.setImage(p2L + 1)
+        tank2.setSoundDictionary(soundDictionary)
 
         gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
         gun1.setAI(True)
@@ -2618,10 +1924,12 @@ def setUpPlayers():
         tank1 = DefaultTank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
         tank1.setData(player1PackageTank)
         tank1.setImage(p1L + 1)
+        tank1.setSoundDictionary(soundDictionary)
 
         tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
         tank2.setData(player2PackageTank)
         tank2.setImage(p2L + 1)
+        tank2.setSoundDictionary(soundDictionary)
 
         gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
         gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
@@ -2634,13 +1942,15 @@ def setUpPlayers():
     elif DifficultyType == 3:
         # normal AI, 1 Player
         tank1 = copy.copy(hullList[p1J]) # Tank 1 setup
-        tank1.setAI(True)
+        tank1.setAI(True, currentTargetPackage)
         tank1.setData(player1PackageTank)
         tank1.setImage(p1L + 1)
+        tank1.setSoundDictionary(soundDictionary)
 
         tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
         tank2.setData(player2PackageTank)
         tank2.setImage(p2L + 1)
+        tank2.setSoundDictionary(soundDictionary)
 
         #Because silencer and watcher aren't made yet, skip them
         if p1I == 1 or p1I == 2:
@@ -2662,10 +1972,12 @@ def setUpPlayers():
         tank1 = copy.copy(hullList[p1J]) # Tank 1 setup
         tank1.setData(player1PackageTank)
         tank1.setImage(p1L + 1)
+        tank1.setSoundDictionary(soundDictionary)
 
         tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
         tank2.setData(player2PackageTank)
         tank2.setImage(p2L + 1)
+        tank2.setSoundDictionary(soundDictionary)
 
         gun1 = copy.copy(turretList[p1I]) # Gun 1 setup
         gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
@@ -2745,6 +2057,79 @@ def constantPlayGame():
     ReloadBox2.setBoxColor(bg)
     ReloadBox2.draw(screen)
 
+def fixMovement(tanks):
+    # This function will fix the movements of the tanks so that they aren't colliding with each other
+    # Inputs: An array of the tanks that need to be processed
+    #force to only have 2 tanks
+
+    for idx, t in enumerate(tanks):
+
+        tempX = t.x + t.changeX
+        tempY = t.y - t.changeY
+
+        if tempX <= mazeX + t.originalTankImage.get_size()[0]/2:
+            tempX = mazeX + t.originalTankImage.get_size()[0]/2
+        if tempY <= mazeY + t.originalTankImage.get_size()[0]/2:
+            tempY = mazeY + t.originalTankImage.get_size()[0]/2
+        if tempX > mazeWidth + mazeX - t.originalTankImage.get_size()[0]/2:
+            tempX = mazeWidth + mazeX - t.originalTankImage.get_size()[0]/2
+        if tempY > mazeHeight + mazeY - t.originalTankImage.get_size()[0]/2:
+            tempY = mazeHeight + mazeY - t.originalTankImage.get_size()[0]/2
+
+        t1 = tanks[(idx+2)%2]
+        t2 = tanks[(idx+1+2)%2]
+
+        if (satCollision(t1, t2)):
+            if (t1.name == p1TankName):
+                t2.setCoords(t2.x + t1.changeX, t2.y - t1.changeY)
+                tempX = t1.x - t1.changeX * 1.5
+                tempY = t1.y + t1.changeY * 1.5
+            elif (t1.name == p2TankName):
+                t1.setCoords(t1.x + t1.changeX, t1.y - t1.changeY)
+                tempX = t1.x - t1.changeX * 1.5
+                tempY = t1.y + t1.changeY * 1.5
+
+        # Check for collision with walls
+        row = math.ceil((t.getCenter()[1] - mazeY) / tileSize)
+        col = math.ceil((t.getCenter()[0] - mazeX) / tileSize)
+        index = (row - 1) * colAmount + col
+        if index in range(1, rowAmount * colAmount + 1):
+            tile = tileList[index - 1]
+            if tile.border[0] and tempY - t.originalTankImage.get_size()[1] <= tile.y: #If the top border is present
+                tempY = tile.y + t.originalTankImage.get_size()[1]
+            if tile.border[1] and tempX + t.originalTankImage.get_size()[0]/2 >= tile.x + tileSize: #If the right border is present
+                tempX = tile.x + tileSize - t.originalTankImage.get_size()[0]/2
+            if tile.border[2] and tempY + t.originalTankImage.get_size()[1] > tile.y + tileSize: #If the bottom border is present
+                tempY = tile.y + tileSize - t.originalTankImage.get_size()[1]
+            if tile.border[3] and tempX - t.originalTankImage.get_size()[0]/2 < tile.x: #If the left border is present
+                tempX = tile.x + t.originalTankImage.get_size()[0]/2
+        t.setCentre(tempX, tempY)
+
+        t.changeX = 0
+        t.changeY = 0
+    
+def damage(tank, damage):
+    # This function will adjust the damage that the tank has taken
+    # Inputs: damage: The amount of damage that the tank has taken
+    # Outputs: None
+    tank.health -= damage
+    if tank.health > 0:
+        if not tank.channelDict["death"]["channel"].get_busy(): # if the sound isn't playing
+            tank.channelDict["death"]["channel"].play(soundDictionary["tankHurt"])  # Play sound indefinitely
+        else:
+            spareChannels(soundDictionary["tankHurt"])
+    else: # if tank is dead
+        # if the tank is dead everything should stop
+        for channel in tank.channelDict:
+            if tank.channelDict[channel]["channel"].get_busy():
+                tank.channelDict[channel]["channel"].stop()
+        # last sound to be played
+        if not tank.channelDict["death"]["channel"].get_busy():
+            tank.channelDict["death"]["channel"].play(soundDictionary["tankDeath"])
+        else:
+            spareChannels(soundDictionary["tankDeath"])
+    updateTankHealth() # Manage the healthbar outside of the code
+
 def playGame():
     # This function controls the main execution of the game
     # Inputs: None
@@ -2821,8 +2206,8 @@ def playGame():
     tank2.updateCorners()
 
     if pygame.time.get_ticks() - startTreads > 50:
-        tank1.treads(1)
-        tank2.treads(2)
+        tank1.treads(1, treadsp1, treadsp2)
+        tank2.treads(2, treadsp1, treadsp2)
         startTreads = pygame.time.get_ticks() # Reset the timer
 
     for pos in treadsp1:
@@ -2838,6 +2223,9 @@ def playGame():
             temp = tank2.getCurrentTile().getIndex()
             tank1.setAim((temp, temp%14*tileSize + tileSize//2, ((temp)//14 + 1)*tileSize + tileSize//2))
     allSprites.update()
+    #Fixing tank movement
+    fixMovement([tank1, tank2])
+
     bulletSprites.update()
     explosionGroup.update()
     for sprite in allSprites:
