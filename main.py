@@ -12,16 +12,12 @@ import copy
 from tanks import *
 
 # Safety Checks
-tempList = os.listdir('sprites')
+tempList = os.listdir('Sprites')
 comparisonList = [] # This list is to contain all of the different types of sprites that are involved
 nameList = ["Bonsai", "Chamber", "Cicada", "Fossil", "Gater", "gun", "Hull", "Huntsman", "Judge", "Panther", "playerGunSprite", "playerTankSprite", "Sidewinder", "Silencer", "tank", "Tempest", "Turret", "Watcher"]
-nonConstantList = ["ZTreads"]
 for i in range(len(nameList)):
     for j in range(8): # There are 8 different types of sprites
         comparisonList.append(nameList[i] + str(j+1) + ".png")
-
-for i in range(len(nonConstantList)):
-    comparisonList.append(nonConstantList[i] + ".png")
 
 #Check that all the sprites are present
 found = False
@@ -37,24 +33,24 @@ for j in comparisonList:
         print(f"Error: {j} is missing")
         anyMissing = True
 
-# check bullet.png
-if not os.path.exists("bullet.png"):
-    print("Error: bullet.png is missing")
-    anyMissing = True
+# Check the asssets folder
+tempList = os.listdir('Assets')
+comparisonList = ['bullet.png', 'explosion.png', 'tank_menu_logo.png', 'Tile.png', 'TileE.png', 'TileES.png', 'TileESW.png', 'TileEW.png', 'TileN.png', 'TileNE.png', 'TileNES.png', 'TileNESW.png', 'TileNEW.png', 'TileNS.png', 'TileNSW.png', 'TileNW.png', 'TileS.png', 'TileSW.png', 'TileW.png', 'Treads.png']
 
-# check explosion.png
-if not os.path.exists("explosion.png"):
-    print("Error: explosion.png is missing")
-    anyMissing = True
+for i in comparisonList:
+    found = False # Reset the found variable
+    for j in tempList:
+        if j == i:
+            found = True
+            break
+    if not found:
+        print(f"Error: {i} is missing")
+        anyMissing = True
 
-if not os.path.exists("tank_menu_logo.png"):
-    print("Error: tank_menu_logo.png is missing")
-    anyMissing = True
 
 if (anyMissing):
     # In case there are missing sprites
     print("Error: Missing sprites")
-    pygame.quit()
     exit()
 else:
     print("All sprites are present")
@@ -76,11 +72,9 @@ for i in comparisonList:
 if (anyMissing):
     # In case there are missing sprites
     print("Error: Missing audio files")
-    pygame.quit()
     exit()
 else:
     print("All audio files are present")
-
 
 #Verification done
 
@@ -431,7 +425,7 @@ class Bullet(pygame.sprite.Sprite):
         super().__init__()
         currentDir = os.path.dirname(__file__)
             
-        bulletPath = os.path.join(currentDir, 'bullet.png')
+        bulletPath = os.path.join(currentDir, './Assets/bullet.png')
         self.originalBulletImage = pygame.image.load(bulletPath).convert_alpha()
         self.bulletImage = self.originalBulletImage
         self.image = self.bulletImage
@@ -891,7 +885,7 @@ class ChamberBullet(Bullet):
         if self.splash:
             screen.blit(self.image, self.rect)
 
-class Tile:
+class Tile(pygame.sprite.Sprite):
     # border = [False, False, False, False]
     #Border format is [Top, Right, Bottom, Left]
     border = [True, True, True, True]
@@ -907,6 +901,17 @@ class Tile:
         self.border = self.borderControl()
         self.neighbours, self.bordering = self.neighbourCheck()
         self.AITarget = False
+        # At this point the borders should be set
+        self.tilePath = "./Assets/Tile"
+        cardinal = ["N", "E", "S", "W"]
+        self.rect = pygame.Rect(self.x, self.y, tileSize, tileSize)
+        for idx, el in enumerate(self.bordering):
+            if el != -1:
+                self.tilePath += str(cardinal[idx])
+        self.tilePath += ".png"
+        # self.Sprite = pygame.image.load(tilePath).convert_alpha()
+        self.image = pygame.image.load(self.tilePath).convert_alpha()
+
     def neighbourCheck(self):
         #This function will return a list of the indexes of the neighbours based on the current list of border
         # No inputs are needed
@@ -925,6 +930,7 @@ class Tile:
                 oldlist[idx] = neighbour
             else:
                 newlist.append(neighbour)
+
         return newlist, oldlist
 
     def borderControl(self):
@@ -954,7 +960,6 @@ class Tile:
 
         for i in range(len(border)):
             if not border[i]:
-                # border[i] = random.choices([True, False])
                 border[i] = random.choices([True, False], weights = (weightTrue, 1-weightTrue))[0]
 
         return border
@@ -966,18 +971,7 @@ class Tile:
         screen.blit(text, [self.x + tileSize/2 - text.get_width()/2, self.y + tileSize/2 - text.get_height()/2])
 
     def draw(self, screen):
-        pygame.draw.rect(screen, self.color, [self.x, self.y, tileSize, tileSize])
-        #Draw the border
-        if self.border[0]:
-            pygame.draw.line(screen, c.geT("BLACK"), [self.x, self.y], [self.x+tileSize, self.y], self.borderWidth)
-        if self.border[1]:
-            pygame.draw.line(screen, c.geT("BLACK"), [self.x + tileSize, self.y], [self.x+tileSize, self.y+tileSize], self.borderWidth)
-        if self.border[2]:
-            pygame.draw.line(screen, c.geT("BLACK"), [self.x, self.y + tileSize], [self.x+tileSize, self.y+tileSize], self.borderWidth)
-        if self.border[3]:
-            pygame.draw.line(screen, c.geT("BLACK"), [self.x, self.y], [self.x, self.y+tileSize], self.borderWidth)
-        #Draw the index
-        # self.drawText(screen)
+        screen.blit(self.image, self.rect)
 
     def getNeighbours(self):
         return self.neighbours
@@ -1006,6 +1000,16 @@ class Tile:
     def setBorder(self, borderidx, value = True):
         self.border[borderidx] = value
         self.neighbours, self.bordering = self.neighbourCheck() # Update the neighbours list
+        self.tilePath = "./Assets/Tile"
+        cardinal = ["N", "E", "S", "W"]
+        for idx, el in enumerate(self.bordering):
+            if el != -1:
+                self.tilePath += str(cardinal[idx])
+        self.tilePath += ".png"
+        self.rect = pygame.Rect(self.x, self.y, tileSize, tileSize)
+        print(self.tilePath)
+
+        self.image = pygame.image.load(self.tilePath).convert_alpha()
 
     def getCenter(self):
         return (self.x + tileSize//2, self.y + tileSize//2) 
@@ -1015,7 +1019,7 @@ class Explosion(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
         self.images = []
-        SpriteSheetImage = pygame.image.load('explosion.png').convert_alpha()
+        SpriteSheetImage = pygame.image.load('./Assets/explosion.png').convert_alpha()
         for i in range(48):
             self.images.append(self.getImage(SpriteSheetImage, i, 128, 128, 0.5))
         self.index = 0
@@ -1813,8 +1817,7 @@ def tileGen():
         validMaze = breathFirstSearch(tileList, choices, 0) and breathFirstSearch(tileList, choices, 1)
     global spawnpoint
     spawnpoint = []
-    spawnpoint = choices
-
+    spawnpoint = choices 
     return tileList
 
 # Helper functions for SAT
@@ -1901,11 +1904,13 @@ def setUpPlayers():
         tank1.setData(player1PackageTank)
         tank1.setImage(p1L + 1)
         tank1.setSoundDictionary(soundDictionary)
+        tank1.settileList(tileList)
 
         tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
         tank2.setData(player2PackageTank)
         tank2.setImage(p2L + 1)
         tank2.setSoundDictionary(soundDictionary)
+        tank2.settileList(tileList)
 
         gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
         gun1.setAI(True)
@@ -1925,11 +1930,13 @@ def setUpPlayers():
         tank1.setData(player1PackageTank)
         tank1.setImage(p1L + 1)
         tank1.setSoundDictionary(soundDictionary)
+        tank1.settileList(tileList)
 
         tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
         tank2.setData(player2PackageTank)
         tank2.setImage(p2L + 1)
         tank2.setSoundDictionary(soundDictionary)
+        tank2.settileList(tileList)
 
         gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
         gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
@@ -1946,11 +1953,13 @@ def setUpPlayers():
         tank1.setData(player1PackageTank)
         tank1.setImage(p1L + 1)
         tank1.setSoundDictionary(soundDictionary)
+        tank1.settileList(tileList)
 
         tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
         tank2.setData(player2PackageTank)
         tank2.setImage(p2L + 1)
         tank2.setSoundDictionary(soundDictionary)
+        tank2.settileList(tileList)
 
         #Because silencer and watcher aren't made yet, skip them
         if p1I == 1 or p1I == 2:
@@ -1973,11 +1982,13 @@ def setUpPlayers():
         tank1.setData(player1PackageTank)
         tank1.setImage(p1L + 1)
         tank1.setSoundDictionary(soundDictionary)
+        tank1.settileList(tileList)
 
         tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
         tank2.setData(player2PackageTank)
         tank2.setImage(p2L + 1)
         tank2.setSoundDictionary(soundDictionary)
+        tank2.settileList(tileList)
 
         gun1 = copy.copy(turretList[p1I]) # Gun 1 setup
         gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
@@ -2138,6 +2149,7 @@ def playGame():
     global gameOverFlag, cooldownTimer, startTime, p1Score, p2Score, startTreads
     global tank1Dead, tank2Dead, tileList, spawnpoint
     global tank1, tank2, gun1, gun2, allSprites, bulletSprites
+    global currentTime, deltaTime, lastUpdateTime
     if gameOverFlag:
         #The game is over
         startTime = time.time() #Start a 5s timer
@@ -2196,14 +2208,9 @@ def playGame():
     for tile in tileList:
         tile.draw(screen)
 
-
-
-
+    # Draw the edge of themaze
+    pygame.draw.rect(screen, c.geT("BLACK"), [mazeX, mazeY, mazeWidth, mazeHeight], 2)
     #Anything below here will be drawn on top of the maze and hence is game updates
-
-    #Update the location of the corners
-    tank1.updateCorners()
-    tank2.updateCorners()
 
     if pygame.time.get_ticks() - startTreads > 50:
         tank1.treads(1, treadsp1, treadsp2)
@@ -2214,6 +2221,7 @@ def playGame():
         screen.blit(pos[0], pos[1])
     for pos in treadsp2:
         screen.blit(pos[0], pos[1])
+
     # pygame.draw.polygon(screen, GREEN, tank1.getCorners(), 2) #Hit box outline
     # pygame.draw.polygon(screen, GREEN, tank2.getCorners(), 2) #Hit box outline
     # if we are using AI we need to set the target to go to the other tank
@@ -2222,12 +2230,23 @@ def playGame():
         if not tank2Dead: # if the tank is still alive
             temp = tank2.getCurrentTile().getIndex()
             tank1.setAim((temp, temp%14*tileSize + tileSize//2, ((temp)//14 + 1)*tileSize + tileSize//2))
-    allSprites.update()
-    #Fixing tank movement
-    fixMovement([tank1, tank2])
 
-    bulletSprites.update()
-    explosionGroup.update()
+    currentTime = time.time()
+    deltaTime = currentTime - lastUpdateTime
+    if deltaTime >= 1//TPS:
+        #Update the location of the corners
+        tank1.updateCorners()
+        tank2.updateCorners()
+
+        allSprites.update()
+        #Fixing tank movement
+        fixMovement([tank1, tank2])
+
+        bulletSprites.update()
+        explosionGroup.update()
+
+        lastUpdateTime = currentTime
+
     for sprite in allSprites:
         sprite.draw(screen)
         if sprite.isDrawable():
@@ -2237,7 +2256,6 @@ def playGame():
         sprite.draw(screen)
         if sprite.isDrawable():
             sprite.customDraw(screen)    
-
 
     explosionGroup.draw(screen)
 
@@ -2370,6 +2388,16 @@ fromHome = True
 done = False
 windowWidth = 800
 windowHeight = 600
+
+TPS = 30 #Ticks per second
+tickrate = 1//TPS
+
+global currentTime, deltaTime, lastUpdateTime
+currentTime = 0
+deltaTime = 0
+lastUpdateTime = 0
+
+
 screen = pygame.display.set_mode((windowWidth,windowHeight))  # Windowed (safer/ superior)
 
 # Fullscreen but it renders your computer useless otherwise
@@ -3108,7 +3136,7 @@ homeButtonList = []
 
 # Load the tank image
 currentDir = os.path.dirname(__file__)
-tankPath = os.path.join(currentDir, 'tank_menu_logo.png')
+tankPath = os.path.join(currentDir, './Assets/tank_menu_logo.png')
 originalTankImage = pygame.image.load(tankPath).convert_alpha()
 
 # Create buttons with specified positions and text
@@ -3239,7 +3267,15 @@ while not done:
                                 # We have the AI
                                 tank1.setAim(currentTargetPackage)
                                 break
-
+            elif event.button == 1:
+                #If it is left click
+                #If we are in the play screen
+                if gameMode == GameMode.play:
+                    #If the mouse is within the maze, make the tile the target
+                    for tile in tileList:
+                        if tile.isWithin(): # If the mouse is within the tile
+                            print(tile.tilePath)
+                            print(tile.bordering)
             if gameMode == GameMode.pause:
                 #We are paused
                 if (unPause.getCorners()[0] <= mouse[0] <= unPause.getCorners()[2] and

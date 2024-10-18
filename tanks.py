@@ -100,7 +100,7 @@ class Tank(pygame.sprite.Sprite):
         self.changeX = 0
         self.changeY = 0
         self.soundDictionary = {} # The dictionary that will store the sound effects
-
+        self.List = []
 
     def updateCorners(self):
         # This function will update the corners of the tank based on the new position
@@ -128,7 +128,6 @@ class Tank(pygame.sprite.Sprite):
         # Outputs: None
         if self.AI:
             #If the tank is an AI, it will move based on the AI's logic
-            global tileList
             # current tile
             (currentTiley, currentTilex) = ((self.getCenter()[0]-50)//50 + 1, (self.getCenter()[1]-50)//50)
             currentTile = currentTilex * 14 + currentTiley
@@ -140,7 +139,7 @@ class Tank(pygame.sprite.Sprite):
             if currentTile != self.aim[0] and self.BFSRefresh:
                 self.BFSRefresh = False
                 # we haven't reached the goal
-                self.pseudoTargetarray = breathFirstSearchShort(tileList, [currentTile, self.aim[0]], 0)
+                self.pseudoTargetarray = breathFirstSearchShort(self.tileList, [currentTile, self.aim[0]], 0)
                 # needs to wait to be in center of tile
                 if self.pseudoTargetarray==[] or self.pseudoTargetarray==None:
                     pass
@@ -369,7 +368,7 @@ class Tank(pygame.sprite.Sprite):
         # This function will draw the treads of the tank
         # Inputs: None
         # Outputs: None
-        rect_surface = pygame.image.load("Sprites/ZTreads.png").convert_alpha()
+        rect_surface = pygame.image.load("./Assets/Treads.png").convert_alpha()
         rect_surface = pygame.transform.scale(rect_surface, (self.originalTankImage.get_size()))
 
 
@@ -396,7 +395,7 @@ class Tank(pygame.sprite.Sprite):
         row = math.ceil((self.getCenter()[1] - 50)/50)
         col = math.ceil((self.getCenter()[0] - 50)/50)
         index = (row-1)*8 + col
-        return tileList[index-1]
+        return self.tileList[index-1]
 
     def getAngle(self):
         return self.angle
@@ -417,6 +416,9 @@ class Tank(pygame.sprite.Sprite):
 
     def setSoundDictionary(self, soundDictionary):
         self.soundDictionary = soundDictionary
+
+    def settileList(self, tileList):
+        self.tileList = tileList
 #Hulls
 class Bonsai(Tank):
 
