@@ -909,7 +909,6 @@ class Tile(pygame.sprite.Sprite):
             if el != -1:
                 self.tilePath += str(cardinal[idx])
         self.tilePath += ".png"
-        # self.Sprite = pygame.image.load(tilePath).convert_alpha()
         self.image = pygame.image.load(self.tilePath).convert_alpha()
 
     def neighbourCheck(self):
@@ -1007,8 +1006,6 @@ class Tile(pygame.sprite.Sprite):
                 self.tilePath += str(cardinal[idx])
         self.tilePath += ".png"
         self.rect = pygame.Rect(self.x, self.y, tileSize, tileSize)
-        print(self.tilePath)
-
         self.image = pygame.image.load(self.tilePath).convert_alpha()
 
     def getCenter(self):
@@ -3387,7 +3384,8 @@ while not done:
             if event.key == pygame.K_m:
                 mute.mute()
                 sfx.mute()
-
+                for sound in soundDictionary:
+                    soundDictionary[sound].set_volume(volume[sound] * sfx.getValue())
     if gameMode == GameMode.play:
         playGame() # Play the game
     elif gameMode == GameMode.pause:
