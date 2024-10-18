@@ -2386,8 +2386,7 @@ done = False
 windowWidth = 800
 windowHeight = 600
 
-TPS = 30 #Ticks per second
-tickrate = 1//TPS
+TPS = 20 #Ticks per second
 
 global currentTime, deltaTime, lastUpdateTime
 currentTime = 0
