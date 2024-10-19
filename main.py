@@ -57,7 +57,7 @@ else:
 
 # check the audio
 tempList = os.listdir('Sounds')
-comparisonList = ["Chamber.wav", "Empty.wav", "game_music.wav", "Huntsman.wav", "Judge.wav", "lobby_music.wav", "Reload.wav", "selection_music.wav", "Silencer.wav", "tank_dead.wav", "tank_moving.wav", "tank_shoot.wav", "tank_turret_rotate.wav", "Tempest.wav", "Watcher.wav"]
+comparisonList = ["Chamber.wav", "Empty.wav", "game_music.wav", "Huntsman.wav", "Judge.wav", "lobby_music.wav", "Reload.wav", "selection_music.wav", "Sidewinder.wav", "Silencer.wav", "tank_dead.wav", "tank_moving.wav", "tank_shoot.wav", "tank_turret_rotate.wav", "Tempest.wav", "Watcher.wav"]
 print("Checking audio files")
 for i in comparisonList:
     found = False # Reset the found variable
@@ -2209,8 +2209,8 @@ def playGame():
     #Anything below here will be drawn on top of the maze and hence is game updates
 
     if pygame.time.get_ticks() - startTreads > 50:
-        tank1.treads(1, treadsp1, treadsp2)
-        tank2.treads(2, treadsp1, treadsp2)
+        tank1.treads(treadsp1)
+        tank2.treads(treadsp2)
         startTreads = pygame.time.get_ticks() # Reset the timer
 
     for pos in treadsp1:
@@ -3247,7 +3247,6 @@ while not done:
         if event.type == pygame.QUIT:
             done = True
         elif event.type == pygame.MOUSEBUTTONDOWN:
-
             mouse = pygame.mouse.get_pos() # Update on button press
             if event.button != 1:
                 #if it is right click
@@ -3340,18 +3339,8 @@ while not done:
         elif event.type == pygame.KEYDOWN: # Any key pressed
             if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
                 done = True
-            if event.key == pygame.K_w:
-                pass
-            if event.key == pygame.K_e:
-                pass
-            if event.key == pygame.K_s:
-                pass
-            if event.key == pygame.K_d:
-                pass
             if event.key == pygame.K_i:
                 print("The current mouse position is: ", mouse)
-            if event.key == pygame.K_o:
-                pass
             if event.key == pygame.K_p:
                 #Pause
                 if gameMode == GameMode.pause:
@@ -3359,10 +3348,6 @@ while not done:
                     gameMode = GameMode.play # Return to game if button was clicked
                 elif gameMode == GameMode.play:
                     gameMode = GameMode.pause # Pause the game
-            if event.key == pygame.K_l:
-                pass
-            if event.key == pygame.K_k:
-                pass
             if event.key == pygame.K_f:
                 #Calculate and track the average FPS
                 totalfps += clock.get_fps()

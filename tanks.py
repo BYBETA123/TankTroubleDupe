@@ -41,11 +41,6 @@ def breathFirstSearchShort(tileList, choices, option):
     return path
 
 
-
-
-
-
-
 # Tank sprite class
 class Tank(pygame.sprite.Sprite):
     topSpeed = 0
@@ -363,8 +358,7 @@ class Tank(pygame.sprite.Sprite):
         
         return x_prime, y_prime
 
-    def treads(self, num, treadsp1, treadsp2):
-    # def treads(self, treads):
+    def treads(self, treads):
         # This function will draw the treads of the tank
         # Inputs: None
         # Outputs: None
@@ -374,19 +368,19 @@ class Tank(pygame.sprite.Sprite):
 
         rotated_surface = pygame.transform.rotate(rect_surface, self.angle)
         rotated_rect = rotated_surface.get_rect(center = (self.x, self.y))
-        # treads.append((rotated_surface, rotated_rect.topleft))
-        # if len(treads) > 15:
-        #     treads.pop(0)
 
+        treads.append((rotated_surface, rotated_rect.topleft))
+        if (len(treads) > 15):
+            treads.pop(0)
 
-        if num:
-            treadsp1.append((rotated_surface, rotated_rect.topleft))
-            if len(treadsp1) > 15:
-                treadsp1.pop(0)
-        if not num:
-            treadsp2.append((rotated_surface, rotated_rect.topleft))
-            if len(treadsp2) > 15:
-                treadsp2.pop(0)
+        # if num:
+        #     treadsp1.append((rotated_surface, rotated_rect.topleft))
+        #     if len(treadsp1) > 15:
+        #         treadsp1.pop(0)
+        # if not num:
+        #     treadsp2.append((rotated_surface, rotated_rect.topleft))
+        #     if len(treadsp2) > 15:
+        #         treadsp2.pop(0)
 
     def getCurrentTile(self):
         # This function will return the tile that the tank is currently on
