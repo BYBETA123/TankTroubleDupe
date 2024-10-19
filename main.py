@@ -1325,7 +1325,6 @@ class Sidewinder(Gun):
             self.channelDict["fire"]["channel"].play(soundDictionary["Sidewinder"])  # Play sound indefinitely
         else:
             spareChannels(soundDictionary["Sidewinder"])
-        print("No sound effect smh")
 
 class Silencer(Gun):
 
@@ -3183,7 +3182,7 @@ volume = {
     'lobby': 0.2,
     'selection': 1,
     'game': 0.2,
-    'tankShoot': 1,
+    'tankShoot': 0.5,
     'tankDeath': 0.5,
     'tankHurt': 0.5,
     'turretRotate': 0.2,
@@ -3211,7 +3210,7 @@ soundDictionary = {
     'Judge' : pygame.mixer.Sound('Sounds/Judge.wav'),
     'Reload' : pygame.mixer.Sound('Sounds/Reload.wav'),
     'Silencer' : pygame.mixer.Sound('Sounds/Silencer.wav'),
-    'Sidewinder' : pygame.mixer.Sound('Sounds/Empty.wav'), # replace
+    'Sidewinder' : pygame.mixer.Sound('Sounds/Sidewinder.wav'), # replace
     'Tempest' : pygame.mixer.Sound('Sounds/Tempest.wav'),
     'Watcher' : pygame.mixer.Sound('Sounds/Watcher.wav'),
 }
