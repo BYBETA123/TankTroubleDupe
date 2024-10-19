@@ -550,8 +550,7 @@ class Bullet(pygame.sprite.Sprite):
                 self.speed *= -1
                 if self.bounce == 0:
                     self.kill()
-                    return
-
+                return
             # After checking, update the current position
             self.x = tempX
             self.y = tempY
@@ -1308,11 +1307,12 @@ class Huntsman(Gun):
         bulletX, bulletY = self.getTank().getGunCenter()
         bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
-        if random.random() < 0.12:  # 12% chance
+        if random.random() < 0.4:  # 40% chance
             bullet.setDamage(self.damage * 2)
+            print("Critical Hit!")
         else:
             bullet.setDamage(self.damage)
-        bullet.setBulletSpeed(2)
+        bullet.setBulletSpeed(5)
         bulletSprites.add(bullet)
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
@@ -1353,24 +1353,26 @@ class Judge(Gun):
         self.setGunBackDuration(300)
         self.setTipOffset(28)
         self.bulletInterval = 15
-        self.scatterRange = 13
+        self.scatterRange = 5
         self.maxUses = 3
-        self.currentUses = 0
+        self.currentUses = self.maxUses
         self.reloadTime = 2  # 2 seconds
         self.setGunCenter(0, -3)
         self.setReload(True)
         
     def fire(self):
-        if self.currentUses < self.maxUses:
+        if self.currentUses != 0:
             self.canShoot = False
-            self.shootCooldown = self.cooldownDuration
+            self.currentUses -= 1
+            if (self.currentUses): # if there are still uses left
+                self.shootCooldown = self.cooldownDuration
+            else:
+                self.shootCooldown = self.cooldownDuration * 3
+                self.currentUses = self.maxUses
 
-            for i in range(1, 11):
+            for i in range(1, 21):
                 Timer(self.bulletInterval * i / 1000.0, self.fireBullet).start() # Threaded???
             self.playSFX()
-            self.currentUses += 1
-            if self.currentUses >= self.maxUses:
-                self.currentUses = 0
 
     def fireBullet(self):
         scatterAngle = random.uniform(-self.scatterRange, self.scatterRange)
@@ -1379,12 +1381,8 @@ class Judge(Gun):
         bullet = JudgeBullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
         bullet.setDamage(self.damage)
-        bullet.setBulletSpeed(0.5)
+        bullet.setBulletSpeed(8)
         bulletSprites.add(bullet)
-
-    def reload(self):
-        self.currentUses = 0
-        self.canShoot = True
 
     def setImage(self, imageNum = 1):
         # Setup a new image if the selected one isn't the default
@@ -1410,6 +1408,18 @@ class Judge(Gun):
         else:
             spareChannels(soundDictionary["Judge"])
 
+    def getReloadPercentage(self):
+        # The bar has 3 segments, each segment is 1/3 of the reload time
+        # self.shootcooldown, self.cooldownDuration, self.currentUses
+        # cooldownDuration = 800 ms
+        if self.currentUses == self.maxUses:
+            temp = self.shootCooldown / (self.cooldownDuration * self.maxUses)
+        else:
+            temp = 1 - (self.currentUses % self.maxUses + self.shootCooldown / self.cooldownDuration) / self.maxUses
+        print(temp)
+        # return temp if temp > 0 else self.cooldownDuration * 3
+        return temp
+
 class Sidewinder(Gun):
 
     def __init__(self, tank, controls, name):
@@ -1425,7 +1435,7 @@ class Sidewinder(Gun):
         bulletX, bulletY = self.getTank().getGunCenter()
         bullet = SidewinderBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
-        bullet.setBulletSpeed(1)
+        bullet.setBulletSpeed(8)
         bulletSprites.add(bullet)
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
