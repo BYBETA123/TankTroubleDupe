@@ -96,7 +96,7 @@ class Tank(pygame.sprite.Sprite):
         self.changeY = 0
         self.soundDictionary = {} # The dictionary that will store the sound effects
         self.List = []
-
+        self.deltaTime = 0
     def updateCorners(self):
         # This function will update the corners of the tank based on the new position
         # This is to make sure that the coliisions detection is accurate
@@ -198,15 +198,15 @@ class Tank(pygame.sprite.Sprite):
             if self.channelDict["move"]["channel"].get_busy(): # if the sound is playing
                 self.channelDict["move"]["channel"].stop()  # Stop playin the sound
 
-        self.angle += self.rotationSpeed
+        self.angle += self.rotationSpeed * self.deltaTime
         self.angle %= 360
 
         self.image = pygame.transform.rotate(self.originalTankImage, self.angle)
         self.rect = self.image.get_rect(center=(self.x, self.y))
 
         angleRad = math.radians(self.angle)
-        self.changeX += math.cos(angleRad) * self.speed
-        self.changeY += math.sin(angleRad) * self.speed
+        self.changeX += math.cos(angleRad) * self.speed * self.deltaTime
+        self.changeY += math.sin(angleRad) * self.speed * self.deltaTime
 
     def getCoords(self):
         return [self.rect.x, self.rect.y, self.rect.x + self.originalTankImage.get_size()[0], self.rect.y + self.originalTankImage.get_size()[1]]
@@ -373,15 +373,6 @@ class Tank(pygame.sprite.Sprite):
         if (len(treads) > 15):
             treads.pop(0)
 
-        # if num:
-        #     treadsp1.append((rotated_surface, rotated_rect.topleft))
-        #     if len(treadsp1) > 15:
-        #         treadsp1.pop(0)
-        # if not num:
-        #     treadsp2.append((rotated_surface, rotated_rect.topleft))
-        #     if len(treadsp2) > 15:
-        #         treadsp2.pop(0)
-
     def getCurrentTile(self):
         # This function will return the tile that the tank is currently on
         # Inputs: None
@@ -413,6 +404,9 @@ class Tank(pygame.sprite.Sprite):
 
     def settileList(self, tileList):
         self.tileList = tileList
+
+    def setDelta(self, deltaTime):
+        self.deltaTime = deltaTime
 #Hulls
 class Bonsai(Tank):
 
@@ -421,8 +415,8 @@ class Bonsai(Tank):
         self.setMaxHealth(3500)
         self.setSpeedStatistic(2)
         self.setHealthStatistic(2)
-        self.setTopSpeed(0.15)
-        self.setTopRotationalSpeed(0.5)
+        self.setTopSpeed(0.05)
+        self.setTopRotationalSpeed(0.17)
         self.setTankName("Bonsai")
 
     def setImage(self, imageNum = 1):
@@ -458,8 +452,8 @@ class Cicada(Tank):
         self.setMaxHealth(2000)
         self.setSpeedStatistic(3)
         self.setHealthStatistic(1)
-        self.setTopSpeed(0.25)
-        self.setTopRotationalSpeed(0.75)
+        self.setTopSpeed(0.08)
+        self.setTopRotationalSpeed(0.25)
         self.setTankName("Cicada")
 
     def setImage(self, imageNum = 1):
@@ -494,8 +488,8 @@ class DefaultTank(Tank):
         self.setMaxHealth(1)
         self.setSpeedStatistic(2)
         self.setHealthStatistic(2)
-        self.setTopSpeed(0.25)
-        self.setTopRotationalSpeed(0.5)
+        self.setTopSpeed(0.08)
+        self.setTopRotationalSpeed(0.17)
         self.setTankName("tank")
 
     def setImage(self, imageNum = 1):
@@ -525,8 +519,8 @@ class Fossil(Tank):
         self.setMaxHealth(4000)
         self.setSpeedStatistic(1)
         self.setHealthStatistic(3)
-        self.setTopSpeed(0.1)
-        self.setTopRotationalSpeed(0.25)
+        self.setTopSpeed(0.03)
+        self.setTopRotationalSpeed(0.08)
         self.setTankName("Fossil")
 
     def setImage(self, imageNum = 1):
@@ -562,8 +556,8 @@ class Gater(Tank):
         self.setMaxHealth(3000)
         self.setSpeedStatistic(2)
         self.setHealthStatistic(2)
-        self.setTopSpeed(0.2)
-        self.setTopRotationalSpeed(0.5)
+        self.setTopSpeed(0.07)
+        self.setTopRotationalSpeed(0.17)
         self.setTankName("Gater")
 
     def setImage(self, imageNum = 1):
@@ -599,8 +593,8 @@ class Panther(Tank):
         self.setMaxHealth(1500)
         self.setSpeedStatistic(3)
         self.setHealthStatistic(1)
-        self.setTopSpeed(0.3)
-        self.setTopRotationalSpeed(0.8)
+        self.setTopSpeed(0.1)
+        self.setTopRotationalSpeed(0.27)
         self.setTankName("Panther")
 
     def setImage(self, imageNum = 1):

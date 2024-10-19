@@ -120,7 +120,7 @@ class Gun(pygame.sprite.Sprite):
         self.damage = 700
         self.damageStatistic = 1
         self.reloadStatistic = 1
-        self.turretSpeed = 0.8
+        self.turretSpeed = 0.27
         self.drawable = False
         self.topTurretSpeed = self.turretSpeed
         self.gunH = 7
@@ -134,6 +134,7 @@ class Gun(pygame.sprite.Sprite):
         self.hard = False
         self.default = False
         self.reload = False
+        self.deltaTime = 0
 
     def update(self):
         """
@@ -211,9 +212,9 @@ class Gun(pygame.sprite.Sprite):
             self.rotationSpeed = 0
             if not self.default:
                 if keys[self.controls['rotate_left']]:
-                    self.rotationSpeed += self.turretSpeed
+                    self.rotationSpeed += self.turretSpeed * self.deltaTime
                 elif keys[self.controls['rotate_right']]:
-                    self.rotationSpeed += -self.turretSpeed         
+                    self.rotationSpeed += -self.turretSpeed * self.deltaTime  
                 
                 #This if statement checks to see if speed or rotation of speed is 0,
                 #if so it will stop playing moving sound, otherwise, sound will play
@@ -227,9 +228,9 @@ class Gun(pygame.sprite.Sprite):
                         self.channelDict["rotate"]["channel"].stop()  # Stop playing the sound
 
             if  keys[self.controls['left']]:
-                self.rotationSpeed += self.tank.getRotationalSpeed()
+                self.rotationSpeed += self.tank.getRotationalSpeed() * self.deltaTime
             elif keys[self.controls['right']]:
-                self.rotationSpeed += -self.tank.getRotationalSpeed()
+                self.rotationSpeed += -self.tank.getRotationalSpeed() * self.deltaTime
 
             self.angle += self.rotationSpeed
             self.angle %= 360
@@ -397,6 +398,9 @@ class Gun(pygame.sprite.Sprite):
         if not self.channelDict["reload"]["channel"].get_busy():
             self.channelDict["reload"]["channel"].play(soundDictionary["Reload"])
 
+    def setDelta(self, delta):
+        self.deltaTime = delta
+
 class Bullet(pygame.sprite.Sprite):
 
     originalCollision = True
@@ -430,7 +434,7 @@ class Bullet(pygame.sprite.Sprite):
         self.bulletImage = self.originalBulletImage
         self.image = self.bulletImage
         self.angle = angle
-        self.speed = 0.5
+        self.speed = 5
         self.drawable = False
         self.trail = False
         angleRad = math.radians(self.angle)
@@ -451,6 +455,8 @@ class Bullet(pygame.sprite.Sprite):
         self.pleaseDraw = False
         self.initialX = x
         self.initialY = y
+        self.deltaTime = 0
+
     def update(self):
         """
         Updates the bullet's position based on its speed and direction.
@@ -465,71 +471,99 @@ class Bullet(pygame.sprite.Sprite):
         --------
         None
         """
+        # Calculate angle in radians
         angleRad = math.radians(self.angle)
+
+        # Calculate the change in x and y
         dx = self.speed * math.cos(angleRad)
         dy = -self.speed * math.sin(angleRad)
-        tempX = self.x + dx
-        tempY = self.y + dy
-        #Check for collision with walls
-        #We are going to calculate the row and column
-        row = math.ceil((self.getCenter()[1] - mazeY)/tileSize)
-        col = math.ceil((self.getCenter()[0] - mazeX)/tileSize)
-        #Find the file at the exact index
-        index = (row-1)*colAmount + col
 
-        #If we are outside of the maze, delete the bullet
-        if tempX <= mazeX or tempY <= mazeY or tempX >= mazeWidth + mazeX or tempY >= mazeHeight + mazeY:
-            self.kill()
-            return
-        
-        #If we hit a tank
-        tank1Collision = satCollision(self, tank1)
-        tank2Collision = satCollision(self, tank2)
+        # Set the maximum step size
+        max_step = 0.1
 
-        if self.name == tank1.getName() and tank2Collision:
+        # Track the progress along dx and dy
+        remaining_dx = dx
+        remaining_dy = dy
+        # Continue while there's still distance to cover in either direction
+        while abs(remaining_dx) > 0 or abs(remaining_dy) > 0:
+            # Determine the step size, which should be limited to max_step
+            step_dx = max(-max_step, min(max_step, remaining_dx))
+            step_dy = max(-max_step, min(max_step, remaining_dy))
+            # Update temp positions based on step size
+            tempX = self.x + step_dx
+            tempY = self.y + step_dy
+
+            # Check if the bullet goes outside of the maze
+            if tempX <= mazeX or tempY <= mazeY or tempX >= mazeWidth + mazeX or tempY >= mazeHeight + mazeY:
+                self.kill()
+                return
+            
+            # Recalculate row and column based on the smaller steps
+            row = math.ceil((self.getCenter()[1] - mazeY) / tileSize)
+            col = math.ceil((self.getCenter()[0] - mazeX) / tileSize)
+            index = (row - 1) * colAmount + col
+
+            # Check for collisions with tanks
+            tank1Collision = satCollision(self, tank1)
+            tank2Collision = satCollision(self, tank2)
+
+            if self.name == tank1.getName() and tank2Collision:
                 damage(tank2, self.damage)
                 self.kill()
-        if self.name == tank2.getName() and tank1Collision:
+                return
+            if self.name == tank2.getName() and tank1Collision:
                 damage(tank1, self.damage)
                 self.kill()
+                return
+            
+            if self.selfCollision:
+                if tank1Collision:
+                    damage(tank1, self.damage)
+                    self.kill()
+                    return
+                if tank2Collision:
+                    damage(tank2, self.damage)
+                    self.kill()
+                    return
 
-        if self.selfCollision:
-            if tank1Collision:
-                damage(tank1, self.damage)
-                self.kill()
-            if tank2Collision:
-                damage(tank2, self.damage)
-                self.kill()
+            # Checking for self damage
+            if self.bounce != self.originalBounce:
+                self.selfCollision = True
 
-        # Checking for self damage
-        if self.bounce != self.originalBounce:
-            self.selfCollision = True
+            # Handle wall collision
+            tile = tileList[index-1]
+            wallCollision = False
+            if tile.border[0] and tempY - self.image.get_size()[1] <= tile.y: # Top border
+                wallCollision = True
+                self.angle = 180 - self.angle
+            if tile.border[1] and tempX + self.image.get_size()[1] >= tile.x + tileSize: # Right border
+                wallCollision = True
+                self.angle = 360 - self.angle
+            if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + tileSize: # Bottom border
+                wallCollision = True
+                self.angle = 180 - self.angle
+            if tile.border[3] and tempX - self.image.get_size()[1] <= tile.x: # Left border
+                wallCollision = True
+                self.angle = 360 - self.angle
+            if wallCollision:
+                self.bounce -= 1
+                self.speed *= -1
+                if self.bounce == 0:
+                    self.kill()
+                    return
 
-        tile = tileList[index-1]
-        wallCollision = False
-        if tile.border[0] and tempY - self.image.get_size()[1] <= tile.y: #If the top border is present
-            wallCollision = True
-            self.angle = 180 - self.angle
-        if tile.border[1] and tempX + self.image.get_size()[1] >= tile.x + tileSize: #If the right border is present
-            wallCollision = True
-            self.angle = 360 - self.angle
-        if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + tileSize: #If the bottom border is present
-            wallCollision = True
-            self.angle = 180 - self.angle
-        if tile.border[3] and tempX - self.image.get_size()[1] <= tile.x: #If the left border is present
-            wallCollision = True
-            self.angle = 360 - self.angle
-        if wallCollision:
-            self.bounce -= 1
-            self.speed *= -1
-            if self.bounce == 0:
-                self.kill() # delete the bullet
+            # After checking, update the current position
+            self.x = tempX
+            self.y = tempY
+
+            # Subtract the amount we moved this step from the remaining distance
+            remaining_dx -= step_dx
+            remaining_dy -= step_dy
+
+        # Once done with the loop, update the bullet's position and state
         self.updateCorners()
-        # Store the updated values
-        self.rect.x = int(tempX)
-        self.rect.y = int(tempY)
-        self.x = tempX
-        self.y = tempY
+        self.rect.x = int(self.x)
+        self.rect.y = int(self.y)
         self.pleaseDraw = True
 
     def setBulletSpeed(self, speed):
@@ -571,6 +605,9 @@ class Bullet(pygame.sprite.Sprite):
     def setBounce(self, bounceValue):
         self.bounce = bounceValue
         self.originalBounce = bounceValue
+    
+    def setDelta(self, delta):
+        self.deltaTime = delta
 
 class SidewinderBullet(Bullet):
 
@@ -590,7 +627,7 @@ class SilencerBullet(Bullet):
 
     def __init__(self, x, y, angle, gunLength, tipOffSet):
         super().__init__(x, y, angle, gunLength, tipOffSet)
-        self.speed = 0.4
+        self.speed = 0.13
         self.damage = 1400
     
     def update(self):
@@ -607,50 +644,77 @@ class SilencerBullet(Bullet):
         --------
         None
         """
+        # Calculate angle in radians
         angleRad = math.radians(self.angle)
+
+        # Calculate the change in x and y
         dx = self.speed * math.cos(angleRad)
         dy = -self.speed * math.sin(angleRad)
-        tempX = self.x + dx
-        tempY = self.y + dy
-        #Check for collision with walls
-        #We are going to calculate the row and column
-        row = math.ceil((self.getCenter()[1] - mazeY)/tileSize)
-        col = math.ceil((self.getCenter()[0] - mazeX)/tileSize)
-        #Find the file at the exact index
-        index = (row-1)*colAmount + col
 
-        #If we are outside of the maze, delete the bullet
-        if tempX <= mazeX or tempY <= mazeY or tempX >= mazeWidth + mazeX or tempY >= mazeHeight + mazeY:
-            self.kill()
-            return
+        # Set the maximum step size
+        max_step = 0.1
 
-        tile = tileList[index-1]
-        wallCollision = False
-        if tile.border[0] and tempY - self.originalBulletImage.get_size()[1] <= tile.y: #If the top border is present
-            wallCollision = True
-            self.angle = 180 - self.angle
-        if tile.border[1] and tempX + self.originalBulletImage.get_size()[1] >= tile.x + tileSize: #If the right border is present
-            wallCollision = True
-            self.angle = 360 - self.angle
-        if tile.border[2] and tempY + self.originalBulletImage.get_size()[1] >= tile.y + tileSize: #If the bottom border is present
-            wallCollision = True
-            self.angle = 180 - self.angle
-        if tile.border[3] and tempX - self.originalBulletImage.get_size()[1] <= tile.x: #If the left border is present
-            wallCollision = True
-            self.angle = 360 - self.angle
-        if wallCollision:
-            self.bounce -= 1
-            self.speed *= -1
-            if self.bounce == 0:
-                self.kill() # delete the bullet
+        # Track the progress along dx and dy
+        remaining_dx = dx
+        remaining_dy = dy
+        # Continue while there's still distance to cover in either direction
+        while abs(remaining_dx) > 0 or abs(remaining_dy) > 0:
+            # Determine the step size, which should be limited to max_step
+            step_dx = max(-max_step, min(max_step, remaining_dx))
+            step_dy = max(-max_step, min(max_step, remaining_dy))
+            # Update temp positions based on step size
+            tempX = self.x + step_dx
+            tempY = self.y + step_dy
+
+            # Check if the bullet goes outside of the maze
+            if tempX <= mazeX or tempY <= mazeY or tempX >= mazeWidth + mazeX or tempY >= mazeHeight + mazeY:
+                self.kill()
+                return
+            
+            # Recalculate row and column based on the smaller steps
+            row = math.ceil((self.getCenter()[1] - mazeY) / tileSize)
+            col = math.ceil((self.getCenter()[0] - mazeX) / tileSize)
+            index = (row - 1) * colAmount + col
+
+            # Checking for self damage
+            if self.bounce != self.originalBounce:
+                self.selfCollision = True
+
+            # Handle wall collision
+            tile = tileList[index-1]
+            wallCollision = False
+            if tile.border[0] and tempY - self.image.get_size()[1] <= tile.y: # Top border
+                wallCollision = True
+                self.angle = 180 - self.angle
+            if tile.border[1] and tempX + self.image.get_size()[1] >= tile.x + tileSize: # Right border
+                wallCollision = True
+                self.angle = 360 - self.angle
+            if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + tileSize: # Bottom border
+                wallCollision = True
+                self.angle = 180 - self.angle
+            if tile.border[3] and tempX - self.image.get_size()[1] <= tile.x: # Left border
+                wallCollision = True
+                self.angle = 360 - self.angle
+            if wallCollision:
+                self.bounce -= 1
+                self.speed *= -1
+                if self.bounce == 0:
+                    self.kill()
+                    return
+
+            # After checking, update the current position
+            self.x = tempX
+            self.y = tempY
+
+            # Subtract the amount we moved this step from the remaining distance
+            remaining_dx -= step_dx
+            remaining_dy -= step_dy
+
+        # Once done with the loop, update the bullet's position and state
         self.updateCorners()
-
-        self.rect.x = int(tempX)
-        self.rect.y = int(tempY)
-        self.x = tempX
-        self.y = tempY
-        if abs(self.x- self.trailX) >= 1 and abs(tempY-self.trailY) >= 1:
-            self.pleaseDraw = True
+        self.rect.x = int(self.x)
+        self.rect.y = int(self.y)
+        self.pleaseDraw = True
 
 class WatcherBullet(Bullet):
 
@@ -675,59 +739,87 @@ class WatcherBullet(Bullet):
         --------
         None
         """
+        # Calculate angle in radians
         angleRad = math.radians(self.angle)
+
+        # Calculate the change in x and y
         dx = self.speed * math.cos(angleRad)
         dy = -self.speed * math.sin(angleRad)
-        tempX = self.x + dx
-        tempY = self.y + dy
-        #Check for collision with walls
-        #We are going to calculate the row and column
-        row = math.ceil((self.getCenter()[1] - mazeY)/tileSize)
-        col = math.ceil((self.getCenter()[0] - mazeX)/tileSize)
-        #Find the file at the exact index
-        index = (row-1)*colAmount + col
 
-        #If we are outside of the maze, delete the bullet
-        if tempX <= mazeX or tempY <= mazeY or tempX >= mazeWidth + mazeX or tempY >= mazeHeight + mazeY:
-            self.kill()
-            return
-        
-        #If we hit a tank
-        tank1Collision = satCollision(self, tank1)
-        tank2Collision = satCollision(self, tank2)
+        # Set the maximum step size
+        max_step = 0.1
 
-        if self.name == tank1.getName() and tank2Collision:
-                damage(tank2, self.damage)
+        # Track the progress along dx and dy
+        remaining_dx = dx
+        remaining_dy = dy
+        # Continue while there's still distance to cover in either direction
+        while abs(remaining_dx) > 0 or abs(remaining_dy) > 0:
+            # Determine the step size, which should be limited to max_step
+            step_dx = max(-max_step, min(max_step, remaining_dx))
+            step_dy = max(-max_step, min(max_step, remaining_dy))
+            # Update temp positions based on step size
+            tempX = self.x + step_dx
+            tempY = self.y + step_dy
+
+            # Check if the bullet goes outside of the maze
+            if tempX <= mazeX or tempY <= mazeY or tempX >= mazeWidth + mazeX or tempY >= mazeHeight + mazeY:
                 self.kill()
-        if self.name == tank2.getName() and tank1Collision:
-                damage(tank1, self.damage)
-                self.kill()
+                return
+            
+            # Recalculate row and column based on the smaller steps
+            row = math.ceil((self.getCenter()[1] - mazeY) / tileSize)
+            col = math.ceil((self.getCenter()[0] - mazeX) / tileSize)
+            index = (row - 1) * colAmount + col
 
-        tile = tileList[index-1]
-        wallCollision = False
-        if tile.border[0] and tempY - self.originalBulletImage.get_size()[1] <= tile.y: #If the top border is present
-            wallCollision = True
-            self.angle = 180 - self.angle
-        if tile.border[1] and tempX + self.originalBulletImage.get_size()[1] >= tile.x + tileSize: #If the right border is present
-            wallCollision = True
-            self.angle = 360 - self.angle
-        if tile.border[2] and tempY + self.originalBulletImage.get_size()[1] >= tile.y + tileSize: #If the bottom border is present
-            wallCollision = True
-            self.angle = 180 - self.angle
-        if tile.border[3] and tempX - self.originalBulletImage.get_size()[1] <= tile.x: #If the left border is present
-            wallCollision = True
-            self.angle = 360 - self.angle
-        if wallCollision:
-            self.bounce -= 1
-            self.speed *= -1
-            if self.bounce == 0:
-                self.kill() # delete the bullet
+            # Check for collisions with tanks
+            tank1Collision = satCollision(self, tank1)
+            tank2Collision = satCollision(self, tank2)
+
+            if self.name == tank1.getName() and tank2Collision:
+                self.kill()
+                return
+            if self.name == tank2.getName() and tank1Collision:
+                self.kill()
+                return
+
+            # Checking for self damage
+            if self.bounce != self.originalBounce:
+                self.selfCollision = True
+
+            # Handle wall collision
+            tile = tileList[index-1]
+            wallCollision = False
+            if tile.border[0] and tempY - self.image.get_size()[1] <= tile.y: # Top border
+                wallCollision = True
+                self.angle = 180 - self.angle
+            if tile.border[1] and tempX + self.image.get_size()[1] >= tile.x + tileSize: # Right border
+                wallCollision = True
+                self.angle = 360 - self.angle
+            if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + tileSize: # Bottom border
+                wallCollision = True
+                self.angle = 180 - self.angle
+            if tile.border[3] and tempX - self.image.get_size()[1] <= tile.x: # Left border
+                wallCollision = True
+                self.angle = 360 - self.angle
+            if wallCollision:
+                self.bounce -= 1
+                self.speed *= -1
+                if self.bounce == 0:
+                    self.kill()
+                    return
+
+            # After checking, update the current position
+            self.x = tempX
+            self.y = tempY
+
+            # Subtract the amount we moved this step from the remaining distance
+            remaining_dx -= step_dx
+            remaining_dy -= step_dy
+
+        # Once done with the loop, update the bullet's position and state
         self.updateCorners()
-
-        self.rect.x = int(tempX)
-        self.rect.y = int(tempY)
-        self.x = tempX
-        self.y = tempY
+        self.rect.x = int(self.x)
+        self.rect.y = int(self.y)
 
     def customDraw(self, screen):
         # This function will draw the bullet on the screen and any additional features that may be needed
@@ -771,69 +863,107 @@ class ChamberBullet(Bullet):
         --------
         None
         """
+        # Calculate angle in radians
         angleRad = math.radians(self.angle)
+
+        # Calculate the change in x and y
         dx = self.speed * math.cos(angleRad)
         dy = -self.speed * math.sin(angleRad)
-        tempX = self.x + dx
-        tempY = self.y + dy
-        #Check for collision with walls
-        #We are going to calculate the row and column
-        row = math.ceil((self.getCenter()[1] - mazeY)/tileSize)
-        col = math.ceil((self.getCenter()[0] - mazeX)/tileSize)
-        #Find the file at the exact index
-        index = (row-1)*colAmount + col
 
-        #If we are outside of the maze, delete the bullet
-        if tempX <= mazeX or tempY <= mazeY or tempX >= mazeWidth + mazeX or tempY >= mazeHeight + mazeY:
-            self.explode()
-            return
-        
-        #If we hit a tank
-        tank1Collision = satCollision(self, tank1)
-        tank2Collision = satCollision(self, tank2)
+        # Set the maximum step size
+        max_step = 0.1
 
-        if self.name == tank1.getName() and tank2Collision:
-                damage(tank2, self.damage)
-                self.explode()
-        if self.name == tank2.getName() and tank1Collision:
-                damage(tank1, self.damage)
-                self.explode()
+        # Track the progress along dx and dy
+        remaining_dx = dx
+        remaining_dy = dy
+        # Continue while there's still distance to cover in either direction
+        while abs(remaining_dx) > 0 or abs(remaining_dy) > 0:
+            # Determine the step size, which should be limited to max_step
+            step_dx = max(-max_step, min(max_step, remaining_dx))
+            step_dy = max(-max_step, min(max_step, remaining_dy))
+            # Update temp positions based on step size
+            tempX = self.x + step_dx
+            tempY = self.y + step_dy
 
-        tile = tileList[index-1]
-        wallCollision = False
-        if tile.border[0] and tempY - self.image.get_size()[1] <= tile.y: #If the top border is present
-            wallCollision = True
-            self.angle = 180 - self.angle
-        if tile.border[1] and tempX + self.image.get_size()[1] >= tile.x + tileSize: #If the right border is present
-            wallCollision = True
-            self.angle = 360 - self.angle
-        if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + tileSize: #If the bottom border is present
-            wallCollision = True
-            self.angle = 180 - self.angle
-        if tile.border[3] and tempX - self.image.get_size()[1] <= tile.x: #If the left border is present
-            wallCollision = True
-            self.angle = 360 - self.angle
-        if wallCollision:
-            if self.name == tank1.getName() and tank1Collision:
-                damage(tank1, self.damage)
+            # Check if the bullet goes outside of the maze
+            if tempX <= mazeX or tempY <= mazeY or tempX >= mazeWidth + mazeX or tempY >= mazeHeight + mazeY:
                 self.explode()
                 return
-            if self.name == tank2.getName() and tank2Collision:
+            
+            # Recalculate row and column based on the smaller steps
+            row = math.ceil((self.getCenter()[1] - mazeY) / tileSize)
+            col = math.ceil((self.getCenter()[0] - mazeX) / tileSize)
+            index = (row - 1) * colAmount + col
+
+            # Check for collisions with tanks
+            tank1Collision = satCollision(self, tank1)
+            tank2Collision = satCollision(self, tank2)
+
+            if self.name == tank1.getName() and tank2Collision:
                 damage(tank2, self.damage)
                 self.explode()
                 return
-
-            self.bounce -= 1
-            self.speed *= -1
-            if self.bounce == 0:
-                self.explode() # delete the bullet
+            if self.name == tank2.getName() and tank1Collision:
+                damage(tank1, self.damage)
+                self.explode()
                 return
+            
+            if self.selfCollision:
+                if tank1Collision:
+                    damage(tank1, self.damage)
+                    self.explode()
+                    return
+                if tank2Collision:
+                    damage(tank2, self.damage)
+                    self.explode()
+                    return
+
+            # Checking for self damage
+            if self.bounce != self.originalBounce:
+                self.selfCollision = True
+
+            # Handle wall collision
+            tile = tileList[index-1]
+            wallCollision = False
+            if tile.border[0] and tempY - self.image.get_size()[1] <= tile.y: # Top border
+                wallCollision = True
+                self.angle = 180 - self.angle
+            if tile.border[1] and tempX + self.image.get_size()[1] >= tile.x + tileSize: # Right border
+                wallCollision = True
+                self.angle = 360 - self.angle
+            if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + tileSize: # Bottom border
+                wallCollision = True
+                self.angle = 180 - self.angle
+            if tile.border[3] and tempX - self.image.get_size()[1] <= tile.x: # Left border
+                wallCollision = True
+                self.angle = 360 - self.angle
+            if wallCollision:
+                if self.name == tank1.getName() and tank1Collision:
+                    damage(tank1, self.damage)
+                    self.explode()
+                    return
+                if self.name == tank2.getName() and tank2Collision:
+                    damage(tank2, self.damage)
+                    self.explode()
+                    return
+                self.bounce -= 1
+                self.speed *= -1
+                if self.bounce == 0:
+                    self.explode()
+                    return
+
+            # After checking, update the current position
+            self.x = tempX
+            self.y = tempY
+
+            # Subtract the amount we moved this step from the remaining distance
+            remaining_dx -= step_dx
+            remaining_dy -= step_dy
+
+        # Once done with the loop, update the bullet's position and state
         self.updateCorners()
-
-        self.rect.x = int(tempX)
-        self.rect.y = int(tempY)
-        self.x = tempX
-        self.y = tempY
+        self.rect.x = int(self.x)
+        self.rect.y = int(self.y)
         if abs(self.x- self.trailX) >= 1 and abs(tempY-self.trailY) >= 1:
             self.pleaseDraw = True
 
@@ -862,20 +992,19 @@ class ChamberBullet(Bullet):
             splash1.setSplash(False)
             splash1.setDamage(self.damage)
             splash1.setName(self.name)
-            splash1.setBulletSpeed(0)
+            splash1.setBulletSpeed(0.1)
             splash1.update()
             splash1.kill()
             # Outer radius
             splash2 = ChamberBullet(self.x, self.y, 0, 0, 0)
-            splash2.sizeImage(5)
+            splash2.sizeImage(20)
             splash2.updateCorners()
             splash2.setSplash(False)
             splash2.setDamage(self.damage)
             splash2.setName(self.name)
-            splash2.setBulletSpeed(0)
+            splash2.setBulletSpeed(0.1)
             splash2.update()
             splash2.kill()
-
         self.kill()
 
     def draw(self,screen):
@@ -1095,7 +1224,7 @@ class Chamber(Gun):
         bullet = ChamberBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
         bullet.setDamage(self.damage)
-        bullet.setBulletSpeed(5)
+        bullet.setBulletSpeed(10)
         bulletSprites.add(bullet)
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
@@ -1366,9 +1495,9 @@ class Silencer(Gun):
         self.rotationSpeed = 0
         
         if keys[self.controls['rotate_left']]:
-            self.rotationSpeed += self.turretSpeed
+            self.rotationSpeed += self.turretSpeed * self.deltaTime
         elif keys[self.controls['rotate_right']]:
-            self.rotationSpeed += -self.turretSpeed
+            self.rotationSpeed += -self.turretSpeed * self.deltaTime
       
         #This if statement checks to see if speed or rotation of speed is 0,
         #if so it will stop playing moving sound, otherwise, sound will play
@@ -1381,9 +1510,9 @@ class Silencer(Gun):
                 self.channelDict["rotate"]["channel"].stop()  # Stop playing the sound
 
         if  keys[self.controls['left']]:
-            self.rotationSpeed += self.tank.getRotationalSpeed()
+            self.rotationSpeed += self.tank.getRotationalSpeed() * self.deltaTime
         elif keys[self.controls['right']]:
-            self.rotationSpeed += -self.tank.getRotationalSpeed()
+            self.rotationSpeed += -self.tank.getRotationalSpeed() * self.deltaTime
 
         self.angle += self.rotationSpeed
         self.angle %= 360
@@ -1428,20 +1557,20 @@ class Silencer(Gun):
         # Outputs: None
         #Setup bullet (Trailed/ Temp)
         bulletX, bulletY = self.getTank().getGunCenter()
-        bullet = SilencerBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
-        bullet.setDamage(0)
-        bullet.setBulletSpeed(5)
-        bullet.setName(self.getTank().getName())
-        bullet.drawable = True
-        bullet.trail = True
-        bulletSprites.add(bullet)
+        # bullet = SilencerBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
+        # bullet.setDamage(0)
+        # bullet.setBulletSpeed(0.5)
+        # bullet.setName(self.getTank().getName())
+        # bullet.drawable = True
+        # bullet.trail = True
+        # bulletSprites.add(bullet)
         # Real bullet
         bullet1 = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet1.setDamage(self.damage)
-        bullet1.setBulletSpeed(5)
+        bullet1.setBulletSpeed(30)
         bullet1.setName(self.getTank().getName())
         bullet1.drawable = True
-        bullet1.trail = True
+        # bullet1.trail = True
         bulletSprites.add(bullet1)
         self.sound = True
         self.canShoot = False
@@ -1560,9 +1689,9 @@ class Watcher(Gun):
         self.rotationSpeed = 0
 
         if keys[self.controls['rotate_left']]:
-            self.rotationSpeed += self.turretSpeed
+            self.rotationSpeed += self.turretSpeed * self.deltaTime
         elif keys[self.controls['rotate_right']]:
-            self.rotationSpeed += -self.turretSpeed
+            self.rotationSpeed += -self.turretSpeed * self.deltaTime
         
         #This if statement checks to see if speed or rotation of speed is 0,
         #if so it will stop playing moving sound, otherwise, sound will play
@@ -1575,9 +1704,9 @@ class Watcher(Gun):
                 self.channelDict["rotate"]["channel"].stop()  # Stop playing the sound
         
         if  keys[self.controls['left']]:
-            self.rotationSpeed += self.tank.getRotationalSpeed()
+            self.rotationSpeed += self.tank.getRotationalSpeed() * self.deltaTime
         elif keys[self.controls['right']]:
-            self.rotationSpeed += -self.tank.getRotationalSpeed()
+            self.rotationSpeed += -self.tank.getRotationalSpeed() * self.deltaTime
     
         self.angle += self.rotationSpeed
         self.angle %= 360
@@ -1592,7 +1721,7 @@ class Watcher(Gun):
             self.getTank().setSpeed(self.getTank().getSpeed()/2)
             self.getTank().setRotationalSpeed(self.getTank().getTopRotationalSpeed()/25)
             #Scale the damage of the bullet
-            self.scopeDamage += 2
+            self.scopeDamage += 60
             if self.scopeDamage >= 3300: # Max damage
                 self.scopeDamage = 3300
 
@@ -1630,7 +1759,7 @@ class Watcher(Gun):
         bulletX, bulletY = self.getTank().getGunCenter()
         bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setDamage(self.getDamage())
-        bullet.setBulletSpeed(5)
+        bullet.setBulletSpeed(30)
         bullet.setName(self.getTank().getName())
         bullet.drawable = True
         bulletSprites.add(bullet)
@@ -2229,11 +2358,16 @@ def playGame():
 
     currentTime = time.time()
     deltaTime = currentTime - lastUpdateTime
-    if deltaTime >= 1//TPS:
+    if deltaTime >= 1/TPS:
         #Update the location of the corners
         tank1.updateCorners()
         tank2.updateCorners()
-
+        tank1.setDelta(TPS)
+        tank2.setDelta(TPS)
+        gun1.setDelta(TPS)
+        gun2.setDelta(TPS)
+        for bullet in bulletSprites:
+            bullet.setDelta(TPS)
         allSprites.update()
         #Fixing tank movement
         fixMovement([tank1, tank2])
@@ -2251,7 +2385,7 @@ def playGame():
     for sprite in bulletSprites:
         sprite.draw(screen)
         if sprite.isDrawable():
-            sprite.customDraw(screen)    
+            sprite.customDraw(screen)
 
     explosionGroup.draw(screen)
 
@@ -2385,7 +2519,7 @@ done = False
 windowWidth = 800
 windowHeight = 600
 
-TPS = 20 #Ticks per second
+TPS = 30 #Ticks per second
 
 global currentTime, deltaTime, lastUpdateTime
 currentTime = 0
