@@ -35,7 +35,7 @@ for j in comparisonList:
 
 # Check the asssets folder
 tempList = os.listdir('Assets')
-comparisonList = ['bullet.png', 'explosion.png', 'tank_menu_logo.png', 'Tile.png', 'TileE.png', 'TileES.png', 'TileESW.png', 'TileEW.png', 'TileN.png', 'TileNE.png', 'TileNES.png', 'TileNESW.png', 'TileNEW.png', 'TileNS.png', 'TileNSW.png', 'TileNW.png', 'TileS.png', 'TileSW.png', 'TileW.png', 'Treads.png']
+comparisonList = ['bullet.png', 'explosion.png', 'tank_menu_logo.png', 'Tile.png', 'TileDebug.png', 'TileE.png', 'TileES.png', 'TileESW.png', 'TileEW.png', 'TileN.png', 'TileNE.png', 'TileNES.png', 'TileNESW.png', 'TileNEW.png', 'TileNS.png', 'TileNSW.png', 'TileNW.png', 'TileS.png', 'TileSW.png', 'TileW.png', 'Treads.png']
 
 for i in comparisonList:
     found = False # Reset the found variable
@@ -77,7 +77,6 @@ else:
     print("All audio files are present")
 
 #Verification done
-
 
 #Classes
 
@@ -1038,6 +1037,7 @@ class Tile(pygame.sprite.Sprite):
                 self.tilePath += str(cardinal[idx])
         self.tilePath += ".png"
         self.image = pygame.image.load(self.tilePath).convert_alpha()
+        self.debug = pygame.image.load("./Assets/TileDebug.png").convert_alpha()
 
     def neighbourCheck(self):
         #This function will return a list of the indexes of the neighbours based on the current list of border
@@ -1098,7 +1098,10 @@ class Tile(pygame.sprite.Sprite):
         screen.blit(text, [self.x + tileSize/2 - text.get_width()/2, self.y + tileSize/2 - text.get_height()/2])
 
     def draw(self, screen):
-        screen.blit(self.image, self.rect)
+        if self.AITarget:
+            screen.blit(self.debug, self.rect)
+        else:
+            screen.blit(self.image, self.rect)
 
     def getNeighbours(self):
         return self.neighbours
@@ -1138,6 +1141,9 @@ class Tile(pygame.sprite.Sprite):
 
     def getCenter(self):
         return (self.x + tileSize//2, self.y + tileSize//2) 
+
+    def setTarget(self, value):
+        self.AITarget = value
 
 class Explosion(pygame.sprite.Sprite):
 
@@ -1836,13 +1842,13 @@ class Watcher(Gun):
                 if wallCollision:
                     found = True
                     break
-            SPACING = 5
+            SPACING = 25
             count = int(math.sqrt((tempX - currentX)**2 + (tempY - currentY)**2) / SPACING)
             #tempX and tempY are our "going to" location
             while count != 0:
                 currentX += step_dx * SPACING
                 currentY += step_dy * SPACING
-                pygame.draw.circle(screen, getColor(), (int(currentX), int(currentY)), 2)
+                pygame.draw.circle(screen, getColor(), (int(currentX), int(currentY)), 1)
                 count -= 1
 
             # bulletX, bulletY = self.getTank().getGunCenter()
