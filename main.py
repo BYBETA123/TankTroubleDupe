@@ -1782,19 +1782,78 @@ class Watcher(Gun):
         return self.scopeDamage
 
     def customDraw(self, _):
+
+        def getColor():
+            # This function will return the color of the bullet based on the damage
+            # Inputs: None
+            # Outputs: The color of the bullet
+            if self.scopeDamage >= 3300:
+                return c.geT("GREEN")
+            else:
+                return c.geT("RED")
+
         #This function will draw the gun on the tank
         # Inputs: None
         # Outputs: None
         if self.scoping:
-            bulletX, bulletY = self.getTank().getGunCenter()
-            bullet = WatcherBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
-            bullet.setDamage(0)
-            bullet.setBulletSpeed(25)
-            if self.scopeDamage >= 3300:
-                bullet.setTrailColor(c.geT("GREEN"))
-            bullet.drawable = True
-            bullet.trail = True
-            bulletSprites.add(bullet)
+            #Draw a line that is dotted which ends when it collides with something
+            #The line will be drawn from the gun to the end of the screen
+            #find the location of the nearest obstacle
+            found = False
+            currentX = self.getTank().getGunCenter()[0]
+            currentY = self.getTank().getGunCenter()[1]
+            step_dx, step_dy = math.cos(math.radians(self.angle)), -math.sin(math.radians(self.angle))
+            tempX, tempY = currentX, currentY
+            while not found:
+                # Determine the step size, which should be limited to max_step
+                # Update temp positions based on step size
+                tempX += step_dx
+                tempY += step_dy
+
+                # Check if the bullet goes outside of the maze
+                if tempX <= mazeX or tempY <= mazeY or tempX >= mazeWidth + mazeX or tempY >= mazeHeight + mazeY:
+                    found = True
+                    break
+                # Recalculate row and column based on the smaller steps
+                row = math.ceil((tempY - mazeY) / tileSize)
+                col = math.ceil((tempX - mazeX) / tileSize)
+                index = (row - 1) * colAmount + col
+
+                # Handle wall collision
+                if (index < 0) or (index >= len(tileList)):
+                    found = True
+                    break
+                tile = tileList[index-1]
+                wallCollision = False
+                if tile.border[0] and tempY - 1 <= tile.y: # Top border
+                    wallCollision = True
+                if tile.border[1] and tempX + 1 >= tile.x + tileSize: # Right border
+                    wallCollision = True
+                if tile.border[2] and tempY + 1 >= tile.y + tileSize: # Bottom border
+                    wallCollision = True
+                if tile.border[3] and tempX - 1 <= tile.x: # Left border
+                    wallCollision = True
+                if wallCollision:
+                    found = True
+                    break
+            SPACING = 5
+            count = int(math.sqrt((tempX - currentX)**2 + (tempY - currentY)**2) / SPACING)
+            #tempX and tempY are our "going to" location
+            while count != 0:
+                currentX += step_dx * SPACING
+                currentY += step_dy * SPACING
+                pygame.draw.circle(screen, getColor(), (int(currentX), int(currentY)), 2)
+                count -= 1
+
+            # bulletX, bulletY = self.getTank().getGunCenter()
+            # bullet = WatcherBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
+            # bullet.setDamage(0)
+            # bullet.setBulletSpeed(25)
+            # if self.scopeDamage >= 3300:
+            #     bullet.setTrailColor(c.geT("GREEN"))
+            # bullet.drawable = True
+            # bullet.trail = True
+            # bulletSprites.add(bullet)
 
     def setImage(self, imageNum = 1):
         # Setup a new image if the selected one isn't the default
@@ -2381,10 +2440,8 @@ def playGame():
         allSprites.update()
         #Fixing tank movement
         fixMovement([tank1, tank2])
-
         bulletSprites.update()
         explosionGroup.update()
-
         lastUpdateTime = currentTime
 
     for sprite in allSprites:
@@ -2529,6 +2586,10 @@ done = False
 windowWidth = 800
 windowHeight = 600
 
+#let's set the window to full screen
+# windowWidth, windowHeight = pygame.display.Info().current_w, pygame.display.Info().current_h
+
+
 TPS = 30 #Ticks per second
 
 global currentTime, deltaTime, lastUpdateTime
@@ -2537,10 +2598,15 @@ deltaTime = 0
 lastUpdateTime = 0
 
 
+
 screen = pygame.display.set_mode((windowWidth,windowHeight))  # Windowed (safer/ superior)
 
 # Fullscreen but it renders your computer useless otherwise
-# screen = pygame.display.set_mode((windowWidth,windowHeight), pygame.FULLSCREEN) # For fullscreen enjoyers
+
+#safe full screen
+# screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN) # For fullscreen enjoyers
+# windowWidth, windowHeight = pygame.display.get_surface().get_size()
+# print(windowWidth, windowHeight)
 
 tileSize = 50
 weightTrue = 0.16 # The percentage change that side on a tile will have a border
