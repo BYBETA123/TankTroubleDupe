@@ -161,16 +161,23 @@ class Gun(pygame.sprite.Sprite):
             dx, dy = tank2x - tank1x, tank2y - tank1y
             a = math.degrees(math.atan2(dx, dy))//1
             a = (a + 360 - 90) % 360
-
+            print(self.angle, end = " ")
+            temp = 0
             if self.hard:
                 # make it find the shortest path and store in self.angle
                 if abs(a - self.angle) > 180:
-                    self.angle = (self.angle + math.copysign(1, self.angle - a)) % 360
+                    temp = self.angle - a
                 else:
-                    self.angle = (self.angle + math.copysign(1, a -self.angle)) % 360
+                    temp = a - self.angle
             else:
-                self.angle = self.tank.getAngle() # update the position of the gun to match the tank
+                temp =self.tank.getAngle() - self.angle
+            #limit the change to a max of 15 degrees
+            if (temp>0):
+                temp = min(temp, 15)
+            else:
+                temp = max(temp, -15)
 
+            self.angle = (self.angle + temp) % 360
             # Line of sight for the tank to shoot
 
             lowerlimit = ((self.angle + 5) + 360) % 360
@@ -1099,10 +1106,11 @@ class Tile(pygame.sprite.Sprite):
         screen.blit(text, [self.x + tileSize/2 - text.get_width()/2, self.y + tileSize/2 - text.get_height()/2])
 
     def draw(self, screen):
-        if self.AITarget:
-            screen.blit(self.debug, self.rect)
-        else:
-            screen.blit(self.image, self.rect)
+        # if self.AITarget:
+        #     screen.blit(self.debug, self.rect)
+        # else:
+        #     screen.blit(self.image, self.rect)
+        screen.blit(self.image, self.rect)
 
     def getNeighbours(self):
         return self.neighbours
