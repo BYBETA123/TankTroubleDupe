@@ -201,6 +201,7 @@ class Gun(pygame.sprite.Sprite):
                             break
                     if i == steps - 1:
                         self.fire()
+                        # print("Boom")
 
         else:
 
@@ -1124,6 +1125,7 @@ class Tile(pygame.sprite.Sprite):
         # Outputs: Boolean value representing whether the mouse is within the tile
         mouseX, mouseY = pygame.mouse.get_pos()
         if mouseX >= self.x and mouseX <= self.x + tileSize and mouseY >= self.y and mouseY <= self.y + tileSize:
+            self.printDebug()
             return True
         return False
 
@@ -1144,6 +1146,12 @@ class Tile(pygame.sprite.Sprite):
 
     def setTarget(self, value):
         self.AITarget = value
+
+    def printDebug(self):
+        print("Index: ", self.index, end = " ")
+        print(self.index%14, self.index//14)
+        print("Neighbours: ", self.neighbours, end = " ")
+        print("Bordering: ", self.bordering)
 
 class Explosion(pygame.sprite.Sprite):
 
@@ -3483,9 +3491,7 @@ while not done:
                 if gameMode == GameMode.play:
                     #If the mouse is within the maze, make the tile the target
                     for tile in tileList:
-                        if tile.isWithin(): # If the mouse is within the tile
-                            print(tile.tilePath)
-                            print(tile.bordering)
+                        tile.isWithin() # If the mouse is within the tile
             if gameMode == GameMode.pause:
                 #We are paused
                 if (unPause.getCorners()[0] <= mouse[0] <= unPause.getCorners()[2] and

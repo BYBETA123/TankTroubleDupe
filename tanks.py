@@ -183,7 +183,6 @@ class Tank(pygame.sprite.Sprite):
 
             # set the current target tile
             self.tileList[currentTarget-1].setTarget(True)
-            # print(self.pseudoTargetarray, self.aim[0])
             self.tileList[self.aim[0]-1].setTarget(True)
             targetTilex, targetTiley = self.lastTargetPackage[1], self.lastTargetPackage[2]
 
@@ -198,7 +197,9 @@ class Tank(pygame.sprite.Sprite):
                     currentTarget = self.pseudoTargetarray.pop(0) # we have an elemnt in the list
                 self.lastTargetPackage = (currentTarget, currentTarget%14*50 + 50//2, ((currentTarget)//14 + 1)*50 + 50//2)
 
-            if (targetTilex == self.getCenter()[0] and targetTiley == self.getCenter()[1]): # if we match our target tile
+            # if (targetTilex == self.getCenter()[0] and targetTiley == self.getCenter()[1]): # if we match our target tile
+            # we are within the target tile
+            if (abs(targetTilex - self.getCenter()[0]) < 10 and abs(targetTiley - self.getCenter()[1]) < 10):
                 self.speed = 0
                 self.rotationSpeed = 0
                 self.BFSRefresh = True
@@ -215,17 +216,32 @@ class Tank(pygame.sprite.Sprite):
                 vAngle = math.atan2(targetTilex - self.getCenter()[0], targetTiley - self.getCenter()[1])
                 vAngle = math.degrees(vAngle)
                 vAngle = (vAngle + 360 - 90) % 360 # we have a rotate coordinate system
-                
                 # make it so that the tank will go forward if it is facing the target
-                difference = (vAngle - self.angle) % 360
-                if difference >180:
-                    difference -= 360
-                if difference < 0:
-                    self.rotationSpeed = -1
-                elif difference > 0:
-                    self.rotationSpeed = 1
-                else:
-                    self.rotationSpeed = 0
+                # difference = (vAngle - self.angle) % 360
+
+                #function
+                #two inputs vAngle, self.angle
+                #one output (+1, -1, 0)
+                #The function should check both ways and return the faster method of travelling, this includes the knowledge about the 360 degree rotation
+                #The function should return 1 if the tank should rotate clockwise, -1 if the tank should rotate counter clockwise and 0 if the tank should not rotate
+
+                def getRotation(vAngle, angle):
+                    deltaNum = 15
+                    if vAngle == angle:
+                        return 0
+                    if vAngle > angle:
+                        if vAngle - angle > 180:
+                            #return the smaller angle between vAngle, angle and deltaNum
+                            return max(-deltaNum, angle - vAngle)//1
+                        else:
+                            return min(deltaNum, vAngle - angle)//1
+                    else:
+                        if angle - vAngle > 180:
+                            return min(deltaNum, angle - vAngle)//1
+                        else:
+                            return max(-deltaNum, vAngle - self.angle)//1
+
+                self.rotationSpeed = getRotation(vAngle, self.angle)
                 # if we are facing the target, go forward
                 self.speed = self.topSpeed # we move
         else:
@@ -244,7 +260,7 @@ class Tank(pygame.sprite.Sprite):
                 self.rotationSpeed = -self.rotationalSpeed
             else:
                 self.rotationSpeed = 0
-
+            self.rotationSpeed *= self.deltaTime
         #This if statement checks to see if speed or rotation of speed is 0,
         #if so it will stop playing moving sound, otherwise, sound will play
         #indefinitely
@@ -255,7 +271,7 @@ class Tank(pygame.sprite.Sprite):
             if self.channelDict["move"]["channel"].get_busy(): # if the sound is playing
                 self.channelDict["move"]["channel"].stop()  # Stop playin the sound
 
-        self.angle += self.rotationSpeed * self.deltaTime
+        self.angle += self.rotationSpeed
         self.angle %= 360
 
         self.image = pygame.transform.rotate(self.originalTankImage, self.angle)
@@ -264,6 +280,7 @@ class Tank(pygame.sprite.Sprite):
         angleRad = math.radians(self.angle)
         self.changeX += math.cos(angleRad) * self.speed * self.deltaTime
         self.changeY += math.sin(angleRad) * self.speed * self.deltaTime
+
 
     def getCoords(self):
         return [self.rect.x, self.rect.y, self.rect.x + self.originalTankImage.get_size()[0], self.rect.y + self.originalTankImage.get_size()[1]]
@@ -436,7 +453,7 @@ class Tank(pygame.sprite.Sprite):
         # Outputs: The tile that the tank is currently on
         row = math.ceil((self.getCenter()[1] - 50)/50)
         col = math.ceil((self.getCenter()[0] - 50)/50)
-        index = (row-1)*8 + col
+        index = (row - 1)*14 + col
         return self.tileList[index-1]
 
     def getAngle(self):
