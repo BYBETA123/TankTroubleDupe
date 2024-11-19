@@ -3542,6 +3542,8 @@ while not done:
             elif gameMode == GameMode.play:
                 fromHome = False
                 if pauseButton.buttonClick(mouse):
+                    for i in range(3, pygame.mixer.get_num_channels()): # Stop all sounds
+                        pygame.mixer.Channel(i).stop()
                     gameMode = GameMode.pause
             elif gameMode == GameMode.credit:
                 if (creditsBackButton.getCorners()[0] <= mouse[0] <= creditsBackButton.getCorners()[2] and 
@@ -3577,6 +3579,8 @@ while not done:
                     constantPlayGame()
                     gameMode = GameMode.play # Return to game if button was clicked
                 elif gameMode == GameMode.play:
+                    for i in range(3, pygame.mixer.get_num_channels()): # Stop all sounds
+                        pygame.mixer.Channel(i).stop()
                     gameMode = GameMode.pause # Pause the game
             if event.key == pygame.K_f:
                 #Calculate and track the average FPS
