@@ -3512,6 +3512,8 @@ while not done:
                     gameMode = GameMode.credit
                 if (home.getCorners()[0] <= mouse[0] <= home.getCorners()[2] and
                     home.getCorners()[1] <= mouse[1] <= home.getCorners()[3]): # Home button
+                    for i in range(3, pygame.mixer.get_num_channels()): # Stop all sounds
+                        pygame.mixer.Channel(i).stop()
                     constantHomeScreen()
                     gameMode = GameMode.home
                 if (quitButton.getCorners()[0] <= mouse[0] <= quitButton.getCorners()[2]and
@@ -3527,7 +3529,6 @@ while not done:
                 if pauseButton.buttonClick(mouse):
                     constantPlayGame()
                     gameMode = GameMode.play
-                    print("Pause button clicked")
             elif gameMode == GameMode.selection: # Selection screen
                 fromHome = False
                 textP1Turret.setText(turretList[p1I].getGunName())
@@ -3542,7 +3543,6 @@ while not done:
                 fromHome = False
                 if pauseButton.buttonClick(mouse):
                     gameMode = GameMode.pause
-                    print("Pause button clicked")
             elif gameMode == GameMode.credit:
                 if (creditsBackButton.getCorners()[0] <= mouse[0] <= creditsBackButton.getCorners()[2] and 
                     creditsBackButton.getCorners()[1] <= mouse[1] <= creditsBackButton.getCorners()[3]): # If we hit the sfx button
