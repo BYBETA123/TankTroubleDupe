@@ -146,6 +146,7 @@ class Tank(pygame.sprite.Sprite):
         self.soundDictionary = {} # The dictionary that will store the sound effects
         self.List = []
         self.deltaTime = 0
+        
     def updateCorners(self):
         # This function will update the corners of the tank based on the new position
         # This is to make sure that the coliisions detection is accurate

@@ -161,7 +161,6 @@ class Gun(pygame.sprite.Sprite):
             dx, dy = tank2x - tank1x, tank2y - tank1y
             a = math.degrees(math.atan2(dx, dy))//1
             a = (a + 360 - 90) % 360
-            print(self.angle, end = " ")
             temp = 0
             if self.hard:
                 # make it find the shortest path and store in self.angle
@@ -169,13 +168,13 @@ class Gun(pygame.sprite.Sprite):
                     temp = self.angle - a
                 else:
                     temp = a - self.angle
+                #limit the change to a max of 15 degrees
+                if (temp>0):
+                    temp = min(temp, 15)
+                else:
+                    temp = max(temp, -15)
             else:
                 temp =self.tank.getAngle() - self.angle
-            #limit the change to a max of 15 degrees
-            if (temp>0):
-                temp = min(temp, 15)
-            else:
-                temp = max(temp, -15)
 
             self.angle = (self.angle + temp) % 360
             # Line of sight for the tank to shoot
@@ -2694,7 +2693,7 @@ creditbox = [
     "UI Design: Bin-Coder14",
     "Sounds: Beta",
     "Music: Beta, Goodnews888",
-    "Art: Beta, Goodnews888",
+    "Art: Beta, Goodnews888, Ekiel",
 ]
 
 cFont = pygame.font.SysFont('Courier New', 36)

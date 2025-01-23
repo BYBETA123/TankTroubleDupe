@@ -1,53 +1,72 @@
 # TankTroubleDupe
 
+Ever wanted to play a tank game?
 
 ## Requirements
 Python must be installed on your local computer
-Pygame and other dependecies found in requirements.txt can be installed with the command pip install -r requirements.txt
+
+Pygame must also be installed by running `pip install pygame` in the command terminal
+
+The minimum screen dimensions to play this game is 800 x 600 pixels
+
+## Introduction
+
+Welcome to Flanki, a game inspired by both Tanki Online and Tank Trouble. Get the top-down feel of tank trouble with the variety and mobility from the prime feel of Tanki Online
+
+## Features
+
+A fully immplemented single and local two player setup with easy and hard difficulties
+
+### Controls
+
+Player 1: 
+> WASD : Movement
+
+> RT   : Turret left / right (disabled in easy mode)
+
+> Y    : Shoot
+
+Player 2:
+> Arrow Keys : Movement
+
+> ,.         : Turret left / right (disabled in easy mode)
+
+> /          : Shoot
+
+## Installation
+
+This game has no current release featured on Github
+
+This game can be played locally on the command terminal by navigating to the directory where the main.py file is located and running the command
+`python main.py`
+
+## How to Play
+
+When on the menu screen, there are several options to play:
+
+Easy mode (1 or 2 players)
+
+This will immediately bring you into the game, if you are in single player mode, then there will be an AI to control the player 1 tank and you will be playing with the player 2 controls. If you are playing with two players, both controls will be active
+
+Hard mode (1 or 2 players)
+
+This will prompt you with the selction screen, where you can choose from a range of different turrets and hulls as well as colour customisation allowing for a completely unique feel, each turret and hull have their own advantages and disadvantages so you must choose wisely in order to outplay your opponent, once both players are ready hit the `play` button in the middle.
+
+This will then bring you into the game, if you are in single player mode, then there will be an AI to control the player 1 tank and you will be playing with the player 2 controls. If you are playing with two players, both controls will be active
 
 
 
+## Known issues
 
-## Below is for Developers
+There is an issue where the game will suddenly crash due to the maze failing to generate, hwoever this bug is difficult to replicate
 
+## Roadmap (future plans)
 
-Code Conventions
+## Credits
 
+Thank you to the following people
+    Bin-Coder14, Goodnews888, Ekiel, Beta
 
-Style:
-4 spaces(tab) for indentation
-Line length: Each line should be ~150 characters
+Thanks to you for playing the game
 
-
-Naming Conventions
-
-
-Variables and Functions should be written in camelCase
-Class names should be in PascalCase
-File names should be written in snake_case
-Function/ Documentation: For any function that is written, there should be a short header to describe the functions, the inputs/outputs and its purpose
-Comments: Should be in line and a simple summary about what the line does
-Requirements: Any extra modules that need to be added should be asked to the group chat first before including it in the project
-
-
-Code Review:
-When a branch needs to be included into main (the branch is fully functioning). A Merge/Pull request should be written, assign one of the other developers to review it and once it has been approved, merge it into main
-
-
-When approving a request, your job is to switch to that branch and check that the branch is fully functioning, provide any comments that you notice and check the code changes that were made, making sure that they follow the conventions laid out in this document
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+All rights belong to their respective owners, if your work was featured in here and you would like it removed, please contact me
