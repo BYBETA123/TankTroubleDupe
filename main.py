@@ -595,7 +595,13 @@ class Bullet(pygame.sprite.Sprite):
         # Inputs: screen: The screen that the bullet will be drawn on
         # Outputs: None
         if self.pleaseDraw and self.trail:
-            pygame.draw.line(screen, c.geT("NEON_PURPLE"), (self.trailX, self.trailY), (self.x, self.y), 3)
+            offset = 5
+            tX, tY = self.trailX, self.trailY
+            if abs(self.trailX - self.x) < offset:
+                tY += offset
+            if abs(self.trailY - self.y) < offset:
+                tX += offset
+            pygame.draw.line(screen, c.geT("NEON_PURPLE"), (tX, tY), (self.x, self.y), 10)
             self.pleaseDraw = False
 
     def draw(self, screen):
@@ -1588,20 +1594,19 @@ class Silencer(Gun):
         # Outputs: None
         #Setup bullet (Trailed/ Temp)
         bulletX, bulletY = self.getTank().getGunCenter()
-        # bullet = SilencerBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
-        # bullet.setDamage(0)
-        # bullet.setBulletSpeed(0.5)
-        # bullet.setName(self.getTank().getName())
-        # bullet.drawable = True
-        # bullet.trail = True
-        # bulletSprites.add(bullet)
+        bullet = SilencerBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
+        bullet.setDamage(0)
+        bullet.setBulletSpeed(30)
+        bullet.setName(self.getTank().getName())
+        bullet.drawable = True
+        bullet.trail = True
+        bulletSprites.add(bullet)
         # Real bullet
         bullet1 = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet1.setDamage(self.damage)
         bullet1.setBulletSpeed(30)
         bullet1.setName(self.getTank().getName())
         bullet1.drawable = True
-        # bullet1.trail = True
         bulletSprites.add(bullet1)
         self.sound = True
         self.canShoot = False
@@ -2077,7 +2082,10 @@ def overlap(proj1, proj2):
     #This function will check if the projections overlap
     # Inputs: proj1, proj2: The two projections
     # Outputs: True if they overlap, False otherwise
-    return proj1[0] < proj2[1] and proj2[0] < proj1[1]
+    scaler = 10
+    p1 = [proj1[0] - scaler, proj1[1] + scaler]
+    p2 = [proj2[0] - scaler, proj2[1] + scaler]
+    return p1[0] < p2[1] and p2[0] < p1[1]
 
 def satCollision(rect1, rect2):
     #This function will check if two rectangles are colliding
