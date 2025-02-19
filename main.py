@@ -2231,6 +2231,7 @@ def constantHomeScreen():
     # Inputs: None
     # Outputs: None
     screen.fill(bg) # This is the first line when drawing a new frame
+    screen.blit(lpng, (windowWidth // 2 - lpng.get_width() // 2, 15))
     print("Switching to lobby music")
     mixer.crossfade('lobby')
 
@@ -2818,8 +2819,6 @@ iListDesc = [["Player 1 Movement: WASD", "Player 1 Turret: RT", "Player 1 Shoot:
 "it can withstand even the toughest enemy fire,",
 "crushing anything that stands in its way."]] # Description of all the elements
 
-
-
 iIndex = 0
 infoLArrow = Button(c.geT("BLACK"), c.geT("BLACK"), 100, 200, 100, 100, '<', c.geT("WHITE"), 100, c.geT("BLACK"))
 infoButtons.append(infoLArrow)
@@ -2841,8 +2840,6 @@ infoButtons.append(infoBackButton)
 
 cFont = pygame.font.SysFont('Courier New', 20)
 iListRender = [[cFont.render(line, True, c.geT("BLACk")) for line in iListDesc[i]] for i in range(len(iListDesc))]
-
-
 
 #Selection Screen
 buttonList = []
@@ -3379,6 +3376,8 @@ homeButtonList = []
 currentDir = os.path.dirname(__file__)
 tankPath = os.path.join(currentDir, './Assets/tank_menu_logo.png')
 originalTankImage = pygame.image.load(tankPath).convert_alpha()
+lpng = pygame.image.load('Assets/logo.png').convert_alpha()
+lpng = pygame.transform.scale(lpng, (lpng.get_size()[0]//15, lpng.get_size()[1]//15))
 
 # Create buttons with specified positions and text
 onePlayerButtonHomeN = Button(c.geT("BLACK"),c.geT("BLACK"), 30, 470, 140, 80, '1P Easy', (255, 255, 255), 15, hoverColor=(100, 100, 255))
@@ -3634,10 +3633,10 @@ while not done:
         selectionScreen()
     elif gameMode == GameMode.home:
         # Draw the tank image
-        screen.blit(originalTankImage, (230, 65))  # Adjust the coordinates as needed
+        screen.blit(originalTankImage, (230, 125))  # Adjust the coordinates as needed
 
         # Draw the title text
-        screen.blit(titleText, (windowWidth // 2 - titleText.get_width() // 2, 50))  # Centered horizontally, 50 pixels from top
+        screen.blit(titleText, (windowWidth // 2 - titleText.get_width() // 2, 110))  # Centered horizontally, 50 pixels from top
 
         # Handle hover effect and draw buttons
         for button in homeButtonList:
