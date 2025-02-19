@@ -4,57 +4,6 @@ import os
 import heapq
 # Main variables
 
-
-
-#helper functions
-
-# Global variable for node weightings
-node_weightings = [1 for _ in range(14 * 8 + 1)]  # Initialize all weights to 1
-
-# Helper function
-# def breathFirstSearchShort(tileList, choices, option):
-#     # This function will search the maze in a modified BFS manner to see if we can reach the second spawn
-#     # Inputs: tileList: The current list of tiles
-#     # Inputs: Choices: The locations of both spawns
-#     # Outputs: True if the second spawn is reachable, False otherwise
-
-#     # Setting up the modified BFS with weights
-#     visitedQueue = []
-#     tracking = [False for _ in range(14 * 8 + 1)]  # 14 is row amount and 8 is column amount
-#     priority_queue = []  # Priority queue for the nodes to explore
-#     heapq.heappush(priority_queue, (0, choices[option]))  # (current_cost, node)
-#     predecessors = {}
-#     visitedQueue.append(choices[option])
-#     tracking[choices[option]] = True
-#     predecessors[choices[option]] = None
-
-#     while priority_queue:  # While there are still elements to check
-#         current_cost, current = heapq.heappop(priority_queue)  # Get the node with the least cost
-        
-#         if current == choices[(option + 1) % 2]:
-#             break
-        
-#         for neighbour in tileList[current - 1].getNeighbours():
-#             if not tracking[neighbour]:
-#                 # Calculate the new cost to reach the neighbor
-#                 new_cost = current_cost + node_weightings[neighbour]
-#                 heapq.heappush(priority_queue, (new_cost, neighbour))
-#                 visitedQueue.append(neighbour)
-#                 tracking[neighbour] = True
-#                 predecessors[neighbour] = current  # Record the predecessor
-                
-#     # Reconstruct the path from endNode to startNode
-#     path = []
-#     currentNode = choices[(option + 1) % 2]
-#     while currentNode is not None:
-#         path.insert(0, currentNode)  # Insert at the beginning to avoid reversing later
-#         currentNode = predecessors[currentNode]
-#     # Remove the first element (starting node)
-#     path.pop(0)
-    
-#     return path
-
-
 def breathFirstSearchShort(tileList, choices, option):
     # This function will search the maze in a breath first manner to see if we can reach the second spawn
     # Inputs: tileList: The current list of tiles
@@ -273,6 +222,7 @@ class Tank(pygame.sprite.Sprite):
                 self.channelDict["move"]["channel"].stop()  # Stop playin the sound
 
         self.angle += self.rotationSpeed
+        self.angle = round(self.angle)
         self.angle %= 360
 
         self.image = pygame.transform.rotate(self.originalTankImage, self.angle)

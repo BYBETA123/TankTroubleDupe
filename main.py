@@ -176,7 +176,9 @@ class Gun(pygame.sprite.Sprite):
             else:
                 temp =self.tank.getAngle() - self.angle
 
-            self.angle = (self.angle + temp) % 360
+            self.angle = (self.angle + temp)
+            self.angle = round(self.angle)
+            self.angle %= 360
             # Line of sight for the tank to shoot
 
             lowerlimit = ((self.angle + 5) + 360) % 360
@@ -239,6 +241,7 @@ class Gun(pygame.sprite.Sprite):
                 self.rotationSpeed += -self.tank.getRotationalSpeed() * self.deltaTime
 
             self.angle += self.rotationSpeed
+            self.angle = round(self.angle)
             self.angle %= 360
 
             #Reload cooldown of bullet and determines the angle to fire the bullet,
@@ -620,7 +623,15 @@ class Bullet(pygame.sprite.Sprite):
         self.deltaTime = delta
 
     def getCollision(self, corners, point):
-        return point[0] >= corners[0][0] and point[0] <= corners[1][0] and point[1] >= corners[0][1] and point[1] <= corners[2][1]
+        # return point[0] >= corners[0][0] and point[0] <= corners[1][0] and point[1] >= corners[0][1] and point[1] <= corners[1][1]
+        x,y = point
+        inside = False
+        for i in range(len(corners)):
+            x1, y1 = corners[i]
+            x2, y2 = corners[(i+1) % len(corners)]
+            if ((y1 > y) != (y2 > y)) and (x < (x2 - x1) * (y - y1) / (y2 - y1) + x1):
+                inside = not inside
+        return inside
 
 class SidewinderBullet(Bullet):
 
@@ -1534,6 +1545,7 @@ class Silencer(Gun):
             self.rotationSpeed += -self.tank.getRotationalSpeed() * self.deltaTime
 
         self.angle += self.rotationSpeed
+        self.angle = round(self.angle)
         self.angle %= 360
 
         #Reload cooldown of bullet and determines the angle to fire the bullet,
@@ -1727,6 +1739,7 @@ class Watcher(Gun):
             self.rotationSpeed += -self.tank.getRotationalSpeed() * self.deltaTime
     
         self.angle += self.rotationSpeed
+        self.angle = round(self.angle)
         self.angle %= 360
         #Reload cooldown of bullet and determines the angle to fire the bullet,
         #which is relative to the posistion of the tank gun.
@@ -2418,8 +2431,15 @@ def playGame():
     #Anything below here will be drawn on top of the maze and hence is game updates
 
     if pygame.time.get_ticks() - startTreads > 50:
-        tank1.treads(treadsp1)
-        tank2.treads(treadsp2)
+        if tank1Dead:
+            treadsp1.clear()
+        else:
+            tank1.treads(treadsp1)
+
+        if tank2Dead:
+            treadsp2.clear()
+        else:
+            tank2.treads(treadsp2)
         startTreads = pygame.time.get_ticks() # Reset the timer
 
     for pos in treadsp1:
@@ -2427,8 +2447,8 @@ def playGame():
     for pos in treadsp2:
         screen.blit(pos[0], pos[1])
 
-    # pygame.draw.polygon(screen, GREEN, tank1.getCorners(), 2) #Hit box outline
-    # pygame.draw.polygon(screen, GREEN, tank2.getCorners(), 2) #Hit box outline
+    pygame.draw.polygon(screen, c.geT("GREEN"), tank1.getCorners(), 2) #Hit box outline
+    pygame.draw.polygon(screen, c.geT("GREEN"), tank2.getCorners(), 2) #Hit box outline
     # if we are using AI we need to set the target to go to the other tank
     if (DifficultyType == 1 or DifficultyType == 3) and pygame.time.get_ticks() - tank1.getAimTime() > 2000:
         # AI difficulty
@@ -2440,18 +2460,23 @@ def playGame():
     deltaTime = currentTime - lastUpdateTime
     if deltaTime >= 1/TPS:
         #Update the location of the corners
-        tank1.updateCorners()
-        tank2.updateCorners()
-        tank1.setDelta(TPS)
-        tank2.setDelta(TPS)
-        gun1.setDelta(TPS)
-        gun2.setDelta(TPS)
+        if not tank1Dead:
+            tank1.updateCorners()
+            tank1.setDelta(TPS)
+            gun1.setDelta(TPS)
+        if not tank2Dead:
+            tank2.updateCorners()
+            tank2.setDelta(TPS)
+            gun2.setDelta(TPS)
         for bullet in bulletSprites:
             bullet.setDelta(TPS)
-        allSprites.update()
+        if not(tank1Dead or tank2Dead):
+            allSprites.update()
         #Fixing tank movement
-        fixMovement([tank1, tank2])
-        bulletSprites.update()
+        # don't update the bullets if the game is over
+        if not cooldownTimer:
+            fixMovement([tank1, tank2])
+            bulletSprites.update()
         explosionGroup.update()
         lastUpdateTime = currentTime
 
