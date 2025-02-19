@@ -510,8 +510,8 @@ class Bullet(pygame.sprite.Sprite):
             index = (row - 1) * colAmount + col
 
             # Check for collisions with tanks
-            tank1Collision = satCollision(self, tank1)
-            tank2Collision = satCollision(self, tank2)
+            tank1Collision = self.getCollision(tank1.getCorners(), (tempX, tempY))
+            tank2Collision = self.getCollision(tank2.getCorners(), (tempX, tempY))
 
             if self.name == tank1.getName() and tank2Collision:
                 damage(tank2, self.damage)
@@ -521,7 +521,10 @@ class Bullet(pygame.sprite.Sprite):
                 damage(tank1, self.damage)
                 self.kill()
                 return
-            
+            # Checking for self damage
+            if self.bounce != self.originalBounce:
+                self.selfCollision = True
+
             if self.selfCollision:
                 if tank1Collision:
                     damage(tank1, self.damage)
@@ -531,10 +534,6 @@ class Bullet(pygame.sprite.Sprite):
                     damage(tank2, self.damage)
                     self.kill()
                     return
-
-            # Checking for self damage
-            if self.bounce != self.originalBounce:
-                self.selfCollision = True
 
             # Handle wall collision
             tile = tileList[index-1]
@@ -619,6 +618,9 @@ class Bullet(pygame.sprite.Sprite):
     
     def setDelta(self, delta):
         self.deltaTime = delta
+
+    def getCollision(self, corners, point):
+        return point[0] >= corners[0][0] and point[0] <= corners[1][0] and point[1] >= corners[0][1] and point[1] <= corners[2][1]
 
 class SidewinderBullet(Bullet):
 
@@ -736,7 +738,6 @@ class WatcherBullet(Bullet):
 
         # Determine the number of steps for fine-grained movement (ray tracing)
         steps = int(max(abs(dx), abs(dy)) * 10)  # Increase for more precision
-
         for step in range(steps + 1):
             temp_x = self.x + (dx * step / steps)
             temp_y = self.y + (dy * step / steps)
@@ -752,19 +753,31 @@ class WatcherBullet(Bullet):
             index = (row - 1) * colAmount + col
 
             # Check for collisions with tanks
-            tank1_collision = satCollision(self, tank1)
-            tank2_collision = satCollision(self, tank2)
 
-            if (self.name == tank1.getName() and tank2_collision) or (self.name == tank2.getName() and tank1_collision):
+            tank1_collision = (self.getCollision(tank1.getCorners(), (temp_x, temp_y)))
+            tank2_collision = (self.getCollision(tank2.getCorners(), (temp_x, temp_y)))
+
+            if self.name == tank1.getName() and tank2_collision:
+                damage(tank2, self.damage)
+                self.kill()
+                return
+            if self.name == tank2.getName() and tank1_collision:
+                damage(tank1, self.damage)
                 self.kill()
                 return
 
             if self.bounce != self.originalBounce:
                 self.selfCollision = True
 
-            if self.selfCollision and (tank1_collision or tank2_collision):
-                self.kill()
-                return
+            if self.selfCollision:
+                if tank1_collision:
+                    damage(tank1, self.damage)
+                    self.kill()
+                    return
+                if tank2_collision:
+                    damage(tank2, self.damage)
+                    self.kill()
+                    return
 
             # Handle wall collisions and bouncing
             tile = tileList[index - 1]
@@ -790,6 +803,7 @@ class WatcherBullet(Bullet):
                 if self.bounce == 0:
                     self.kill()
                     return
+            
 
         # After all steps, update the bullet's final position
         self.x = temp_x
@@ -874,6 +888,10 @@ class ChamberBullet(Bullet):
             index = (row - 1) * colAmount + col
 
             # Check for collisions with tanks
+            # tank1Collision = self.getCollision(tank1.getCorners(), (tempX, tempY))
+            # tank2Collision = self.getCollision(tank2.getCorners(), (tempX, tempY))
+
+            # use the old collision
             tank1Collision = satCollision(self, tank1)
             tank2Collision = satCollision(self, tank2)
 
@@ -1306,7 +1324,7 @@ class Huntsman(Gun):
             print("Critical Hit!")
         else:
             bullet.setDamage(self.damage)
-        bullet.setBulletSpeed(5)
+        bullet.setBulletSpeed(15)
         bulletSprites.add(bullet)
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
@@ -1404,14 +1422,11 @@ class Judge(Gun):
 
     def getReloadPercentage(self):
         # The bar has 3 segments, each segment is 1/3 of the reload time
-        # self.shootcooldown, self.cooldownDuration, self.currentUses
         # cooldownDuration = 800 ms
         if self.currentUses == self.maxUses:
             temp = self.shootCooldown / (self.cooldownDuration * self.maxUses)
         else:
             temp = 1 - (self.currentUses % self.maxUses + self.shootCooldown / self.cooldownDuration) / self.maxUses
-        print(temp)
-        # return temp if temp > 0 else self.cooldownDuration * 3
         return temp
 
 class Sidewinder(Gun):
@@ -1563,15 +1578,15 @@ class Silencer(Gun):
         bulletX, bulletY = self.getTank().getGunCenter()
         bullet = SilencerBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setDamage(0)
-        bullet.setBulletSpeed(30)
+        bullet.setBulletSpeed(50)
         bullet.setName(self.getTank().getName())
         bullet.drawable = True
         bullet.trail = True
         bulletSprites.add(bullet)
         # Real bullet
-        bullet1 = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
+        bullet1 = WatcherBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet1.setDamage(self.damage)
-        bullet1.setBulletSpeed(30)
+        bullet1.setBulletSpeed(50)
         bullet1.setName(self.getTank().getName())
         bullet1.drawable = True
         bulletSprites.add(bullet1)
@@ -1760,9 +1775,9 @@ class Watcher(Gun):
         # Outputs: None
         # Setup bullet
         bulletX, bulletY = self.getTank().getGunCenter()
-        bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
+        bullet = WatcherBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setDamage(self.getDamage())
-        bullet.setBulletSpeed(30)
+        bullet.setBulletSpeed(50)
         bullet.setName(self.getTank().getName())
         bullet.drawable = True
         bulletSprites.add(bullet)
@@ -3616,3 +3631,6 @@ while not done:
     pygame.display.flip()# Update the screen
 
 pygame.quit()
+
+
+
