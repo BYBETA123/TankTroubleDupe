@@ -3612,15 +3612,6 @@ while not done:
                 print("The average FPS is: ", totalfps/fpsCounter)
                 totalfps = 0
                 fpsCounter = 0
-
-            if event.key == pygame.K_n:
-                if gameMode == GameMode.play:
-                    constantPlayGame()
-                    reset()
-            if event.key == pygame.K_0:
-                if gameMode == GameMode.play:
-                    constantPlayGame()
-                    reset()
             if event.key == pygame.K_m:
                 mute.mute()
                 sfx.mute()
