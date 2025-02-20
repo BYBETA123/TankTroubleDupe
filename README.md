@@ -62,6 +62,15 @@ There is an issue where the game will suddenly crash due to the maze failing to 
 
 ## Roadmap (future plans)
 
+No current plans
+Ideas:
+1. Improve the AI to avoid bullets
+1. Add `Inferno` turret, concept: A laser that will deal more damage over time as it stays on its target, also takes self damage after too long
+1. Add `Bucket` turret, concept: A "Bucket" that can't shoot, however can pick up and reflect any bullet shot at it
+1. Add `Avalanche` turret: A turret that will slow down the enemies in its range
+1. Add kill streak sounds / change battle track
+1. Add introduction cards for each tank
+
 ## Credits
 
 Thank you to the following people
@@ -70,3 +79,26 @@ Thank you to the following people
 Thanks to you for playing the game
 
 All rights belong to their respective owners, if your work was featured in here and you would like it removed, please contact me
+
+
+
+
+# Statistics
+
+|  Tank |  Health | Speed |
+|-------|---------|-------|
+| Panther | 1500 | 0.1 |
+| Cicada | 2000 | 0.08 |
+| Gater | 3000 | 0.07 |
+| Bonsai | 3500 | 0.05 |
+| Fossil | 4000 | 0.03 |
+
+| Gun | Damage | Reload | Bullet Speed | Notes |
+|-----|--------|--------|--------------|-------|
+| Chamber | 810 | 1500 | 10 |3 radii of 270 each, splash damage |
+| Huntsman | 600 | 1000 | 15 | 40% chance for double damage |
+| Judge | 1520 | 2400 | 8 |3 rounds each with 800 reload and 2400 long, bounces once, 20 bullets each 76 damage |
+| Sidewinder | 350 | 500 | 12 | 5 bounces per bullet |
+| Silencer | 1400 | 2400 | 50 | No Notes |
+| Tempest | 200 | 200 | 10 | No Notes |
+| Watcher | 3300 | 1500 | 50 | Scope comes attached, damage scales over time |

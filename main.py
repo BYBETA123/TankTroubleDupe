@@ -443,7 +443,7 @@ class Bullet(pygame.sprite.Sprite):
         self.bulletImage = self.originalBulletImage
         self.image = self.bulletImage
         self.angle = angle
-        self.speed = 5
+        self.speed = 12
         self.drawable = False
         self.trail = False
         angleRad = math.radians(self.angle)
@@ -1460,7 +1460,7 @@ class Sidewinder(Gun):
         bulletX, bulletY = self.getTank().getGunCenter()
         bullet = SidewinderBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
-        bullet.setBulletSpeed(8)
+        bullet.setBulletSpeed(10)
         bulletSprites.add(bullet)
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
