@@ -1376,7 +1376,7 @@ class Judge(Gun):
         self.setGunBackDuration(300)
         self.setTipOffset(28)
         self.bulletInterval = 15
-        self.scatterRange = 5
+        self.scatterRange = 10
         self.maxUses = 3
         self.currentUses = self.maxUses
         self.reloadTime = 2  # 2 seconds
@@ -1392,9 +1392,14 @@ class Judge(Gun):
             else:
                 self.shootCooldown = self.cooldownDuration * 3
                 self.currentUses = self.maxUses
+            
+            for i in range(1, 5): # 20 bullets
+                Timer(self.bulletInterval * (i) / 2000.0, self.fireBullet).start() # Threaded???
+                Timer(self.bulletInterval * (i+1) / 1000.0, self.fireBullet).start() # Threaded???
+                Timer(self.bulletInterval * (i+2) / 1000.0, self.fireBullet).start() # Threaded???
+                Timer(self.bulletInterval * (i+3) / 1000.0, self.fireBullet).start() # Threaded???
+                Timer(self.bulletInterval * (i+4) / 1000.0, self.fireBullet).start() # Threaded???
 
-            for i in range(1, 21):
-                Timer(self.bulletInterval * i / 1000.0, self.fireBullet).start() # Threaded???
             self.playSFX()
 
     def fireBullet(self):
@@ -2375,6 +2380,13 @@ def playGame():
         gameOverFlag = False
         cooldownTimer = True
     if cooldownTimer:
+        #movement sound
+        pygame.mixer.Channel(3).stop()
+        pygame.mixer.Channel(9).stop()
+        #rotation sound
+        pygame.mixer.Channel(4).stop()
+        pygame.mixer.Channel(10).stop()
+
         if time.time() - startTime >= 3: # 3 seconds
             #Reset the game
             reset()
@@ -2633,8 +2645,6 @@ global currentTime, deltaTime, lastUpdateTime
 currentTime = 0
 deltaTime = 0
 lastUpdateTime = 0
-
-
 
 screen = pygame.display.set_mode((windowWidth,windowHeight))  # Windowed (safer/ superior)
 
