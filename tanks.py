@@ -1,7 +1,6 @@
 import pygame
 import math
-import os
-import heapq
+import os, sys
 # Main variables
 
 def breathFirstSearchShort(tileList, choices, option):
@@ -336,7 +335,10 @@ class Tank(pygame.sprite.Sprite):
         # Inputs: imageNum: The index that points to the required image
         # Outputs: None
         # Load the tank image
-        currentDir = os.path.dirname(__file__)
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            currentDir = sys._MEIPASS
+        else:  # Running as a .py script
+            currentDir = os.path.dirname(os.path.abspath(__file__))
         tankPath = os.path.join(currentDir, 'Sprites', 'tank' + str(imageNum) + '.png')
         self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
 
@@ -387,7 +389,17 @@ class Tank(pygame.sprite.Sprite):
         # This function will draw the treads of the tank
         # Inputs: None
         # Outputs: None
-        rect_surface = pygame.image.load("./Assets/Treads.png").convert_alpha()
+        # Determine the correct base path
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            base_path = sys._MEIPASS
+        else:  # Running as a .py script
+            base_path = os.path.dirname(os.path.abspath(__file__))
+
+        # Construct the correct path for the image file
+        image_path = os.path.join(base_path, 'Assets', 'Treads.png')
+
+        # Load the image with the corrected path
+        rect_surface = pygame.image.load(image_path).convert_alpha()
         rect_surface = pygame.transform.scale(rect_surface, (self.originalTankImage.get_size()))
 
 
@@ -449,7 +461,10 @@ class Bonsai(Tank):
         # Inputs: imageNum: The index that points to the required image
         # Outputs: None
         # Load the tank image
-        currentDir = os.path.dirname(__file__)
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            currentDir = sys._MEIPASS
+        else:  # Running as a .py script
+            currentDir = os.path.dirname(os.path.abspath(__file__))
         tankPath = os.path.join(currentDir, 'Sprites', 'Bonsai' + str(imageNum) + '.png')
         self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
 
@@ -486,7 +501,10 @@ class Cicada(Tank):
         # Inputs: imageNum: The index that points to the required image
         # Outputs: None
         # Load the tank image
-        currentDir = os.path.dirname(__file__)
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            currentDir = sys._MEIPASS
+        else:  # Running as a .py script
+            currentDir = os.path.dirname(os.path.abspath(__file__))
         tankPath = os.path.join(currentDir, 'Sprites', 'Cicada' + str(imageNum) + '.png')
         self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
 
@@ -522,7 +540,10 @@ class DefaultTank(Tank):
         # Inputs: imageNum: The index that points to the required image
         # Outputs: None
         # Load the tank image
-        currentDir = os.path.dirname(__file__)
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            currentDir = sys._MEIPASS
+        else:  # Running as a .py script
+            currentDir = os.path.dirname(os.path.abspath(__file__))
         tankPath = os.path.join(currentDir, 'Sprites', 'tank' + str(imageNum) + '.png')
         self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
 
@@ -553,7 +574,10 @@ class Fossil(Tank):
         # Inputs: imageNum: The index that points to the required image
         # Outputs: None
         # Load the tank image
-        currentDir = os.path.dirname(__file__)
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            currentDir = sys._MEIPASS
+        else:  # Running as a .py script
+            currentDir = os.path.dirname(os.path.abspath(__file__))
         tankPath = os.path.join(currentDir, 'Sprites', 'Fossil' + str(imageNum) + '.png')
         self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
 
@@ -590,7 +614,10 @@ class Gater(Tank):
         # Inputs: imageNum: The index that points to the required image
         # Outputs: None
         # Load the tank image
-        currentDir = os.path.dirname(__file__)
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            currentDir = sys._MEIPASS
+        else:  # Running as a .py script
+            currentDir = os.path.dirname(os.path.abspath(__file__))
         tankPath = os.path.join(currentDir, 'Sprites', 'Gater' + str(imageNum) + '.png')
         self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
 
@@ -627,7 +654,10 @@ class Panther(Tank):
         # Inputs: imageNum: The index that points to the required image
         # Outputs: None
         # Load the tank image
-        currentDir = os.path.dirname(__file__)
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            currentDir = sys._MEIPASS
+        else:  # Running as a .py script
+            currentDir = os.path.dirname(os.path.abspath(__file__))
         tankPath = os.path.join(currentDir, 'Sprites', 'Panther' + str(imageNum) + '.png')
         self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
 

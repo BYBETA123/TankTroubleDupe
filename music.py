@@ -1,3 +1,4 @@
+import sys, os
 import pygame
 class Music:
 
@@ -26,10 +27,16 @@ class Music:
         super().__init__()
         pygame.mixer.init() # Initialising music
 
+        # Determine the correct base path
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            base_path = sys._MEIPASS
+        else:  # Running as a .py script
+            base_path = os.path.dirname(os.path.abspath(__file__))
+
         self.tracks = {
-            'lobby': pygame.mixer.Sound('Sounds/lobby_music.wav'),
-            'selection': pygame.mixer.Sound('Sounds/selection_music.wav'),
-            'game': pygame.mixer.Sound('Sounds/game_music.wav')
+            'lobby': pygame.mixer.Sound(os.path.join(base_path, 'Sounds/lobby_music.wav')),
+            'selection': pygame.mixer.Sound(os.path.join(base_path, 'Sounds/selection_music.wav')),
+            'game': pygame.mixer.Sound(os.path.join(base_path, 'Sounds/game_music.wav'))
         }
 
         self.volume = {

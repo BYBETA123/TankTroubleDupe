@@ -2,7 +2,7 @@ import pygame
 import random
 import math
 import time
-import os
+import os, sys
 from ColorDictionary import ColourDictionary as c # colors
 from threading import Timer
 from enum import Enum
@@ -12,69 +12,69 @@ import copy
 from tanks import *
 
 # Safety Checks
-tempList = os.listdir('Sprites')
-comparisonList = [] # This list is to contain all of the different types of sprites that are involved
-nameList = ["Bonsai", "Chamber", "Cicada", "Fossil", "Gater", "gun", "Hull", "Huntsman", "Judge", "Panther", "playerGunSprite", "playerTankSprite", "Sidewinder", "Silencer", "tank", "Tempest", "Turret", "Watcher"]
-for i in range(len(nameList)):
-    for j in range(8): # There are 8 different types of sprites
-        comparisonList.append(nameList[i] + str(j+1) + ".png")
+# tempList = os.listdir('Sprites')
+# comparisonList = [] # This list is to contain all of the different types of sprites that are involved
+# nameList = ["Bonsai", "Chamber", "Cicada", "Fossil", "Gater", "gun", "Hull", "Huntsman", "Judge", "Panther", "playerGunSprite", "playerTankSprite", "Sidewinder", "Silencer", "tank", "Tempest", "Turret", "Watcher"]
+# for i in range(len(nameList)):
+#     for j in range(8): # There are 8 different types of sprites
+#         comparisonList.append(nameList[i] + str(j+1) + ".png")
 
-#Check that all the sprites are present
-found = False
-anyMissing = False
-for j in comparisonList:
-    found = False # Reset the found variable
-    for i in tempList:
-        if i == j:
-            # If they are the same then the sprite is present
-            found = True
-            break
-    if not found:
-        print(f"Error: {j} is missing")
-        anyMissing = True
+# # Check that all the sprites are present
+# found = False
+# anyMissing = False
+# for j in comparisonList:
+#     found = False # Reset the found variable
+#     for i in tempList:
+#         if i == j:
+#             # If they are the same then the sprite is present
+#             found = True
+#             break
+#     if not found:
+#         print(f"Error: {j} is missing")
+#         anyMissing = True
 
-# Check the asssets folder
-tempList = os.listdir('Assets')
-comparisonList = ['bullet.png', 'explosion.png', 'tank_menu_logo.png', 'Tile.png', 'TileDebug.png', 'TileE.png', 'TileES.png', 'TileESW.png', 'TileEW.png', 'TileN.png', 'TileNE.png', 'TileNES.png', 'TileNESW.png', 'TileNEW.png', 'TileNS.png', 'TileNSW.png', 'TileNW.png', 'TileS.png', 'TileSW.png', 'TileW.png', 'Treads.png']
+# # Check the asssets folder
+# tempList = os.listdir('Assets')
+# comparisonList = ['bullet.png', 'explosion.png', 'tank_menu_logo.png', 'Tile.png', 'TileDebug.png', 'TileE.png', 'TileES.png', 'TileESW.png', 'TileEW.png', 'TileN.png', 'TileNE.png', 'TileNES.png', 'TileNESW.png', 'TileNEW.png', 'TileNS.png', 'TileNSW.png', 'TileNW.png', 'TileS.png', 'TileSW.png', 'TileW.png', 'Treads.png']
 
-for i in comparisonList:
-    found = False # Reset the found variable
-    for j in tempList:
-        if j == i:
-            found = True
-            break
-    if not found:
-        print(f"Error: {i} is missing")
-        anyMissing = True
+# for i in comparisonList:
+#     found = False # Reset the found variable
+#     for j in tempList:
+#         if j == i:
+#             found = True
+#             break
+#     if not found:
+#         print(f"Error: {i} is missing")
+#         anyMissing = True
 
 
-if (anyMissing):
-    # In case there are missing sprites
-    print("Error: Missing sprites")
-    exit()
-else:
-    print("All sprites are present")
+# if (anyMissing):
+#     # In case there are missing sprites
+#     print("Error: Missing sprites")
+#     exit()
+# else:
+#     print("All sprites are present")
 
-# check the audio
-tempList = os.listdir('Sounds')
-comparisonList = ["Chamber.wav", "Empty.wav", "game_music.wav", "Huntsman.wav", "Judge.wav", "lobby_music.wav", "Reload.wav", "selection_music.wav", "Sidewinder.wav", "Silencer.wav", "tank_dead.wav", "tank_moving.wav", "tank_shoot.wav", "tank_turret_rotate.wav", "Tempest.wav", "Watcher.wav"]
-print("Checking audio files")
-for i in comparisonList:
-    found = False # Reset the found variable
-    for j in tempList:
-        if j == i:
-            found = True
-            break
-    if not found:
-        print(f"Error: {i} is missing")
-        anyMissing = True
+# # check the audio
+# tempList = os.listdir('Sounds')
+# comparisonList = ["Chamber.wav", "Empty.wav", "game_music.wav", "Huntsman.wav", "Judge.wav", "lobby_music.wav", "Reload.wav", "selection_music.wav", "Sidewinder.wav", "Silencer.wav", "tank_dead.wav", "tank_moving.wav", "tank_shoot.wav", "tank_turret_rotate.wav", "Tempest.wav", "Watcher.wav"]
+# print("Checking audio files")
+# for i in comparisonList:
+#     found = False # Reset the found variable
+#     for j in tempList:
+#         if j == i:
+#             found = True
+#             break
+#     if not found:
+#         print(f"Error: {i} is missing")
+#         anyMissing = True
 
-if (anyMissing):
-    # In case there are missing sprites
-    print("Error: Missing audio files")
-    exit()
-else:
-    print("All audio files are present")
+# if (anyMissing):
+#     # In case there are missing sprites
+#     print("Error: Missing audio files")
+#     exit()
+# else:
+#     print("All audio files are present")
 
 #Verification done
 
@@ -96,7 +96,10 @@ class Gun(pygame.sprite.Sprite):
         """
         super().__init__()
 
-        currentDir = os.path.dirname(__file__)
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            currentDir = sys._MEIPASS
+        else:  # Running as a .py script
+            currentDir = os.path.dirname(os.path.abspath(__file__))
         gunPath = os.path.join(currentDir,'Sprites', 'gun1.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
         self.gunImage = self.originalGunImage
@@ -355,7 +358,10 @@ class Gun(pygame.sprite.Sprite):
         # Setup a new image if the selected one isn't the default
         # Inputs: imagePath: The filepath the points to the required image
         # Outputs: None
-        currentDir = os.path.dirname(__file__)
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            currentDir = sys._MEIPASS
+        else:  # Running as a .py script
+            currentDir = os.path.dirname(os.path.abspath(__file__))
         gunPath = os.path.join(currentDir,'Sprites', 'gun' + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
         width, height = self.originalGunImage.get_size()
@@ -436,7 +442,10 @@ class Bullet(pygame.sprite.Sprite):
             The offset from the gun's tip to the bullet's starting position.
         """
         super().__init__()
-        currentDir = os.path.dirname(__file__)
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            currentDir = sys._MEIPASS
+        else:  # Running as a .py script
+            currentDir = os.path.dirname(os.path.abspath(__file__))
             
         bulletPath = os.path.join(currentDir, './Assets/bullet.png')
         self.originalBulletImage = pygame.image.load(bulletPath).convert_alpha()
@@ -1038,15 +1047,39 @@ class Tile(pygame.sprite.Sprite):
         self.neighbours, self.bordering = self.neighbourCheck()
         self.AITarget = False
         # At this point the borders should be set
-        self.tilePath = "./Assets/Tile"
+        # self.tilePath = "./Assets/Tile"
+        # cardinal = ["N", "E", "S", "W"]
+        # self.rect = pygame.Rect(self.x, self.y, tileSize, tileSize)
+        # for idx, el in enumerate(self.bordering):
+        #     if el != -1:
+        #         self.tilePath += str(cardinal[idx])
+        # self.tilePath += ".png"
+        # self.image = pygame.image.load(self.tilePath).convert_alpha()
+        # self.debug = pygame.image.load("./Assets/TileDebug.png").convert_alpha()
+
+        # Determine the correct base path
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            base_path = sys._MEIPASS
+        else:  # Running as a .py script
+            base_path = os.path.dirname(os.path.abspath(__file__))
+
+        # Construct the tile path dynamically
+        self.tilePath = os.path.join(base_path, "Assets", "Tile")
         cardinal = ["N", "E", "S", "W"]
         self.rect = pygame.Rect(self.x, self.y, tileSize, tileSize)
+
         for idx, el in enumerate(self.bordering):
             if el != -1:
-                self.tilePath += str(cardinal[idx])
-        self.tilePath += ".png"
+                self.tilePath += str(cardinal[idx])  # Append direction suffix
+
+        self.tilePath += ".png"  # Add the file extension
+
+        # Load the correct tile image
         self.image = pygame.image.load(self.tilePath).convert_alpha()
-        self.debug = pygame.image.load("./Assets/TileDebug.png").convert_alpha()
+
+        # Load the debug tile image
+        debugPath = os.path.join(base_path, "Assets", "TileDebug.png")
+        self.debug = pygame.image.load(debugPath).convert_alpha()
 
     def neighbourCheck(self):
         #This function will return a list of the indexes of the neighbours based on the current list of border
@@ -1100,7 +1133,6 @@ class Tile(pygame.sprite.Sprite):
 
         return border
 
-
     def drawText(self, screen):
         font = pygame.font.SysFont('Calibri', 25, True, False)
         text = font.render(str(self.index), True, c.geT("BLACK"))
@@ -1141,14 +1173,29 @@ class Tile(pygame.sprite.Sprite):
     def setBorder(self, borderidx, value = True):
         self.border[borderidx] = value
         self.neighbours, self.bordering = self.neighbourCheck() # Update the neighbours list
-        self.tilePath = "./Assets/Tile"
+        # Determine the correct base path
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            base_path = sys._MEIPASS
+        else:  # Running as a .py script
+            base_path = os.path.dirname(os.path.abspath(__file__))
+
+        # Construct the tile path dynamically
+        self.tilePath = os.path.join(base_path, "Assets", "Tile")
         cardinal = ["N", "E", "S", "W"]
+        self.rect = pygame.Rect(self.x, self.y, tileSize, tileSize)
+
         for idx, el in enumerate(self.bordering):
             if el != -1:
-                self.tilePath += str(cardinal[idx])
-        self.tilePath += ".png"
-        self.rect = pygame.Rect(self.x, self.y, tileSize, tileSize)
+                self.tilePath += str(cardinal[idx])  # Append direction suffix
+
+        self.tilePath += ".png"  # Add the file extension
+
+        # Load the correct tile image
         self.image = pygame.image.load(self.tilePath).convert_alpha()
+
+        # Load the debug tile image
+        debugPath = os.path.join(base_path, "Assets", "TileDebug.png")
+        self.debug = pygame.image.load(debugPath).convert_alpha()
 
     def getCenter(self):
         return (self.x + tileSize//2, self.y + tileSize//2) 
@@ -1167,7 +1214,17 @@ class Explosion(pygame.sprite.Sprite):
     def __init__(self, x, y):
         super().__init__()
         self.images = []
-        SpriteSheetImage = pygame.image.load('./Assets/explosion.png').convert_alpha()
+        # Determine the correct base path
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            base_path = sys._MEIPASS
+        else:  # Running as a .py script
+            base_path = os.path.dirname(os.path.abspath(__file__))
+
+        # Construct the correct path for the sprite sheet
+        sprite_sheet_path = os.path.join(base_path, "Assets", "explosion.png")
+
+        # Load the sprite sheet
+        SpriteSheetImage = pygame.image.load(sprite_sheet_path).convert_alpha()
         for i in range(48):
             self.images.append(self.getImage(SpriteSheetImage, i, 128, 128, 0.5))
         self.index = 0
@@ -1257,15 +1314,27 @@ class Chamber(Gun):
         # Setup a new image if the selected one isn't the default
         # Inputs: imagePath: The filepath the points to the required image
         # Outputs: None        
-        currentDir = os.path.dirname(__file__)
-        gunPath = os.path.join(currentDir,'Sprites', 'Chamber' + str(imageNum) + '.png')
+        # Determine the correct base path
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            base_path = sys._MEIPASS
+        else:  # Running as a .py script
+            base_path = os.path.dirname(os.path.abspath(__file__))
+
+        # Construct the correct paths for gun and turret images
+        gunPath = os.path.join(base_path, 'Sprites', 'Chamber' + str(imageNum) + '.png')
+        spritePath = os.path.join(base_path, 'Sprites', 'Turret' + str(imageNum) + '.png')
+
+        # Load and scale the gun image
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
         width, height = self.originalGunImage.get_size()
-        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
+        self.originalGunImage = pygame.transform.scale(self.originalGunImage, 
+                                                    (int(width * self.imgScaler), int(height * self.imgScaler)))
+
+        # Assign images correctly
         self.gunImage = self.originalGunImage
         self.image = self.gunImage
 
-        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
+        # Load the turret sprite
         self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
     def playSFX(self):
@@ -1288,15 +1357,18 @@ class DefaultGun(Gun):
         # Setup a new image if the selected one isn't the default
         # Inputs: imagePath: The filepath the points to the required image
         # Outputs: None        
-        currentDir = os.path.dirname(__file__)
-        gunPath = os.path.join(currentDir,'Sprites', 'gun' + str(imageNum) + '.png')
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            base_path = sys._MEIPASS
+        else:  # Running as a .py script
+            base_path = os.path.dirname(os.path.abspath(__file__))
+        gunPath = os.path.join(base_path,'Sprites', 'gun' + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
         width, height = self.originalGunImage.get_size()
         self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
         self.gunImage = self.originalGunImage
         self.image = self.gunImage
 
-        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
+        spritePath = os.path.join(base_path, 'Sprites', 'Turret' + str(imageNum) + '.png')
         self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
     def fire(self):
@@ -1345,15 +1417,18 @@ class Huntsman(Gun):
         # Setup a new image if the selected one isn't the default
         # Inputs: imagePath: The filepath the points to the required image
         # Outputs: None
-        currentDir = os.path.dirname(__file__)
-        gunPath = os.path.join(currentDir,'Sprites', 'Huntsman' + str(imageNum) + '.png')
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            base_path = sys._MEIPASS
+        else:  # Running as a .py script
+            base_path = os.path.dirname(os.path.abspath(__file__))
+        gunPath = os.path.join(base_path,'Sprites', 'Huntsman' + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
         width, height = self.originalGunImage.get_size()
         self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
         self.gunImage = self.originalGunImage
         self.image = self.gunImage
 
-        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
+        spritePath = os.path.join(base_path, 'Sprites', 'Turret' + str(imageNum) + '.png')
         self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
     def playSFX(self):
@@ -1416,15 +1491,18 @@ class Judge(Gun):
         # Setup a new image if the selected one isn't the default
         # Inputs: imagePath: The filepath the points to the required image
         # Outputs: None        
-        currentDir = os.path.dirname(__file__)
-        gunPath = os.path.join(currentDir,'Sprites', 'Judge' + str(imageNum) + '.png')
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            base_path = sys._MEIPASS
+        else:  # Running as a .py script
+            base_path = os.path.dirname(os.path.abspath(__file__))
+        gunPath = os.path.join(base_path,'Sprites', 'Judge' + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
         width, height = self.originalGunImage.get_size()
         self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
         self.gunImage = self.originalGunImage
         self.image = self.gunImage
 
-        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
+        spritePath = os.path.join(base_path, 'Sprites', 'Turret' + str(imageNum) + '.png')
         self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
     def playSFX(self):
@@ -1470,15 +1548,18 @@ class Sidewinder(Gun):
         # Setup a new image if the selected one isn't the default
         # Inputs: imagePath: The filepath the points to the required image
         # Outputs: None        
-        currentDir = os.path.dirname(__file__)
-        gunPath = os.path.join(currentDir,'Sprites', 'Sidewinder' + str(imageNum) + '.png')
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            base_path = sys._MEIPASS
+        else:  # Running as a .py script
+            base_path = os.path.dirname(os.path.abspath(__file__))
+        gunPath = os.path.join(base_path,'Sprites', 'Sidewinder' + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
         width, height = self.originalGunImage.get_size()
         self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
         self.gunImage = self.originalGunImage
         self.image = self.gunImage
 
-        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
+        spritePath = os.path.join(base_path, 'Sprites', 'Turret' + str(imageNum) + '.png')
         self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
     def playSFX(self):
@@ -1626,15 +1707,18 @@ class Silencer(Gun):
         # Setup a new image if the selected one isn't the default
         # Inputs: imagePath: The filepath the points to the required image
         # Outputs: None        
-        currentDir = os.path.dirname(__file__)
-        gunPath = os.path.join(currentDir,'Sprites', 'Silencer' + str(imageNum) + '.png')
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            base_path = sys._MEIPASS
+        else:  # Running as a .py script
+            base_path = os.path.dirname(os.path.abspath(__file__))
+        gunPath = os.path.join(base_path,'Sprites', 'Silencer' + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
         width, height = self.originalGunImage.get_size()
         self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
         self.gunImage = self.originalGunImage
         self.image = self.gunImage
 
-        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
+        spritePath = os.path.join(base_path, 'Sprites', 'Turret' + str(imageNum) + '.png')
         self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
     def playSFX(self):
@@ -1661,15 +1745,18 @@ class Tempest(Gun):
         # Setup a new image if the selected one isn't the default
         # Inputs: imagePath: The filepath the points to the required image
         # Outputs: None
-        currentDir = os.path.dirname(__file__)
-        gunPath = os.path.join(currentDir,'Sprites', 'Tempest' + str(imageNum) + '.png')
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            base_path = sys._MEIPASS
+        else:  # Running as a .py script
+            base_path = os.path.dirname(os.path.abspath(__file__))
+        gunPath = os.path.join(base_path,'Sprites', 'Tempest' + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
         width, height = self.originalGunImage.get_size()
         self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
         self.gunImage = self.originalGunImage
         self.image = self.gunImage
 
-        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
+        spritePath = os.path.join(base_path, 'Sprites', 'Turret' + str(imageNum) + '.png')
         self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
     def playSFX(self):
@@ -1885,15 +1972,18 @@ class Watcher(Gun):
         # Setup a new image if the selected one isn't the default
         # Inputs: imagePath: The filepath the points to the required image
         # Outputs: None        
-        currentDir = os.path.dirname(__file__)
-        gunPath = os.path.join(currentDir,'Sprites', 'Watcher' + str(imageNum) + '.png')
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            base_path = sys._MEIPASS
+        else:  # Running as a .py script
+            base_path = os.path.dirname(os.path.abspath(__file__))
+        gunPath = os.path.join(base_path,'Sprites', 'Watcher' + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
         width, height = self.originalGunImage.get_size()
         self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
         self.gunImage = self.originalGunImage
         self.image = self.gunImage
 
-        spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
+        spritePath = os.path.join(base_path, 'Sprites', 'Turret' + str(imageNum) + '.png')
         self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
     def playSFX(self):
@@ -2259,7 +2349,17 @@ def constantPlayGame():
     screen.blit(tank2.getSprite(), (windowWidth - tileSize*3, 0.78*windowHeight)) # Tank 2
     print("Switching to game music")
     mixer.crossfade('game')
-    fontName = pygame.font.Font('fonts/LondrinaSolid-Regular.otf', 30)
+    # Determine the correct base path
+    if getattr(sys, 'frozen', False):  # Running as an .exe
+        base_path = sys._MEIPASS
+    else:  # Running as a .py script
+        base_path = os.path.dirname(os.path.abspath(__file__))
+
+    # Construct the correct path for the custom font file
+    font_path = os.path.join(base_path, 'fonts', 'LondrinaSolid-Regular.otf')
+
+    # Load the custom font
+    fontName = pygame.font.Font(font_path, 30)
     fontName2 = pygame.font.SysFont('Courier New', 20, True, False)
     fontString = "PLAYER 1             SCORE              PLAYER 2" # This is a bad way to write a string
     controlString = "WASD                            ↑↓→←" # This is a bad way to write a string
@@ -2403,7 +2503,17 @@ def playGame():
     p2ScoreText = str(p2Score)
     #Setting up the text
     fontScore = pygame.font.SysFont('Londrina', 90, True, False)
-    fontScore = pygame.font.Font('fonts/LondrinaSolid-Regular.otf', 70)
+        # Determine the correct base path
+    if getattr(sys, 'frozen', False):  # Running as an .exe
+        base_path = sys._MEIPASS
+    else:  # Running as a .py script
+        base_path = os.path.dirname(os.path.abspath(__file__))
+
+    # Construct the correct path for the custom font file
+    font_path = os.path.join(base_path, 'fonts', 'LondrinaSolid-Regular.otf')
+
+    # Load the custom font
+    fontScore = pygame.font.Font(font_path, 70)
     pygame.draw.rect(screen, bg, [tileSize*2.1, 0.87*windowHeight, windowWidth-tileSize*1.2-barWidth, windowHeight*0.15]) # The bottom bar
 
     text3 = fontScore.render(p1ScoreText + ":" + p2ScoreText, True, c.geT("BLACK"))
@@ -2898,7 +3008,10 @@ treadsp2 = []
 treadslen = 10
 
 # Load all the images
-currentDir = os.path.dirname(__file__)
+if getattr(sys, 'frozen', False):  # Running as an .exe
+    currentDir = sys._MEIPASS
+else:  # Running as a .py script
+    currentDir = os.path.dirname(os.path.abspath(__file__))
 
 ColorIndex = ["TANK_GREEN", "BURGUNDY", "ORANGE", "YELLOW", "SKY_BLUE", "LIGHT_BROWN", "DARK_LILAC", "BRIGHT_PINK"]
 
@@ -3383,10 +3496,18 @@ def creditDraw():
 homeButtonList = []
 
 # Load the tank image
-currentDir = os.path.dirname(__file__)
+if getattr(sys, 'frozen', False):  # Running as an .exe
+    currentDir = sys._MEIPASS
+else:  # Running as a .py script
+    currentDir = os.path.dirname(os.path.abspath(__file__))
 tankPath = os.path.join(currentDir, './Assets/tank_menu_logo.png')
 originalTankImage = pygame.image.load(tankPath).convert_alpha()
-lpng = pygame.image.load('Assets/logo.png').convert_alpha()
+
+# Construct the correct path for the logo image
+logo_path = os.path.join(currentDir, "Assets", "logo.png")
+
+# Load the logo image
+lpng = pygame.image.load(logo_path).convert_alpha()
 lpng = pygame.transform.scale(lpng, (lpng.get_size()[0]//15, lpng.get_size()[1]//15))
 
 # Create buttons with specified positions and text
@@ -3452,22 +3573,30 @@ volume = {
     'Tempest': 1,
     'Watcher': 0.5
 }
+# Determine the correct base path
+if getattr(sys, 'frozen', False):  # Running as an .exe
+    currentDir = sys._MEIPASS
+else:  # Running as a .py script
+    currentDir = os.path.dirname(os.path.abspath(__file__))
+
+# Construct the correct path for the sound
+# sound_path = os.path.join(base_path, "Sounds", "tank_dead.wav")
 
 soundDictionary = {
-    'tankDeath' : pygame.mixer.Sound('Sounds/tank_dead.wav'),
-    'tankHurt' : pygame.mixer.Sound('Sounds/tank_dead.wav'), # replace
-    'tankMove' : pygame.mixer.Sound('Sounds/tank_moving.wav'),
-    'tankShoot' : pygame.mixer.Sound('Sounds/tank_shoot.wav'),
-    'turretRotate' : pygame.mixer.Sound('Sounds/tank_turret_rotate.wav'),
-    'Chamber' : pygame.mixer.Sound('Sounds/Chamber.wav'),
-    'Empty' : pygame.mixer.Sound('Sounds/Empty.wav'),
-    'Huntsman' : pygame.mixer.Sound('Sounds/Huntsman.wav'),
-    'Judge' : pygame.mixer.Sound('Sounds/Judge.wav'),
-    'Reload' : pygame.mixer.Sound('Sounds/Reload.wav'),
-    'Silencer' : pygame.mixer.Sound('Sounds/Silencer.wav'),
-    'Sidewinder' : pygame.mixer.Sound('Sounds/Sidewinder.wav'), # replace
-    'Tempest' : pygame.mixer.Sound('Sounds/Tempest.wav'),
-    'Watcher' : pygame.mixer.Sound('Sounds/Watcher.wav'),
+    'tankDeath' : pygame.mixer.Sound(os.path.join(currentDir, "Sounds", "tank_dead.wav")),
+    'tankHurt' : pygame.mixer.Sound(os.path.join(currentDir, "Sounds", "tank_dead.wav")), # replace
+    'tankMove' : pygame.mixer.Sound(os.path.join(currentDir, "Sounds", "tank_moving.wav")),
+    'tankShoot' : pygame.mixer.Sound(os.path.join(currentDir, "Sounds", "tank_shoot.wav")),
+    'turretRotate' : pygame.mixer.Sound(os.path.join(currentDir, "Sounds", "tank_turret_rotate.wav")),
+    'Chamber' : pygame.mixer.Sound(os.path.join(currentDir, "Sounds", "Chamber.wav")),
+    'Empty' : pygame.mixer.Sound(os.path.join(currentDir, "Sounds", "Empty.wav")),
+    'Huntsman' : pygame.mixer.Sound(os.path.join(currentDir, "Sounds", "Huntsman.wav")),
+    'Judge' : pygame.mixer.Sound(os.path.join(currentDir, "Sounds", "Judge.wav")),
+    'Reload' : pygame.mixer.Sound(os.path.join(currentDir, "Sounds", "Reload.wav")),
+    'Silencer' : pygame.mixer.Sound(os.path.join(currentDir, "Sounds", "Silencer.wav")),
+    'Sidewinder' : pygame.mixer.Sound(os.path.join(currentDir, "Sounds", "Sidewinder.wav")), # replace
+    'Tempest' : pygame.mixer.Sound(os.path.join(currentDir, "Sounds", "Tempest.wav")),
+    'Watcher' : pygame.mixer.Sound(os.path.join(currentDir, "Sounds", "Watcher.wav")),
 }
 
 pygame.mixer.set_num_channels(32)
