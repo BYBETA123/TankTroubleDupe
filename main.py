@@ -12,69 +12,79 @@ import copy
 from tanks import *
 
 # Safety Checks
-# tempList = os.listdir('Sprites')
-# comparisonList = [] # This list is to contain all of the different types of sprites that are involved
-# nameList = ["Bonsai", "Chamber", "Cicada", "Fossil", "Gater", "gun", "Hull", "Huntsman", "Judge", "Panther", "playerGunSprite", "playerTankSprite", "Sidewinder", "Silencer", "tank", "Tempest", "Turret", "Watcher"]
-# for i in range(len(nameList)):
-#     for j in range(8): # There are 8 different types of sprites
-#         comparisonList.append(nameList[i] + str(j+1) + ".png")
+if getattr(sys, 'frozen', False):  # Running as an .exe
+    tempList = os.listdir(os.path.join(sys._MEIPASS, 'Sprites'))
+else:  # Running as a .py script
+    tempList = os.listdir('Sprites')
 
-# # Check that all the sprites are present
-# found = False
-# anyMissing = False
-# for j in comparisonList:
-#     found = False # Reset the found variable
-#     for i in tempList:
-#         if i == j:
-#             # If they are the same then the sprite is present
-#             found = True
-#             break
-#     if not found:
-#         print(f"Error: {j} is missing")
-#         anyMissing = True
+comparisonList = [] # This list is to contain all of the different types of sprites that are involved
+nameList = ["Bonsai", "Chamber", "Cicada", "Fossil", "Gater", "gun", "Hull", "Huntsman", "Judge", "Panther", "playerGunSprite", "playerTankSprite", "Sidewinder", "Silencer", "tank", "Tempest", "Turret", "Watcher"]
+for i in range(len(nameList)):
+    for j in range(8): # There are 8 different types of sprites
+        comparisonList.append(nameList[i] + str(j+1) + ".png")
 
-# # Check the asssets folder
-# tempList = os.listdir('Assets')
-# comparisonList = ['bullet.png', 'explosion.png', 'tank_menu_logo.png', 'Tile.png', 'TileDebug.png', 'TileE.png', 'TileES.png', 'TileESW.png', 'TileEW.png', 'TileN.png', 'TileNE.png', 'TileNES.png', 'TileNESW.png', 'TileNEW.png', 'TileNS.png', 'TileNSW.png', 'TileNW.png', 'TileS.png', 'TileSW.png', 'TileW.png', 'Treads.png']
+# Check that all the sprites are present
+found = False
+anyMissing = False
+for j in comparisonList:
+    found = False # Reset the found variable
+    for i in tempList:
+        if i == j:
+            # If they are the same then the sprite is present
+            found = True
+            break
+    if not found:
+        print(f"Error: {j} is missing")
+        anyMissing = True
 
-# for i in comparisonList:
-#     found = False # Reset the found variable
-#     for j in tempList:
-#         if j == i:
-#             found = True
-#             break
-#     if not found:
-#         print(f"Error: {i} is missing")
-#         anyMissing = True
+# Check the asssets folder
+if getattr(sys, 'frozen', False):  # Running as an .exe
+    tempList = os.listdir(os.path.join(sys._MEIPASS, 'Assets'))
+else:  # Running as a .py script
+    tempList = os.listdir('Assets')
+comparisonList = ['bullet.png', 'explosion.png', 'tank_menu_logo.png', 'Tile.png', 'TileDebug.png', 'TileE.png', 'TileES.png', 'TileESW.png', 'TileEW.png', 'TileN.png', 'TileNE.png', 'TileNES.png', 'TileNESW.png', 'TileNEW.png', 'TileNS.png', 'TileNSW.png', 'TileNW.png', 'TileS.png', 'TileSW.png', 'TileW.png', 'Treads.png']
+
+for i in comparisonList:
+    found = False # Reset the found variable
+    for j in tempList:
+        if j == i:
+            found = True
+            break
+    if not found:
+        print(f"Error: {i} is missing")
+        anyMissing = True
 
 
-# if (anyMissing):
-#     # In case there are missing sprites
-#     print("Error: Missing sprites")
-#     exit()
-# else:
-#     print("All sprites are present")
+if (anyMissing):
+    # In case there are missing sprites
+    print("Error: Missing sprites")
+    exit()
+else:
+    print("All sprites are present")
 
-# # check the audio
-# tempList = os.listdir('Sounds')
-# comparisonList = ["Chamber.wav", "Empty.wav", "game_music.wav", "Huntsman.wav", "Judge.wav", "lobby_music.wav", "Reload.wav", "selection_music.wav", "Sidewinder.wav", "Silencer.wav", "tank_dead.wav", "tank_moving.wav", "tank_shoot.wav", "tank_turret_rotate.wav", "Tempest.wav", "Watcher.wav"]
-# print("Checking audio files")
-# for i in comparisonList:
-#     found = False # Reset the found variable
-#     for j in tempList:
-#         if j == i:
-#             found = True
-#             break
-#     if not found:
-#         print(f"Error: {i} is missing")
-#         anyMissing = True
+# check the audio
+if getattr(sys, 'frozen', False):  # Running as an .exe
+    tempList = os.listdir(os.path.join(sys._MEIPASS, 'Sounds'))
+else:  # Running as a .py script
+    tempList = os.listdir('Sounds')
+comparisonList = ["Chamber.wav", "Empty.wav", "game_music.wav", "Huntsman.wav", "Judge.wav", "lobby_music.wav", "Reload.wav", "selection_music.wav", "Sidewinder.wav", "Silencer.wav", "tank_dead.wav", "tank_moving.wav", "tank_shoot.wav", "tank_turret_rotate.wav", "Tempest.wav", "Watcher.wav"]
+print("Checking audio files")
+for i in comparisonList:
+    found = False # Reset the found variable
+    for j in tempList:
+        if j == i:
+            found = True
+            break
+    if not found:
+        print(f"Error: {i} is missing")
+        anyMissing = True
 
-# if (anyMissing):
-#     # In case there are missing sprites
-#     print("Error: Missing audio files")
-#     exit()
-# else:
-#     print("All audio files are present")
+if (anyMissing):
+    # In case there are missing sprites
+    print("Error: Missing audio files")
+    exit()
+else:
+    print("All audio files are present")
 
 #Verification done
 
