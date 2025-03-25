@@ -221,8 +221,6 @@ class Tank(pygame.sprite.Sprite):
                 self.channelDict["move"]["channel"].stop()  # Stop playin the sound
 
         self.angle += self.rotationSpeed
-        self.angle = round(self.angle)
-        self.angle %= 360
 
         self.image = pygame.transform.rotate(self.originalTankImage, self.angle)
         self.rect = self.image.get_rect(center=(self.x, self.y))

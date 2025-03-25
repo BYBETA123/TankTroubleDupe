@@ -1831,8 +1831,6 @@ class Watcher(Gun):
             self.rotationSpeed += -self.tank.getRotationalSpeed() * self.deltaTime
     
         self.angle += self.rotationSpeed
-        self.angle = round(self.angle)
-        self.angle %= 360
         #Reload cooldown of bullet and determines the angle to fire the bullet,
         #which is relative to the posistion of the tank gun.
         if keys[self.controls['fire']] and self.canShoot:
@@ -1842,7 +1840,7 @@ class Watcher(Gun):
         if self.scoping:
             self.setTurretSpeed(self.getTurretSpeed()/20)
             self.getTank().setSpeed(self.getTank().getSpeed()/2)
-            self.getTank().setRotationalSpeed(self.getTank().getTopRotationalSpeed()/25)
+            self.getTank().setRotationalSpeed(self.getTank().getTopRotationalSpeed()/10)
             #Scale the damage of the bullet
             self.scopeDamage += 60
             if self.scopeDamage >= 3300: # Max damage
