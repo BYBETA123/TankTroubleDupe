@@ -129,6 +129,9 @@ class Tank(pygame.sprite.Sprite):
             for t in self.tileList:
                 t.setTarget(False)
 
+            # visualising the BFS
+            for tile in self.pseudoTargetarray:
+                self.tileList[tile-1].setTarget(True)
 
             # set the current target tile
             self.tileList[currentTarget-1].setTarget(True)
@@ -146,7 +149,6 @@ class Tank(pygame.sprite.Sprite):
                     currentTarget = self.pseudoTargetarray.pop(0) # we have an elemnt in the list
                 self.lastTargetPackage = (currentTarget, currentTarget%14*50 + 50//2, ((currentTarget)//14 + 1)*50 + 50//2)
 
-            # if (targetTilex == self.getCenter()[0] and targetTiley == self.getCenter()[1]): # if we match our target tile
             # we are within the target tile
             if (abs(targetTilex - self.getCenter()[0]) < 10 and abs(targetTiley - self.getCenter()[1]) < 10):
                 self.speed = 0
@@ -158,6 +160,7 @@ class Tank(pygame.sprite.Sprite):
                     currentTarget = self.pseudoTargetarray.pop(0) # we have an elemnt in the list
                     #set the new target
                 self.lastTargetPackage = (currentTarget, currentTarget%14*50 + 50//2, ((currentTarget)//14 + 1)*50 + 50//2)
+
             else:
                 # we are not on the target tile
 
@@ -192,7 +195,8 @@ class Tank(pygame.sprite.Sprite):
 
                 self.rotationSpeed = getRotation(vAngle, self.angle)
                 # if we are facing the target, go forward
-                self.speed = self.topSpeed # we move
+                self.speed = self.maxSpeed # I don't like this
+
         else:
             keys = pygame.key.get_pressed()
             #Movement keys
@@ -221,6 +225,8 @@ class Tank(pygame.sprite.Sprite):
                 self.channelDict["move"]["channel"].stop()  # Stop playin the sound
 
         self.angle += self.rotationSpeed
+        # self.angle should always be between -360 and 360
+        self.angle %= 360
 
         self.image = pygame.transform.rotate(self.originalTankImage, self.angle)
         self.rect = self.image.get_rect(center=(self.x, self.y))

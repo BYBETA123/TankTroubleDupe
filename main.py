@@ -2527,7 +2527,7 @@ def playGame():
     pygame.draw.rect(screen, bg, [tileSize*2.1, 0.87*windowHeight, windowWidth-tileSize*1.2-barWidth, windowHeight*0.15]) # The bottom bar
 
     text3 = fontDictionary["playerScore"].render(p1ScoreText + ":" + p2ScoreText, True, c.geT("BLACK"))
-    screen.blit(text3, [windowWidth/2 - text3.get_width()/2, 0.87*windowHeight])
+    screen.blit(text3, [windowWidth/2 - text3.get_width()/2, 0.85*windowHeight])
 
     #Box around the bottom of the screen for the health and reload bars
 
