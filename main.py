@@ -88,6 +88,27 @@ else:
 
 #Verification done
 
+#init
+pygame.init()
+
+
+# setup font dictionary
+if getattr(sys, 'frozen', False):  # Running as an .exe
+    base_path = sys._MEIPASS
+else:  # Running as a .py script
+    base_path = os.path.dirname(os.path.abspath(__file__))
+font_path = os.path.join(base_path, 'fonts', 'LondrinaSolid-Regular.otf')
+
+fontDictionary = {"tileFont":pygame.font.SysFont('Calibri', 25, True, False),
+                  "playerStringFont": pygame.font.Font(font_path, 30),
+                    "ctrlFont": pygame.font.SysFont('Courier New', 20, True, False),
+                    "scoreFont": pygame.font.SysFont('Londrina', 60, True, False),
+                    "playerScore" : pygame.font.Font(font_path, 70),
+                    "cFont" : pygame.font.SysFont('Courier New', 36),
+                    "iFont" : pygame.font.SysFont('Courier New', 20),
+                    "titleFont" : pygame.font.SysFont('Arial', 60),
+                  }
+
 #Classes
 
 class Gun(pygame.sprite.Sprite):
@@ -1144,8 +1165,9 @@ class Tile(pygame.sprite.Sprite):
         return border
 
     def drawText(self, screen):
-        font = pygame.font.SysFont('Calibri', 25, True, False)
-        text = font.render(str(self.index), True, c.geT("BLACK"))
+        global fontDictionary
+        # access the "tileFont" key from the dictionary
+        text = fontDictionary["tileFont"].render(str(self.index), True, c.geT("BLACK"))
         screen.blit(text, [self.x + tileSize/2 - text.get_width()/2, self.y + tileSize/2 - text.get_height()/2])
 
     def draw(self, screen):
@@ -1479,11 +1501,11 @@ class Judge(Gun):
                 self.currentUses = self.maxUses
             
             for i in range(1, 5): # 20 bullets
-                Timer(self.bulletInterval * (i) / 2000.0, self.fireBullet).start() # Threaded???
+                Timer(self.bulletInterval * (i) / 1000.0, self.fireBullet).start() # Threaded???
                 Timer(self.bulletInterval * (i+1) / 1000.0, self.fireBullet).start() # Threaded???
                 Timer(self.bulletInterval * (i+2) / 1000.0, self.fireBullet).start() # Threaded???
                 Timer(self.bulletInterval * (i+3) / 1000.0, self.fireBullet).start() # Threaded???
-                Timer(self.bulletInterval * (i+4) / 1000.0, self.fireBullet).start() # Threaded???
+                # Timer(self.bulletInterval * (i+4) / 1000.0, self.fireBullet).start() # Threaded???
 
             self.playSFX()
 
@@ -1966,16 +1988,6 @@ class Watcher(Gun):
                 pygame.draw.circle(screen, getColor(), (int(currentX), int(currentY)), 1)
                 count -= 1
 
-            # bulletX, bulletY = self.getTank().getGunCenter()
-            # bullet = WatcherBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
-            # bullet.setDamage(0)
-            # bullet.setBulletSpeed(25)
-            # if self.scopeDamage >= 3300:
-            #     bullet.setTrailColor(c.geT("GREEN"))
-            # bullet.drawable = True
-            # bullet.trail = True
-            # bulletSprites.add(bullet)
-
     def setImage(self, imageNum = 1):
         # Setup a new image if the selected one isn't the default
         # Inputs: imagePath: The filepath the points to the required image
@@ -2019,7 +2031,6 @@ def validateChoice(option, choices):
             return False
         
         #Extracting the row/col
-        # print("rowAmount: ", rowAmount, "colAmount: ", colAmount)
         row1, col1 = choices[0]//colAmount, choices[0]%colAmount
         row2, col2 = option//colAmount, option%colAmount
 
@@ -2346,6 +2357,7 @@ def constantSelectionScreen():
     mixer.crossfade('selection')
 
 def constantPlayGame():
+    global fontDictionary
     #This function handles the constant elements of the game screen
     # Inputs: None
     # Outputs: None
@@ -2357,22 +2369,12 @@ def constantPlayGame():
     screen.blit(tank2.getSprite(), (windowWidth - tileSize*3, 0.78*windowHeight)) # Tank 2
     print("Switching to game music")
     mixer.crossfade('game')
-    # Determine the correct base path
-    if getattr(sys, 'frozen', False):  # Running as an .exe
-        base_path = sys._MEIPASS
-    else:  # Running as a .py script
-        base_path = os.path.dirname(os.path.abspath(__file__))
-
-    # Construct the correct path for the custom font file
-    font_path = os.path.join(base_path, 'fonts', 'LondrinaSolid-Regular.otf')
 
     # Load the custom font
-    fontName = pygame.font.Font(font_path, 30)
-    fontName2 = pygame.font.SysFont('Courier New', 20, True, False)
     fontString = "PLAYER 1             SCORE              PLAYER 2" # This is a bad way to write a string
     controlString = "WASD                            ↑↓→←" # This is a bad way to write a string
-    textp2Name = fontName.render(fontString, True, c.geT("BLACK"))
-    controls = fontName2.render(controlString, True, c.geT("BLACK"))
+    textp2Name = fontDictionary["playerStringFont"].render(fontString, True, c.geT("BLACK"))
+    controls = fontDictionary["ctrlFont"].render(controlString, True, c.geT("BLACK"))
     screen.blit(textp2Name,[windowWidth//2 - textp2Name.get_width()//2, 0.78*windowHeight]) # This is the name on the right
     screen.blit(controls,[windowWidth//2 - controls.get_width()//2, windowHeight*5/6]) # This is the name on the right
 
@@ -2481,7 +2483,8 @@ def playGame():
     global gameOverFlag, cooldownTimer, startTime, p1Score, p2Score, startTreads
     global tank1Dead, tank2Dead, tileList, spawnpoint
     global tank1, tank2, gun1, gun2, allSprites, bulletSprites
-    global currentTime, deltaTime, lastUpdateTime
+    global currentTime, deltaTime, lastUpdateTime, systemTime, elapsedTime
+    global fontDictionary
     if gameOverFlag:
         #The game is over
         startTime = time.time() #Start a 5s timer
@@ -2499,6 +2502,15 @@ def playGame():
             #Reset the game
             reset()
             constantPlayGame()
+            systemTime = time.time_ns() # reset the time
+    else:
+        #work out the elasped time and print the difference
+        # difference 
+        elapsedTime = time.time_ns()
+
+    seconds =  (elapsedTime - systemTime) // 1_000_000_000 # convert to seconds
+    textString = f"{seconds // 60:02d}:{seconds % 60:02d}"
+    text = fontDictionary["scoreFont"].render(textString, True, c.geT("BLACK"))
 
     #UI Elements
     pauseButton.update_display(pygame.mouse.get_pos())
@@ -2509,22 +2521,12 @@ def playGame():
     #Making the string for score
     p1ScoreText = str(p1Score)
     p2ScoreText = str(p2Score)
-    #Setting up the text
-    fontScore = pygame.font.SysFont('Londrina', 90, True, False)
-        # Determine the correct base path
-    if getattr(sys, 'frozen', False):  # Running as an .exe
-        base_path = sys._MEIPASS
-    else:  # Running as a .py script
-        base_path = os.path.dirname(os.path.abspath(__file__))
-
-    # Construct the correct path for the custom font file
-    font_path = os.path.join(base_path, 'fonts', 'LondrinaSolid-Regular.otf')
+    #Setting up the tex
 
     # Load the custom font
-    fontScore = pygame.font.Font(font_path, 70)
     pygame.draw.rect(screen, bg, [tileSize*2.1, 0.87*windowHeight, windowWidth-tileSize*1.2-barWidth, windowHeight*0.15]) # The bottom bar
 
-    text3 = fontScore.render(p1ScoreText + ":" + p2ScoreText, True, c.geT("BLACK"))
+    text3 = fontDictionary["playerScore"].render(p1ScoreText + ":" + p2ScoreText, True, c.geT("BLACK"))
     screen.blit(text3, [windowWidth/2 - text3.get_width()/2, 0.87*windowHeight])
 
     #Box around the bottom of the screen for the health and reload bars
@@ -2577,6 +2579,12 @@ def playGame():
         screen.blit(pos[0], pos[1])
     for pos in treadsp2:
         screen.blit(pos[0], pos[1])
+
+    # fill up the area covered by the tank with the background color
+    pygame.draw.rect(screen, bg, [windowWidth//2 - (text.get_width()//2) * 1.1, 8, text.get_width()* 1.1, text.get_height()])
+    # draw the text again
+    screen.blit(text, [windowWidth//2 - text.get_width()//2, 8])
+
 
     # pygame.draw.polygon(screen, c.geT("GREEN"), tank1.getCorners(), 2) #Hit box outline
     # pygame.draw.polygon(screen, c.geT("GREEN"), tank2.getCorners(), 2) #Hit box outline
@@ -2724,7 +2732,6 @@ def infoScreen():
 
 #Game setup
 #Start the game setup
-pygame.init()
 mixer = Music()
 mixer.play()
 pygame.display.set_caption("Flanki") # Name the window
@@ -2840,8 +2847,7 @@ creditbox = [
     "Art: Beta, Goodnews888, Ekiel",
 ]
 
-cFont = pygame.font.SysFont('Courier New', 36)
-creditsurfaces = [cFont.render(line, True, c.geT("BLACk")) for line in creditbox]
+creditsurfaces = [fontDictionary["cFont"].render(line, True, c.geT("BLACk")) for line in creditbox]
 
 # info screen
 infoButtons = []
@@ -2966,8 +2972,7 @@ infoButtons.append(infoRArrow)
 infoBackButton = Button(c.geT("GREEN"), c.geT("WHITE"), windowWidth - 175, 75, 100, tileSize, 'Back', c.geT("BLACK"), 20, (100, 100, 255))
 infoButtons.append(infoBackButton)
 
-cFont = pygame.font.SysFont('Courier New', 20)
-iListRender = [[cFont.render(line, True, c.geT("BLACk")) for line in iListDesc[i]] for i in range(len(iListDesc))]
+iListRender = [[fontDictionary["iFont"].render(line, True, c.geT("BLACk")) for line in iListDesc[i]] for i in range(len(iListDesc))]
 
 #Selection Screen
 buttonList = []
@@ -3258,6 +3263,9 @@ reloadBar2.setBoxColor(selectionBackground)
 reloadBar2.setText("RELOAD", "left")
 buttonList.append(reloadBar2)
 
+# current time on system clock
+systemTime = time.time_ns()
+elapsedTime = time.time_ns()
 
 def checkButtons(mouse):
     #This function checks all the buttons of the mouse in the selection screen
@@ -3534,8 +3542,7 @@ homeButtonList.append(settingsButton)
 homeButtonList.append(quitButtonHome)
 
 # Define title text properties
-titleFont = pygame.font.SysFont('Arial', 60)
-titleText = titleFont.render('FLANKI', True, (0, 0, 0))  # Render the title text
+titleText = fontDictionary["titleFont"].render('FLANKI', True, (0, 0, 0))  # Render the title text
 
 pauseButton = Button(bg ,bg, windowWidth-tileSize*3, tileSize//5,tileSize*2,tileSize//2, "PAUSE", c.geT("BLACK"), 20, c.geT("OFF_WHITE"))
 pauseButton.setOutline(True, 2)
