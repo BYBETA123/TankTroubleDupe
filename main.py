@@ -275,7 +275,7 @@ class Gun(pygame.sprite.Sprite):
                 self.rotationSpeed += -self.tank.getRotationalSpeed() * self.deltaTime
 
             self.angle += self.rotationSpeed
-            self.angle = round(self.angle)
+            # self.angle = round(self.angle)
             self.angle %= 360
 
             #Reload cooldown of bullet and determines the angle to fire the bullet,

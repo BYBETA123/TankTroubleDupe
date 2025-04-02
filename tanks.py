@@ -404,14 +404,14 @@ class Tank(pygame.sprite.Sprite):
 
         # Load the image with the corrected path
         rect_surface = pygame.image.load(image_path).convert_alpha()
-        rect_surface = pygame.transform.scale(rect_surface, (self.originalTankImage.get_size()))
-
+        # rect_surface = pygame.transform.scale(rect_surface, (self.originalTankImage.get_size()))
+        rect_surface = pygame.transform.scale(rect_surface, (6, self.originalTankImage.get_size()[1]))
 
         rotated_surface = pygame.transform.rotate(rect_surface, self.angle)
         rotated_rect = rotated_surface.get_rect(center = (self.x, self.y))
 
         treads.append((rotated_surface, rotated_rect.topleft))
-        if (len(treads) > 15):
+        if (len(treads) > 30):
             treads.pop(0)
 
     def getCurrentTile(self):
