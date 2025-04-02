@@ -1082,6 +1082,12 @@ class Tile(pygame.sprite.Sprite):
         self.neighbours, self.bordering = self.neighbourCheck()
         self.AITarget = False
         self.supply = None
+        self.timer = 50667 # Roughly one minute?
+        self.supplyTimer = self.timer # This is the timer for the supply
+        self.picked = False
+        self.supplyIndex = None # The index of the supply that is on the tile
+
+
         # At this point the borders should be set
         # self.tilePath = "./Assets/Tile"
         # cardinal = ["N", "E", "S", "W"]
@@ -1116,6 +1122,35 @@ class Tile(pygame.sprite.Sprite):
         # Load the debug tile image
         debugPath = os.path.join(base_path, "Assets", "TileDebug.png")
         self.debug = pygame.image.load(debugPath).convert_alpha()
+
+    def update(self):
+        if self.picked:
+            self.supplyTimer -= 1
+        if self.supplyTimer < 0:
+            self.supplyTimer = 0
+            self.picked = False
+        
+        # if tank1 or tank 2 is within the tile, then we want to grant the effect
+        if self.supply is not None and not self.picked:
+            if self.isWithin(tank1.getCenter()):
+                print("Picked up supply")
+                if self.supplyIndex == 0:
+                    tank1.applyDoubleDamage()
+                elif self.supplyIndex == 1:
+                    tank1.applyDoubleArmor()
+                elif self.supplyIndex == 2:
+                    tank1.applySpeedBoost()
+
+                self.picked = True
+            if self.isWithin(tank2.getCenter()):
+                print("Picked up supply")
+                if self.supplyIndex == 0:
+                    tank2.applyDoubleDamage()
+                elif self.supplyIndex == 1:
+                    tank2.applyDoubleArmor()
+                elif self.supplyIndex == 2:
+                    tank2.applySpeedBoost()
+                self.picked = True
 
     def neighbourCheck(self):
         #This function will return a list of the indexes of the neighbours based on the current list of border
@@ -1201,13 +1236,18 @@ class Tile(pygame.sprite.Sprite):
     def getCorners(self):
         return [(self.x, self.y), (self.x + tileSize, self.y), (self.x + tileSize, self.y + tileSize), (self.x, self.y + tileSize)]
 
-    def isWithin(self):
+    def isWithin(self, crds = None):
         # This function will check if the mouse is within the tile
         # Inputs: None
         # Outputs: Boolean value representing whether the mouse is within the tile
-        mouseX, mouseY = pygame.mouse.get_pos()
+        if crds == None:
+            mouseX, mouseY = pygame.mouse.get_pos()
+        else:
+            mouseX, mouseY = crds[0], crds[1]
+
         if mouseX >= self.x and mouseX <= self.x + tileSize and mouseY >= self.y and mouseY <= self.y + tileSize:
-            self.printDebug()
+            if crds == None:
+                self.printDebug()
             return True
         return False
 
@@ -1238,13 +1278,14 @@ class Tile(pygame.sprite.Sprite):
         debugPath = os.path.join(base_path, "Assets", "TileDebug.png")
         self.debug = pygame.image.load(debugPath).convert_alpha()
 
-    def setSupply(self, supplyPath):
+    def setSupply(self, supplyPath, index = None):
         # This function will set the supply icon for the tile
         # Inputs: supplyPath: The path to the supply icon
         # Outputs: None
         if supplyPath is not None:
             self.supply = pygame.image.load(supplyPath).convert_alpha()
             self.supply = pygame.transform.scale(self.supply, (tileSize//2, tileSize//2))
+            self.supplyIndex = index
 
     def getCenter(self):
         return (self.x + tileSize//2, self.y + tileSize//2) 
@@ -2167,17 +2208,17 @@ def tileGen():
 
     # supplies
 
-    tileList[98].setSupply("Assets/Double_Armor.png")
-    tileList[74].setSupply("Assets/Double_Damage.png")
-    tileList[105].setSupply("Assets/Speed_Boost.png")
+    tileList[98].setSupply("Assets/Double_Armor.png", 1)
+    tileList[74].setSupply("Assets/Double_Damage.png", 0)
+    tileList[105].setSupply("Assets/Speed_Boost.png", 2)
 
-    tileList[95].setSupply("Assets/Double_Armor.png")
-    tileList[54].setSupply("Assets/Double_Damage.png")
-    tileList[10].setSupply("Assets/Speed_Boost.png")
+    tileList[95].setSupply("Assets/Double_Armor.png", 1)
+    tileList[54].setSupply("Assets/Double_Damage.png", 0)
+    tileList[10].setSupply("Assets/Speed_Boost.png", 2)
 
-    tileList[2].setSupply("Assets/Double_Armor.png")
-    tileList[33].setSupply("Assets/Double_Damage.png")
-    tileList[42].setSupply("Assets/Speed_Boost.png")
+    tileList[2].setSupply("Assets/Double_Armor.png", 1)
+    tileList[33].setSupply("Assets/Double_Damage.png", 2)
+    tileList[42].setSupply("Assets/Speed_Boost.png", 0)
 
     return tileList
 
@@ -2597,6 +2638,7 @@ def playGame():
 
     # Draw the border
     for tile in tileList:
+        tile.update()
         tile.draw(screen)
 
     # Draw the edge of themaze
