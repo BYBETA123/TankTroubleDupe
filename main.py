@@ -303,11 +303,12 @@ class Gun(pygame.sprite.Sprite):
         # This function completely handles the bullet generation when firing a bullet
         # Inputs: None
         # Outputs: None
-
         # Calculating where the bullet should spawn
         bulletX, bulletY = self.getTank().getGunCenter()
         bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
-        bullet.setDamage(self.damage)
+        bullet.setDamage(self._getDamage())
+        if self.tank.effect[0] != 0:
+            print("Double damage")
         bullet.setName(self.getTank().getName())
         bulletSprites.add(bullet)
         self.canShoot = False
@@ -353,6 +354,9 @@ class Gun(pygame.sprite.Sprite):
     def getDamageStatistic(self):
         return self.damageStatistic
     
+    def _getDamage(self):
+        return self.damage * (2 if (self.tank.effect[0] != 0) else 1)
+
     def setTurretSpeed(self, speed):
         self.turretSpeed = speed
 
@@ -1077,6 +1081,7 @@ class Tile(pygame.sprite.Sprite):
         self.border = self.borderControl()
         self.neighbours, self.bordering = self.neighbourCheck()
         self.AITarget = False
+        self.supply = None
         # At this point the borders should be set
         # self.tilePath = "./Assets/Tile"
         # cardinal = ["N", "E", "S", "W"]
@@ -1177,6 +1182,10 @@ class Tile(pygame.sprite.Sprite):
         #     screen.blit(self.image, self.rect)
         screen.blit(self.image, self.rect)
 
+        if self.supply is not None:
+            # draw the supply icon
+            screen.blit(self.supply, (self.x + tileSize//2 - self.supply.get_width()//2, self.y + tileSize//2 - self.supply.get_height()//2))
+
     def getNeighbours(self):
         return self.neighbours
 
@@ -1228,6 +1237,14 @@ class Tile(pygame.sprite.Sprite):
         # Load the debug tile image
         debugPath = os.path.join(base_path, "Assets", "TileDebug.png")
         self.debug = pygame.image.load(debugPath).convert_alpha()
+
+    def setSupply(self, supplyPath):
+        # This function will set the supply icon for the tile
+        # Inputs: supplyPath: The path to the supply icon
+        # Outputs: None
+        if supplyPath is not None:
+            self.supply = pygame.image.load(supplyPath).convert_alpha()
+            self.supply = pygame.transform.scale(self.supply, (tileSize//2, tileSize//2))
 
     def getCenter(self):
         return (self.x + tileSize//2, self.y + tileSize//2) 
@@ -1411,7 +1428,7 @@ class DefaultGun(Gun):
         # Calculating where the bullet should spawn
         bulletX, bulletY = self.getTank().getGunCenter()
         bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
-        bullet.setDamage(self.damage)
+        bullet.setDamage(self._getDamage())
         bullet.setBounce(5)
         bullet.setName(self.getTank().getName())
         bulletSprites.add(bullet)
@@ -2147,6 +2164,21 @@ def tileGen():
     global spawnpoint
     spawnpoint = []
     spawnpoint = choices 
+
+    # supplies
+
+    tileList[98].setSupply("Assets/Double_Armor.png")
+    tileList[74].setSupply("Assets/Double_Damage.png")
+    tileList[105].setSupply("Assets/Speed_Boost.png")
+
+    tileList[95].setSupply("Assets/Double_Armor.png")
+    tileList[54].setSupply("Assets/Double_Damage.png")
+    tileList[10].setSupply("Assets/Speed_Boost.png")
+
+    tileList[2].setSupply("Assets/Double_Armor.png")
+    tileList[33].setSupply("Assets/Double_Damage.png")
+    tileList[42].setSupply("Assets/Speed_Boost.png")
+
     return tileList
 
 # Helper functions for SAT
@@ -2457,7 +2489,7 @@ def damage(tank, damage):
     # This function will adjust the damage that the tank has taken
     # Inputs: damage: The amount of damage that the tank has taken
     # Outputs: None
-    tank.health -= damage
+    tank.health -= damage * (0.5 if tank.effect[1] != 0 else 1)
     if tank.health > 0:
         if not tank.channelDict["death"]["channel"].get_busy(): # if the sound isn't playing
             tank.channelDict["death"]["channel"].play(soundDictionary["tankHurt"])  # Play sound indefinitely
@@ -2484,7 +2516,7 @@ def playGame():
     global tank1Dead, tank2Dead, tileList, spawnpoint
     global tank1, tank2, gun1, gun2, allSprites, bulletSprites
     global currentTime, deltaTime, lastUpdateTime, systemTime, elapsedTime
-    global fontDictionary
+    global fontDictionary, supplyAssets
     if gameOverFlag:
         #The game is over
         startTime = time.time() #Start a 5s timer
@@ -2542,8 +2574,6 @@ def playGame():
     pygame.draw.rect(screen, c.geT("BLACK"), [tileSize*2.2, 0.88*windowHeight + mazeY//2, barWidth, barHeight], 2) # Outline
 
 
-
-
     #Health bars
     pygame.draw.rect(screen, c.geT("RED"), [windowWidth - tileSize*2.2 - barWidth, 0.88*windowHeight, barWidth*(tank2.getHealthPercentage()),
                                             barHeight])
@@ -2554,8 +2584,18 @@ def playGame():
                                              barHeight]) # The 25 is to space from the health bar
     pygame.draw.rect(screen, c.geT("BLACK"), [windowWidth - tileSize*2.2 - barWidth, 0.88*windowHeight + mazeY//2, barWidth, barHeight], 2) # Outline
 
-    # Draw the border
+    #draw the supplies # Draw more on top of them
 
+    screen.blit(supplyAssets[0], [270, 550])
+    screen.blit(supplyAssets[1], [290, 550])
+    screen.blit(supplyAssets[2], [310, 550])
+
+    # opposite side
+    screen.blit(supplyAssets[2], [520, 550])
+    screen.blit(supplyAssets[1], [490, 550])
+    screen.blit(supplyAssets[0], [460, 550])
+
+    # Draw the border
     for tile in tileList:
         tile.draw(screen)
 
@@ -2774,6 +2814,21 @@ lastUpdateTime = 0
 screen = pygame.display.set_mode((windowWidth,windowHeight))  # Windowed (safer/ superior)
 
 # Fullscreen but it renders your computer useless otherwise
+supplyAssets = ["Assets/Double_Armor.png", "Assets/Speed_Boost.png"]
+if getattr(sys, 'frozen', False):  # Running as an .exe
+    currentDir = sys._MEIPASS
+else:  # Running as a .py script
+    currentDir = os.path.dirname(os.path.abspath(__file__))
+
+supplyAssets = [None] * 3
+
+supplyAssets[0] = pygame.image.load(os.path.join(currentDir, 'Assets', 'Double_Damage.png')).convert_alpha()
+supplyAssets[1] = pygame.image.load(os.path.join(currentDir, 'Assets', 'Double_Armor.png')).convert_alpha()
+supplyAssets[2] = pygame.image.load(os.path.join(currentDir, 'Assets', 'Speed_Boost.png')).convert_alpha()
+
+supplyAssets[0] = pygame.transform.scale(supplyAssets[0], (20, 20))
+supplyAssets[1] = pygame.transform.scale(supplyAssets[1], (20, 20))
+supplyAssets[2] = pygame.transform.scale(supplyAssets[2], (20, 20))
 
 #safe full screen
 # screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN) # For fullscreen enjoyers
@@ -3761,6 +3816,17 @@ while not done:
                 sfx.mute()
                 for sound in soundDictionary:
                     soundDictionary[sound].set_volume(volume[sound] * sfx.getValue())
+            if event.key == pygame.K_4:
+                # speed
+                if tank1 is not None:
+                    tank1.applySpeedBoost()
+            if event.key == pygame.K_3:
+                # damage
+                if tank1 is not None:
+                    tank1.applyDoubleDamage()
+            if event.key == pygame.K_2:
+                if tank1 is not None:
+                    tank1.applyDoubleArmor()
     if gameMode == GameMode.play:
         playGame() # Play the game
     elif gameMode == GameMode.pause:

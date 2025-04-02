@@ -2,6 +2,7 @@ import pygame
 import math
 import os, sys
 # Main variables
+TIMER_MAX = 19000 # The maximum time for the timer I think this is 10s?
 
 def breathFirstSearchShort(tileList, choices, option):
     # This function will search the maze in a breath first manner to see if we can reach the second spawn
@@ -94,6 +95,7 @@ class Tank(pygame.sprite.Sprite):
         self.soundDictionary = {} # The dictionary that will store the sound effects
         self.List = []
         self.deltaTime = 0
+        self.effect = [0,0,0] # This is an array which carries timers for the effects being [damage, armor, speed]
         
     def updateCorners(self):
         # This function will update the corners of the tank based on the new position
@@ -201,9 +203,10 @@ class Tank(pygame.sprite.Sprite):
             keys = pygame.key.get_pressed()
             #Movement keys
             if keys[self.controls['up']]:
-                self.speed = self.maxSpeed
+                self.speed = self.maxSpeed # I don't like this
             elif keys[self.controls['down']]:
-                self.speed = -self.maxSpeed
+                self.speed = -self.maxSpeed # I don't like this
+                
             else:
                 self.speed = 0
 
@@ -232,9 +235,16 @@ class Tank(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=(self.x, self.y))
 
         angleRad = math.radians(self.angle)
-        self.changeX += math.cos(angleRad) * self.speed * self.deltaTime
-        self.changeY += math.sin(angleRad) * self.speed * self.deltaTime
 
+        self.changeX += math.cos(angleRad) * self._getSpeed() * self.deltaTime
+        self.changeY += math.sin(angleRad) * self._getSpeed() * self.deltaTime
+
+        # Update the tank effect
+        for i in range(len(self.effect)):
+            if self.effect[i] > 0:
+                self.effect[i] -= self.deltaTime
+                if self.effect[i] <= 0:
+                    self.effect[i] = 0
 
     def getCoords(self):
         return [self.rect.x, self.rect.y, self.rect.x + self.originalTankImage.get_size()[0], self.rect.y + self.originalTankImage.get_size()[1]]
@@ -310,8 +320,25 @@ class Tank(pygame.sprite.Sprite):
     def resetMaxSpeed(self):
         self.maxSpeed = self.topSpeed
 
+    def _getSpeed(self): # This is private
+        sped = 1.5
+        return self.speed * (sped if (self.effect[2] != 0) else 1)
+
     def getSpeed(self):
         return self.topSpeed
+
+    def applyDoubleDamage(self):
+        # This function will apply double damage to the tank
+        # Inputs: None
+        # Outputs: None
+        self.effect[0] = TIMER_MAX # idk
+    
+    def applyDoubleArmor(self):
+        # This function will apply double armor to the tank
+        self.effect[1] = TIMER_MAX # idk
+    
+    def applySpeedBoost(self):
+        self.effect[2] = TIMER_MAX / 3 # idk
 
     def getTankName(self):
         return self.tankName
@@ -405,7 +432,7 @@ class Tank(pygame.sprite.Sprite):
         # Load the image with the corrected path
         rect_surface = pygame.image.load(image_path).convert_alpha()
         # rect_surface = pygame.transform.scale(rect_surface, (self.originalTankImage.get_size()))
-        rect_surface = pygame.transform.scale(rect_surface, (6, self.originalTankImage.get_size()[1]))
+        rect_surface = pygame.transform.scale(rect_surface, (8, self.originalTankImage.get_size()[1]))
 
         rotated_surface = pygame.transform.rotate(rect_surface, self.angle)
         rotated_rect = rotated_surface.get_rect(center = (self.x, self.y))
