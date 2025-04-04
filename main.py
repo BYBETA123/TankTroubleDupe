@@ -307,8 +307,6 @@ class Gun(pygame.sprite.Sprite):
         bulletX, bulletY = self.getTank().getGunCenter()
         bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setDamage(self._getDamage())
-        if self.tank.effect[0] != 0:
-            print("Double damage")
         bullet.setName(self.getTank().getName())
         bulletSprites.add(bullet)
         self.canShoot = False
@@ -389,7 +387,7 @@ class Gun(pygame.sprite.Sprite):
     def draw(self, screen):
         screen.blit(self.image, self.rect)
 
-    def setImage(self, imageNum = 1):
+    def setImage(self, name = 'gun', imageNum = 1):
         # Setup a new image if the selected one isn't the default
         # Inputs: imagePath: The filepath the points to the required image
         # Outputs: None
@@ -397,7 +395,7 @@ class Gun(pygame.sprite.Sprite):
             currentDir = sys._MEIPASS
         else:  # Running as a .py script
             currentDir = os.path.dirname(os.path.abspath(__file__))
-        gunPath = os.path.join(currentDir,'Sprites', 'gun' + str(imageNum) + '.png')
+        gunPath = os.path.join(currentDir,'Sprites', str(name) + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
         width, height = self.originalGunImage.get_size()
         self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
@@ -682,13 +680,11 @@ class SidewinderBullet(Bullet):
     def __init__(self, x, y, angle, gunLength, tipOffSet):
         super().__init__(x, y, angle, gunLength, tipOffSet)
         self.setBounce(5)
-        self.setDamage(350)
 
 class JudgeBullet(Bullet):
 
-    def __init__(self, x, y, angle, gunLength, tipOffSet, initialDamage=76, minDamage=50):
+    def __init__(self, x, y, angle, gunLength, tipOffSet):
         super().__init__(x, y, angle, gunLength, tipOffSet)
-        self.damage = initialDamage
         self.setBounce(2)
 
 class SilencerBullet(Bullet):
@@ -696,7 +692,6 @@ class SilencerBullet(Bullet):
     def __init__(self, x, y, angle, gunLength, tipOffSet):
         super().__init__(x, y, angle, gunLength, tipOffSet)
         self.speed = 0.13
-        self.damage = 1400
     
     def update(self):
         """
@@ -774,7 +769,6 @@ class WatcherBullet(Bullet):
     def __init__(self, x, y, angle, gunLength, tipOffSet):
         super().__init__(x, y, angle, gunLength, tipOffSet)
         self.speed = 0.2
-        self.damage = 3300
 
     def update(self):
         """
@@ -884,17 +878,12 @@ class WatcherBullet(Bullet):
 
 class ChamberBullet(Bullet):
 
-    gunLength = -24
-    tipOffSet = 30
     splash = True
 
     def __init__(self, x, y, angle, gunLength, tipOffSet):
         super().__init__(x, y, angle, gunLength, tipOffSet)
         self.speed = 0.5
-        self.damage = 1000
         self.drawable = True
-        self.gunLength = gunLength
-        self.tipOffSet = tipOffSet
 
     def update(self):
         """
@@ -1392,40 +1381,13 @@ class Chamber(Gun):
         bulletX, bulletY = self.getTank().getGunCenter()
         bullet = ChamberBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
-        bullet.setDamage(self.damage)
+        bullet.setDamage(self._getDamage())
         bullet.setBulletSpeed(10)
         bulletSprites.add(bullet)
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
         #If either tank shoots, play this sound effect.
         self.playSFX()
-
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imagePath: The filepath the points to the required image
-        # Outputs: None        
-        # Determine the correct base path
-        if getattr(sys, 'frozen', False):  # Running as an .exe
-            base_path = sys._MEIPASS
-        else:  # Running as a .py script
-            base_path = os.path.dirname(os.path.abspath(__file__))
-
-        # Construct the correct paths for gun and turret images
-        gunPath = os.path.join(base_path, 'Sprites', 'Chamber' + str(imageNum) + '.png')
-        spritePath = os.path.join(base_path, 'Sprites', 'Turret' + str(imageNum) + '.png')
-
-        # Load and scale the gun image
-        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
-        width, height = self.originalGunImage.get_size()
-        self.originalGunImage = pygame.transform.scale(self.originalGunImage, 
-                                                    (int(width * self.imgScaler), int(height * self.imgScaler)))
-
-        # Assign images correctly
-        self.gunImage = self.originalGunImage
-        self.image = self.gunImage
-
-        # Load the turret sprite
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
     def playSFX(self):
         # This function will play the sound effect of the gun firing
@@ -1442,24 +1404,6 @@ class DefaultGun(Gun):
         self.setCooldown(400) # 500 ms
         self.setDamage(1) # 10000
         self.setDefault(True)
-
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imagePath: The filepath the points to the required image
-        # Outputs: None        
-        if getattr(sys, 'frozen', False):  # Running as an .exe
-            base_path = sys._MEIPASS
-        else:  # Running as a .py script
-            base_path = os.path.dirname(os.path.abspath(__file__))
-        gunPath = os.path.join(base_path,'Sprites', 'gun' + str(imageNum) + '.png')
-        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
-        width, height = self.originalGunImage.get_size()
-        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
-        self.gunImage = self.originalGunImage
-        self.image = self.gunImage
-
-        spritePath = os.path.join(base_path, 'Sprites', 'Turret' + str(imageNum) + '.png')
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
     def fire(self):
         # This function completely handles the bullet generation when firing a bullet
@@ -1492,34 +1436,16 @@ class Huntsman(Gun):
         bulletX, bulletY = self.getTank().getGunCenter()
         bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
-        if random.random() < 0.4:  # 40% chance
-            bullet.setDamage(self.damage * 2)
+        if random.random() <= 0.4:  # 40% chance
+            bullet.setDamage(self._getDamage() * 2)
             print("Critical Hit!")
         else:
-            bullet.setDamage(self.damage)
+            bullet.setDamage(self._getDamage())
         bullet.setBulletSpeed(15)
         bulletSprites.add(bullet)
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
         self.playSFX()
-
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imagePath: The filepath the points to the required image
-        # Outputs: None
-        if getattr(sys, 'frozen', False):  # Running as an .exe
-            base_path = sys._MEIPASS
-        else:  # Running as a .py script
-            base_path = os.path.dirname(os.path.abspath(__file__))
-        gunPath = os.path.join(base_path,'Sprites', 'Huntsman' + str(imageNum) + '.png')
-        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
-        width, height = self.originalGunImage.get_size()
-        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
-        self.gunImage = self.originalGunImage
-        self.image = self.gunImage
-
-        spritePath = os.path.join(base_path, 'Sprites', 'Turret' + str(imageNum) + '.png')
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
     def playSFX(self):
         # This function will play the sound effect of the gun firing
@@ -1541,7 +1467,6 @@ class Judge(Gun):
         self.setGunBackDuration(300)
         self.setTipOffset(28)
         self.bulletInterval = 15
-        self.scatterRange = 10
         self.maxUses = 3
         self.currentUses = self.maxUses
         self.reloadTime = 2  # 2 seconds
@@ -1557,43 +1482,22 @@ class Judge(Gun):
             else:
                 self.shootCooldown = self.cooldownDuration * 3
                 self.currentUses = self.maxUses
-            
-            for i in range(1, 5): # 20 bullets
-                Timer(self.bulletInterval * (i) / 1000.0, self.fireBullet).start() # Threaded???
-                Timer(self.bulletInterval * (i+1) / 1000.0, self.fireBullet).start() # Threaded???
-                Timer(self.bulletInterval * (i+2) / 1000.0, self.fireBullet).start() # Threaded???
-                Timer(self.bulletInterval * (i+3) / 1000.0, self.fireBullet).start() # Threaded???
-                # Timer(self.bulletInterval * (i+4) / 1000.0, self.fireBullet).start() # Threaded???
+
+            # <!Optimize>
+            for _ in range(20): # 20 bullets
+                self.fireBullet()
 
             self.playSFX()
 
     def fireBullet(self):
-        scatterAngle = random.uniform(-self.scatterRange, self.scatterRange)
+        scatterAngle = random.uniform(-7.5, 7.5) # cone of 10 degrees
         bulletAngle = self.angle + scatterAngle
         bulletX, bulletY = self.getTank().getGunCenter()
-        bullet = JudgeBullet(bulletX, bulletY, bulletAngle, self.gunLength, self.tipOffSet)
+        bullet = JudgeBullet(bulletX + random.uniform(-3, 3), bulletY + random.uniform(-3, 3), bulletAngle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
-        bullet.setDamage(self.damage)
+        bullet.setDamage(self._getDamage())
         bullet.setBulletSpeed(8)
         bulletSprites.add(bullet)
-
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imagePath: The filepath the points to the required image
-        # Outputs: None        
-        if getattr(sys, 'frozen', False):  # Running as an .exe
-            base_path = sys._MEIPASS
-        else:  # Running as a .py script
-            base_path = os.path.dirname(os.path.abspath(__file__))
-        gunPath = os.path.join(base_path,'Sprites', 'Judge' + str(imageNum) + '.png')
-        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
-        width, height = self.originalGunImage.get_size()
-        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
-        self.gunImage = self.originalGunImage
-        self.image = self.gunImage
-
-        spritePath = os.path.join(base_path, 'Sprites', 'Turret' + str(imageNum) + '.png')
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
     def playSFX(self):
         # This function will play the sound effect of the gun firing
@@ -1629,28 +1533,11 @@ class Sidewinder(Gun):
         bullet = SidewinderBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
         bullet.setName(self.getTank().getName())
         bullet.setBulletSpeed(10)
+        bullet.setDamage(self._getDamage())
         bulletSprites.add(bullet)
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
         self.playSFX()
-
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imagePath: The filepath the points to the required image
-        # Outputs: None        
-        if getattr(sys, 'frozen', False):  # Running as an .exe
-            base_path = sys._MEIPASS
-        else:  # Running as a .py script
-            base_path = os.path.dirname(os.path.abspath(__file__))
-        gunPath = os.path.join(base_path,'Sprites', 'Sidewinder' + str(imageNum) + '.png')
-        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
-        width, height = self.originalGunImage.get_size()
-        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
-        self.gunImage = self.originalGunImage
-        self.image = self.gunImage
-
-        spritePath = os.path.join(base_path, 'Sprites', 'Turret' + str(imageNum) + '.png')
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
     def playSFX(self):
         # This function will play the sound effect of the gun firing
@@ -1773,7 +1660,7 @@ class Silencer(Gun):
         bulletSprites.add(bullet)
         # Real bullet
         bullet1 = WatcherBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
-        bullet1.setDamage(self.damage)
+        bullet1.setDamage(self._getDamage())
         bullet1.setBulletSpeed(50)
         bullet1.setName(self.getTank().getName())
         bullet1.drawable = True
@@ -1792,24 +1679,6 @@ class Silencer(Gun):
             pygame.draw.circle(screen, c.geT("NEON_PURPLE"),
                                (gunEndX + (self.gunH + 7) * math.cos(angleRad), gunEndY - (self.gunH + 7) * math.sin(angleRad)),
                                 (pygame.time.get_ticks() - self.lastRegister)/self.wind_up * 5)
-
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imagePath: The filepath the points to the required image
-        # Outputs: None        
-        if getattr(sys, 'frozen', False):  # Running as an .exe
-            base_path = sys._MEIPASS
-        else:  # Running as a .py script
-            base_path = os.path.dirname(os.path.abspath(__file__))
-        gunPath = os.path.join(base_path,'Sprites', 'Silencer' + str(imageNum) + '.png')
-        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
-        width, height = self.originalGunImage.get_size()
-        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
-        self.gunImage = self.originalGunImage
-        self.image = self.gunImage
-
-        spritePath = os.path.join(base_path, 'Sprites', 'Turret' + str(imageNum) + '.png')
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
     def playSFX(self):
         # This function will play the sound effect of the gun firing
@@ -1830,24 +1699,6 @@ class Tempest(Gun):
         self.setReloadStatistic(3)
         self.setGunBackDuration(50)
         self.setGunCenter(0, -2)
-
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imagePath: The filepath the points to the required image
-        # Outputs: None
-        if getattr(sys, 'frozen', False):  # Running as an .exe
-            base_path = sys._MEIPASS
-        else:  # Running as a .py script
-            base_path = os.path.dirname(os.path.abspath(__file__))
-        gunPath = os.path.join(base_path,'Sprites', 'Tempest' + str(imageNum) + '.png')
-        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
-        width, height = self.originalGunImage.get_size()
-        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
-        self.gunImage = self.originalGunImage
-        self.image = self.gunImage
-
-        spritePath = os.path.join(base_path, 'Sprites', 'Turret' + str(imageNum) + '.png')
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
     def playSFX(self):
         # This function will play the sound effect of the gun firing
@@ -1980,7 +1831,7 @@ class Watcher(Gun):
         self.playSFX()
 
     def getDamage(self):
-        return self.scopeDamage
+        return self.scopeDamage * (self._getDamage() / self.damage) # reverting any change made
 
     def customDraw(self, _):
 
@@ -2045,24 +1896,6 @@ class Watcher(Gun):
                 currentY += step_dy * SPACING
                 pygame.draw.circle(screen, getColor(), (int(currentX), int(currentY)), 1)
                 count -= 1
-
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imagePath: The filepath the points to the required image
-        # Outputs: None        
-        if getattr(sys, 'frozen', False):  # Running as an .exe
-            base_path = sys._MEIPASS
-        else:  # Running as a .py script
-            base_path = os.path.dirname(os.path.abspath(__file__))
-        gunPath = os.path.join(base_path,'Sprites', 'Watcher' + str(imageNum) + '.png')
-        self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
-        width, height = self.originalGunImage.get_size()
-        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
-        self.gunImage = self.originalGunImage
-        self.image = self.gunImage
-
-        spritePath = os.path.join(base_path, 'Sprites', 'Turret' + str(imageNum) + '.png')
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
     def playSFX(self):
         # This function will play the sound effect of the gun firing
@@ -2217,8 +2050,8 @@ def tileGen():
     tileList[10].setSupply("Assets/Speed_Boost.png", 2)
 
     tileList[2].setSupply("Assets/Double_Armor.png", 1)
-    tileList[33].setSupply("Assets/Double_Damage.png", 2)
-    tileList[42].setSupply("Assets/Speed_Boost.png", 0)
+    tileList[33].setSupply("Assets/Double_Damage.png", 0)
+    tileList[42].setSupply("Assets/Speed_Boost.png", 2)
 
     return tileList
 
@@ -2307,24 +2140,24 @@ def setUpPlayers():
         tank1 = DefaultTank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
         tank1.setAI(True, currentTargetPackage)
         tank1.setData(player1PackageTank)
-        tank1.setImage(p1L + 1)
+        tank1.setImage('tank', p1L + 1)
         tank1.setSoundDictionary(soundDictionary)
         tank1.settileList(tileList)
 
         tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
         tank2.setData(player2PackageTank)
-        tank2.setImage(p2L + 1)
+        tank2.setImage('tank', p2L + 1)
         tank2.setSoundDictionary(soundDictionary)
         tank2.settileList(tileList)
 
         gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
         gun1.setAI(True)
         gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
-        gun1.setImage(p1K + 1)
+        gun1.setImage('gun', p1K + 1)
 
         gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
         gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
-        gun2.setImage(p2K + 1)
+        gun2.setImage('gun', p2K + 1)
         #Starting location
         temp = tank2.getCurrentTile().getIndex()
         tank1.setAim((temp, temp%14*tileSize + tileSize//2, ((temp)//14 + 1)*tileSize + tileSize//2))
@@ -2333,36 +2166,36 @@ def setUpPlayers():
         # easy
         tank1 = DefaultTank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
         tank1.setData(player1PackageTank)
-        tank1.setImage(p1L + 1)
+        tank1.setImage('tank', p1L + 1)
         tank1.setSoundDictionary(soundDictionary)
         tank1.settileList(tileList)
 
         tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
         tank2.setData(player2PackageTank)
-        tank2.setImage(p2L + 1)
+        tank2.setImage('tank', p2L + 1)
         tank2.setSoundDictionary(soundDictionary)
         tank2.settileList(tileList)
 
         gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
         gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
-        gun1.setImage(p1K + 1)
+        gun1.setImage('gun', p1K + 1)
 
         gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
         gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
-        gun2.setImage(p2K + 1)
+        gun2.setImage('gun', p2K + 1)
 
     elif DifficultyType == 3:
         # normal AI, 1 Player
         tank1 = copy.copy(hullList[p1J]) # Tank 1 setup
         tank1.setAI(True, currentTargetPackage)
         tank1.setData(player1PackageTank)
-        tank1.setImage(p1L + 1)
+        tank1.setImage(hullList[p1J].getName(), p1L + 1)
         tank1.setSoundDictionary(soundDictionary)
         tank1.settileList(tileList)
 
         tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
         tank2.setData(player2PackageTank)
-        tank2.setImage(p2L + 1)
+        tank2.setImage(hullList[p2J].getName(), p2L + 1)
         tank2.setSoundDictionary(soundDictionary)
         tank2.settileList(tileList)
 
@@ -2375,33 +2208,33 @@ def setUpPlayers():
         gun1.setAI(True)
         gun1.setHard()
         gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
-        gun1.setImage(p1K + 1)
+        gun1.setImage(turretList[p1I].getGunName(), p1K + 1)
 
         gun2 = copy.copy(turretList[p2I]) # Gun 2 setup
         gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
-        gun2.setImage(p2K + 1)
+        gun2.setImage(turretList[p2I].getGunName(), p2K + 1)
 
     else:
         #normal
         tank1 = copy.copy(hullList[p1J]) # Tank 1 setup
         tank1.setData(player1PackageTank)
-        tank1.setImage(p1L + 1)
+        tank1.setImage(hullList[p1J].getName(), p1L + 1)
         tank1.setSoundDictionary(soundDictionary)
         tank1.settileList(tileList)
 
         tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
         tank2.setData(player2PackageTank)
-        tank2.setImage(p2L + 1)
+        tank2.setImage(hullList[p2J].getName(), p2L + 1)
         tank2.setSoundDictionary(soundDictionary)
         tank2.settileList(tileList)
 
         gun1 = copy.copy(turretList[p1I]) # Gun 1 setup
         gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
-        gun1.setImage(p1K + 1)
+        gun1.setImage(turretList[p1I].getGunName(), p1K + 1)
 
         gun2 = copy.copy(turretList[p2I]) # Gun 2 setup
         gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
-        gun2.setImage(p2K + 1)
+        gun2.setImage(turretList[p2I].getGunName(), p2K + 1)
     #Updating the groups
     
     for sprite in allSprites:
@@ -2666,7 +2499,6 @@ def playGame():
     pygame.draw.rect(screen, bg, [windowWidth//2 - (text.get_width()//2) * 1.1, 8, text.get_width()* 1.1, text.get_height()])
     # draw the text again
     screen.blit(text, [windowWidth//2 - text.get_width()//2, 8])
-
 
     # pygame.draw.polygon(screen, c.geT("GREEN"), tank1.getCorners(), 2) #Hit box outline
     # pygame.draw.polygon(screen, c.geT("GREEN"), tank2.getCorners(), 2) #Hit box outline

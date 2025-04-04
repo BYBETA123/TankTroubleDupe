@@ -97,24 +97,20 @@ class Tank(pygame.sprite.Sprite):
         self.deltaTime = 0
         self.effect = [0,0,0] # This is an array which carries timers for the effects being [damage, armor, speed]
         
-    def updateCorners(self):
-        # This function will update the corners of the tank based on the new position
-        # This is to make sure that the coliisions detection is accurate
-        # Inputs: None
-        # Outputs: None
-        cx, cy = self.rect.center
-        w, h = self.width / 2, self.height / 2
-        rad = math.radians(self.angle)
-        rad = math.pi * 2 - rad
-        cosA = math.cos(rad)
-        sinA = math.sin(rad)
-        # assign the new corners
-        self.corners = [
-            (cx + cosA * -w - sinA * -h, cy + sinA * -w + cosA * -h),
-            (cx + cosA * w - sinA * -h, cy + sinA * w + cosA * -h),
-            (cx + cosA * w - sinA * h, cy + sinA * w + cosA * h),
-            (cx + cosA * -w - sinA * h, cy + sinA * -w + cosA * h),
-        ] # Using trigonomety to calculate the corners
+        # Treads
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            base_path = sys._MEIPASS
+        else:  # Running as a .py script
+            base_path = os.path.dirname(os.path.abspath(__file__))
+
+        # Construct the correct path for the image file
+        image_path = os.path.join(base_path, 'Assets', 'Treads.png')
+
+        # Load the image with the corrected path
+        self.tread_surface = pygame.image.load(image_path).convert_alpha()
+        # rect_surface = pygame.transform.scale(rect_surface, (self.originalTankImage.get_size()))
+        self.tread_surface = pygame.transform.scale(self.tread_surface, (8, self.originalTankImage.get_size()[1]))
+
 
     def update(self):
         # This function updates the tank's position and rotation based on the controls detected
@@ -246,31 +242,63 @@ class Tank(pygame.sprite.Sprite):
                 if self.effect[i] <= 0:
                     self.effect[i] = 0
 
-    def getCoords(self):
-        return [self.rect.x, self.rect.y, self.rect.x + self.originalTankImage.get_size()[0], self.rect.y + self.originalTankImage.get_size()[1]]
+    def draw(self, screen): # A manual entry of the draw screen so that we can update it with anything else we may need to draw
+        screen.blit(self.image, self.rect)
 
-    def getCorners(self):
-        return self.corners
+    def updateCorners(self):
+        # This function will update the corners of the tank based on the new position
+        # This is to make sure that the coliisions detection is accurate
+        # Inputs: None
+        # Outputs: None
+        cx, cy = self.rect.center
+        w, h = self.width / 2, self.height / 2
+        rad = math.radians(self.angle)
+        rad = math.pi * 2 - rad
+        cosA = math.cos(rad)
+        sinA = math.sin(rad)
+        # assign the new corners
+        self.corners = [
+            (cx + cosA * -w - sinA * -h, cy + sinA * -w + cosA * -h),
+            (cx + cosA * w - sinA * -h, cy + sinA * w + cosA * -h),
+            (cx + cosA * w - sinA * h, cy + sinA * w + cosA * h),
+            (cx + cosA * -w - sinA * h, cy + sinA * -w + cosA * h),
+        ] # Using trigonomety to calculate the corners
+
+    def applyDoubleDamage(self):
+        # This function will apply double damage to the tank
+        # Inputs: None
+        # Outputs: None
+        self.effect[0] = TIMER_MAX
     
-    def getCenter(self):
-        return self.rect.center
+    def applyDoubleArmor(self):
+        # This function will apply double armor to the tank
+        self.effect[1] = TIMER_MAX
     
+    def applySpeedBoost(self):
+        self.effect[2] = TIMER_MAX / 3
+
     def setCoords(self, newx, newy):
         self.x, self.y = newx, newy
 
+    def getCoords(self):
+        return [self.rect.x, self.rect.y, self.rect.x + self.originalTankImage.get_size()[0], self.rect.y + self.originalTankImage.get_size()[1]]
+    
     def setCentre(self, x, y):
         self.rect.center = (x, y)
         self.x = x # Update the x and y coordinate as well
         self.y = y
 
+    def getCenter(self):
+        return self.rect.center
+
     def isDrawable(self):
         return self.drawable
 
-    def getHealth(self):
-        return self.health
-    
     def setHealth(self, health):
         self.health = health
+
+    def getHealth(self):
+        return self.health
 
     def setMaxHealth(self, health):
         self.maxHealth = health
@@ -279,36 +307,42 @@ class Tank(pygame.sprite.Sprite):
     def getMaxHealth(self):
         return self.maxHealth
 
-    def getHealthStatistic(self):
-        return self.healthStatistic
-    
     def setHealthStatistic(self, value):
         self.healthStatistic = value
 
-    def getSpeedStatistic(self):
-        return self.speedStatistic
+    def getHealthStatistic(self):
+        return self.healthStatistic
     
     def setSpeedStatistic(self, value):
         self.speedStatistic = value
 
+    def getSpeedStatistic(self):
+        return self.speedStatistic
+
     def setTankName(self, tankName):
         self.tankName = tankName
 
+    def getTankName(self):
+        return self.tankName
+    
+    def getName(self):
+        return self.name
+    
     def setRotationalSpeed(self, speed):
         self.rotationalSpeed = speed
+
+    def getRotationalSpeed(self):
+        return self.rotationalSpeed
 
     def setTopRotationalSpeed(self, speed):
         self.topRotation = speed
         self.rotationalSpeed = speed
 
-    def resetRotationalSpeed(self):
-        self.rotationalSpeed = self.topRotation
-
-    def getRotationalSpeed(self):
-        return self.rotationalSpeed
-
     def getTopRotationalSpeed(self):
         return self.topRotation
+    
+    def resetRotationalSpeed(self):
+        self.rotationalSpeed = self.topRotation
 
     def setSpeed(self, speed):
         self.maxSpeed = speed
@@ -326,22 +360,6 @@ class Tank(pygame.sprite.Sprite):
 
     def getSpeed(self):
         return self.topSpeed
-
-    def applyDoubleDamage(self):
-        # This function will apply double damage to the tank
-        # Inputs: None
-        # Outputs: None
-        self.effect[0] = TIMER_MAX # idk
-    
-    def applyDoubleArmor(self):
-        # This function will apply double armor to the tank
-        self.effect[1] = TIMER_MAX # idk
-    
-    def applySpeedBoost(self):
-        self.effect[2] = TIMER_MAX / 3 # idk
-
-    def getTankName(self):
-        return self.tankName
     
     def setData(self, data):
         # This function will set up the tanks that are being used
@@ -355,13 +373,7 @@ class Tank(pygame.sprite.Sprite):
         # set up the audio channels
         self.channelDict = data[4]
 
-    def draw(self, screen): # A manual entry of the draw screen so that we can update it with anything else we may need to draw
-        screen.blit(self.image, self.rect)
-
-    def getName(self):
-        return self.name
-
-    def setImage(self, imageNum = 1):
+    def setImage(self, name = 'tank', imageNum = 1):
         # Setup a new image if the selected one isn't the default
         # Inputs: imageNum: The index that points to the required image
         # Outputs: None
@@ -370,7 +382,7 @@ class Tank(pygame.sprite.Sprite):
             currentDir = sys._MEIPASS
         else:  # Running as a .py script
             currentDir = os.path.dirname(os.path.abspath(__file__))
-        tankPath = os.path.join(currentDir, 'Sprites', 'tank' + str(imageNum) + '.png')
+        tankPath = os.path.join(currentDir, 'Sprites', str(name) + str(imageNum) + '.png')
         self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
 
         # Scale the tank image to a smaller size
@@ -421,20 +433,7 @@ class Tank(pygame.sprite.Sprite):
         # Inputs: None
         # Outputs: None
         # Determine the correct base path
-        if getattr(sys, 'frozen', False):  # Running as an .exe
-            base_path = sys._MEIPASS
-        else:  # Running as a .py script
-            base_path = os.path.dirname(os.path.abspath(__file__))
-
-        # Construct the correct path for the image file
-        image_path = os.path.join(base_path, 'Assets', 'Treads.png')
-
-        # Load the image with the corrected path
-        rect_surface = pygame.image.load(image_path).convert_alpha()
-        # rect_surface = pygame.transform.scale(rect_surface, (self.originalTankImage.get_size()))
-        rect_surface = pygame.transform.scale(rect_surface, (8, self.originalTankImage.get_size()[1]))
-
-        rotated_surface = pygame.transform.rotate(rect_surface, self.angle)
+        rotated_surface = pygame.transform.rotate(self.tread_surface, self.angle)
         rotated_rect = rotated_surface.get_rect(center = (self.x, self.y))
 
         treads.append((rotated_surface, rotated_rect.topleft))
@@ -458,9 +457,6 @@ class Tank(pygame.sprite.Sprite):
         self.aim = aim
         self.BFSRefresh = True
         self.lastTargetPackage = aim
-
-    def getAimTime(self):
-        return self.aimTime
     
     def setAI(self, AI, currentTargetPackage):
         self.AI = AI
@@ -474,7 +470,16 @@ class Tank(pygame.sprite.Sprite):
         self.tileList = tileList
 
     def setDelta(self, deltaTime):
+        # set the delta time that occurs between each frame for refereneing elsewhere
         self.deltaTime = deltaTime
+
+    def getCorners(self):
+        # return the corners of the tank
+        return self.corners
+
+    def getAimTime(self):
+        # This function is used to keep track of the time elapsed since the last aim update (see main.py)
+        return self.aimTime
 #Hulls
 class Bonsai(Tank):
 
@@ -486,29 +491,6 @@ class Bonsai(Tank):
         self.setTopSpeed(0.05)
         self.setTopRotationalSpeed(0.17)
         self.setTankName("Bonsai")
-
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imageNum: The index that points to the required image
-        # Outputs: None
-        # Load the tank image
-        if getattr(sys, 'frozen', False):  # Running as an .exe
-            currentDir = sys._MEIPASS
-        else:  # Running as a .py script
-            currentDir = os.path.dirname(os.path.abspath(__file__))
-        tankPath = os.path.join(currentDir, 'Sprites', 'Bonsai' + str(imageNum) + '.png')
-        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
-
-        # Scale the tank image to a smaller size
-        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
-        self.image = self.tankImage
-        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
-        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
-        self.x = float(self.rect.centerx)
-        self.y = float(self.rect.centery)
-
-        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
     def getGunCenter(self):
         #Since the point is not in the center of the tank, we need to adjust the gun position
@@ -527,29 +509,6 @@ class Cicada(Tank):
         self.setTopRotationalSpeed(0.25)
         self.setTankName("Cicada")
 
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imageNum: The index that points to the required image
-        # Outputs: None
-        # Load the tank image
-        if getattr(sys, 'frozen', False):  # Running as an .exe
-            currentDir = sys._MEIPASS
-        else:  # Running as a .py script
-            currentDir = os.path.dirname(os.path.abspath(__file__))
-        tankPath = os.path.join(currentDir, 'Sprites', 'Cicada' + str(imageNum) + '.png')
-        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
-
-        # Scale the tank image to a smaller size
-        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
-        self.image = self.tankImage
-        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
-        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
-        self.x = float(self.rect.centerx)
-        self.y = float(self.rect.centery)
-
-        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
-
     def getGunCenter(self):
         #Since the point is not in the center of the tank, we need to adjust the gun position
         # Inputs: None
@@ -566,29 +525,6 @@ class DefaultTank(Tank):
         self.setTopRotationalSpeed(0.17)
         self.setTankName("tank")
 
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imageNum: The index that points to the required image
-        # Outputs: None
-        # Load the tank image
-        if getattr(sys, 'frozen', False):  # Running as an .exe
-            currentDir = sys._MEIPASS
-        else:  # Running as a .py script
-            currentDir = os.path.dirname(os.path.abspath(__file__))
-        tankPath = os.path.join(currentDir, 'Sprites', 'tank' + str(imageNum) + '.png')
-        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
-
-        # Scale the tank image to a smaller size
-        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
-        self.image = self.tankImage
-        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
-        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
-        self.x = float(self.rect.centerx)
-        self.y = float(self.rect.centery)
-
-        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
-
 class Fossil(Tank):
 
     def __init__(self, x, y, controls, name):
@@ -599,29 +535,6 @@ class Fossil(Tank):
         self.setTopSpeed(0.03)
         self.setTopRotationalSpeed(0.08)
         self.setTankName("Fossil")
-
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imageNum: The index that points to the required image
-        # Outputs: None
-        # Load the tank image
-        if getattr(sys, 'frozen', False):  # Running as an .exe
-            currentDir = sys._MEIPASS
-        else:  # Running as a .py script
-            currentDir = os.path.dirname(os.path.abspath(__file__))
-        tankPath = os.path.join(currentDir, 'Sprites', 'Fossil' + str(imageNum) + '.png')
-        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
-
-        # Scale the tank image to a smaller size
-        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
-        self.image = self.tankImage
-        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
-        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
-        self.x = float(self.rect.centerx)
-        self.y = float(self.rect.centery)
-
-        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
     def getGunCenter(self):
         #Since the point is not in the center of the tank, we need to adjust the gun position
@@ -640,29 +553,6 @@ class Gater(Tank):
         self.setTopRotationalSpeed(0.17)
         self.setTankName("Gater")
 
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imageNum: The index that points to the required image
-        # Outputs: None
-        # Load the tank image
-        if getattr(sys, 'frozen', False):  # Running as an .exe
-            currentDir = sys._MEIPASS
-        else:  # Running as a .py script
-            currentDir = os.path.dirname(os.path.abspath(__file__))
-        tankPath = os.path.join(currentDir, 'Sprites', 'Gater' + str(imageNum) + '.png')
-        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
-
-        # Scale the tank image to a smaller size
-        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
-        self.image = self.tankImage
-        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
-        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
-        self.x = float(self.rect.centerx)
-        self.y = float(self.rect.centery)
-
-        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
-
     def getGunCenter(self):
         #Since the point is not in the center of the tank, we need to adjust the gun position
         # Inputs: None
@@ -679,29 +569,6 @@ class Panther(Tank):
         self.setTopSpeed(0.1)
         self.setTopRotationalSpeed(0.27)
         self.setTankName("Panther")
-
-    def setImage(self, imageNum = 1):
-        # Setup a new image if the selected one isn't the default
-        # Inputs: imageNum: The index that points to the required image
-        # Outputs: None
-        # Load the tank image
-        if getattr(sys, 'frozen', False):  # Running as an .exe
-            currentDir = sys._MEIPASS
-        else:  # Running as a .py script
-            currentDir = os.path.dirname(os.path.abspath(__file__))
-        tankPath = os.path.join(currentDir, 'Sprites', 'Panther' + str(imageNum) + '.png')
-        self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
-
-        # Scale the tank image to a smaller size
-        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
-        self.image = self.tankImage
-        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
-        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
-        self.x = float(self.rect.centerx)
-        self.y = float(self.rect.centery)
-
-        spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
-        self.spriteImage = pygame.image.load(spritePath).convert_alpha()
 
     def getGunCenter(self):
         #Since the point is not in the center of the tank, we need to adjust the gun position
