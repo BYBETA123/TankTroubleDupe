@@ -1071,7 +1071,7 @@ class Tile(pygame.sprite.Sprite):
         self.neighbours, self.bordering = self.neighbourCheck()
         self.AITarget = False
         self.supply = None
-        self.timer = 50667 # Roughly one minute?
+        self.timer = 8372 # Roughly one minute?
         self.supplyTimer = self.timer # This is the timer for the supply
         self.picked = False
         self.supplyIndex = None # The index of the supply that is on the tile
@@ -1118,6 +1118,7 @@ class Tile(pygame.sprite.Sprite):
         if self.supplyTimer < 0:
             self.supplyTimer = 0
             self.picked = False
+            print("Supply timer expired")
         
         # if tank1 or tank 2 is within the tile, then we want to grant the effect
         if self.supply is not None and not self.picked:
@@ -1125,21 +1126,28 @@ class Tile(pygame.sprite.Sprite):
                 print("Picked up supply")
                 if self.supplyIndex == 0:
                     tank1.applyDoubleDamage()
+                    print("tank1 double damage")
                 elif self.supplyIndex == 1:
                     tank1.applyDoubleArmor()
+                    print("tank1 double armor")
                 elif self.supplyIndex == 2:
                     tank1.applySpeedBoost()
-
+                print("tank1 speed boost")
                 self.picked = True
+                self.supplyTimer = self.timer
             if self.isWithin(tank2.getCenter()):
                 print("Picked up supply")
                 if self.supplyIndex == 0:
                     tank2.applyDoubleDamage()
+                    print("tank2 double damage")
                 elif self.supplyIndex == 1:
                     tank2.applyDoubleArmor()
+                    print("tank2 double armor")
                 elif self.supplyIndex == 2:
                     tank2.applySpeedBoost()
+                    print("tank2 speed boost")
                 self.picked = True
+                self.supplyTimer = self.timer
 
     def neighbourCheck(self):
         #This function will return a list of the indexes of the neighbours based on the current list of border
@@ -1208,7 +1216,10 @@ class Tile(pygame.sprite.Sprite):
 
         if self.supply is not None:
             # draw the supply icon
-            screen.blit(self.supply, (self.x + tileSize//2 - self.supply.get_width()//2, self.y + tileSize//2 - self.supply.get_height()//2))
+            if self.picked:
+                screen.blit(self.supply[0], (self.x + tileSize//2 - self.supply[0].get_width()//2, self.y + tileSize//2 - self.supply[0].get_height()//2))
+            else:
+                screen.blit(self.supply[1], (self.x + tileSize//2 - self.supply[1].get_width()//2, self.y + tileSize//2 - self.supply[1].get_height()//2))
 
     def getNeighbours(self):
         return self.neighbours
@@ -1272,8 +1283,11 @@ class Tile(pygame.sprite.Sprite):
         # Inputs: supplyPath: The path to the supply icon
         # Outputs: None
         if supplyPath is not None:
-            self.supply = pygame.image.load(supplyPath).convert_alpha()
-            self.supply = pygame.transform.scale(self.supply, (tileSize//2, tileSize//2))
+            self.supply = [None, None]
+            self.supply[0] = pygame.image.load(supplyPath[0]).convert_alpha()
+            self.supply[0] = pygame.transform.scale(self.supply[0], (tileSize//2, tileSize//2))
+            self.supply[1] = pygame.image.load(supplyPath[1]).convert_alpha()
+            self.supply[1] = pygame.transform.scale(self.supply[1], (tileSize//2, tileSize//2))
             self.supplyIndex = index
 
     def getCenter(self):
@@ -1365,7 +1379,7 @@ class Chamber(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(1500) # 200 ms
-        self.setDamage(270) # Should be 900 but because of the 3 step effect it will be split into 3x 300
+        self.setDamage(247) # Should be 900 but because of the 3 step effect it will be split into 3x 300
         self.setDamageStatistic(2)
         self.setReloadStatistic(2)
         self.setGunBackDuration(500)
@@ -1461,7 +1475,7 @@ class Judge(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(800)  # 800 ms
-        self.setDamage(76)
+        self.setDamage(80)
         self.setDamageStatistic(2)
         self.setReloadStatistic(2)
         self.setGunBackDuration(300)
@@ -1522,7 +1536,7 @@ class Sidewinder(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(500)  # 500 ms
-        self.setDamage(350)
+        self.setDamage(300)
         self.setDamageStatistic(1)
         self.setReloadStatistic(2)
         self.setGunBackDuration(300)
@@ -1557,7 +1571,7 @@ class Silencer(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(2400) #2400 ms
-        self.setDamage(1400)
+        self.setDamage(1300)
         self.setDamageStatistic(3)
         self.setReloadStatistic(1)
         self.drawable = True
@@ -1694,7 +1708,7 @@ class Tempest(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(200) # 200 ms
-        self.setDamage(200)
+        self.setDamage(150)
         self.setDamageStatistic(1)
         self.setReloadStatistic(3)
         self.setGunBackDuration(50)
@@ -1719,7 +1733,7 @@ class Watcher(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(1500) #1500 ms
-        self.setDamage(3300)
+        self.setDamage(3000)
         self.setDamageStatistic(2)
         self.setReloadStatistic(2)
         self.setTipOffset(25)
@@ -1784,8 +1798,8 @@ class Watcher(Gun):
             self.getTank().setRotationalSpeed(self.getTank().getTopRotationalSpeed()/10)
             #Scale the damage of the bullet
             self.scopeDamage += 60
-            if self.scopeDamage >= 3300: # Max damage
-                self.scopeDamage = 3300
+            if self.scopeDamage >= self.damage: # Max damage
+                self.scopeDamage = self.damage
 
             if not keys[self.controls['fire']]:
                 self.scoping = False
@@ -1839,7 +1853,7 @@ class Watcher(Gun):
             # This function will return the color of the bullet based on the damage
             # Inputs: None
             # Outputs: The color of the bullet
-            if self.scopeDamage >= 3300:
+            if self.scopeDamage >= self.damage:
                 return c.geT("GREEN")
             else:
                 return c.geT("RED")
@@ -2041,17 +2055,17 @@ def tileGen():
 
     # supplies
 
-    tileList[98].setSupply("Assets/Double_Armor.png", 1)
-    tileList[74].setSupply("Assets/Double_Damage.png", 0)
-    tileList[105].setSupply("Assets/Speed_Boost.png", 2)
+    tileList[98].setSupply(["Assets/Armor_Floor_Picked.png", "Assets/Armor_Floor.png"], 1)
+    tileList[74].setSupply(["Assets/Damage_Floor_Picked.png", "Assets/Damage_Floor.png"], 0)
+    tileList[105].setSupply(["Assets/Speed_Floor_Picked.png", "Assets/Speed_Floor.png"], 2)
 
-    tileList[95].setSupply("Assets/Double_Armor.png", 1)
-    tileList[54].setSupply("Assets/Double_Damage.png", 0)
-    tileList[10].setSupply("Assets/Speed_Boost.png", 2)
+    tileList[95].setSupply(["Assets/Armor_Floor_Picked.png", "Assets/Armor_Floor.png"], 1)
+    tileList[54].setSupply(["Assets/Damage_Floor_Picked.png", "Assets/Damage_Floor.png"], 0)
+    tileList[10].setSupply(["Assets/Speed_Floor_Picked.png", "Assets/Speed_Floor.png"], 2)
 
-    tileList[2].setSupply("Assets/Double_Armor.png", 1)
-    tileList[33].setSupply("Assets/Double_Damage.png", 0)
-    tileList[42].setSupply("Assets/Speed_Boost.png", 2)
+    tileList[2].setSupply(["Assets/Armor_Floor_Picked.png", "Assets/Armor_Floor.png"], 1)
+    tileList[33].setSupply(["Assets/Damage_Floor_Picked.png", "Assets/Damage_Floor.png"], 0)
+    tileList[42].setSupply(["Assets/Speed_Floor_Picked.png", "Assets/Speed_Floor.png"], 2)
 
     return tileList
 
@@ -2143,12 +2157,14 @@ def setUpPlayers():
         tank1.setImage('tank', p1L + 1)
         tank1.setSoundDictionary(soundDictionary)
         tank1.settileList(tileList)
+        tank1.effect = [0,0,0]
 
         tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
         tank2.setData(player2PackageTank)
         tank2.setImage('tank', p2L + 1)
         tank2.setSoundDictionary(soundDictionary)
         tank2.settileList(tileList)
+        tank2.effect = [0,0,0]
 
         gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
         gun1.setAI(True)
@@ -2169,12 +2185,14 @@ def setUpPlayers():
         tank1.setImage('tank', p1L + 1)
         tank1.setSoundDictionary(soundDictionary)
         tank1.settileList(tileList)
+        tank1.effect = [0,0,0]
 
         tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
         tank2.setData(player2PackageTank)
         tank2.setImage('tank', p2L + 1)
         tank2.setSoundDictionary(soundDictionary)
         tank2.settileList(tileList)
+        tank2.effect = [0,0,0]
 
         gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
         gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
@@ -2192,12 +2210,14 @@ def setUpPlayers():
         tank1.setImage(hullList[p1J].getName(), p1L + 1)
         tank1.setSoundDictionary(soundDictionary)
         tank1.settileList(tileList)
+        tank1.effect = [0,0,0]
 
         tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
         tank2.setData(player2PackageTank)
         tank2.setImage(hullList[p2J].getName(), p2L + 1)
         tank2.setSoundDictionary(soundDictionary)
         tank2.settileList(tileList)
+        tank2.effect = [0,0,0]
 
         #Because silencer and watcher aren't made yet, skip them
         if p1I == 1 or p1I == 2:
@@ -2221,12 +2241,14 @@ def setUpPlayers():
         tank1.setImage(hullList[p1J].getName(), p1L + 1)
         tank1.setSoundDictionary(soundDictionary)
         tank1.settileList(tileList)
+        tank1.effect = [0,0,0]
 
         tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
         tank2.setData(player2PackageTank)
         tank2.setImage(hullList[p2J].getName(), p2L + 1)
         tank2.setSoundDictionary(soundDictionary)
         tank2.settileList(tileList)
+        tank2.effect = [0,0,0]
 
         gun1 = copy.copy(turretList[p1I]) # Gun 1 setup
         gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
@@ -2460,14 +2482,20 @@ def playGame():
 
     #draw the supplies # Draw more on top of them
 
-    screen.blit(supplyAssets[0], [270, 550])
-    screen.blit(supplyAssets[1], [290, 550])
-    screen.blit(supplyAssets[2], [310, 550])
+    ef, mx = tank1.getEffect()
 
-    # opposite side
-    screen.blit(supplyAssets[2], [520, 550])
-    screen.blit(supplyAssets[1], [490, 550])
-    screen.blit(supplyAssets[0], [460, 550])
+    # Dynamic updating of the current supply status
+    screen.blit(supplyAssets[0][min(int(((ef[0]/mx[0])*10)//1) + 1, 10) if ef[0] != 0 else 0], [270, 550])
+    screen.blit(supplyAssets[1][min(int(((ef[1]/mx[1])*10)//1) + 1, 10) if ef[1] != 0 else 0], [300, 550])
+    screen.blit(supplyAssets[2][min(int(((ef[2]/mx[2])*10)//1) + 1, 10) if ef[2] != 0 else 0], [270, 520])
+
+    ef2, mx2 = tank2.getEffect()
+
+    screen.blit(supplyAssets[0][min(int(((ef2[0]/mx2[0])*10)//1) + 1, 10) if ef2[0] != 0 else 0], [510, 550])
+    screen.blit(supplyAssets[1][min(int(((ef2[1]/mx2[1])*10)//1) + 1, 10) if ef2[1] != 0 else 0], [480, 550])
+    screen.blit(supplyAssets[2][min(int(((ef2[2]/mx2[2])*10)//1) + 1, 10) if ef2[2] != 0 else 0], [510, 520])
+
+    # print(ef, ef2)
 
     # Draw the border
     for tile in tileList:
@@ -2694,15 +2722,13 @@ if getattr(sys, 'frozen', False):  # Running as an .exe
 else:  # Running as a .py script
     currentDir = os.path.dirname(os.path.abspath(__file__))
 
-supplyAssets = [None] * 3
+supplyAssets = [[None]*11 for _ in range(3)] # 3 for the supply, 3 for the picked up supply
+names = ["Damage", "Armor", "Speed"]
+for i in range(3):
+    for j in range(11): # each version of the supply
+        supplyAssets[i][j] = pygame.image.load(os.path.join(currentDir, 'Assets', f"{names[i]}_{j}.png")).convert_alpha()
+        supplyAssets[i][j] = pygame.transform.scale(supplyAssets[i][j], (20, 20))
 
-supplyAssets[0] = pygame.image.load(os.path.join(currentDir, 'Assets', 'Double_Damage.png')).convert_alpha()
-supplyAssets[1] = pygame.image.load(os.path.join(currentDir, 'Assets', 'Double_Armor.png')).convert_alpha()
-supplyAssets[2] = pygame.image.load(os.path.join(currentDir, 'Assets', 'Speed_Boost.png')).convert_alpha()
-
-supplyAssets[0] = pygame.transform.scale(supplyAssets[0], (20, 20))
-supplyAssets[1] = pygame.transform.scale(supplyAssets[1], (20, 20))
-supplyAssets[2] = pygame.transform.scale(supplyAssets[2], (20, 20))
 
 #safe full screen
 # screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN) # For fullscreen enjoyers
@@ -3740,6 +3766,3 @@ while not done:
     pygame.display.flip()# Update the screen
 
 pygame.quit()
-
-
-

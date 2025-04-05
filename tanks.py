@@ -428,6 +428,9 @@ class Tank(pygame.sprite.Sprite):
         
         return x_prime, y_prime
 
+    def getEffect(self):
+        return self.effect, [TIMER_MAX, TIMER_MAX, TIMER_MAX//3]
+
     def treads(self, treads):
         # This function will draw the treads of the tank
         # Inputs: None
@@ -485,7 +488,7 @@ class Bonsai(Tank):
 
     def __init__(self, x, y, controls, name):
         super().__init__(x, y, controls, name)
-        self.setMaxHealth(3500)
+        self.setMaxHealth(4500)
         self.setSpeedStatistic(2)
         self.setHealthStatistic(2)
         self.setTopSpeed(0.05)
@@ -502,10 +505,10 @@ class Cicada(Tank):
 
     def __init__(self, x, y, controls, name):
         super().__init__(x, y, controls, name)
-        self.setMaxHealth(2000)
+        self.setMaxHealth(2100)
         self.setSpeedStatistic(3)
         self.setHealthStatistic(1)
-        self.setTopSpeed(0.08)
+        self.setTopSpeed(0.09)
         self.setTopRotationalSpeed(0.25)
         self.setTankName("Cicada")
 
@@ -529,10 +532,10 @@ class Fossil(Tank):
 
     def __init__(self, x, y, controls, name):
         super().__init__(x, y, controls, name)
-        self.setMaxHealth(4000)
+        self.setMaxHealth(5100)
         self.setSpeedStatistic(1)
         self.setHealthStatistic(3)
-        self.setTopSpeed(0.03)
+        self.setTopSpeed(0.04)
         self.setTopRotationalSpeed(0.08)
         self.setTankName("Fossil")
 
@@ -546,7 +549,7 @@ class Gater(Tank):
 
     def __init__(self, x, y, controls, name):
         super().__init__(x, y, controls, name)
-        self.setMaxHealth(3000)
+        self.setMaxHealth(3300)
         self.setSpeedStatistic(2)
         self.setHealthStatistic(2)
         self.setTopSpeed(0.07)

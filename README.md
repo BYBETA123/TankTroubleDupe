@@ -88,17 +88,18 @@ All rights belong to their respective owners, if your work was featured in here 
 |  Tank |  Health | Speed |
 |-------|---------|-------|
 | Panther | 1500 | 0.1 |
-| Cicada | 2000 | 0.08 |
-| Gater | 3000 | 0.07 |
-| Bonsai | 3500 | 0.05 |
-| Fossil | 4000 | 0.03 |
+| Cicada | 2100 | 0.08 |
+| Gater | 3300 | 0.07 |
+| Bonsai | 4500 | 0.05 |
+| Fossil | 5100 | 0.03 |
 
 | Gun | Damage | Reload | Bullet Speed | Notes |
 |-----|--------|--------|--------------|-------|
-| Chamber | 810 | 1500 | 10 |3 radii of 270 each, splash damage |
+| Chamber | 750 | 1500 | 10 |3 radii of 250 each, splash damage |
 | Huntsman | 600 | 1000 | 15 | 40% chance for double damage |
-| Judge | 1520 | 2400 | 8 |3 rounds each with 800 reload and 2400 long, bounces once, 20 bullets each 76 damage |
-| Sidewinder | 350 | 500 | 12 | 5 bounces per bullet |
-| Silencer | 1400 | 2400 | 50 | No Notes |
-| Tempest | 200 | 200 | 10 | No Notes |
+| Judge | 1600 | 2400 | 8 |3 rounds each with 800 reload and 2400 long, bounces once, 20 bullets each 80 damage |
+| Sidewinder | 300 | 500 | 12 | 5 bounces per bullet |
+| Silencer | 1300 | 2400 | 50 | No Notes |
+| Tempest | 150 | 200 | 10 | No Notes |
 | Watcher | 3300 | 1500 | 50 | Scope comes attached, damage scales over time |
+
