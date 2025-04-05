@@ -934,13 +934,9 @@ class ChamberBullet(Bullet):
             col = math.ceil((self.getCenter()[0] - mazeX) / tileSize)
             index = (row - 1) * colAmount + col
 
-            # Check for collisions with tanks
-            # tank1Collision = self.getCollision(tank1.getCorners(), (tempX, tempY))
-            # tank2Collision = self.getCollision(tank2.getCorners(), (tempX, tempY))
-
             # use the old collision
-            tank1Collision = satCollision(self, tank1)
-            tank2Collision = satCollision(self, tank2)
+            tank1Collision = pygame.sprite.collide_rect(self, tank1)
+            tank2Collision = pygame.sprite.collide_rect(self, tank2)
 
             if self.name == tank1.getName() and tank2Collision:
                 damage(tank2, self.damage)
@@ -1595,9 +1591,9 @@ class Silencer(Gun):
         self.rotationSpeed = 0
         
         if keys[self.controls['rotate_left']]:
-            self.rotationSpeed += self.turretSpeed * self.deltaTime
+            self.rotationSpeed += self._getTurretSpeed() * self.deltaTime
         elif keys[self.controls['rotate_right']]:
-            self.rotationSpeed += -self.turretSpeed * self.deltaTime
+            self.rotationSpeed += -self._getTurretSpeed() * self.deltaTime
       
         #This if statement checks to see if speed or rotation of speed is 0,
         #if so it will stop playing moving sound, otherwise, sound will play
@@ -1759,9 +1755,9 @@ class Watcher(Gun):
         self.rotationSpeed = 0
 
         if keys[self.controls['rotate_left']]:
-            self.rotationSpeed += self.turretSpeed * self.deltaTime
+            self.rotationSpeed += self._getTurretSpeed() * self.deltaTime
         elif keys[self.controls['rotate_right']]:
-            self.rotationSpeed += -self.turretSpeed * self.deltaTime
+            self.rotationSpeed += -self._getTurretSpeed() * self.deltaTime
         
         #This if statement checks to see if speed or rotation of speed is 0,
         #if so it will stop playing moving sound, otherwise, sound will play
@@ -2061,74 +2057,16 @@ def tileGen():
 
     return tileList
 
-# Helper functions for SAT
-def getEdges(corners):
-    #This function will return the edges of the polygon
-    # Inputs: corners: The corners of the polygon
-    # Outputs: A list of edges
-    edges = []
-    for i in range(len(corners)):
-        edge = (corners[i][0] - corners[i - 1][0], corners[i][1] - corners[i - 1][1])
-        edges.append(edge)
-    return edges
-
-def getPerpendicularVector(edge):
-    #This function will return the perpendicular vector to the edge
-    # Inputs: edge: The edge of the polygon
-    # Outputs: The perpendicular vector
-    return (-edge[1], edge[0])
-
-def dotProduct(v1, v2):
-    #This function will return the dot product of two vectors
-    # Inputs: v1, v2: The two vectors
-    # Outputs: The dot product
-    return v1[0] * v2[0] + v1[1] * v2[1]
-
-def projectPolygon(corners, axis):
-    #This function will project the polygon onto the axis
-    # Inputs: corners: The corners of the polygon
-    # Inputs: axis: The axis to project onto
-    # Outputs: The projection
-    minProj = dotProduct(corners[0], axis)
-    maxProj = minProj
-    for corner in corners[1:]:
-        projection = dotProduct(corner, axis)
-        if projection < minProj:
-            minProj = projection
-        if projection > maxProj:
-            maxProj = projection
-    return minProj, maxProj
-
-def overlap(proj1, proj2):
-    #This function will check if the projections overlap
-    # Inputs: proj1, proj2: The two projections
-    # Outputs: True if they overlap, False otherwise
-    scaler = 10
-    p1 = [proj1[0] - scaler, proj1[1] + scaler]
-    p2 = [proj2[0] - scaler, proj2[1] + scaler]
-    return p1[0] < p2[1] and p2[0] < p1[1]
-
-def satCollision(rect1, rect2):
-    #This function will check if two rectangles are colliding
-    # Inputs: rect1, rect2: The two rectangles
-    # Outputs: True if they are colliding, False otherwise
-    for rect in [rect1, rect2]:
-        edges = getEdges(rect.corners)
-        for edge in edges:
-            axis = getPerpendicularVector(edge)
-            proj1 = projectPolygon(rect1.corners, axis)
-            proj2 = projectPolygon(rect2.corners, axis)
-            if not overlap(proj1, proj2):
-                return False
-    return True
-
 def setUpPlayers():
-    global tileList, spawnpoint, tank1, tank2, gun1, gun2, allSprites, bulletSprites
-    global p1I, p1J, p2I, p2J, p1K, p2K, p1L, p2L, DifficultyType
     # This function sets up the players for the game including reseting the respective global veriables
     #This function has no real dependencies on things outside of its control
     # Inputs: None
     # Outputs: None
+    global tileList, spawnpoint, tank1, tank2, gun1, gun2, allSprites, bulletSprites
+    global p1I, p1J, p2I, p2J, p1K, p2K, p1L, p2L, DifficultyType
+    global p1Score, p2Score, systemTime
+    p1Score, p2Score = 0, 0 # reset the player scores
+    systemTime = time.time_ns() # reset the system time
     tileList = tileGen() # Get a new board
     spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
     spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
@@ -2513,8 +2451,6 @@ def playGame():
     screen.blit(supplyAssets[0][min(int(((ef2[0]/mx2[0])*10)//1) + 1, 10) if ef2[0] != 0 else 0], [510, 550])
     screen.blit(supplyAssets[1][min(int(((ef2[1]/mx2[1])*10)//1) + 1, 10) if ef2[1] != 0 else 0], [480, 550])
     screen.blit(supplyAssets[2][min(int(((ef2[2]/mx2[2])*10)//1) + 1, 10) if ef2[2] != 0 else 0], [510, 520])
-
-    # print(ef, ef2)
 
     # Draw the border
     for tile in tileList:
@@ -3735,17 +3671,6 @@ while not done:
                 sfx.mute()
                 for sound in soundDictionary:
                     soundDictionary[sound].set_volume(volume[sound] * sfx.getValue())
-            if event.key == pygame.K_4:
-                # speed
-                if tank1 is not None:
-                    tank1.applySpeedBoost()
-            if event.key == pygame.K_3:
-                # damage
-                if tank1 is not None:
-                    tank1.applyDoubleDamage()
-            if event.key == pygame.K_2:
-                if tank1 is not None:
-                    tank1.applyDoubleArmor()
     if gameMode == GameMode.play:
         playGame() # Play the game
     elif gameMode == GameMode.pause:
