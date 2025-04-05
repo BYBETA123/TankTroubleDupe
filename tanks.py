@@ -96,7 +96,7 @@ class Tank(pygame.sprite.Sprite):
         self.List = []
         self.deltaTime = 0
         self.effect = [0,0,0] # This is an array which carries timers for the effects being [damage, armor, speed]
-        
+        self.weight = 1
         # Treads
         if getattr(sys, 'frozen', False):  # Running as an .exe
             base_path = sys._MEIPASS
@@ -207,9 +207,9 @@ class Tank(pygame.sprite.Sprite):
                 self.speed = 0
 
             if keys[self.controls['left']]:
-                self.rotationSpeed = self.rotationalSpeed
+                self.rotationSpeed = self.getRotationalSpeed()
             elif keys[self.controls['right']]:
-                self.rotationSpeed = -self.rotationalSpeed
+                self.rotationSpeed = -self.getRotationalSpeed()
             else:
                 self.rotationSpeed = 0
             self.rotationSpeed *= self.deltaTime
@@ -332,7 +332,7 @@ class Tank(pygame.sprite.Sprite):
         self.rotationalSpeed = speed
 
     def getRotationalSpeed(self):
-        return self.rotationalSpeed
+        return self.rotationalSpeed * (1.5 if (self.effect[2] != 0) else 1)
 
     def setTopRotationalSpeed(self, speed):
         self.topRotation = speed
@@ -355,8 +355,7 @@ class Tank(pygame.sprite.Sprite):
         self.maxSpeed = self.topSpeed
 
     def _getSpeed(self): # This is private
-        sped = 1.5
-        return self.speed * (sped if (self.effect[2] != 0) else 1)
+        return self.speed * (1.5 if (self.effect[2] != 0) else 1)
 
     def getSpeed(self):
         return self.topSpeed
@@ -483,6 +482,13 @@ class Tank(pygame.sprite.Sprite):
     def getAimTime(self):
         # This function is used to keep track of the time elapsed since the last aim update (see main.py)
         return self.aimTime
+
+    def setWeight(self, weight):
+        self.weight = weight
+
+    def getWeight(self):
+        return self.weight
+
 #Hulls
 class Bonsai(Tank):
 
@@ -494,6 +500,7 @@ class Bonsai(Tank):
         self.setTopSpeed(0.05)
         self.setTopRotationalSpeed(0.17)
         self.setTankName("Bonsai")
+        self.setWeight(900)
 
     def getGunCenter(self):
         #Since the point is not in the center of the tank, we need to adjust the gun position
@@ -511,6 +518,8 @@ class Cicada(Tank):
         self.setTopSpeed(0.09)
         self.setTopRotationalSpeed(0.25)
         self.setTankName("Cicada")
+        self.setWeight(233)
+
 
     def getGunCenter(self):
         #Since the point is not in the center of the tank, we need to adjust the gun position
@@ -527,6 +536,8 @@ class DefaultTank(Tank):
         self.setTopSpeed(0.08)
         self.setTopRotationalSpeed(0.17)
         self.setTankName("tank")
+        self.setWeight(1)
+
 
 class Fossil(Tank):
 
@@ -538,6 +549,8 @@ class Fossil(Tank):
         self.setTopSpeed(0.04)
         self.setTopRotationalSpeed(0.08)
         self.setTankName("Fossil")
+        self.setWeight(1275)
+
 
     def getGunCenter(self):
         #Since the point is not in the center of the tank, we need to adjust the gun position
@@ -555,6 +568,8 @@ class Gater(Tank):
         self.setTopSpeed(0.07)
         self.setTopRotationalSpeed(0.17)
         self.setTankName("Gater")
+        self.setWeight(471)
+
 
     def getGunCenter(self):
         #Since the point is not in the center of the tank, we need to adjust the gun position
@@ -572,6 +587,8 @@ class Panther(Tank):
         self.setTopSpeed(0.1)
         self.setTopRotationalSpeed(0.27)
         self.setTankName("Panther")
+        self.setWeight(150)
+
 
     def getGunCenter(self):
         #Since the point is not in the center of the tank, we need to adjust the gun position

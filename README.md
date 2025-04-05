@@ -85,7 +85,7 @@ All rights belong to their respective owners, if your work was featured in here 
 
 # Statistics
 
-|  Tank |  Health | Speed |
+|  Tank | Health | Speed |
 |-------|---------|-------|
 | Panther | 1500 | 0.1 |
 | Cicada | 2100 | 0.08 |
@@ -103,3 +103,10 @@ All rights belong to their respective owners, if your work was featured in here 
 | Tempest | 150 | 200 | 10 | No Notes |
 | Watcher | 3300 | 1500 | 50 | Scope comes attached, damage scales over time |
 
+Supply Statistics
+
+| Supply | Effect |
+|--|--|
+| Damage | Deal 150% Damage|
+| Armor | Take 50% Less Damage|
+| Speed | 40% Increased Tank Speed and Turret Rotation Speed|

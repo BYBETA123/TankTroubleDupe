@@ -254,9 +254,9 @@ class Gun(pygame.sprite.Sprite):
             self.rotationSpeed = 0
             if not self.default:
                 if keys[self.controls['rotate_left']]:
-                    self.rotationSpeed += self.turretSpeed * self.deltaTime
+                    self.rotationSpeed += self._getTurretSpeed() * self.deltaTime
                 elif keys[self.controls['rotate_right']]:
-                    self.rotationSpeed += -self.turretSpeed * self.deltaTime  
+                    self.rotationSpeed += -self._getTurretSpeed() * self.deltaTime  
                 
                 #This if statement checks to see if speed or rotation of speed is 0,
                 #if so it will stop playing moving sound, otherwise, sound will play
@@ -446,6 +446,9 @@ class Gun(pygame.sprite.Sprite):
         if not self.channelDict["reload"]["channel"].get_busy():
             self.channelDict["reload"]["channel"].play(soundDictionary["Reload"])
 
+    def _getTurretSpeed(self):
+        return self.tank.getRotationalSpeed() * (1.5 if (self.tank.effect[2] != 0) else 1)
+    
     def setDelta(self, delta):
         self.deltaTime = delta
 
@@ -1118,34 +1121,25 @@ class Tile(pygame.sprite.Sprite):
         if self.supplyTimer < 0:
             self.supplyTimer = 0
             self.picked = False
-            print("Supply timer expired")
         
         # if tank1 or tank 2 is within the tile, then we want to grant the effect
         if self.supply is not None and not self.picked:
             if self.isWithin(tank1.getCenter()):
-                print("Picked up supply")
                 if self.supplyIndex == 0:
                     tank1.applyDoubleDamage()
-                    print("tank1 double damage")
                 elif self.supplyIndex == 1:
                     tank1.applyDoubleArmor()
-                    print("tank1 double armor")
                 elif self.supplyIndex == 2:
                     tank1.applySpeedBoost()
-                print("tank1 speed boost")
                 self.picked = True
                 self.supplyTimer = self.timer
             if self.isWithin(tank2.getCenter()):
-                print("Picked up supply")
                 if self.supplyIndex == 0:
                     tank2.applyDoubleDamage()
-                    print("tank2 double damage")
                 elif self.supplyIndex == 1:
                     tank2.applyDoubleArmor()
-                    print("tank2 double armor")
                 elif self.supplyIndex == 2:
                     tank2.applySpeedBoost()
-                    print("tank2 speed boost")
                 self.picked = True
                 self.supplyTimer = self.timer
 
@@ -1452,7 +1446,6 @@ class Huntsman(Gun):
         bullet.setName(self.getTank().getName())
         if random.random() <= 0.4:  # 40% chance
             bullet.setDamage(self._getDamage() * 2)
-            print("Critical Hit!")
         else:
             bullet.setDamage(self._getDamage())
         bullet.setBulletSpeed(15)
@@ -1972,7 +1965,6 @@ def breathFirstSearch(tileList, choices, option):
     # Inputs: Choices: The locations of both spawns
     # Outputs: True if the second spawn is reachable, False otherwise
 
-
     #Setting up the BFS
     visitedQueue = []
     tracking = [False for _ in range(rowAmount*colAmount+1)]
@@ -2352,15 +2344,42 @@ def fixMovement(tanks):
         t1 = tanks[(idx+2)%2]
         t2 = tanks[(idx+1+2)%2]
 
-        if (satCollision(t1, t2)):
-            if (t1.name == p1TankName):
-                t2.setCoords(t2.x + t1.changeX, t2.y - t1.changeY)
-                tempX = t1.x - t1.changeX * 1.5
-                tempY = t1.y + t1.changeY * 1.5
-            elif (t1.name == p2TankName):
-                t1.setCoords(t1.x + t1.changeX, t1.y - t1.changeY)
-                tempX = t1.x - t1.changeX * 1.5
-                tempY = t1.y + t1.changeY * 1.5
+        if pygame.sprite.collide_rect(t1, t2):
+
+            # Calculate the direction vector between the tanks
+            deltaX = t2.x - t1.x
+            deltaY = t2.y - t1.y
+
+            # Get the distance between the two tanks
+            distance = (deltaX**2 + deltaY**2)**0.5
+
+            # Define a minimum distance threshold (how far apart the tanks should be)
+            minDistance = 15  # Adjust this value as needed
+
+            # Only push the tanks apart if they are within the threshold distance
+            if distance < minDistance:
+                # Calculate the overlap (how much the tanks are colliding)
+                overlap = minDistance - distance
+
+                # Normalize the direction vector to get a unit vector
+                if distance != 0:
+                    directionX = deltaX / distance
+                    directionY = deltaY / distance
+                else:
+                    directionX = 0
+                    directionY = 0
+
+                # Calculate the total weight of both tanks
+                totalWeight = t1.getWeight() + t2.getWeight()
+
+                # Calculate the push-back proportionally to the weight
+                pushAmountT1 = (t2.getWeight() / totalWeight) * overlap  # t1's pushback based on its weight
+                pushAmountT2 = (t1.getWeight() / totalWeight) * overlap  # t2's pushback based on its weight
+
+                # Apply the push-back to both tanks
+                t1.setCoords(t1.x - directionX * pushAmountT1, t1.y - directionY * pushAmountT1)
+                t2.setCoords(t2.x + directionX * pushAmountT2, t2.y + directionY * pushAmountT2)
+
 
         # Check for collision with walls
         row = math.ceil((t.getCenter()[1] - mazeY) / tileSize)
