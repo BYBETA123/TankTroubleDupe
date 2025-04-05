@@ -353,7 +353,7 @@ class Gun(pygame.sprite.Sprite):
         return self.damageStatistic
     
     def _getDamage(self):
-        return self.damage * (2 if (self.tank.effect[0] != 0) else 1)
+        return self.damage * (1.5 if (self.tank.effect[0] != 0) else 1)
 
     def setTurretSpeed(self, speed):
         self.turretSpeed = speed
