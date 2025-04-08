@@ -254,9 +254,9 @@ class Gun(pygame.sprite.Sprite):
             self.rotationSpeed = 0
             if not self.default:
                 if keys[self.controls['rotate_left']]:
-                    self.rotationSpeed += self.turretSpeed * self.deltaTime
+                    self.rotationSpeed += self._getTurretSpeed() * self.deltaTime
                 elif keys[self.controls['rotate_right']]:
-                    self.rotationSpeed += -self.turretSpeed * self.deltaTime  
+                    self.rotationSpeed += -self._getTurretSpeed() * self.deltaTime  
                 
                 #This if statement checks to see if speed or rotation of speed is 0,
                 #if so it will stop playing moving sound, otherwise, sound will play
@@ -353,7 +353,7 @@ class Gun(pygame.sprite.Sprite):
         return self.damageStatistic
     
     def _getDamage(self):
-        return self.damage * (2 if (self.tank.effect[0] != 0) else 1)
+        return self.damage * (1.5 if (self.tank.effect[0] != 0) else 1)
 
     def setTurretSpeed(self, speed):
         self.turretSpeed = speed
@@ -446,6 +446,9 @@ class Gun(pygame.sprite.Sprite):
         if not self.channelDict["reload"]["channel"].get_busy():
             self.channelDict["reload"]["channel"].play(soundDictionary["Reload"])
 
+    def _getTurretSpeed(self):
+        return self.tank.getRotationalSpeed() * (1.5 if (self.tank.effect[2] != 0) else 1)
+    
     def setDelta(self, delta):
         self.deltaTime = delta
 
@@ -931,13 +934,9 @@ class ChamberBullet(Bullet):
             col = math.ceil((self.getCenter()[0] - mazeX) / tileSize)
             index = (row - 1) * colAmount + col
 
-            # Check for collisions with tanks
-            # tank1Collision = self.getCollision(tank1.getCorners(), (tempX, tempY))
-            # tank2Collision = self.getCollision(tank2.getCorners(), (tempX, tempY))
-
             # use the old collision
-            tank1Collision = satCollision(self, tank1)
-            tank2Collision = satCollision(self, tank2)
+            tank1Collision = pygame.sprite.collide_rect(self, tank1)
+            tank2Collision = pygame.sprite.collide_rect(self, tank2)
 
             if self.name == tank1.getName() and tank2Collision:
                 damage(tank2, self.damage)
@@ -1071,7 +1070,7 @@ class Tile(pygame.sprite.Sprite):
         self.neighbours, self.bordering = self.neighbourCheck()
         self.AITarget = False
         self.supply = None
-        self.timer = 50667 # Roughly one minute?
+        self.timer = 8372 # Roughly one minute?
         self.supplyTimer = self.timer # This is the timer for the supply
         self.picked = False
         self.supplyIndex = None # The index of the supply that is on the tile
@@ -1122,17 +1121,15 @@ class Tile(pygame.sprite.Sprite):
         # if tank1 or tank 2 is within the tile, then we want to grant the effect
         if self.supply is not None and not self.picked:
             if self.isWithin(tank1.getCenter()):
-                print("Picked up supply")
                 if self.supplyIndex == 0:
                     tank1.applyDoubleDamage()
                 elif self.supplyIndex == 1:
                     tank1.applyDoubleArmor()
                 elif self.supplyIndex == 2:
                     tank1.applySpeedBoost()
-
                 self.picked = True
+                self.supplyTimer = self.timer
             if self.isWithin(tank2.getCenter()):
-                print("Picked up supply")
                 if self.supplyIndex == 0:
                     tank2.applyDoubleDamage()
                 elif self.supplyIndex == 1:
@@ -1140,6 +1137,7 @@ class Tile(pygame.sprite.Sprite):
                 elif self.supplyIndex == 2:
                     tank2.applySpeedBoost()
                 self.picked = True
+                self.supplyTimer = self.timer
 
     def neighbourCheck(self):
         #This function will return a list of the indexes of the neighbours based on the current list of border
@@ -1208,7 +1206,10 @@ class Tile(pygame.sprite.Sprite):
 
         if self.supply is not None:
             # draw the supply icon
-            screen.blit(self.supply, (self.x + tileSize//2 - self.supply.get_width()//2, self.y + tileSize//2 - self.supply.get_height()//2))
+            if self.picked:
+                screen.blit(self.supply[0], (self.x + tileSize//2 - self.supply[0].get_width()//2, self.y + tileSize//2 - self.supply[0].get_height()//2))
+            else:
+                screen.blit(self.supply[1], (self.x + tileSize//2 - self.supply[1].get_width()//2, self.y + tileSize//2 - self.supply[1].get_height()//2))
 
     def getNeighbours(self):
         return self.neighbours
@@ -1272,8 +1273,11 @@ class Tile(pygame.sprite.Sprite):
         # Inputs: supplyPath: The path to the supply icon
         # Outputs: None
         if supplyPath is not None:
-            self.supply = pygame.image.load(supplyPath).convert_alpha()
-            self.supply = pygame.transform.scale(self.supply, (tileSize//2, tileSize//2))
+            self.supply = [None, None]
+            self.supply[0] = pygame.image.load(supplyPath[0]).convert_alpha()
+            self.supply[0] = pygame.transform.scale(self.supply[0], (tileSize//2, tileSize//2))
+            self.supply[1] = pygame.image.load(supplyPath[1]).convert_alpha()
+            self.supply[1] = pygame.transform.scale(self.supply[1], (tileSize//2, tileSize//2))
             self.supplyIndex = index
 
     def getCenter(self):
@@ -1365,7 +1369,7 @@ class Chamber(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(1500) # 200 ms
-        self.setDamage(270) # Should be 900 but because of the 3 step effect it will be split into 3x 300
+        self.setDamage(247) # Should be 900 but because of the 3 step effect it will be split into 3x 300
         self.setDamageStatistic(2)
         self.setReloadStatistic(2)
         self.setGunBackDuration(500)
@@ -1438,7 +1442,6 @@ class Huntsman(Gun):
         bullet.setName(self.getTank().getName())
         if random.random() <= 0.4:  # 40% chance
             bullet.setDamage(self._getDamage() * 2)
-            print("Critical Hit!")
         else:
             bullet.setDamage(self._getDamage())
         bullet.setBulletSpeed(15)
@@ -1461,7 +1464,7 @@ class Judge(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(800)  # 800 ms
-        self.setDamage(76)
+        self.setDamage(80)
         self.setDamageStatistic(2)
         self.setReloadStatistic(2)
         self.setGunBackDuration(300)
@@ -1522,7 +1525,7 @@ class Sidewinder(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(500)  # 500 ms
-        self.setDamage(350)
+        self.setDamage(300)
         self.setDamageStatistic(1)
         self.setReloadStatistic(2)
         self.setGunBackDuration(300)
@@ -1557,7 +1560,7 @@ class Silencer(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(2400) #2400 ms
-        self.setDamage(1400)
+        self.setDamage(1300)
         self.setDamageStatistic(3)
         self.setReloadStatistic(1)
         self.drawable = True
@@ -1588,9 +1591,9 @@ class Silencer(Gun):
         self.rotationSpeed = 0
         
         if keys[self.controls['rotate_left']]:
-            self.rotationSpeed += self.turretSpeed * self.deltaTime
+            self.rotationSpeed += self._getTurretSpeed() * self.deltaTime
         elif keys[self.controls['rotate_right']]:
-            self.rotationSpeed += -self.turretSpeed * self.deltaTime
+            self.rotationSpeed += -self._getTurretSpeed() * self.deltaTime
       
         #This if statement checks to see if speed or rotation of speed is 0,
         #if so it will stop playing moving sound, otherwise, sound will play
@@ -1694,7 +1697,7 @@ class Tempest(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(200) # 200 ms
-        self.setDamage(200)
+        self.setDamage(150)
         self.setDamageStatistic(1)
         self.setReloadStatistic(3)
         self.setGunBackDuration(50)
@@ -1719,7 +1722,7 @@ class Watcher(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(1500) #1500 ms
-        self.setDamage(3300)
+        self.setDamage(3000)
         self.setDamageStatistic(2)
         self.setReloadStatistic(2)
         self.setTipOffset(25)
@@ -1752,9 +1755,9 @@ class Watcher(Gun):
         self.rotationSpeed = 0
 
         if keys[self.controls['rotate_left']]:
-            self.rotationSpeed += self.turretSpeed * self.deltaTime
+            self.rotationSpeed += self._getTurretSpeed() * self.deltaTime
         elif keys[self.controls['rotate_right']]:
-            self.rotationSpeed += -self.turretSpeed * self.deltaTime
+            self.rotationSpeed += -self._getTurretSpeed() * self.deltaTime
         
         #This if statement checks to see if speed or rotation of speed is 0,
         #if so it will stop playing moving sound, otherwise, sound will play
@@ -1784,8 +1787,8 @@ class Watcher(Gun):
             self.getTank().setRotationalSpeed(self.getTank().getTopRotationalSpeed()/10)
             #Scale the damage of the bullet
             self.scopeDamage += 60
-            if self.scopeDamage >= 3300: # Max damage
-                self.scopeDamage = 3300
+            if self.scopeDamage >= self.damage: # Max damage
+                self.scopeDamage = self.damage
 
             if not keys[self.controls['fire']]:
                 self.scoping = False
@@ -1839,7 +1842,7 @@ class Watcher(Gun):
             # This function will return the color of the bullet based on the damage
             # Inputs: None
             # Outputs: The color of the bullet
-            if self.scopeDamage >= 3300:
+            if self.scopeDamage >= self.damage:
                 return c.geT("GREEN")
             else:
                 return c.geT("RED")
@@ -1958,7 +1961,6 @@ def breathFirstSearch(tileList, choices, option):
     # Inputs: Choices: The locations of both spawns
     # Outputs: True if the second spawn is reachable, False otherwise
 
-
     #Setting up the BFS
     visitedQueue = []
     tracking = [False for _ in range(rowAmount*colAmount+1)]
@@ -2041,88 +2043,30 @@ def tileGen():
 
     # supplies
 
-    tileList[98].setSupply("Assets/Double_Armor.png", 1)
-    tileList[74].setSupply("Assets/Double_Damage.png", 0)
-    tileList[105].setSupply("Assets/Speed_Boost.png", 2)
+    tileList[98].setSupply(["Assets/Armor_Floor_Picked.png", "Assets/Armor_Floor.png"], 1)
+    tileList[74].setSupply(["Assets/Damage_Floor_Picked.png", "Assets/Damage_Floor.png"], 0)
+    tileList[105].setSupply(["Assets/Speed_Floor_Picked.png", "Assets/Speed_Floor.png"], 2)
 
-    tileList[95].setSupply("Assets/Double_Armor.png", 1)
-    tileList[54].setSupply("Assets/Double_Damage.png", 0)
-    tileList[10].setSupply("Assets/Speed_Boost.png", 2)
+    tileList[95].setSupply(["Assets/Armor_Floor_Picked.png", "Assets/Armor_Floor.png"], 1)
+    tileList[54].setSupply(["Assets/Damage_Floor_Picked.png", "Assets/Damage_Floor.png"], 0)
+    tileList[10].setSupply(["Assets/Speed_Floor_Picked.png", "Assets/Speed_Floor.png"], 2)
 
-    tileList[2].setSupply("Assets/Double_Armor.png", 1)
-    tileList[33].setSupply("Assets/Double_Damage.png", 0)
-    tileList[42].setSupply("Assets/Speed_Boost.png", 2)
+    tileList[2].setSupply(["Assets/Armor_Floor_Picked.png", "Assets/Armor_Floor.png"], 1)
+    tileList[33].setSupply(["Assets/Damage_Floor_Picked.png", "Assets/Damage_Floor.png"], 0)
+    tileList[42].setSupply(["Assets/Speed_Floor_Picked.png", "Assets/Speed_Floor.png"], 2)
 
     return tileList
 
-# Helper functions for SAT
-def getEdges(corners):
-    #This function will return the edges of the polygon
-    # Inputs: corners: The corners of the polygon
-    # Outputs: A list of edges
-    edges = []
-    for i in range(len(corners)):
-        edge = (corners[i][0] - corners[i - 1][0], corners[i][1] - corners[i - 1][1])
-        edges.append(edge)
-    return edges
-
-def getPerpendicularVector(edge):
-    #This function will return the perpendicular vector to the edge
-    # Inputs: edge: The edge of the polygon
-    # Outputs: The perpendicular vector
-    return (-edge[1], edge[0])
-
-def dotProduct(v1, v2):
-    #This function will return the dot product of two vectors
-    # Inputs: v1, v2: The two vectors
-    # Outputs: The dot product
-    return v1[0] * v2[0] + v1[1] * v2[1]
-
-def projectPolygon(corners, axis):
-    #This function will project the polygon onto the axis
-    # Inputs: corners: The corners of the polygon
-    # Inputs: axis: The axis to project onto
-    # Outputs: The projection
-    minProj = dotProduct(corners[0], axis)
-    maxProj = minProj
-    for corner in corners[1:]:
-        projection = dotProduct(corner, axis)
-        if projection < minProj:
-            minProj = projection
-        if projection > maxProj:
-            maxProj = projection
-    return minProj, maxProj
-
-def overlap(proj1, proj2):
-    #This function will check if the projections overlap
-    # Inputs: proj1, proj2: The two projections
-    # Outputs: True if they overlap, False otherwise
-    scaler = 10
-    p1 = [proj1[0] - scaler, proj1[1] + scaler]
-    p2 = [proj2[0] - scaler, proj2[1] + scaler]
-    return p1[0] < p2[1] and p2[0] < p1[1]
-
-def satCollision(rect1, rect2):
-    #This function will check if two rectangles are colliding
-    # Inputs: rect1, rect2: The two rectangles
-    # Outputs: True if they are colliding, False otherwise
-    for rect in [rect1, rect2]:
-        edges = getEdges(rect.corners)
-        for edge in edges:
-            axis = getPerpendicularVector(edge)
-            proj1 = projectPolygon(rect1.corners, axis)
-            proj2 = projectPolygon(rect2.corners, axis)
-            if not overlap(proj1, proj2):
-                return False
-    return True
-
 def setUpPlayers():
-    global tileList, spawnpoint, tank1, tank2, gun1, gun2, allSprites, bulletSprites
-    global p1I, p1J, p2I, p2J, p1K, p2K, p1L, p2L, DifficultyType
     # This function sets up the players for the game including reseting the respective global veriables
     #This function has no real dependencies on things outside of its control
     # Inputs: None
     # Outputs: None
+    global tileList, spawnpoint, tank1, tank2, gun1, gun2, allSprites, bulletSprites
+    global p1I, p1J, p2I, p2J, p1K, p2K, p1L, p2L, DifficultyType
+    global p1Score, p2Score, systemTime
+    p1Score, p2Score = 0, 0 # reset the player scores
+    systemTime = time.time_ns() # reset the system time
     tileList = tileGen() # Get a new board
     spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
     spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
@@ -2143,12 +2087,14 @@ def setUpPlayers():
         tank1.setImage('tank', p1L + 1)
         tank1.setSoundDictionary(soundDictionary)
         tank1.settileList(tileList)
+        tank1.effect = [0,0,0]
 
         tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
         tank2.setData(player2PackageTank)
         tank2.setImage('tank', p2L + 1)
         tank2.setSoundDictionary(soundDictionary)
         tank2.settileList(tileList)
+        tank2.effect = [0,0,0]
 
         gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
         gun1.setAI(True)
@@ -2169,12 +2115,14 @@ def setUpPlayers():
         tank1.setImage('tank', p1L + 1)
         tank1.setSoundDictionary(soundDictionary)
         tank1.settileList(tileList)
+        tank1.effect = [0,0,0]
 
         tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
         tank2.setData(player2PackageTank)
         tank2.setImage('tank', p2L + 1)
         tank2.setSoundDictionary(soundDictionary)
         tank2.settileList(tileList)
+        tank2.effect = [0,0,0]
 
         gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
         gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
@@ -2192,12 +2140,14 @@ def setUpPlayers():
         tank1.setImage(hullList[p1J].getName(), p1L + 1)
         tank1.setSoundDictionary(soundDictionary)
         tank1.settileList(tileList)
+        tank1.effect = [0,0,0]
 
         tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
         tank2.setData(player2PackageTank)
         tank2.setImage(hullList[p2J].getName(), p2L + 1)
         tank2.setSoundDictionary(soundDictionary)
         tank2.settileList(tileList)
+        tank2.effect = [0,0,0]
 
         #Because silencer and watcher aren't made yet, skip them
         if p1I == 1 or p1I == 2:
@@ -2221,12 +2171,14 @@ def setUpPlayers():
         tank1.setImage(hullList[p1J].getName(), p1L + 1)
         tank1.setSoundDictionary(soundDictionary)
         tank1.settileList(tileList)
+        tank1.effect = [0,0,0]
 
         tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
         tank2.setData(player2PackageTank)
         tank2.setImage(hullList[p2J].getName(), p2L + 1)
         tank2.setSoundDictionary(soundDictionary)
         tank2.settileList(tileList)
+        tank2.effect = [0,0,0]
 
         gun1 = copy.copy(turretList[p1I]) # Gun 1 setup
         gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
@@ -2330,15 +2282,42 @@ def fixMovement(tanks):
         t1 = tanks[(idx+2)%2]
         t2 = tanks[(idx+1+2)%2]
 
-        if (satCollision(t1, t2)):
-            if (t1.name == p1TankName):
-                t2.setCoords(t2.x + t1.changeX, t2.y - t1.changeY)
-                tempX = t1.x - t1.changeX * 1.5
-                tempY = t1.y + t1.changeY * 1.5
-            elif (t1.name == p2TankName):
-                t1.setCoords(t1.x + t1.changeX, t1.y - t1.changeY)
-                tempX = t1.x - t1.changeX * 1.5
-                tempY = t1.y + t1.changeY * 1.5
+        if pygame.sprite.collide_rect(t1, t2):
+
+            # Calculate the direction vector between the tanks
+            deltaX = t2.x - t1.x
+            deltaY = t2.y - t1.y
+
+            # Get the distance between the two tanks
+            distance = (deltaX**2 + deltaY**2)**0.5
+
+            # Define a minimum distance threshold (how far apart the tanks should be)
+            minDistance = 15  # Adjust this value as needed
+
+            # Only push the tanks apart if they are within the threshold distance
+            if distance < minDistance:
+                # Calculate the overlap (how much the tanks are colliding)
+                overlap = minDistance - distance
+
+                # Normalize the direction vector to get a unit vector
+                if distance != 0:
+                    directionX = deltaX / distance
+                    directionY = deltaY / distance
+                else:
+                    directionX = 0
+                    directionY = 0
+
+                # Calculate the total weight of both tanks
+                totalWeight = t1.getWeight() + t2.getWeight()
+
+                # Calculate the push-back proportionally to the weight
+                pushAmountT1 = (t2.getWeight() / totalWeight) * overlap  # t1's pushback based on its weight
+                pushAmountT2 = (t1.getWeight() / totalWeight) * overlap  # t2's pushback based on its weight
+
+                # Apply the push-back to both tanks
+                t1.setCoords(t1.x - directionX * pushAmountT1, t1.y - directionY * pushAmountT1)
+                t2.setCoords(t2.x + directionX * pushAmountT2, t2.y + directionY * pushAmountT2)
+
 
         # Check for collision with walls
         row = math.ceil((t.getCenter()[1] - mazeY) / tileSize)
@@ -2460,14 +2439,18 @@ def playGame():
 
     #draw the supplies # Draw more on top of them
 
-    screen.blit(supplyAssets[0], [270, 550])
-    screen.blit(supplyAssets[1], [290, 550])
-    screen.blit(supplyAssets[2], [310, 550])
+    ef, mx = tank1.getEffect()
 
-    # opposite side
-    screen.blit(supplyAssets[2], [520, 550])
-    screen.blit(supplyAssets[1], [490, 550])
-    screen.blit(supplyAssets[0], [460, 550])
+    # Dynamic updating of the current supply status
+    screen.blit(supplyAssets[0][min(int(((ef[0]/mx[0])*10)//1) + 1, 10) if ef[0] != 0 else 0], [270, 550])
+    screen.blit(supplyAssets[1][min(int(((ef[1]/mx[1])*10)//1) + 1, 10) if ef[1] != 0 else 0], [300, 550])
+    screen.blit(supplyAssets[2][min(int(((ef[2]/mx[2])*10)//1) + 1, 10) if ef[2] != 0 else 0], [270, 520])
+
+    ef2, mx2 = tank2.getEffect()
+
+    screen.blit(supplyAssets[0][min(int(((ef2[0]/mx2[0])*10)//1) + 1, 10) if ef2[0] != 0 else 0], [510, 550])
+    screen.blit(supplyAssets[1][min(int(((ef2[1]/mx2[1])*10)//1) + 1, 10) if ef2[1] != 0 else 0], [480, 550])
+    screen.blit(supplyAssets[2][min(int(((ef2[2]/mx2[2])*10)//1) + 1, 10) if ef2[2] != 0 else 0], [510, 520])
 
     # Draw the border
     for tile in tileList:
@@ -2694,15 +2677,13 @@ if getattr(sys, 'frozen', False):  # Running as an .exe
 else:  # Running as a .py script
     currentDir = os.path.dirname(os.path.abspath(__file__))
 
-supplyAssets = [None] * 3
+supplyAssets = [[None]*11 for _ in range(3)] # 3 for the supply, 3 for the picked up supply
+names = ["Damage", "Armor", "Speed"]
+for i in range(3):
+    for j in range(11): # each version of the supply
+        supplyAssets[i][j] = pygame.image.load(os.path.join(currentDir, 'Assets', f"{names[i]}_{j}.png")).convert_alpha()
+        supplyAssets[i][j] = pygame.transform.scale(supplyAssets[i][j], (20, 20))
 
-supplyAssets[0] = pygame.image.load(os.path.join(currentDir, 'Assets', 'Double_Damage.png')).convert_alpha()
-supplyAssets[1] = pygame.image.load(os.path.join(currentDir, 'Assets', 'Double_Armor.png')).convert_alpha()
-supplyAssets[2] = pygame.image.load(os.path.join(currentDir, 'Assets', 'Speed_Boost.png')).convert_alpha()
-
-supplyAssets[0] = pygame.transform.scale(supplyAssets[0], (20, 20))
-supplyAssets[1] = pygame.transform.scale(supplyAssets[1], (20, 20))
-supplyAssets[2] = pygame.transform.scale(supplyAssets[2], (20, 20))
 
 #safe full screen
 # screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN) # For fullscreen enjoyers
@@ -3691,17 +3672,6 @@ while not done:
                 sfx.mute()
                 for sound in soundDictionary:
                     soundDictionary[sound].set_volume(volume[sound] * sfx.getValue())
-            if event.key == pygame.K_4:
-                # speed
-                if tank1 is not None:
-                    tank1.applySpeedBoost()
-            if event.key == pygame.K_3:
-                # damage
-                if tank1 is not None:
-                    tank1.applyDoubleDamage()
-            if event.key == pygame.K_2:
-                if tank1 is not None:
-                    tank1.applyDoubleArmor()
     if gameMode == GameMode.play:
         playGame() # Play the game
     elif gameMode == GameMode.pause:
@@ -3742,6 +3712,3 @@ while not done:
     pygame.display.flip()# Update the screen
 
 pygame.quit()
-
-
-
