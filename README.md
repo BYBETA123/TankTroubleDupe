@@ -81,8 +81,6 @@ Thanks to you for playing the game
 All rights belong to their respective owners, if your work was featured in here and you would like it removed, please contact me
 
 
-
-
 # Statistics
 
 |  Tank | Health | Speed |
@@ -99,7 +97,7 @@ All rights belong to their respective owners, if your work was featured in here 
 | Huntsman | 600 | 1000 | 15 | 40% chance for double damage |
 | Judge | 1600 | 2400 | 8 |3 rounds each with 800 reload and 2400 long, bounces once, 20 bullets each 80 damage |
 | Sidewinder | 300 | 500 | 12 | 5 bounces per bullet |
-| Silencer | 1300 | 2400 | 50 | No Notes |
+| Silencer | 1300 | 2400 | 50 | Wind-up time before shooting |
 | Tempest | 150 | 200 | 10 | No Notes |
 | Watcher | 3300 | 1500 | 50 | Scope comes attached, damage scales over time |
 

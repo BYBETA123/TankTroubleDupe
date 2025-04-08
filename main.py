@@ -4,7 +4,6 @@ import math
 import time
 import os, sys
 from ColorDictionary import ColourDictionary as c # colors
-from threading import Timer
 from enum import Enum
 from UIUtility import Button, ButtonSlider, TextBox
 from music import Music
@@ -2043,17 +2042,22 @@ def tileGen():
 
     # supplies
 
-    tileList[98].setSupply(["Assets/Armor_Floor_Picked.png", "Assets/Armor_Floor.png"], 1)
-    tileList[74].setSupply(["Assets/Damage_Floor_Picked.png", "Assets/Damage_Floor.png"], 0)
-    tileList[105].setSupply(["Assets/Speed_Floor_Picked.png", "Assets/Speed_Floor.png"], 2)
+    if getattr(sys, 'frozen', False):  # Running as an .exe
+        currentDir = sys._MEIPASS
+    else:  # Running as a .py script
+        currentDir = os.path.dirname(os.path.abspath(__file__))
 
-    tileList[95].setSupply(["Assets/Armor_Floor_Picked.png", "Assets/Armor_Floor.png"], 1)
-    tileList[54].setSupply(["Assets/Damage_Floor_Picked.png", "Assets/Damage_Floor.png"], 0)
-    tileList[10].setSupply(["Assets/Speed_Floor_Picked.png", "Assets/Speed_Floor.png"], 2)
+    tileList[98].setSupply([os.path.join(currentDir, 'Assets', 'Armor_Floor_Picked.png'), os.path.join(currentDir, 'Assets', 'Armor_Floor.png')], 1)
+    tileList[74].setSupply([os.path.join(currentDir, 'Assets', 'Damage_Floor_Picked.png'), os.path.join(currentDir, 'Assets', 'Damage_Floor.png')], 0)
+    tileList[105].setSupply([os.path.join(currentDir, 'Assets', 'Speed_Floor_Picked.png'), os.path.join(currentDir, 'Assets', 'Speed_Floor.png')], 2)
 
-    tileList[2].setSupply(["Assets/Armor_Floor_Picked.png", "Assets/Armor_Floor.png"], 1)
-    tileList[33].setSupply(["Assets/Damage_Floor_Picked.png", "Assets/Damage_Floor.png"], 0)
-    tileList[42].setSupply(["Assets/Speed_Floor_Picked.png", "Assets/Speed_Floor.png"], 2)
+    tileList[95].setSupply([os.path.join(currentDir, 'Assets', 'Armor_Floor_Picked.png'), os.path.join(currentDir, 'Assets', 'Armor_Floor.png')], 1)
+    tileList[54].setSupply([os.path.join(currentDir, 'Assets', 'Damage_Floor_Picked.png'), os.path.join(currentDir, 'Assets', 'Damage_Floor.png')], 0)
+    tileList[10].setSupply([os.path.join(currentDir, 'Assets', 'Speed_Floor_Picked.png'), os.path.join(currentDir, 'Assets', 'Speed_Floor.png')], 2)
+
+    tileList[2].setSupply([os.path.join(currentDir, 'Assets', 'Armor_Floor_Picked.png'), os.path.join(currentDir, 'Assets', 'Armor_Floor.png')], 1)
+    tileList[33].setSupply([os.path.join(currentDir, 'Assets', 'Damage_Floor_Picked.png'), os.path.join(currentDir, 'Assets', 'Damage_Floor.png')], 0)
+    tileList[42].setSupply([os.path.join(currentDir, 'Assets', 'Speed_Floor_Picked.png'), os.path.join(currentDir, 'Assets', 'Speed_Floor.png')], 2)
 
     return tileList
 

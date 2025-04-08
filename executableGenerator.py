@@ -4,8 +4,6 @@ import glob
 
 NAME_OF_FILE = "Flanki"
 
-
-
 def clean_build_folders():
     if os.path.exists('build'):
         shutil.rmtree('build')
