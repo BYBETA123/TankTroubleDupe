@@ -3722,8 +3722,7 @@ while not done:
         selectionScreen()
     elif gameMode == GameMode.home:
         # Draw the tank image
-        # 30 is for the centering offest
-        screen.blit(originalTankImage, (windowWidth//2 - originalTankImage.get_width()//2 - 30, windowHeight//2 - originalTankImage.get_height()//2))  # Centered horizontally
+        screen.blit(originalTankImage, (windowWidth//2 - originalTankImage.get_width()//2, windowHeight//2 - originalTankImage.get_height()//2))  # Centered horizontally
 
         # Draw the title text
         screen.blit(titleText, (windowWidth // 2 - titleText.get_width() // 2, 110))  # Centered horizontally, 50 pixels from top
