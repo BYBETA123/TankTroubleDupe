@@ -3447,6 +3447,7 @@ else:  # Running as a .py script
     currentDir = os.path.dirname(os.path.abspath(__file__))
 tankPath = os.path.join(currentDir, './Assets/tank_menu_logo.png')
 originalTankImage = pygame.image.load(tankPath).convert_alpha()
+originalTankImage = pygame.transform.scale(originalTankImage, (originalTankImage.get_size()[0]/2.25, originalTankImage.get_size()[1]//2.25))
 
 # Construct the correct path for the logo image
 logo_path = os.path.join(currentDir, "Assets", "logo.png")
@@ -3718,7 +3719,8 @@ while not done:
         selectionScreen()
     elif gameMode == GameMode.home:
         # Draw the tank image
-        screen.blit(originalTankImage, (230, 125))  # Adjust the coordinates as needed
+        # 30 is for the centering offest
+        screen.blit(originalTankImage, (windowWidth//2 - originalTankImage.get_width()//2 - 30, windowHeight//2 - originalTankImage.get_height()//2))  # Centered horizontally
 
         # Draw the title text
         screen.blit(titleText, (windowWidth // 2 - titleText.get_width() // 2, 110))  # Centered horizontally, 50 pixels from top
