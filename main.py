@@ -2285,7 +2285,7 @@ def fixMovement(tanks):
 
         t1 = tanks[(idx+2)%2]
         t2 = tanks[(idx+1+2)%2]
-
+        # between tanks
         if pygame.sprite.collide_rect(t1, t2):
 
             # Calculate the direction vector between the tanks
@@ -2321,22 +2321,52 @@ def fixMovement(tanks):
                 # Apply the push-back to both tanks
                 t1.setCoords(t1.x - directionX * pushAmountT1, t1.y - directionY * pushAmountT1)
                 t2.setCoords(t2.x + directionX * pushAmountT2, t2.y + directionY * pushAmountT2)
-
-
+        
         # Check for collision with walls
         row = math.ceil((t.getCenter()[1] - mazeY) / tileSize)
         col = math.ceil((t.getCenter()[0] - mazeX) / tileSize)
         index = (row - 1) * colAmount + col
+
         if index in range(1, rowAmount * colAmount + 1):
             tile = tileList[index - 1]
-            if tile.border[0] and tempY - t.originalTankImage.get_size()[1] <= tile.y: #If the top border is present
-                tempY = tile.y + t.originalTankImage.get_size()[1]
-            if tile.border[1] and tempX + t.originalTankImage.get_size()[0]/2 >= tile.x + tileSize: #If the right border is present
-                tempX = tile.x + tileSize - t.originalTankImage.get_size()[0]/2
-            if tile.border[2] and tempY + t.originalTankImage.get_size()[1] > tile.y + tileSize: #If the bottom border is present
-                tempY = tile.y + tileSize - t.originalTankImage.get_size()[1]
-            if tile.border[3] and tempX - t.originalTankImage.get_size()[0]/2 < tile.x: #If the left border is present
-                tempX = tile.x + t.originalTankImage.get_size()[0]/2
+            tank_width = t.originalTankImage.get_size()[0]
+            tank_height = t.originalTankImage.get_size()[1]
+
+            # Calculate tank's future position (without correction)
+            futureX = tempX
+            futureY = tempY
+
+            # Check top, bottom, left, and right borders
+            if tile.border[0] and tempY - tank_height <= tile.y:  # Top border
+                futureY = tile.y + tank_height
+            if tile.border[1] and tempX + tank_width / 2 >= tile.x + tileSize:  # Right border
+                futureX = tile.x + tileSize - tank_width / 2
+            if tile.border[2] and tempY + tank_height > tile.y + tileSize:  # Bottom border
+                futureY = tile.y + tileSize - tank_height
+            if tile.border[3] and tempX - tank_width / 2 < tile.x:  # Left border
+                futureX = tile.x + tank_width / 2
+
+            # Corner detection (top-left, top-right, bottom-left, bottom-right)
+            if tile.border[0] and tile.border[3]:  # Top-left corner
+                if tempX - tank_width / 2 < tile.x and tempY - tank_height <= tile.y:
+                    futureX = tile.x + tank_width / 2
+                    futureY = tile.y + tank_height
+            elif tile.border[0] and tile.border[1]:  # Top-right corner
+                if tempX + tank_width / 2 >= tile.x + tileSize and tempY - tank_height <= tile.y:
+                    futureX = tile.x + tileSize - tank_width / 2
+                    futureY = tile.y + tank_height
+            elif tile.border[2] and tile.border[3]:  # Bottom-left corner
+                if tempX - tank_width / 2 < tile.x and tempY + tank_height > tile.y + tileSize:
+                    futureX = tile.x + tank_width / 2
+                    futureY = tile.y + tileSize - tank_height
+            elif tile.border[2] and tile.border[1]:  # Bottom-right corner
+                if tempX + tank_width / 2 >= tile.x + tileSize and tempY + tank_height > tile.y + tileSize:
+                    futureX = tile.x + tileSize - tank_width / 2
+                    futureY = tile.y + tileSize - tank_height
+
+            # Apply the corrected positions
+            tempX, tempY = futureX, futureY
+
         t.setCentre(tempX, tempY)
 
         t.changeX = 0
@@ -3335,7 +3365,6 @@ def selectionScreen():
     #Outlines
     pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelX, reloadBarX, cellWidth * 3, rectY), barBorder) # Green bar outline
     pygame.draw.rect(screen, c.geT("BLACK"), (BarLevelX + cellWidth, reloadBarX, cellWidth,rectY), barBorder) # Thirding
-
 
     BarLevelRX = 493
 
