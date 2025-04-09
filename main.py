@@ -86,7 +86,8 @@ else:
     print("All audio files are present")
 
 #Verification done
-
+global timerClock
+timerClock = 0
 #init
 pygame.init()
 
@@ -109,6 +110,70 @@ fontDictionary = {"tileFont":pygame.font.SysFont('Calibri', 25, True, False),
                   }
 
 #Classes
+class UpDownTimer():
+    def __init__(self, duration = 0, up = True):
+        self.duration = duration * 1e9 # duration in nano seconds
+        self.startTime = time.time_ns()
+        self.timer = self.startTime
+        self.up = up
+        self.expired = False
+        self.paused = False
+        self.pausedTime = 0
+
+    def tick(self):
+        if self.paused:
+            return # exit early
+        if self.isExpired():
+            return # exit early
+        # we are counting up
+        if self.timer < self.duration + self.startTime:
+            self.timer = time.time_ns()
+        if self.timer >= self.duration + self.startTime:
+            self.timer = self.duration + self.startTime
+            self.expired = True
+            
+    def reset(self):
+        self.timer = time.time_ns()
+        self.startTime = time.time_ns()
+        self.expired = False
+        self.paused = False
+    
+    def setDirection(self, up):
+        # up is True and down is False
+        self.up = up
+        self.startTime = time.time_ns()
+
+    def setDuration(self, duration):
+        # set the duration of the timer in seconds
+        self.duration = duration * 1e9
+        self.startTime = time.time_ns()
+
+    def start(self):
+        self.startTime = time.time_ns()
+        self.timer = self.startTime if self.up else self.duration
+        self.expired = False
+
+    def pause(self):
+        self.pausedTime = time.time_ns()
+        self.paused = True
+
+    def resume(self):
+        self.paused = False
+        cTime = time.time_ns()
+        self.timer -= (cTime - self.pausedTime) # capture
+        self.startTime += (cTime - self.pausedTime)
+
+    def getElapsed(self):
+        return self.timer - self.startTime if self.up else self.duration - self.timer + self.startTime
+
+    def getElapsedAsSeconds(self):
+        return self.getElapsed()/1e9
+
+    def isExpired(self):
+        return self.expired
+
+    def getTime(self):
+        return int(self.getElapsed()//1e9)
 
 class Gun(pygame.sprite.Sprite):
 
@@ -2068,9 +2133,8 @@ def setUpPlayers():
     # Outputs: None
     global tileList, spawnpoint, tank1, tank2, gun1, gun2, allSprites, bulletSprites
     global p1I, p1J, p2I, p2J, p1K, p2K, p1L, p2L, DifficultyType
-    global p1Score, p2Score, systemTime
+    global p1Score, p2Score
     p1Score, p2Score = 0, 0 # reset the player scores
-    systemTime = time.time_ns() # reset the system time
     tileList = tileGen() # Get a new board
     spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
     spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
@@ -2111,6 +2175,7 @@ def setUpPlayers():
         #Starting location
         temp = tank2.getCurrentTile().getIndex()
         tank1.setAim((temp, temp%14*tileSize + tileSize//2, ((temp)//14 + 1)*tileSize + tileSize//2))
+        timer.setDirection(True)
 
     elif DifficultyType == 2:
         # easy
@@ -2135,6 +2200,7 @@ def setUpPlayers():
         gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
         gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
         gun2.setImage('gun', p2K + 1)
+        timer.setDirection(True)
 
     elif DifficultyType == 3:
         # normal AI, 1 Player
@@ -2167,6 +2233,7 @@ def setUpPlayers():
         gun2 = copy.copy(turretList[p2I]) # Gun 2 setup
         gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
         gun2.setImage(turretList[p2I].getGunName(), p2K + 1)
+        timer.setDirection(True)
 
     else:
         #normal
@@ -2191,6 +2258,8 @@ def setUpPlayers():
         gun2 = copy.copy(turretList[p2I]) # Gun 2 setup
         gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
         gun2.setImage(turretList[p2I].getGunName(), p2K + 1)
+        timer.setDirection(True)
+
     #Updating the groups
     
     for sprite in allSprites:
@@ -2402,13 +2471,14 @@ def playGame():
     global gameOverFlag, cooldownTimer, startTime, p1Score, p2Score, startTreads
     global tank1Dead, tank2Dead, tileList, spawnpoint
     global tank1, tank2, gun1, gun2, allSprites, bulletSprites
-    global currentTime, deltaTime, lastUpdateTime, systemTime, elapsedTime
-    global fontDictionary, supplyAssets
+    global currentTime, deltaTime, lastUpdateTime
+    global fontDictionary, supplyAssets, timerClock
     if gameOverFlag:
         #The game is over
-        startTime = time.time() #Start a 5s timer
+        startTime = time.time() #Start a 3s timer
         gameOverFlag = False
         cooldownTimer = True
+        timer.pause()
     if cooldownTimer:
         #movement sound
         pygame.mixer.Channel(3).stop()
@@ -2421,13 +2491,9 @@ def playGame():
             #Reset the game
             reset()
             constantPlayGame()
-            systemTime = time.time_ns() # reset the time
-    else:
-        #work out the elasped time and print the difference
-        # difference 
-        elapsedTime = time.time_ns()
+            timer.reset() # rest the clock
 
-    seconds =  (elapsedTime - systemTime) // 1_000_000_000 # convert to seconds
+    seconds = timer.getTime()
     textString = f"{seconds // 60:02d}:{seconds % 60:02d}"
     text = fontDictionary["scoreFont"].render(textString, True, c.geT("BLACK"))
 
@@ -2561,6 +2627,9 @@ def playGame():
             sprite.customDraw(screen)
 
     explosionGroup.draw(screen)
+    if timerClock == 0:
+        timer.tick()
+    timerClock = (timerClock + 1) % 125 # This is to make sure that the timer doesn't go too fast
 
 def pauseScreen():
     # This function will draw the pause screen
@@ -2660,6 +2729,8 @@ def infoScreen():
     gap = 25
     for i in range(len(iListRender[iIndex])):
         screen.blit(iListRender[iIndex][i], (mazeX + 50, startY + i*gap))
+
+timer = UpDownTimer(1000, True)
 
 #Game setup
 #Start the game setup
@@ -3207,10 +3278,6 @@ reloadBar2.setBoxColor(selectionBackground)
 reloadBar2.setText("RELOAD", "left")
 buttonList.append(reloadBar2)
 
-# current time on system clock
-systemTime = time.time_ns()
-elapsedTime = time.time_ns()
-
 def checkButtons(mouse):
     #This function checks all the buttons of the mouse in the selection screen
     # Inputs: Mouse: The current location of the mouse
@@ -3689,10 +3756,12 @@ while not done:
                 if gameMode == GameMode.pause:
                     constantPlayGame()
                     gameMode = GameMode.play # Return to game if button was clicked
+                    timer.resume()
                 elif gameMode == GameMode.play:
                     for i in range(3, pygame.mixer.get_num_channels()): # Stop all sounds
                         pygame.mixer.Channel(i).stop()
                     gameMode = GameMode.pause # Pause the game
+                    timer.pause()
             if event.key == pygame.K_f:
                 #Calculate and track the average FPS
                 totalfps += clock.get_fps()
