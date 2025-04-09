@@ -1274,7 +1274,7 @@ class Tile(pygame.sprite.Sprite):
                 screen.blit(self.supply[0], (self.x + tileSize//2 - self.supply[0].get_width()//2, self.y + tileSize//2 - self.supply[0].get_height()//2))
             else:
                 screen.blit(self.supply[1], (self.x + tileSize//2 - self.supply[1].get_width()//2, self.y + tileSize//2 - self.supply[1].get_height()//2))
-
+        self.drawText(screen)
     def getNeighbours(self):
         return self.neighbours
 
@@ -2104,7 +2104,7 @@ def tileGen():
     global spawnpoint
     spawnpoint = []
     spawnpoint = choices 
-
+    print(spawnpoint)
     # supplies
 
     if getattr(sys, 'frozen', False):  # Running as an .exe
@@ -2132,8 +2132,9 @@ def setUpPlayers():
     # Inputs: None
     # Outputs: None
     global tileList, spawnpoint, tank1, tank2, gun1, gun2, allSprites, bulletSprites
-    global p1I, p1J, p2I, p2J, p1K, p2K, p1L, p2L, DifficultyType
-    global p1Score, p2Score
+    global p1I, p1J, p2I, p2J, p1K, p2K, p1L, p2L, DifficultyType, spawnTank1, spawnTank2
+    global p1Score, p2Score, player1PackageTank, player1PackageGun, player2PackageTank, player2PackageGun
+    global player1Channels, player2Channels, p1TankName, p2TankName, p1GunName, p2GunName
     p1Score, p2Score = 0, 0 # reset the player scores
     tileList = tileGen() # Get a new board
     spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
@@ -2200,7 +2201,8 @@ def setUpPlayers():
         gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
         gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
         gun2.setImage('gun', p2K + 1)
-        timer.setDirection(True)
+        timer.setDirection(False)
+        timer.setDuration(301)
 
     elif DifficultyType == 3:
         # normal AI, 1 Player
@@ -2445,7 +2447,7 @@ def damage(tank, damage):
     # This function will adjust the damage that the tank has taken
     # Inputs: damage: The amount of damage that the tank has taken
     # Outputs: None
-    tank.health -= damage * (0.5 if tank.effect[1] != 0 else 1)
+    tank.health -= (damage * (0.5 if tank.effect[1] != 0 else 1)) if tank.getInvincibility() == 0 else 0 # if it is not equal to 0 we must be invincible
     if tank.health > 0:
         if not tank.channelDict["death"]["channel"].get_busy(): # if the sound isn't playing
             tank.channelDict["death"]["channel"].play(soundDictionary["tankHurt"])  # Play sound indefinitely
@@ -2464,19 +2466,30 @@ def damage(tank, damage):
     updateTankHealth() # Manage the healthbar outside of the code
 
 def playGame():
+
+    def checkGameOver():
+        global tank1Dead, tank2Dead, DifficultyType
+        # checking if the game is over
+        if DifficultyType == 1:
+            return tank1Dead or tank2Dead
+        if DifficultyType == 2: # temp dm
+            return timer.isExpired()
+        if DifficultyType == 3:
+            return tank1Dead or tank2Dead
+        if DifficultyType == 4:
+            return tank1Dead or tank2Dead
     # This function controls the main execution of the game
     # Inputs: None
     # Outputs: None
     # Because of the way the game is structured, these global variables can't be avoided
-    global gameOverFlag, cooldownTimer, startTime, p1Score, p2Score, startTreads
-    global tank1Dead, tank2Dead, tileList, spawnpoint
+    global gameOverFlag, cooldownTimer, systemTime, p1Score, p2Score, startTreads
+    global tank1Dead, tank2Dead, tileList, spawnpoint, player1Channels, player2Channels
     global tank1, tank2, gun1, gun2, allSprites, bulletSprites
     global currentTime, deltaTime, lastUpdateTime
     global fontDictionary, supplyAssets, timerClock
-    if gameOverFlag:
+    if checkGameOver() and not cooldownTimer:
         #The game is over
-        startTime = time.time() #Start a 3s timer
-        gameOverFlag = False
+        systemTime = time.time() #Start a 3s timer
         cooldownTimer = True
         timer.pause()
     if cooldownTimer:
@@ -2486,8 +2499,7 @@ def playGame():
         #rotation sound
         pygame.mixer.Channel(4).stop()
         pygame.mixer.Channel(10).stop()
-
-        if time.time() - startTime >= 3: # 3 seconds
+        if time.time() - systemTime >= 3: # 3 seconds
             #Reset the game
             reset()
             constantPlayGame()
@@ -2600,14 +2612,49 @@ def playGame():
             tank1.updateCorners()
             tank1.setDelta(TPS)
             gun1.setDelta(TPS)
+        else:
+            # The tank is dead lol
+            # easy
+            tank1 = DefaultTank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
+            tank1.setData(player1PackageTank)
+            tank1.setImage('tank', p1L + 1)
+            tank1.setSoundDictionary(soundDictionary)
+            tank1.settileList(tileList)
+            tank1.effect = [0,0,0]
+
+
+            gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
+            gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
+            gun1.setImage('gun', p1K + 1)
+            tank1.setCentre(spawnTank1[0], spawnTank1[1])
+            tank1Dead = False
+            allSprites.add(tank1, gun1) # Add the new sprites
+
         if not tank2Dead:
             tank2.updateCorners()
             tank2.setDelta(TPS)
             gun2.setDelta(TPS)
+        else:
+            tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
+            tank2.setData(player2PackageTank)
+            tank2.setImage('tank', p2L + 1)
+            tank2.setSoundDictionary(soundDictionary)
+            tank2.settileList(tileList)
+            tank2.effect = [0,0,0]
+
+            gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
+            gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
+            gun2.setImage('gun', p2K + 1)
+            tank2.setCentre(spawnTank2[0], spawnTank2[1])
+            tank2Dead = False
+            allSprites.add(tank2, gun2) # Add the new sprites
+            
         for bullet in bulletSprites:
             bullet.setDelta(TPS)
-        if not(tank1Dead or tank2Dead):
-            allSprites.update()
+        # if not(tank1Dead or tank2Dead):
+        #     allSprites.update()
+        allSprites.update()
+
         #Fixing tank movement
         # don't update the bullets if the game is over
         if not cooldownTimer:
@@ -2629,7 +2676,8 @@ def playGame():
     explosionGroup.draw(screen)
     if timerClock == 0:
         timer.tick()
-    timerClock = (timerClock + 1) % 125 # This is to make sure that the timer doesn't go too fast
+    # 125 is the reference for the FPS
+    timerClock = (timerClock + 1) % 120 # This is to make sure that the timer doesn't go too fast
 
 def pauseScreen():
     # This function will draw the pause screen
@@ -2657,7 +2705,7 @@ def reset():
     # Inputs: None
     # Outputs: None
     # Because of the way it's coded, these global declarations can't be avoided
-    global gameOverFlag, cooldownTimer, startTime, p1Score, p2Score
+    global gameOverFlag, cooldownTimer, systemTime, p1Score, p2Score
     global tank1Dead, tank2Dead
     global allSprites, bulletSprites
     gameOverFlag = False
@@ -2670,7 +2718,7 @@ def reset():
         sprite.kill()
     bulletSprites = pygame.sprite.Group()
     #Nautural constants
-    startTime = 0
+    systemTime = 0
     tank1Dead = False
     tank2Dead = False
     treadsp1.clear()
@@ -2681,13 +2729,12 @@ def updateTankHealth():
     # This function will update the tank health and check if the tank is dead
     # Inputs: None
     # Outputs: None
-    global explosionGroup, tank1Dead, tank2Dead, gameOverFlag
+    global explosionGroup, tank1Dead, tank2Dead, respawnTank1, respawnTank2
     global p1Score, p2Score
     global allSprites, tank1, tank2, gun1, gun2
     #Update the tank health
     if tank1.getHealth() <= 0:
         if not tank1Dead:
-            print("Player 2 Wins")
             p2Score = (p2Score + 1) % 99 # Fix the maximum to 99
             tank1Dead = True
             explosionGroup.add(Explosion(tank1.getCenter()[0], tank1.getCenter()[1]))
@@ -2698,10 +2745,9 @@ def updateTankHealth():
             for sprite in allSprites:
                 sprite.kill()
             allSprites = pygame.sprite.Group()
-        gameOverFlag = True #The game is over
+        respawnTank1 = True #The game is over
     if tank2.getHealth() <= 0:
         if not tank2Dead:
-            print("Player 1 Wins")
             p1Score = (p1Score + 1) % 99 # Fix the maximum to 99
             tank2Dead = True
             explosionGroup.add(Explosion(tank2.getCenter()[0], tank2.getCenter()[1]))
@@ -2712,7 +2758,7 @@ def updateTankHealth():
             for sprite in allSprites:
                 sprite.kill()            
             allSprites = pygame.sprite.Group()
-        gameOverFlag = True #The game is over
+        respawnTank2 = True #The game is over
 
 def infoScreen():
 
@@ -2748,13 +2794,16 @@ global explosionGroup
 explosionGroup = pygame.sprite.Group() #All the explosions
 
 resetFlag = True
-startTime = 0
+systemTime = 0
 cooldownTimer = False
 
 global startTreads
 startTreads = 0
 global gameOverFlag
 gameOverFlag = False
+global respawnTank1, respawnTank2
+respawnTank1 = False
+respawnTank2 = False
 global fromHome
 fromHome = True
 #Constants
@@ -3629,7 +3678,7 @@ pygame.mixer.set_num_channels(32)
 
 for sound in soundDictionary:
     soundDictionary[sound].set_volume(volume[sound])
-
+global spawnpoint
 spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
 spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
 global tank1Dead, tank2Dead
@@ -3809,7 +3858,7 @@ while not done:
         screen.fill(c.geT("WHITE")) # Errornous state
     clock.tick(240) # Set the FPS
     mixer.update(mute.getValue()) # Update the mixer
-
+    # print(spawnTank1, spawnTank2)
     pygame.display.flip()# Update the screen
 
 pygame.quit()

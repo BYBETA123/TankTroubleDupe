@@ -97,6 +97,7 @@ class Tank(pygame.sprite.Sprite):
         self.deltaTime = 0
         self.effect = [0,0,0] # This is an array which carries timers for the effects being [damage, armor, speed]
         self.weight = 1
+        self.invincibility = TIMER_MAX * 2 / 9 # this is the invincibility period (~5sec)
         # Treads
         if getattr(sys, 'frozen', False):  # Running as an .exe
             base_path = sys._MEIPASS
@@ -117,6 +118,7 @@ class Tank(pygame.sprite.Sprite):
         # from the keyboard sound effects will be played as well as the sound effects
         # Inputs: None
         # Outputs: None
+        self.invincibility = max(0, self.invincibility - self.deltaTime) # Decrease the invincibility timer
         if self.AI:
             #If the tank is an AI, it will move based on the AI's logic
             # current tile
@@ -488,6 +490,9 @@ class Tank(pygame.sprite.Sprite):
 
     def getWeight(self):
         return self.weight
+
+    def getInvincibility(self):
+        return self.invincibility
 
 #Hulls
 class Bonsai(Tank):
