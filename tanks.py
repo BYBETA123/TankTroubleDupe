@@ -95,7 +95,7 @@ class Tank(pygame.sprite.Sprite):
         self.soundDictionary = {} # The dictionary that will store the sound effects
         self.List = []
         self.deltaTime = 0
-        self.effect = [0,0,0] # This is an array which carries timers for the effects being [damage, armor, speed]
+        self.effect = [0,0,0] # This is an array which carries timers for the effects being [damage, armor, speed] # we start with a speed boost
         self.weight = 1
         self.invincibility = TIMER_MAX * 2 / 9 # this is the invincibility period (~5sec)
         # Treads
@@ -245,6 +245,12 @@ class Tank(pygame.sprite.Sprite):
                     self.effect[i] = 0
 
     def draw(self, screen): # A manual entry of the draw screen so that we can update it with anything else we may need to draw
+        if self.invincibility > 0:
+            # Draw the tank with a transparent effect
+            self.image.set_alpha(31)
+        else:
+            self.image.set_alpha(255)
+        # Draw the tank image
         screen.blit(self.image, self.rect)
 
     def updateCorners(self):

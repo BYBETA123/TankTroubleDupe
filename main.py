@@ -449,6 +449,12 @@ class Gun(pygame.sprite.Sprite):
         self.y = float(self.rect.centery)
 
     def draw(self, screen):
+        if self.tank.getInvincibility() > 0:
+            # Draw the tank with a transparent effect
+            self.image.set_alpha(31)
+        else:
+            self.image.set_alpha(255)
+        # Draw the tank image
         screen.blit(self.image, self.rect)
 
     def setImage(self, name = 'gun', imageNum = 1):
@@ -1274,7 +1280,7 @@ class Tile(pygame.sprite.Sprite):
                 screen.blit(self.supply[0], (self.x + tileSize//2 - self.supply[0].get_width()//2, self.y + tileSize//2 - self.supply[0].get_height()//2))
             else:
                 screen.blit(self.supply[1], (self.x + tileSize//2 - self.supply[1].get_width()//2, self.y + tileSize//2 - self.supply[1].get_height()//2))
-        self.drawText(screen)
+        # self.drawText(screen)
     def getNeighbours(self):
         return self.neighbours
 
@@ -2103,8 +2109,7 @@ def tileGen():
         validMaze = breathFirstSearch(tileList, choices, 0) and breathFirstSearch(tileList, choices, 1)
     global spawnpoint
     spawnpoint = []
-    spawnpoint = choices 
-    print(spawnpoint)
+    spawnpoint = choices
     # supplies
 
     if getattr(sys, 'frozen', False):  # Running as an .exe
@@ -2125,6 +2130,10 @@ def tileGen():
     tileList[42].setSupply([os.path.join(currentDir, 'Assets', 'Speed_Floor_Picked.png'), os.path.join(currentDir, 'Assets', 'Speed_Floor.png')], 2)
 
     return tileList
+
+def setUpTank1():
+
+def setUpTank2():
 
 def setUpPlayers():
     # This function sets up the players for the game including reseting the respective global veriables
@@ -2202,7 +2211,7 @@ def setUpPlayers():
         gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
         gun2.setImage('gun', p2K + 1)
         timer.setDirection(False)
-        timer.setDuration(301)
+        timer.setDuration(301) # Set the timer to 5 minutes
 
     elif DifficultyType == 3:
         # normal AI, 1 Player
@@ -2272,6 +2281,7 @@ def setUpPlayers():
     for bullet in bulletSprites:
         bullet.kill()
     bulletSprites = pygame.sprite.Group()
+    timer.reset() # Reset the timer
 
 def constantHomeScreen():
     #This funciton handles the constant elements of the home screen
@@ -2577,12 +2587,14 @@ def playGame():
         if tank1Dead:
             treadsp1.clear()
         else:
-            tank1.treads(treadsp1)
+            if tank1.invincibility==0:
+                tank1.treads(treadsp1)
 
         if tank2Dead:
             treadsp2.clear()
         else:
-            tank2.treads(treadsp2)
+            if tank2.invincibility==0:
+                tank2.treads(treadsp2)
         startTreads = pygame.time.get_ticks() # Reset the timer
 
     for pos in treadsp1:
@@ -2613,51 +2625,52 @@ def playGame():
             tank1.setDelta(TPS)
             gun1.setDelta(TPS)
         else:
-            # The tank is dead lol
-            # easy
-            tank1 = DefaultTank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
-            tank1.setData(player1PackageTank)
-            tank1.setImage('tank', p1L + 1)
-            tank1.setSoundDictionary(soundDictionary)
-            tank1.settileList(tileList)
-            tank1.effect = [0,0,0]
+            if DifficultyType == 2:
+                # easy
+                tank1 = DefaultTank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
+                tank1.setData(player1PackageTank)
+                tank1.setImage('tank', p1L + 1)
+                tank1.setSoundDictionary(soundDictionary)
+                tank1.settileList(tileList)
+                tank1.effect = [0,0,0]
 
 
-            gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
-            gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
-            gun1.setImage('gun', p1K + 1)
-            tank1.setCentre(spawnTank1[0], spawnTank1[1])
-            tank1Dead = False
-            allSprites.add(tank1, gun1) # Add the new sprites
+                gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
+                gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
+                gun1.setImage('gun', p1K + 1)
+                tank1.setCentre(spawnTank1[0], spawnTank1[1])
+                tank1Dead = False
+                allSprites.add(tank1, gun1) # Add the new sprites
 
         if not tank2Dead:
             tank2.updateCorners()
             tank2.setDelta(TPS)
             gun2.setDelta(TPS)
         else:
-            tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
-            tank2.setData(player2PackageTank)
-            tank2.setImage('tank', p2L + 1)
-            tank2.setSoundDictionary(soundDictionary)
-            tank2.settileList(tileList)
-            tank2.effect = [0,0,0]
+            if DifficultyType == 2:
+                tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
+                tank2.setData(player2PackageTank)
+                tank2.setImage('tank', p2L + 1)
+                tank2.setSoundDictionary(soundDictionary)
+                tank2.settileList(tileList)
+                tank2.effect = [0,0,0]
 
-            gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
-            gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
-            gun2.setImage('gun', p2K + 1)
-            tank2.setCentre(spawnTank2[0], spawnTank2[1])
-            tank2Dead = False
-            allSprites.add(tank2, gun2) # Add the new sprites
+                gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
+                gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
+                gun2.setImage('gun', p2K + 1)
+                tank2.setCentre(spawnTank2[0], spawnTank2[1])
+                tank2Dead = False
+                allSprites.add(tank2, gun2) # Add the new sprites
             
         for bullet in bulletSprites:
             bullet.setDelta(TPS)
         # if not(tank1Dead or tank2Dead):
         #     allSprites.update()
-        allSprites.update()
 
         #Fixing tank movement
         # don't update the bullets if the game is over
         if not cooldownTimer:
+            allSprites.update()
             fixMovement([tank1, tank2])
             bulletSprites.update()
         explosionGroup.update()
