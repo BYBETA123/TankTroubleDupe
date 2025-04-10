@@ -517,7 +517,7 @@ class Gun(pygame.sprite.Sprite):
             self.channelDict["reload"]["channel"].play(soundDictionary["Reload"])
 
     def _getTurretSpeed(self):
-        return self.tank.getRotationalSpeed() * (1.5 if (self.tank.effect[2] != 0) else 1)
+        return self.tank.getRotationalSpeed() * (1.2 if (self.tank.effect[2] != 0) else 1)
     
     def setDelta(self, delta):
         self.deltaTime = delta
@@ -3137,6 +3137,7 @@ iListRender = [[fontDictionary["iFont"].render(line, True, c.geT("BLACk")) for l
 
 #Selection Screen
 buttonList = []
+
 homeButton = TextBox(tileSize//4, tileSize//4, font=selectionFont,fontSize=26, text="BACK", textColor=c.geT("BLACK"))
 homeButton.setBoxColor(selectionBackground)
 homeButton.setOutline(True, 5)
@@ -3516,32 +3517,45 @@ def checkHomeButtons(mouse):
     # This function checks all the buttons of the mouse in the home screen
     # Inputs: Mouse: The current location of the mouse
     # Outputs: None
-    global gameMode, DifficultyType
+    global gameMode, DifficultyType, pageNum
 
-    if onePlayerButtonHomeN.buttonClick(mouse):
-        DifficultyType = 5
+    if HomeButton1.buttonClick(mouse):
+        DifficultyType = 1 + pageNum
         setUpPlayers()
         gameMode=GameMode.play
         #Switch the the play screen
         print("One Player Easy")
         constantPlayGame()
-    if twoPlayerButtonHomeN.buttonClick(mouse):
-        DifficultyType = 6
+    if HomeButton2.buttonClick(mouse):
+        DifficultyType = 2 + pageNum
         setUpPlayers()
         gameMode=GameMode.play
         #Switch the the play screen
         print("Two Player Easy")
         constantPlayGame()
-    if onePlayerButtonHomeH.buttonClick(mouse):
+    if HomeButton3.buttonClick(mouse):
+        DifficultyType = 3 + pageNum
         print("One Player Hard")
         gameMode = GameMode.selection
-        DifficultyType = 7
         constantSelectionScreen()
-    if twoPlayerButtonHomeH.buttonClick(mouse):
+    if HomeButton4.buttonClick(mouse):
+        DifficultyType = 4 + pageNum
         print("Two Player Hard")
         gameMode = GameMode.selection
-        DifficultyType = 8
         constantSelectionScreen()
+    if homeLeftButton.buttonClick(mouse):
+        pageNum = (pageNum - 4) % len(homeButtonNameArray)
+        HomeButton1.setText(homeButtonNameArray[(pageNum) % len(homeButtonNameArray)])
+        HomeButton2.setText(homeButtonNameArray[(pageNum + 1) % len(homeButtonNameArray)])
+        HomeButton3.setText(homeButtonNameArray[(pageNum + 2) % len(homeButtonNameArray)])
+        HomeButton4.setText(homeButtonNameArray[(pageNum + 3) % len(homeButtonNameArray)])
+    if homeRightButton.buttonClick(mouse):
+        pageNum = (pageNum + 4) % len(homeButtonNameArray)
+        HomeButton1.setText(homeButtonNameArray[(pageNum) % len(homeButtonNameArray)])
+        HomeButton2.setText(homeButtonNameArray[(pageNum + 1) % len(homeButtonNameArray)])
+        HomeButton3.setText(homeButtonNameArray[(pageNum + 2) % len(homeButtonNameArray)])
+        HomeButton4.setText(homeButtonNameArray[(pageNum + 3) % len(homeButtonNameArray)])
+
     if settingsButton.buttonClick(mouse):
         print("Settings")
         gameMode = GameMode.settings
@@ -3683,18 +3697,30 @@ logo_path = os.path.join(currentDir, "Assets", "logo.png")
 lpng = pygame.image.load(logo_path).convert_alpha()
 lpng = pygame.transform.scale(lpng, (lpng.get_size()[0]//15, lpng.get_size()[1]//15))
 
+# number to keep track of which page we are on
+global pageNum
+pageNum = 0
+
+# homeButtonNameArray = ["1P Easy", "1P Hard", "2P Easy", "2P Hard"] #<!>
+homeButtonNameArray = ["1P Yard", "1P Scrapyard", "2P Yard", "2P Scrapyard", "1p Brawl", "1P DeathMatch", "2P Brawl", "2P DeathMatch"] #<!>
+
 # Create buttons with specified positions and text
-onePlayerButtonHomeN = Button(c.geT("BLACK"),c.geT("BLACK"), 30, 470, 140, 80, '1P Easy', (255, 255, 255), 15, hoverColor=(100, 100, 255))
-onePlayerButtonHomeH = Button(c.geT("BLACK"),c.geT("BLACK"), 230, 470, 140, 80, '1P Hard', (255, 255, 255), 15, hoverColor=(100, 100, 255))
-twoPlayerButtonHomeN = Button(c.geT("BLACK"),c.geT("BLACK"), 430, 470, 140, 80, '2P Easy', (255, 255, 255), 15, hoverColor=(100, 100, 255))
-twoPlayerButtonHomeH = Button(c.geT("BLACK"),c.geT("BLACK"), 630, 470, 140, 80, '2P Hard', (255, 255, 255), 15, hoverColor=(100, 100, 255))
+homeLeftButton = Button(c.geT("BLACK"), c.geT("BLACK"), 30, 490, 40, 80, '←', (255, 255, 255), 25, hoverColor=(100, 100, 255))
+HomeButton1 = Button(c.geT("BLACK"),c.geT("BLACK"), 106, 490, 120, 80, homeButtonNameArray[0], (255, 255, 255), 15, hoverColor=(100, 100, 255))
+HomeButton2 = Button(c.geT("BLACK"),c.geT("BLACK"), 262, 490, 120, 80, homeButtonNameArray[1], (255, 255, 255), 15, hoverColor=(100, 100, 255))
+HomeButton3 = Button(c.geT("BLACK"),c.geT("BLACK"), 418, 490, 120, 80, homeButtonNameArray[2], (255, 255, 255), 15, hoverColor=(100, 100, 255))
+HomeButton4 = Button(c.geT("BLACK"),c.geT("BLACK"), 574, 490, 120, 80, homeButtonNameArray[3], (255, 255, 255), 15, hoverColor=(100, 100, 255))
+homeRightButton = Button(c.geT("BLACK"), c.geT("BLACK"), 730, 490, 40, 80, '→', (255, 255, 255), 25, hoverColor=(100, 100, 255))
+
 quitButtonHome = Button(c.geT("BLACK"), c.geT("BLACK"), 30, 30, 140, 80, 'Quit', (255, 255, 255), 25, hoverColor=(100, 100, 255))
 settingsButton = Button(c.geT("BLACK"), c.geT("BLACK"), 570, 30, 210, 80, 'Settings', (255, 255, 255), 25, hoverColor=(100, 100, 255))
 
-homeButtonList.append(onePlayerButtonHomeN)
-homeButtonList.append(onePlayerButtonHomeH)
-homeButtonList.append(twoPlayerButtonHomeN)
-homeButtonList.append(twoPlayerButtonHomeH)
+homeButtonList.append(homeLeftButton)
+homeButtonList.append(HomeButton1)
+homeButtonList.append(HomeButton3)
+homeButtonList.append(HomeButton2)
+homeButtonList.append(HomeButton4)
+homeButtonList.append(homeRightButton)
 homeButtonList.append(settingsButton)
 homeButtonList.append(quitButtonHome)
 

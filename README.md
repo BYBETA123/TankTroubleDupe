@@ -35,7 +35,7 @@ Player 2:
 
 ## Installation
 
-This game has no current release featured on Github
+This game has a current release featured on Github which can be downloaded and run without needing any pre-installed requirements
 
 This game can be played locally on the command terminal by navigating to the directory where the main.py file is located and running the command
 `python main.py`
@@ -44,37 +44,62 @@ This game can be played locally on the command terminal by navigating to the dir
 
 When on the menu screen, there are several options to play:
 
-Easy mode (1 or 2 players)
+Whenever selecting a one-player option, you will always play as player two using the player two controls.
 
-This will immediately bring you into the game, if you are in single player mode, then there will be an AI to control the player 1 tank and you will be playing with the player 2 controls. If you are playing with two players, both controls will be active
+# Scrapyard
 
-Hard mode (1 or 2 players)
+> Scrapyard is a One-Hit Kill gamemode which will run indefinitely, resetting after each kill with a freeze-frame
 
-This will prompt you with the selction screen, where you can choose from a range of different turrets and hulls as well as colour customisation allowing for a completely unique feel, each turret and hull have their own advantages and disadvantages so you must choose wisely in order to outplay your opponent, once both players are ready hit the `play` button in the middle.
+## Modes:
+- 1P Yard: One player vs an AI both using simple tanks
 
-This will then bring you into the game, if you are in single player mode, then there will be an AI to control the player 1 tank and you will be playing with the player 2 controls. If you are playing with two players, both controls will be active
+- 1P Scrapyard: One player vs an AI both using the advanced tanks
+
+- 2P Yard: Player vs Player both using simple tanks
+
+- 2P Scrapyard: Palyer vs Player both using the advanced tanks
+
+# Death Match
+
+> Deathmatch is a 5 mintues gamemode which players will compete for the most kills
+
+- 1P Brawl: One player vs an AI both using simple tanks
+
+- 1P Deathmatch: One player vs an AI both using the advanced tanks
+
+- 2P Brawl: Player vs Player both using simple tanks
+
+- 2P DeathMatch: Palyer vs Player both using the advanced tanks
 
 
+# Team Modes (in concept)
+## Future Plans:
+
+> TDM (Team DeathMatch) 2v2 with the option of either 1 or 2 players, the other 2 tanks will be AI's. Most Kills wins
+
+> CTF (Capture the Flag) 2v2 with the option of either 1 or 2 players, the other 2 tanks will be AI's. However the win condition is whoever captures the most enemy flags
 
 ## Known issues
 
-There is an issue where the game will suddenly crash due to the maze failing to generate, hwoever this bug is difficult to replicate
+There is an issue with the music if the switch between varying scenes (e.g. home -> 1p easy) where the music track will not properly transition to the battle track
 
 ## Roadmap (future plans)
 
-No current plans
-Ideas:
+Ideas (Not currently in development):
+1. Add `Firestorm` turret, concept: A powerful flame thrower that will slowly deal damage over time as the enemy stays within its range for longer
 1. Improve the AI to avoid bullets
 1. Add `Inferno` turret, concept: A laser that will deal more damage over time as it stays on its target, also takes self damage after too long
 1. Add `Bucket` turret, concept: A "Bucket" that can't shoot, however can pick up and reflect any bullet shot at it
-1. Add `Avalanche` turret: A turret that will slow down the enemies in its range
-1. Add kill streak sounds / change battle track
+1. Add kill streak sounds
 1. Add introduction cards for each tank
 
 ## Credits
 
 Thank you to the following people
-    Bin-Coder14, Goodnews888, Ekiel, Beta
+- Bin-Coder14
+- Goodnews888
+- Ekiel
+- Beta
 
 Thanks to you for playing the game
 
@@ -107,4 +132,4 @@ Supply Statistics
 |--|--|
 | Damage | Deal 150% Damage|
 | Armor | Take 50% Less Damage|
-| Speed | 40% Increased Tank Speed and Turret Rotation Speed|
+| Speed | 40% Increased Tank Speed and 20% Increased Turret Rotation Speed|
