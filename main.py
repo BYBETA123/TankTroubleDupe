@@ -631,11 +631,11 @@ class Bullet(pygame.sprite.Sprite):
             tank1Collision = self.getCollision(tank1.getCorners(), (tempX, tempY))
             tank2Collision = self.getCollision(tank2.getCorners(), (tempX, tempY))
 
-            if self.name == tank1.getName() and tank2Collision:
+            if self.name == tank1.getName() and tank2Collision and tank2.getInvincibility() == 0:
                 damage(tank2, self.damage)
                 self.kill()
                 return
-            if self.name == tank2.getName() and tank1Collision:
+            if self.name == tank2.getName() and tank1Collision and tank1.getInvincibility() == 0:
                 damage(tank1, self.damage)
                 self.kill()
                 return
@@ -644,11 +644,11 @@ class Bullet(pygame.sprite.Sprite):
                 self.selfCollision = True
 
             if self.selfCollision:
-                if tank1Collision:
+                if tank1Collision and tank1.getInvincibility()==0:
                     damage(tank1, self.damage)
                     self.kill()
                     return
-                if tank2Collision:
+                if tank2Collision and tank2.getInvincibility()==0:
                     damage(tank2, self.damage)
                     self.kill()
                     return
@@ -879,11 +879,11 @@ class WatcherBullet(Bullet):
             tank1_collision = (self.getCollision(tank1.getCorners(), (temp_x, temp_y)))
             tank2_collision = (self.getCollision(tank2.getCorners(), (temp_x, temp_y)))
 
-            if self.name == tank1.getName() and tank2_collision:
+            if self.name == tank1.getName() and tank2_collision and tank2.getInvincibility() == 0:
                 damage(tank2, self.damage)
                 self.kill()
                 return
-            if self.name == tank2.getName() and tank1_collision:
+            if self.name == tank2.getName() and tank1_collision and tank1.getInvincibility() == 0:
                 damage(tank1, self.damage)
                 self.kill()
                 return
@@ -1007,22 +1007,22 @@ class ChamberBullet(Bullet):
             # use the old collision
             tank1Collision = pygame.sprite.collide_rect(self, tank1)
             tank2Collision = pygame.sprite.collide_rect(self, tank2)
-
-            if self.name == tank1.getName() and tank2Collision:
+            
+            if self.name == tank1.getName() and tank2Collision and tank2.getInvincibility() == 0:
                 damage(tank2, self.damage)
                 self.explode()
                 return
-            if self.name == tank2.getName() and tank1Collision:
+            if self.name == tank2.getName() and tank1Collision and tank1.getInvincibility() == 0:
                 damage(tank1, self.damage)
                 self.explode()
                 return
-            
+
             if self.selfCollision:
-                if tank1Collision:
+                if tank1Collision and tank1.getInvincibility() == 0:
                     damage(tank1, self.damage)
                     self.explode()
                     return
-                if tank2Collision:
+                if tank2Collision and tank2.getInvincibility() == 0:
                     damage(tank2, self.damage)
                     self.explode()
                     return
@@ -1047,11 +1047,11 @@ class ChamberBullet(Bullet):
                 wallCollision = True
                 self.angle = 360 - self.angle
             if wallCollision:
-                if self.name == tank1.getName() and tank1Collision:
+                if self.name == tank1.getName() and tank1Collision and tank1.getInvincibility() == 0:
                     damage(tank1, self.damage)
                     self.explode()
                     return
-                if self.name == tank2.getName() and tank2Collision:
+                if self.name == tank2.getName() and tank2Collision and tank2.getInvincibility() == 0:
                     damage(tank2, self.damage)
                     self.explode()
                     return
@@ -2131,34 +2131,17 @@ def tileGen():
 
     return tileList
 
-def setUpTank1():
+def setUpTank1(DifficultyType = -1):
+    global tileList, spawnpoint, tank1, gun1, allSprites, bulletSprites
+    global p1I, p1J, p1K, p1L, spawnTank1
+    global player1PackageTank, player1PackageGun
+    global player1Channels, p1TankName, p1GunName
+    if DifficultyType == -1:
+        print("Error: Difficulty type isn't valid")
+        raise Exception("Broken")
 
-def setUpTank2():
-
-def setUpPlayers():
-    # This function sets up the players for the game including reseting the respective global veriables
-    #This function has no real dependencies on things outside of its control
-    # Inputs: None
-    # Outputs: None
-    global tileList, spawnpoint, tank1, tank2, gun1, gun2, allSprites, bulletSprites
-    global p1I, p1J, p2I, p2J, p1K, p2K, p1L, p2L, DifficultyType, spawnTank1, spawnTank2
-    global p1Score, p2Score, player1PackageTank, player1PackageGun, player2PackageTank, player2PackageGun
-    global player1Channels, player2Channels, p1TankName, p2TankName, p1GunName, p2GunName
-    p1Score, p2Score = 0, 0 # reset the player scores
-    tileList = tileGen() # Get a new board
-    spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
-    spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
-    player1Channels = {"move": {"channel": pygame.mixer.Channel(3), "volume": 0.05}, "rotate": {"channel": pygame.mixer.Channel(4), "volume": 0.2}, "death": {"channel" : pygame.mixer.Channel(5), "volume": 0.5}, "fire": {"channel": pygame.mixer.Channel(6), "volume": 1}, "hit": {"channel": pygame.mixer.Channel(7), "volume": 1}, "reload": {"channel": pygame.mixer.Channel(8), "volume": 0.5}}
-    player2Channels = {"move": {"channel": pygame.mixer.Channel(9), "volume": 0.05}, "rotate": {"channel": pygame.mixer.Channel(10), "volume": 0.3}, "death": {"channel" : pygame.mixer.Channel(11), "volume": 0.5}, "fire": {"channel": pygame.mixer.Channel(12), "volume": 1}, "hit": {"channel": pygame.mixer.Channel(13), "volume": 1}, "reload": {"channel": pygame.mixer.Channel(14), "volume": 0.5}}
-    #Updating the packages
-    player1PackageTank = [spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName, player1Channels]
-    player1PackageGun = [controlsTank1, p1GunName, player1Channels]
-    player2PackageTank = [spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName, player2Channels]
-    player2PackageGun = [controlsTank2, p2GunName, player2Channels]
-
-    #Setup the tanks
-    if DifficultyType == 1:
-        # easy AI, 1 Player
+    elif DifficultyType == 1:
+        # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Simple Tanks
         tank1 = DefaultTank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
         tank1.setAI(True, currentTargetPackage)
         tank1.setData(player1PackageTank)
@@ -2167,28 +2150,13 @@ def setUpPlayers():
         tank1.settileList(tileList)
         tank1.effect = [0,0,0]
 
-        tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
-        tank2.setData(player2PackageTank)
-        tank2.setImage('tank', p2L + 1)
-        tank2.setSoundDictionary(soundDictionary)
-        tank2.settileList(tileList)
-        tank2.effect = [0,0,0]
-
         gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
         gun1.setAI(True)
         gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
         gun1.setImage('gun', p1K + 1)
-
-        gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
-        gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
-        gun2.setImage('gun', p2K + 1)
-        #Starting location
-        temp = tank2.getCurrentTile().getIndex()
-        tank1.setAim((temp, temp%14*tileSize + tileSize//2, ((temp)//14 + 1)*tileSize + tileSize//2))
-        timer.setDirection(True)
-
+    
     elif DifficultyType == 2:
-        # easy
+        # Scrapyard, Player vs Player Simple Tanks
         tank1 = DefaultTank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
         tank1.setData(player1PackageTank)
         tank1.setImage('tank', p1L + 1)
@@ -2196,25 +2164,12 @@ def setUpPlayers():
         tank1.settileList(tileList)
         tank1.effect = [0,0,0]
 
-        tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
-        tank2.setData(player2PackageTank)
-        tank2.setImage('tank', p2L + 1)
-        tank2.setSoundDictionary(soundDictionary)
-        tank2.settileList(tileList)
-        tank2.effect = [0,0,0]
-
         gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
         gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
         gun1.setImage('gun', p1K + 1)
 
-        gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
-        gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
-        gun2.setImage('gun', p2K + 1)
-        timer.setDirection(False)
-        timer.setDuration(301) # Set the timer to 5 minutes
-
     elif DifficultyType == 3:
-        # normal AI, 1 Player
+        # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Normal Tanks
         tank1 = copy.copy(hullList[p1J]) # Tank 1 setup
         tank1.setAI(True, currentTargetPackage)
         tank1.setData(player1PackageTank)
@@ -2222,14 +2177,7 @@ def setUpPlayers():
         tank1.setSoundDictionary(soundDictionary)
         tank1.settileList(tileList)
         tank1.effect = [0,0,0]
-
-        tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
-        tank2.setData(player2PackageTank)
-        tank2.setImage(hullList[p2J].getName(), p2L + 1)
-        tank2.setSoundDictionary(soundDictionary)
-        tank2.settileList(tileList)
-        tank2.effect = [0,0,0]
-
+        
         #Because silencer and watcher aren't made yet, skip them
         if p1I == 1 or p1I == 2:
             print("Skipping Silencer or Watcher, selecting Chamber")
@@ -2241,19 +2189,84 @@ def setUpPlayers():
         gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
         gun1.setImage(turretList[p1I].getGunName(), p1K + 1)
 
-        gun2 = copy.copy(turretList[p2I]) # Gun 2 setup
-        gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
-        gun2.setImage(turretList[p2I].getGunName(), p2K + 1)
-        timer.setDirection(True)
-
-    else:
-        #normal
+    elif DifficultyType == 4:
+        # Scrapyard, Player vs Player Normal Tanks
         tank1 = copy.copy(hullList[p1J]) # Tank 1 setup
         tank1.setData(player1PackageTank)
         tank1.setImage(hullList[p1J].getName(), p1L + 1)
         tank1.setSoundDictionary(soundDictionary)
         tank1.settileList(tileList)
         tank1.effect = [0,0,0]
+
+        gun1 = copy.copy(turretList[p1I]) # Gun 1 setup
+        gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
+        gun1.setImage(turretList[p1I].getGunName(), p1K + 1)
+
+    elif DifficultyType == 5:
+        setUpTank1(1)
+    elif DifficultyType == 6:
+        setUpTank1(2)
+    elif DifficultyType == 7:
+        setUpTank1(3)
+    elif DifficultyType == 8:
+        setUpTank1(4)
+
+
+def setUpTank2(DifficultyType = -1):
+    global tileList, spawnpoint, tank2, gun2, allSprites, bulletSprites
+    global p2I, p2J, p2K, p2L, spawnTank2
+    global player2PackageTank, player2PackageGun
+    global player2Channels, p2TankName, p2GunName
+    if DifficultyType == -1:
+        print("Error: Difficulty type isn't valid")
+        raise Exception("Broken")
+    
+    elif DifficultyType == 1:
+        # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Simple Tanks
+        tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
+        tank2.setData(player2PackageTank)
+        tank2.setImage('tank', p2L + 1)
+        tank2.setSoundDictionary(soundDictionary)
+        tank2.settileList(tileList)
+        tank2.effect = [0,0,0]
+
+        gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
+        gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
+        gun2.setImage('gun', p2K + 1)
+
+    elif DifficultyType == 2:
+        # Scrapyard, Player vs Player Simple Tanks
+        tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
+        tank2.setData(player2PackageTank)
+        tank2.setImage('tank', p2L + 1)
+        tank2.setSoundDictionary(soundDictionary)
+        tank2.settileList(tileList)
+        tank2.effect = [0,0,0]
+
+        gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
+        gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
+        gun2.setImage('gun', p2K + 1)
+
+    elif DifficultyType == 3:
+        # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Normal Tanks
+        tank1 = copy.copy(hullList[p1J]) # Tank 1 setup
+        tank1.setAI(True, currentTargetPackage)
+        tank1.setData(player1PackageTank)
+        tank1.setImage(hullList[p1J].getName(), p1L + 1)
+        tank1.setSoundDictionary(soundDictionary)
+        tank1.settileList(tileList)
+        tank1.effect = [0,0,0]
+        
+        #Because silencer and watcher aren't made yet, skip them
+        if p1I == 1 or p1I == 2:
+            print("Skipping Silencer or Watcher, selecting Chamber")
+            gun1 = copy.copy(turretList[3]) # Gun 1 setup
+        else:
+            gun1 = copy.copy(turretList[p1I]) # Gun 1 setup
+        gun1.setAI(True)
+        gun1.setHard()
+        gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
+        gun1.setImage(turretList[p1I].getGunName(), p1K + 1)
 
         tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
         tank2.setData(player2PackageTank)
@@ -2262,14 +2275,95 @@ def setUpPlayers():
         tank2.settileList(tileList)
         tank2.effect = [0,0,0]
 
-        gun1 = copy.copy(turretList[p1I]) # Gun 1 setup
-        gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
-        gun1.setImage(turretList[p1I].getGunName(), p1K + 1)
+        gun2 = copy.copy(turretList[p2I]) # Gun 2 setup
+        gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
+        gun2.setImage(turretList[p2I].getGunName(), p2K + 1)
+
+    elif DifficultyType == 4:
+        # Scrapyard, Player vs Player Normal Tanks
+        tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
+        tank2.setData(player2PackageTank)
+        tank2.setImage(hullList[p2J].getName(), p2L + 1)
+        tank2.setSoundDictionary(soundDictionary)
+        tank2.settileList(tileList)
+        tank2.effect = [0,0,0]
 
         gun2 = copy.copy(turretList[p2I]) # Gun 2 setup
         gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
         gun2.setImage(turretList[p2I].getGunName(), p2K + 1)
+
+    elif DifficultyType == 5:
+        setUpTank2(1)
+    elif DifficultyType == 6:
+        setUpTank2(2)
+    elif DifficultyType == 7:
+        setUpTank2(3)
+    elif DifficultyType == 8:
+        setUpTank2(4)
+
+def setUpPlayers():
+    # This function sets up the players for the game including reseting the respective global veriables
+    #This function has no real dependencies on things outside of its control
+    # Inputs: None
+    # Outputs: None
+    global tileList, spawnpoint, tank1, tank2, gun1, gun2, allSprites, bulletSprites
+    global p1I, p1J, p2I, p2J, p1K, p2K, p1L, p2L, DifficultyType, spawnTank1, spawnTank2
+    global player1PackageTank, player1PackageGun, player2PackageTank, player2PackageGun
+    global player1Channels, player2Channels, p1TankName, p2TankName, p1GunName, p2GunName
+    tileList = tileGen() # Get a new board
+    spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
+    spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
+    player1Channels = {"move": {"channel": pygame.mixer.Channel(3), "volume": 0.05}, "rotate": {"channel": pygame.mixer.Channel(4), "volume": 0.2}, "death": {"channel" : pygame.mixer.Channel(5), "volume": 0.5}, "fire": {"channel": pygame.mixer.Channel(6), "volume": 1}, "hit": {"channel": pygame.mixer.Channel(7), "volume": 1}, "reload": {"channel": pygame.mixer.Channel(8), "volume": 0.5}}
+    player2Channels = {"move": {"channel": pygame.mixer.Channel(9), "volume": 0.05}, "rotate": {"channel": pygame.mixer.Channel(10), "volume": 0.3}, "death": {"channel" : pygame.mixer.Channel(11), "volume": 0.5}, "fire": {"channel": pygame.mixer.Channel(12), "volume": 1}, "hit": {"channel": pygame.mixer.Channel(13), "volume": 1}, "reload": {"channel": pygame.mixer.Channel(14), "volume": 0.5}}
+    #Updating the packages
+    player1PackageTank = [spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName, player1Channels]
+    player1PackageGun = [controlsTank1, p1GunName, player1Channels]
+    player2PackageTank = [spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName, player2Channels]
+    player2PackageGun = [controlsTank2, p2GunName, player2Channels]
+    # setup the tanks and guns
+    setUpTank1(DifficultyType)
+    setUpTank2(DifficultyType)
+
+    #Setup the tanks
+    if DifficultyType == 1:
+        # # easy AI, 1 Player
+        temp = tank2.getCurrentTile().getIndex()
+        tank1.setAim((temp, temp%14*tileSize + tileSize//2, ((temp)//14 + 1)*tileSize + tileSize//2))
+        # scrapyeard
         timer.setDirection(True)
+
+    elif DifficultyType == 2:
+        # easy
+        # dm
+        timer.setDirection(True)
+
+    elif DifficultyType == 3:
+        # # normal AI, 1 Player
+        # scrapyard
+        timer.setDirection(True)
+
+    elif DifficultyType == 4: # 4
+        # scrapyard
+        #normal
+        timer.setDirection(True)
+    elif DifficultyType == 5:
+        #dm
+        timer.setDirection(False)
+        timer.setDuration(301)
+    elif DifficultyType == 6:
+        #dm
+        timer.setDirection(False)
+        timer.setDuration(301)
+    elif DifficultyType == 7:
+        #dm
+        timer.setDirection(False)
+        timer.setDuration(301)
+    elif DifficultyType == 8:
+        #dm
+        timer.setDirection(False)
+        timer.setDuration(301)
+    else:
+        print(f"Unknown Difficulty: {DifficultyType}")
 
     #Updating the groups
     
@@ -2457,7 +2551,9 @@ def damage(tank, damage):
     # This function will adjust the damage that the tank has taken
     # Inputs: damage: The amount of damage that the tank has taken
     # Outputs: None
-    tank.health -= (damage * (0.5 if tank.effect[1] != 0 else 1)) if tank.getInvincibility() == 0 else 0 # if it is not equal to 0 we must be invincible
+    # if tank.getInvincibility() != 0: # we are still invincible
+    #     return
+    tank.health -= (damage * (0.5 if tank.effect[1] != 0 else 1))
     if tank.health > 0:
         if not tank.channelDict["death"]["channel"].get_busy(): # if the sound isn't playing
             tank.channelDict["death"]["channel"].play(soundDictionary["tankHurt"])  # Play sound indefinitely
@@ -2477,17 +2573,28 @@ def damage(tank, damage):
 
 def playGame():
 
-    def checkGameOver():
-        global tank1Dead, tank2Dead, DifficultyType
+    def checkGameOver(t):
+        global tank1Dead, tank2Dead
         # checking if the game is over
-        if DifficultyType == 1:
+        if t == 1:
             return tank1Dead or tank2Dead
-        if DifficultyType == 2: # temp dm
+        elif t == 2:
+            return tank1Dead or tank2Dead
+        elif t == 3:
+            return tank1Dead or tank2Dead
+        elif t == 4:
+            return tank1Dead or tank2Dead
+        elif t == 5:
             return timer.isExpired()
-        if DifficultyType == 3:
-            return tank1Dead or tank2Dead
-        if DifficultyType == 4:
-            return tank1Dead or tank2Dead
+        elif t == 6:
+            return timer.isExpired()
+        elif t == 7:
+            return timer.isExpired()
+        elif t == 8:
+            return timer.isExpired()
+        else:
+            print(f"{t} is not a known gamemode")
+            return 1 # broken
     # This function controls the main execution of the game
     # Inputs: None
     # Outputs: None
@@ -2495,9 +2602,9 @@ def playGame():
     global gameOverFlag, cooldownTimer, systemTime, p1Score, p2Score, startTreads
     global tank1Dead, tank2Dead, tileList, spawnpoint, player1Channels, player2Channels
     global tank1, tank2, gun1, gun2, allSprites, bulletSprites
-    global currentTime, deltaTime, lastUpdateTime
+    global currentTime, deltaTime, lastUpdateTime, DifficultyType
     global fontDictionary, supplyAssets, timerClock
-    if checkGameOver() and not cooldownTimer:
+    if checkGameOver(t = DifficultyType) and not cooldownTimer:
         #The game is over
         systemTime = time.time() #Start a 3s timer
         cooldownTimer = True
@@ -2610,7 +2717,7 @@ def playGame():
     # pygame.draw.polygon(screen, c.geT("GREEN"), tank1.getCorners(), 2) #Hit box outline
     # pygame.draw.polygon(screen, c.geT("GREEN"), tank2.getCorners(), 2) #Hit box outline
     # if we are using AI we need to set the target to go to the other tank
-    if (DifficultyType == 1 or DifficultyType == 3) and pygame.time.get_ticks() - tank1.getAimTime() > 2000:
+    if (DifficultyType == 1 or DifficultyType == 3 or DifficultyType == 5 or DifficultyType == 7) and pygame.time.get_ticks() - tank1.getAimTime() > 2000:
         # AI difficulty
         if not tank2Dead: # if the tank is still alive
             temp = tank2.getCurrentTile().getIndex()
@@ -2625,19 +2732,9 @@ def playGame():
             tank1.setDelta(TPS)
             gun1.setDelta(TPS)
         else:
-            if DifficultyType == 2:
+            if DifficultyType == 5 or DifficultyType == 6 or DifficultyType == 7 or DifficultyType == 8:
                 # easy
-                tank1 = DefaultTank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
-                tank1.setData(player1PackageTank)
-                tank1.setImage('tank', p1L + 1)
-                tank1.setSoundDictionary(soundDictionary)
-                tank1.settileList(tileList)
-                tank1.effect = [0,0,0]
-
-
-                gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
-                gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
-                gun1.setImage('gun', p1K + 1)
+                setUpTank1(DifficultyType)
                 tank1.setCentre(spawnTank1[0], spawnTank1[1])
                 tank1Dead = False
                 allSprites.add(tank1, gun1) # Add the new sprites
@@ -2647,18 +2744,8 @@ def playGame():
             tank2.setDelta(TPS)
             gun2.setDelta(TPS)
         else:
-            if DifficultyType == 2:
-                tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
-                tank2.setData(player2PackageTank)
-                tank2.setImage('tank', p2L + 1)
-                tank2.setSoundDictionary(soundDictionary)
-                tank2.settileList(tileList)
-                tank2.effect = [0,0,0]
-
-                gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
-                gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
-                gun2.setImage('gun', p2K + 1)
-                tank2.setCentre(spawnTank2[0], spawnTank2[1])
+            if DifficultyType == 5 or DifficultyType == 6 or DifficultyType == 7 or DifficultyType == 8:
+                setUpTank2(DifficultyType)
                 tank2Dead = False
                 allSprites.add(tank2, gun2) # Add the new sprites
             
@@ -2692,22 +2779,21 @@ def playGame():
     # 125 is the reference for the FPS
     timerClock = (timerClock + 1) % 120 # This is to make sure that the timer doesn't go too fast
 
-def pauseScreen():
+def pauseScreen(fromHome = 1):
     # This function will draw the pause screen
     # Inputs: None
     # Outputs: None
-
-    global fromHome
     pauseWidth = windowWidth - mazeX * 2
     pauseHeight = windowHeight - mazeY * 2
     pygame.draw.rect(screen, c.geT("OFF_WHITE"), [mazeX, mazeY, pauseWidth, pauseHeight])
     pygame.draw.rect(screen, c.geT("BLACK"), [mazeX, mazeY, pauseWidth, pauseHeight], 5)
 
     #Buttons
-    if not fromHome: # We haven't started the game
-        unPause.draw(screen, outline = True)
-    else: # we came from home, add the credits button
+    if fromHome:
         creditButton.draw(screen, outline = True)
+    else:
+        unPause.draw(screen, outline = True)
+        
     home.draw(screen, outline = True)
     quitButton.draw(screen, outline = True)
     mute.draw(screen, outline = False)
@@ -2817,8 +2903,6 @@ gameOverFlag = False
 global respawnTank1, respawnTank2
 respawnTank1 = False
 respawnTank2 = False
-global fromHome
-fromHome = True
 #Constants
 done = False
 windowWidth = 800
@@ -3435,14 +3519,14 @@ def checkHomeButtons(mouse):
     global gameMode, DifficultyType
 
     if onePlayerButtonHomeN.buttonClick(mouse):
-        DifficultyType = 1
+        DifficultyType = 5
         setUpPlayers()
         gameMode=GameMode.play
         #Switch the the play screen
         print("One Player Easy")
         constantPlayGame()
     if twoPlayerButtonHomeN.buttonClick(mouse):
-        DifficultyType = 2
+        DifficultyType = 6
         setUpPlayers()
         gameMode=GameMode.play
         #Switch the the play screen
@@ -3451,16 +3535,16 @@ def checkHomeButtons(mouse):
     if onePlayerButtonHomeH.buttonClick(mouse):
         print("One Player Hard")
         gameMode = GameMode.selection
-        DifficultyType = 3
+        DifficultyType = 7
         constantSelectionScreen()
     if twoPlayerButtonHomeH.buttonClick(mouse):
         print("Two Player Hard")
         gameMode = GameMode.selection
-        DifficultyType = 4
+        DifficultyType = 8
         constantSelectionScreen()
     if settingsButton.buttonClick(mouse):
         print("Settings")
-        gameMode = GameMode.pause
+        gameMode = GameMode.settings
     if quitButtonHome.buttonClick(mouse):
         global done
         done = True
@@ -3710,168 +3794,195 @@ constantHomeScreen()
 totalfps = 0
 fpsCounter = 0
 
-#Main loop
-while not done:
-    # Early define probably not a good idea, but will help with reducing function calls
-    mouse = pygame.mouse.get_pos() #Update the position
+def main():
+    global done, gameMode
+    #Main loop
+    while not done:
+        # Early define probably not a good idea, but will help with reducing function calls
+        mouse = pygame.mouse.get_pos() #Update the position
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            done = True
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            mouse = pygame.mouse.get_pos() # Update on button press
-            if event.button != 1:
-                #if it is right click
-                if event.button == 3 and gameMode == GameMode.play:
-                    #if the mosue is within the maze, make the tile the target
-                    for tile in tileList:
-                        if DifficultyType == 1 or DifficultyType == 3:
-                            if tile.isWithin(): # If the mouse is within the tile
-                                (targetx, targety) = tile.getCenter()
-                                currentTargetPackage = (tile.getIndex(), targetx, targety)
-                                # if we have the AI we need to update the target
-                                # We have the AI
-                                tank1.setAim(currentTargetPackage)
-                                break
-            elif event.button == 1:
-                #If it is left click
-                #If we are in the play screen
-                if gameMode == GameMode.play:
-                    #If the mouse is within the maze, make the tile the target
-                    for tile in tileList:
-                        tile.isWithin() # If the mouse is within the tile
-            if gameMode == GameMode.pause:
-                #We are paused
-                if (unPause.getCorners()[0] <= mouse[0] <= unPause.getCorners()[2] and
-                    unPause.getCorners()[1] <= mouse[1] <= unPause.getCorners()[3] and not fromHome): #If we click the return to game button
-                    constantPlayGame()
-                    gameMode = GameMode.play # Return to game if button was clicked
-                if (creditButton.getCorners()[0] <= mouse[0] <= creditButton.getCorners()[2] and
-                    creditButton.getCorners()[1] <= mouse[1] <= creditButton.getCorners()[3] and fromHome): #If we click the return to game button
-                    creditDraw()
-                    gameMode = GameMode.credit
-                if (home.getCorners()[0] <= mouse[0] <= home.getCorners()[2] and
-                    home.getCorners()[1] <= mouse[1] <= home.getCorners()[3]): # Home button
-                    for i in range(3, pygame.mixer.get_num_channels()): # Stop all sounds
-                        pygame.mixer.Channel(i).stop()
-                    constantHomeScreen()
-                    gameMode = GameMode.home
-                if (quitButton.getCorners()[0] <= mouse[0] <= quitButton.getCorners()[2]and
-                    quitButton.getCorners()[1] <= mouse[1] <= quitButton.getCorners()[3]): # If we hit the quit butotn
-                    print("Quitting the game")
-                    done = True # We quit the appplication
-                if (mute.getCorners()[0] <= mouse[0] <= mute.getCorners()[2] and
-                    mute.getCorners()[1] <= mouse[1] <= mute.getCorners()[3]): # If we hit the mute button
-                    mute.buttonClick()
-                if (sfx.getCorners()[0] <= mouse[0] <= sfx.getCorners()[2] and 
-                    sfx.getCorners()[1] <= mouse[1] <= sfx.getCorners()[3]): # If we hit the sfx button
-                    sfx.buttonClick()
-                if pauseButton.buttonClick(mouse):
-                    constantPlayGame()
-                    gameMode = GameMode.play
-            elif gameMode == GameMode.selection: # Selection screen
-                fromHome = False
-                textP1Turret.setText(turretList[p1I].getGunName())
-                textP2Turret.setText(turretList[p2I].getGunName())
-                textP1Hull.setText(hullList[p1J].getTankName())
-                textP2Hull.setText(hullList[p2J].getTankName())
-                checkButtons(mouse)
-            elif gameMode == GameMode.home: # Home screen
-                fromHome = True
-                checkHomeButtons(mouse)
-            elif gameMode == GameMode.play:
-                fromHome = False
-                if pauseButton.buttonClick(mouse):
-                    for i in range(3, pygame.mixer.get_num_channels()): # Stop all sounds
-                        pygame.mixer.Channel(i).stop()
-                    gameMode = GameMode.pause
-            elif gameMode == GameMode.credit:
-                if (creditsBackButton.getCorners()[0] <= mouse[0] <= creditsBackButton.getCorners()[2] and 
-                    creditsBackButton.getCorners()[1] <= mouse[1] <= creditsBackButton.getCorners()[3]): # If we hit the sfx button
-                    # fromHome = True
-                    print("Returning to the settings menu")
-                    gameMode = GameMode.pause
-
-            elif gameMode == GameMode.info:
-                # L/R/ buttons
-                if (infoBackButton.getCorners()[0] <= mouse[0] <= infoBackButton.getCorners()[2] and
-                    infoBackButton.getCorners()[1] <= mouse[1] <= infoBackButton.getCorners()[3]):
-                    gameMode = GameMode.selection
-                    constantSelectionScreen()
-                if (infoLArrow.buttonClick(mouse)):
-                    # Update the list
-                    iIndex = (iIndex - 1) % len(iList)
-                    iBox.setText(iList[iIndex])
-                if (infoRArrow.buttonClick(mouse)):
-                    # Update the list
-                    iIndex = (iIndex + 1) % len(iList)
-                    iBox.setText(iList[iIndex])
-
-
-        elif event.type == pygame.KEYDOWN: # Any key pressed
-            if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
                 done = True
-            if event.key == pygame.K_i:
-                print("The current mouse position is: ", mouse)
-            if event.key == pygame.K_p:
-                #Pause
-                if gameMode == GameMode.pause:
-                    constantPlayGame()
-                    gameMode = GameMode.play # Return to game if button was clicked
-                    timer.resume()
-                elif gameMode == GameMode.play:
-                    for i in range(3, pygame.mixer.get_num_channels()): # Stop all sounds
-                        pygame.mixer.Channel(i).stop()
-                    gameMode = GameMode.pause # Pause the game
-                    timer.pause()
-            if event.key == pygame.K_f:
-                #Calculate and track the average FPS
-                totalfps += clock.get_fps()
-                fpsCounter += 1
-                print("The average FPS is: ", totalfps/fpsCounter)
-                totalfps = 0
-                fpsCounter = 0
-            if event.key == pygame.K_m:
-                mute.mute()
-                sfx.mute()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse = pygame.mouse.get_pos() # Update on button press
+                if event.button != 1:
+                    #if it is right click
+                    if event.button == 3 and gameMode == GameMode.play:
+                        #if the mosue is within the maze, make the tile the target
+                        for tile in tileList:
+                            if DifficultyType == 1 or DifficultyType == 3:
+                                if tile.isWithin(): # If the mouse is within the tile
+                                    (targetx, targety) = tile.getCenter()
+                                    currentTargetPackage = (tile.getIndex(), targetx, targety)
+                                    # if we have the AI we need to update the target
+                                    # We have the AI
+                                    tank1.setAim(currentTargetPackage)
+                                    break
+                elif event.button == 1:
+                    #If it is left click
+                    #If we are in the play screen
+                    if gameMode == GameMode.play:
+                        #If the mouse is within the maze, make the tile the target
+                        for tile in tileList:
+                            tile.isWithin() # If the mouse is within the tile
+                        if pauseButton.buttonClick(mouse):
+                            gameMode = GameMode.pause
+                    elif gameMode == GameMode.pause:
+                        #We are paused
+                        # set the sounds to 60%
+                        
+                        if (unPause.getCorners()[0] <= mouse[0] <= unPause.getCorners()[2] and
+                            unPause.getCorners()[1] <= mouse[1] <= unPause.getCorners()[3]): #If we click the return to game button
+                            constantPlayGame()
+                            gameMode = GameMode.play # Return to game if button was clicked
+                        if (home.getCorners()[0] <= mouse[0] <= home.getCorners()[2] and
+                            home.getCorners()[1] <= mouse[1] <= home.getCorners()[3]): # Home button
+                            for i in range(3, pygame.mixer.get_num_channels()): # Stop all sounds
+                                pygame.mixer.Channel(i).stop()
+                            constantHomeScreen()
+                            gameMode = GameMode.home
+                        if (quitButton.getCorners()[0] <= mouse[0] <= quitButton.getCorners()[2]and
+                            quitButton.getCorners()[1] <= mouse[1] <= quitButton.getCorners()[3]): # If we hit the quit butotn
+                            print("Quitting the game")
+                            done = True # We quit the appplication
+                        if (mute.getCorners()[0] <= mouse[0] <= mute.getCorners()[2] and
+                            mute.getCorners()[1] <= mouse[1] <= mute.getCorners()[3]): # If we hit the mute button
+                            mute.buttonClick()
+                        if (sfx.getCorners()[0] <= mouse[0] <= sfx.getCorners()[2] and 
+                            sfx.getCorners()[1] <= mouse[1] <= sfx.getCorners()[3]): # If we hit the sfx button
+                            sfx.buttonClick()
+                        if pauseButton.buttonClick(mouse):
+                            constantPlayGame()
+                            gameMode = GameMode.play
+                    elif gameMode == GameMode.selection: # Selection screen
+                        textP1Turret.setText(turretList[p1I].getGunName())
+                        textP2Turret.setText(turretList[p2I].getGunName())
+                        textP1Hull.setText(hullList[p1J].getTankName())
+                        textP2Hull.setText(hullList[p2J].getTankName())
+                        checkButtons(mouse)
+                    elif gameMode == GameMode.home: # Home screen
+                        checkHomeButtons(mouse)
+                        global p1Score, p2Score
+                        p1Score, p2Score = 0, 0 # reset the player scores
+
+                    elif gameMode == GameMode.play:
+                        if pauseButton.buttonClick(mouse):
+                            print("Hi")
+                            for i in range(3, pygame.mixer.get_num_channels()): # Stop all sounds
+                                pygame.mixer.Channel(i).stop()
+                            gameMode = GameMode.pause
+                    elif gameMode == GameMode.credit:
+                        if (creditsBackButton.getCorners()[0] <= mouse[0] <= creditsBackButton.getCorners()[2] and 
+                            creditsBackButton.getCorners()[1] <= mouse[1] <= creditsBackButton.getCorners()[3]): # If we hit the sfx button
+                            print("Returning to the settings menu")
+                            gameMode = GameMode.pause
+                    elif gameMode == GameMode.info:
+                        # L/R/ buttons
+                        if (infoBackButton.getCorners()[0] <= mouse[0] <= infoBackButton.getCorners()[2] and
+                            infoBackButton.getCorners()[1] <= mouse[1] <= infoBackButton.getCorners()[3]):
+                            gameMode = GameMode.selection
+                            constantSelectionScreen()
+                        if (infoLArrow.buttonClick(mouse)):
+                            # Update the list
+                            iIndex = (iIndex - 1) % len(iList)
+                            iBox.setText(iList[iIndex])
+                        if (infoRArrow.buttonClick(mouse)):
+                            # Update the list
+                            iIndex = (iIndex + 1) % len(iList)
+                            iBox.setText(iList[iIndex])
+                    elif gameMode == GameMode.settings:
+                        #We are paused
+                        if (creditButton.getCorners()[0] <= mouse[0] <= creditButton.getCorners()[2] and
+                            creditButton.getCorners()[1] <= mouse[1] <= creditButton.getCorners()[3]): #If we click the return to game button
+                            creditDraw()
+                            gameMode = GameMode.credit
+                        if (home.getCorners()[0] <= mouse[0] <= home.getCorners()[2] and
+                            home.getCorners()[1] <= mouse[1] <= home.getCorners()[3]): # Home button
+                            for i in range(3, pygame.mixer.get_num_channels()): # Stop all sounds
+                                pygame.mixer.Channel(i).stop()
+                            constantHomeScreen()
+                            gameMode = GameMode.home
+                        if (quitButton.getCorners()[0] <= mouse[0] <= quitButton.getCorners()[2]and
+                            quitButton.getCorners()[1] <= mouse[1] <= quitButton.getCorners()[3]): # If we hit the quit butotn
+                            print("Quitting the game")
+                            done = True # We quit the appplication
+                        if (mute.getCorners()[0] <= mouse[0] <= mute.getCorners()[2] and
+                            mute.getCorners()[1] <= mouse[1] <= mute.getCorners()[3]): # If we hit the mute button
+                            mute.buttonClick()
+                        if (sfx.getCorners()[0] <= mouse[0] <= sfx.getCorners()[2] and 
+                            sfx.getCorners()[1] <= mouse[1] <= sfx.getCorners()[3]): # If we hit the sfx button
+                            sfx.buttonClick()
+
+            elif event.type == pygame.KEYDOWN: # Any key pressed
+                if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
+                    done = True
+                if event.key == pygame.K_i:
+                    print("The current mouse position is: ", mouse)
+                if event.key == pygame.K_p:
+                    #Pause
+                    if gameMode == GameMode.pause:
+                        constantPlayGame()
+                        gameMode = GameMode.play # Return to game if button was clicked
+                        timer.resume()
+                    elif gameMode == GameMode.play:
+                        for i in range(3, pygame.mixer.get_num_channels()): # Stop all sounds
+                            pygame.mixer.Channel(i).stop()
+                        gameMode = GameMode.pause # Pause the game
+                        timer.pause()
+                if event.key == pygame.K_f:
+                    #Calculate and track the average FPS
+                    print("The FPS is: ", clock.get_fps())
+                if event.key == pygame.K_m:
+                    mute.mute()
+                    sfx.mute()
+                    for sound in soundDictionary:
+                        soundDictionary[sound].set_volume(volume[sound] * sfx.getValue())
+        if gameMode == GameMode.play:
+            playGame() # Play the game
+        elif gameMode == GameMode.pause:
+            pauseScreen(0) # Pause screen
+            if mouse[0] and pygame.mouse.get_pressed()[0]:
+                mute.updateSlider(mouse[0], mouse[1])
+                sfx.updateSlider(mouse[0], mouse[1])
                 for sound in soundDictionary:
                     soundDictionary[sound].set_volume(volume[sound] * sfx.getValue())
-    if gameMode == GameMode.play:
-        playGame() # Play the game
-    elif gameMode == GameMode.pause:
-        pauseScreen() # Pause screen
-        if mouse[0] and pygame.mouse.get_pressed()[0]:
-            mute.updateSlider(mouse[0], mouse[1])
-            sfx.updateSlider(mouse[0], mouse[1])
-            for sound in soundDictionary:
-                soundDictionary[sound].set_volume(volume[sound] * sfx.getValue())
-    elif gameMode == GameMode.selection:
-        screen.fill(selectionBackground) # This is the first line when drawing a new frame
-        for button in buttonList:
-            button.update_display(mouse)
-            button.draw(screen, outline = False)
-        selectionScreen()
-    elif gameMode == GameMode.home:
-        # Draw the tank image
-        screen.blit(originalTankImage, (windowWidth//2 - originalTankImage.get_width()//2, windowHeight//2 - originalTankImage.get_height()//2))  # Centered horizontally
+        elif gameMode == GameMode.selection:
+            screen.fill(selectionBackground) # This is the first line when drawing a new frame
+            for button in buttonList:
+                button.update_display(mouse)
+                button.draw(screen, outline = False)
+            selectionScreen()
+        elif gameMode == GameMode.home:
+            # Draw the tank image
+            screen.blit(originalTankImage, (windowWidth//2 - originalTankImage.get_width()//2, windowHeight//2 - originalTankImage.get_height()//2))  # Centered horizontally
 
-        # Draw the title text
-        screen.blit(titleText, (windowWidth // 2 - titleText.get_width() // 2, 110))  # Centered horizontally, 50 pixels from top
+            # Draw the title text
+            screen.blit(titleText, (windowWidth // 2 - titleText.get_width() // 2, 110))  # Centered horizontally, 50 pixels from top
 
-        # Handle hover effect and draw buttons
-        for button in homeButtonList:
-            button.update_display(mouse)
-            button.draw(screen, outline=True)
-    elif gameMode == GameMode.credit:
-        pass # Do nothing
-    elif gameMode == GameMode.info:
-        infoScreen() # Info screen
-        # we need to update the info screen if the user changes the input # however there may be the case where we don't need to do it and only update once ever click
-    else:
-        screen.fill(c.geT("WHITE")) # Errornous state
-    clock.tick(240) # Set the FPS
-    mixer.update(mute.getValue()) # Update the mixer
-    # print(spawnTank1, spawnTank2)
-    pygame.display.flip()# Update the screen
+            # Handle hover effect and draw buttons
+            for button in homeButtonList:
+                button.update_display(mouse)
+                button.draw(screen, outline=True)
+        elif gameMode == GameMode.credit:
+            pass # Do nothing
+        elif gameMode == GameMode.info:
+            infoScreen() # Info screen
+            # we need to update the info screen if the user changes the input # however there may be the case where we don't need to do it and only update once ever click
+        elif gameMode == GameMode.settings:
+            pauseScreen() # Pause screen
+            if mouse[0] and pygame.mouse.get_pressed()[0]:
+                mute.updateSlider(mouse[0], mouse[1])
+                sfx.updateSlider(mouse[0], mouse[1])
+                for sound in soundDictionary:
+                    soundDictionary[sound].set_volume(volume[sound] * sfx.getValue())
+        else:
+            screen.fill(c.geT("WHITE")) # Errornous state
+        clock.tick(240) # Set the FPS
+        mixer.update(mute.getValue()) # Update the mixer
+        # print(spawnTank1, spawnTank2)
+        pygame.display.flip()# Update the screen
 
-pygame.quit()
+    pygame.quit()
+
+main()
