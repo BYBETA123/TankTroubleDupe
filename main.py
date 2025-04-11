@@ -9,6 +9,8 @@ from UIUtility import Button, ButtonSlider, TextBox
 from music import Music
 import copy
 from tanks import *
+from Screen import *
+import constants as const
 
 # Safety Checks
 if getattr(sys, 'frozen', False):  # Running as an .exe
@@ -98,16 +100,6 @@ if getattr(sys, 'frozen', False):  # Running as an .exe
 else:  # Running as a .py script
     base_path = os.path.dirname(os.path.abspath(__file__))
 font_path = os.path.join(base_path, 'fonts', 'LondrinaSolid-Regular.otf')
-
-fontDictionary = {"tileFont":pygame.font.SysFont('Calibri', 25, True, False),
-                  "playerStringFont": pygame.font.Font(font_path, 30),
-                    "ctrlFont": pygame.font.SysFont('Courier New', 20, True, False),
-                    "scoreFont": pygame.font.SysFont('Londrina', 60, True, False),
-                    "playerScore" : pygame.font.Font(font_path, 70),
-                    "cFont" : pygame.font.SysFont('Courier New', 36),
-                    "iFont" : pygame.font.SysFont('Courier New', 20),
-                    "titleFont" : pygame.font.SysFont('Arial', 60),
-                  }
 
 #Classes
 class UpDownTimer():
@@ -290,20 +282,20 @@ class Gun(pygame.sprite.Sprite):
                         x = tank1x + (dx/distance) * i
                         y = tank1y + (dy/distance) * i
                         #check the tile it is in
-                        row = math.ceil((y - mazeY)/tileSize)
-                        col = math.ceil((x - mazeX)/tileSize)
+                        row = math.ceil((y - const.MAZE_Y)/const.TILE_SIZE)
+                        col = math.ceil((x - const.MAZE_X)/const.TILE_SIZE)
                         index = (row-1)*colAmount + col
                         tile = tileList[index-1]
 
                         if tile.border[0] and y - 1 <= tile.y:
                             break
-                        if tile.border[1] and x + 1 >= tile.x + tileSize:
+                        if tile.border[1] and x + 1 >= tile.x + const.TILE_SIZE:
                             break
-                        if tile.border[2] and y + 1 >= tile.y + tileSize:
+                        if tile.border[2] and y + 1 >= tile.y + const.TILE_SIZE:
                             break
                         if tile.border[3] and x - 1 <= tile.x:
                             break
-                        if x <= mazeX or y <= mazeY or x >= mazeWidth + mazeX or y >= mazeHeight + mazeY:
+                        if x <= const.MAZE_X or y <= const.MAZE_Y or x >= mazeWidth + const.MAZE_X or y >= mazeHeight + const.MAZE_Y:
                             break
                     if i == steps - 1:
                         self.fire()
@@ -618,13 +610,13 @@ class Bullet(pygame.sprite.Sprite):
             tempY = self.y + step_dy
 
             # Check if the bullet goes outside of the maze
-            if tempX <= mazeX or tempY <= mazeY or tempX >= mazeWidth + mazeX or tempY >= mazeHeight + mazeY:
+            if tempX <= const.MAZE_X or tempY <= const.MAZE_Y or tempX >= mazeWidth + const.MAZE_X or tempY >= mazeHeight + const.MAZE_Y:
                 self.kill()
                 return
             
             # Recalculate row and column based on the smaller steps
-            row = math.ceil((self.getCenter()[1] - mazeY) / tileSize)
-            col = math.ceil((self.getCenter()[0] - mazeX) / tileSize)
+            row = math.ceil((self.getCenter()[1] - const.MAZE_Y) / const.TILE_SIZE)
+            col = math.ceil((self.getCenter()[0] - const.MAZE_X) / const.TILE_SIZE)
             index = (row - 1) * colAmount + col
 
             # Check for collisions with tanks
@@ -659,10 +651,10 @@ class Bullet(pygame.sprite.Sprite):
             if tile.border[0] and tempY - self.image.get_size()[1] <= tile.y: # Top border
                 wallCollision = True
                 self.angle = 180 - self.angle
-            if tile.border[1] and tempX + self.image.get_size()[1] >= tile.x + tileSize: # Right border
+            if tile.border[1] and tempX + self.image.get_size()[1] >= tile.x + const.TILE_SIZE: # Right border
                 wallCollision = True
                 self.angle = 360 - self.angle
-            if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + tileSize: # Bottom border
+            if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + const.TILE_SIZE: # Bottom border
                 wallCollision = True
                 self.angle = 180 - self.angle
             if tile.border[3] and tempX - self.image.get_size()[1] <= tile.x: # Left border
@@ -787,13 +779,13 @@ class SilencerBullet(Bullet):
             tempY = start_y + (dy * (i / steps))
 
             # Check if the bullet goes outside of the maze
-            if tempX <= mazeX or tempY <= mazeY or tempX >= mazeWidth + mazeX or tempY >= mazeHeight + mazeY:
+            if tempX <= const.MAZE_X or tempY <= const.MAZE_Y or tempX >= mazeWidth + const.MAZE_X or tempY >= mazeHeight + const.MAZE_Y:
                 self.kill()
                 return
 
             # Determine current tile based on precise position
-            row = math.ceil((tempY - mazeY) / tileSize)
-            col = math.ceil((tempX - mazeX) / tileSize)
+            row = math.ceil((tempY - const.MAZE_Y) / const.TILE_SIZE)
+            col = math.ceil((tempX - const.MAZE_X) / const.TILE_SIZE)
             index = (row - 1) * colAmount + col
 
             # Checking for self-damage
@@ -808,10 +800,10 @@ class SilencerBullet(Bullet):
             if tile.border[0] and tempY - self.image.get_size()[1] <= tile.y:  # Top border
                 wallCollision = True
                 self.angle = 180 - self.angle
-            if tile.border[1] and tempX + self.image.get_size()[1] >= tile.x + tileSize:  # Right border
+            if tile.border[1] and tempX + self.image.get_size()[1] >= tile.x + const.TILE_SIZE:  # Right border
                 wallCollision = True
                 self.angle = 360 - self.angle
-            if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + tileSize:  # Bottom border
+            if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + const.TILE_SIZE:  # Bottom border
                 wallCollision = True
                 self.angle = 180 - self.angle
             if tile.border[3] and tempX - self.image.get_size()[1] <= tile.x:  # Left border
@@ -865,13 +857,13 @@ class WatcherBullet(Bullet):
             temp_y = self.y + (dy * step / steps)
 
             # Check if the bullet goes outside the maze boundaries
-            if temp_x <= mazeX or temp_y <= mazeY or temp_x >= mazeWidth + mazeX or temp_y >= mazeHeight + mazeY:
+            if temp_x <= const.MAZE_X or temp_y <= const.MAZE_Y or temp_x >= mazeWidth + const.MAZE_X or temp_y >= mazeHeight + const.MAZE_Y:
                 self.kill()
                 return
 
             # Determine the current tile based on bullet position
-            row = math.ceil((temp_y - mazeY) / tileSize)
-            col = math.ceil((temp_x - mazeX) / tileSize)
+            row = math.ceil((temp_y - const.MAZE_Y) / const.TILE_SIZE)
+            col = math.ceil((temp_x - const.MAZE_X) / const.TILE_SIZE)
             index = (row - 1) * colAmount + col
 
             # Check for collisions with tanks
@@ -910,10 +902,10 @@ class WatcherBullet(Bullet):
             if tile.border[0] and temp_y - bullet_size <= tile.y:  # Top wall
                 wall_collision = True
                 self.angle = 180 - self.angle
-            if tile.border[1] and temp_x + bullet_size >= tile.x + tileSize:  # Right wall
+            if tile.border[1] and temp_x + bullet_size >= tile.x + const.TILE_SIZE:  # Right wall
                 wall_collision = True
                 self.angle = 360 - self.angle
-            if tile.border[2] and temp_y + bullet_size >= tile.y + tileSize:  # Bottom wall
+            if tile.border[2] and temp_y + bullet_size >= tile.y + const.TILE_SIZE:  # Bottom wall
                 wall_collision = True
                 self.angle = 180 - self.angle
             if tile.border[3] and temp_x - bullet_size <= tile.x:  # Left wall
@@ -933,7 +925,6 @@ class WatcherBullet(Bullet):
         self.updateCorners()
         self.rect.x = int(self.x)
         self.rect.y = int(self.y)
-
 
     def customDraw(self, screen):
         # This function will draw the bullet on the screen and any additional features that may be needed
@@ -995,13 +986,13 @@ class ChamberBullet(Bullet):
             tempY = self.y + step_dy
 
             # Check if the bullet goes outside of the maze
-            if tempX <= mazeX or tempY <= mazeY or tempX >= mazeWidth + mazeX or tempY >= mazeHeight + mazeY:
+            if tempX <= const.MAZE_X or tempY <= const.MAZE_Y or tempX >= mazeWidth + const.MAZE_X or tempY >= mazeHeight + const.MAZE_Y:
                 self.explode()
                 return
             
             # Recalculate row and column based on the smaller steps
-            row = math.ceil((self.getCenter()[1] - mazeY) / tileSize)
-            col = math.ceil((self.getCenter()[0] - mazeX) / tileSize)
+            row = math.ceil((self.getCenter()[1] - const.MAZE_Y) / const.TILE_SIZE)
+            col = math.ceil((self.getCenter()[0] - const.MAZE_X) / const.TILE_SIZE)
             index = (row - 1) * colAmount + col
 
             # use the old collision
@@ -1037,10 +1028,10 @@ class ChamberBullet(Bullet):
             if tile.border[0] and tempY - self.image.get_size()[1] <= tile.y: # Top border
                 wallCollision = True
                 self.angle = 180 - self.angle
-            if tile.border[1] and tempX + self.image.get_size()[1] >= tile.x + tileSize: # Right border
+            if tile.border[1] and tempX + self.image.get_size()[1] >= tile.x + const.TILE_SIZE: # Right border
                 wallCollision = True
                 self.angle = 360 - self.angle
-            if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + tileSize: # Bottom border
+            if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + const.TILE_SIZE: # Bottom border
                 wallCollision = True
                 self.angle = 180 - self.angle
             if tile.border[3] and tempX - self.image.get_size()[1] <= tile.x: # Left border
@@ -1145,18 +1136,6 @@ class Tile(pygame.sprite.Sprite):
         self.picked = False
         self.supplyIndex = None # The index of the supply that is on the tile
 
-
-        # At this point the borders should be set
-        # self.tilePath = "./Assets/Tile"
-        # cardinal = ["N", "E", "S", "W"]
-        # self.rect = pygame.Rect(self.x, self.y, tileSize, tileSize)
-        # for idx, el in enumerate(self.bordering):
-        #     if el != -1:
-        #         self.tilePath += str(cardinal[idx])
-        # self.tilePath += ".png"
-        # self.image = pygame.image.load(self.tilePath).convert_alpha()
-        # self.debug = pygame.image.load("./Assets/TileDebug.png").convert_alpha()
-
         # Determine the correct base path
         if getattr(sys, 'frozen', False):  # Running as an .exe
             base_path = sys._MEIPASS
@@ -1166,7 +1145,7 @@ class Tile(pygame.sprite.Sprite):
         # Construct the tile path dynamically
         self.tilePath = os.path.join(base_path, "Assets", "Tile")
         cardinal = ["N", "E", "S", "W"]
-        self.rect = pygame.Rect(self.x, self.y, tileSize, tileSize)
+        self.rect = pygame.Rect(self.x, self.y, const.TILE_SIZE, const.TILE_SIZE)
 
         for idx, el in enumerate(self.bordering):
             if el != -1:
@@ -1262,10 +1241,9 @@ class Tile(pygame.sprite.Sprite):
         return border
 
     def drawText(self, screen):
-        global fontDictionary
         # access the "tileFont" key from the dictionary
-        text = fontDictionary["tileFont"].render(str(self.index), True, c.geT("BLACK"))
-        screen.blit(text, [self.x + tileSize/2 - text.get_width()/2, self.y + tileSize/2 - text.get_height()/2])
+        text = const.FONT_DICTIONARY["tileFont"].render(str(self.index), True, c.geT("BLACK"))
+        screen.blit(text, [self.x + const.TILE_SIZE/2 - text.get_width()/2, self.y + const.TILE_SIZE/2 - text.get_height()/2])
 
     def draw(self, screen):
         # if self.AITarget:
@@ -1277,10 +1255,11 @@ class Tile(pygame.sprite.Sprite):
         if self.supply is not None:
             # draw the supply icon
             if self.picked:
-                screen.blit(self.supply[0], (self.x + tileSize//2 - self.supply[0].get_width()//2, self.y + tileSize//2 - self.supply[0].get_height()//2))
+                screen.blit(self.supply[0], (self.x + const.TILE_SIZE//2 - self.supply[0].get_width()//2, self.y + const.TILE_SIZE//2 - self.supply[0].get_height()//2))
             else:
-                screen.blit(self.supply[1], (self.x + tileSize//2 - self.supply[1].get_width()//2, self.y + tileSize//2 - self.supply[1].get_height()//2))
+                screen.blit(self.supply[1], (self.x + const.TILE_SIZE//2 - self.supply[1].get_width()//2, self.y + const.TILE_SIZE//2 - self.supply[1].get_height()//2))
         # self.drawText(screen)
+    
     def getNeighbours(self):
         return self.neighbours
 
@@ -1294,7 +1273,7 @@ class Tile(pygame.sprite.Sprite):
         self.color = c.geT("WHITE")
 
     def getCorners(self):
-        return [(self.x, self.y), (self.x + tileSize, self.y), (self.x + tileSize, self.y + tileSize), (self.x, self.y + tileSize)]
+        return [(self.x, self.y), (self.x + const.TILE_SIZE, self.y), (self.x + const.TILE_SIZE, self.y + const.TILE_SIZE), (self.x, self.y + const.TILE_SIZE)]
 
     def isWithin(self, crds = None):
         # This function will check if the mouse is within the tile
@@ -1305,7 +1284,7 @@ class Tile(pygame.sprite.Sprite):
         else:
             mouseX, mouseY = crds[0], crds[1]
 
-        if mouseX >= self.x and mouseX <= self.x + tileSize and mouseY >= self.y and mouseY <= self.y + tileSize:
+        if mouseX >= self.x and mouseX <= self.x + const.TILE_SIZE and mouseY >= self.y and mouseY <= self.y + const.TILE_SIZE:
             if crds == None:
                 self.printDebug()
             return True
@@ -1323,7 +1302,7 @@ class Tile(pygame.sprite.Sprite):
         # Construct the tile path dynamically
         self.tilePath = os.path.join(base_path, "Assets", "Tile")
         cardinal = ["N", "E", "S", "W"]
-        self.rect = pygame.Rect(self.x, self.y, tileSize, tileSize)
+        self.rect = pygame.Rect(self.x, self.y, const.TILE_SIZE, const.TILE_SIZE)
 
         for idx, el in enumerate(self.bordering):
             if el != -1:
@@ -1345,13 +1324,13 @@ class Tile(pygame.sprite.Sprite):
         if supplyPath is not None:
             self.supply = [None, None]
             self.supply[0] = pygame.image.load(supplyPath[0]).convert_alpha()
-            self.supply[0] = pygame.transform.scale(self.supply[0], (tileSize//2, tileSize//2))
+            self.supply[0] = pygame.transform.scale(self.supply[0], (const.TILE_SIZE//2, const.TILE_SIZE//2))
             self.supply[1] = pygame.image.load(supplyPath[1]).convert_alpha()
-            self.supply[1] = pygame.transform.scale(self.supply[1], (tileSize//2, tileSize//2))
+            self.supply[1] = pygame.transform.scale(self.supply[1], (const.TILE_SIZE//2, const.TILE_SIZE//2))
             self.supplyIndex = index
 
     def getCenter(self):
-        return (self.x + tileSize//2, self.y + tileSize//2) 
+        return (self.x + const.TILE_SIZE//2, self.y + const.TILE_SIZE//2) 
 
     def setTarget(self, value):
         self.AITarget = value
@@ -1431,6 +1410,30 @@ class GameMode(Enum):
     selection = 4
     credit = 5
     info = 6
+
+class DifficultyType(Enum):
+    # format is <Number> <Respawn> <AI>
+    NotInGame = (0, False, False)
+    OnePlayerYard = (1, False, True)
+    OnePlayerScrapYard = (2, False, True)
+    TwoPlayerYard = (3, False, False)
+    TwoPlayerScrapYard = (4, False, False)
+    OnePlayerBrawl = (5, True, True)
+    OnePlayerDeathMatch = (6, True, True)
+    TwoPlayerBrawl = (7, True, False)
+    TwoPlayerDeathMatch = (8, True, False)
+
+    def __init__(self, number, respawn, ai):
+        self._value_ = number
+        self.respawn = respawn
+        self.ai = ai
+
+    @classmethod
+    def from_index(cls, index):
+        for mode in cls:
+            if mode.value == index:
+                return mode
+        raise ValueError(f"No GameMode with index {index}")
 
 #Turrets
 
@@ -1936,12 +1939,12 @@ class Watcher(Gun):
                 tempY += step_dy
 
                 # Check if the bullet goes outside of the maze
-                if tempX <= mazeX or tempY <= mazeY or tempX >= mazeWidth + mazeX or tempY >= mazeHeight + mazeY:
+                if tempX <= const.MAZE_X or tempY <= const.MAZE_Y or tempX >= mazeWidth + const.MAZE_X or tempY >= mazeHeight + const.MAZE_Y:
                     found = True
                     break
                 # Recalculate row and column based on the smaller steps
-                row = math.ceil((tempY - mazeY) / tileSize)
-                col = math.ceil((tempX - mazeX) / tileSize)
+                row = math.ceil((tempY - const.MAZE_Y) / const.TILE_SIZE)
+                col = math.ceil((tempX - const.MAZE_X) / const.TILE_SIZE)
                 index = (row - 1) * colAmount + col
 
                 # Handle wall collision
@@ -1952,9 +1955,9 @@ class Watcher(Gun):
                 wallCollision = False
                 if tile.border[0] and tempY - 1 <= tile.y: # Top border
                     wallCollision = True
-                if tile.border[1] and tempX + 1 >= tile.x + tileSize: # Right border
+                if tile.border[1] and tempX + 1 >= tile.x + const.TILE_SIZE: # Right border
                     wallCollision = True
-                if tile.border[2] and tempY + 1 >= tile.y + tileSize: # Bottom border
+                if tile.border[2] and tempY + 1 >= tile.y + const.TILE_SIZE: # Bottom border
                     wallCollision = True
                 if tile.border[3] and tempX - 1 <= tile.x: # Left border
                     wallCollision = True
@@ -2088,8 +2091,8 @@ def tileGen():
         if failsafe == 10: # In case we are running for too long
             print("failsafe activated")
             choices = [1,rowAmount*colAmount]
-        for j in range(mazeY, mazeHeight + 1, tileSize): # Assign the tiles and spawns once everything is found
-            for i in range(mazeX, mazeWidth + 1, tileSize):
+        for j in range(const.MAZE_Y, mazeHeight + 1, const.TILE_SIZE): # Assign the tiles and spawns once everything is found
+            for i in range(const.MAZE_X, mazeWidth + 1, const.TILE_SIZE):
                 if index in choices:
                     spawn = True
                 else:
@@ -2131,175 +2134,250 @@ def tileGen():
 
     return tileList
 
-def setUpTank1(DifficultyType = -1):
+def setUpTank1(dType = 0):
     global tileList, spawnpoint, tank1, gun1, allSprites, bulletSprites
     global p1I, p1J, p1K, p1L, spawnTank1
     global player1PackageTank, player1PackageGun
-    global player1Channels, p1TankName, p1GunName
-    if DifficultyType == -1:
-        print("Error: Difficulty type isn't valid")
-        raise Exception("Broken")
+    global player1Channels, p1TankName, p1GunName, DifficultyType
 
-    elif DifficultyType == 1:
-        # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Simple Tanks
-        tank1 = DefaultTank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
-        tank1.setAI(True, currentTargetPackage)
-        tank1.setData(player1PackageTank)
-        tank1.setImage('tank', p1L + 1)
-        tank1.setSoundDictionary(soundDictionary)
-        tank1.settileList(tileList)
-        tank1.effect = [0,0,0]
+    match dType:
+        case DifficultyType.OnePlayerYard:
+            # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Simple Tanks
+            tank1 = DefaultTank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
+            tank1.setAI(True, currentTargetPackage)
+            tank1.setData(player1PackageTank)
+            tank1.setImage('tank', p1L + 1)
+            tank1.setSoundDictionary(soundDictionary)
+            tank1.settileList(tileList)
+            tank1.effect = [0,0,0]
 
-        gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
-        gun1.setAI(True)
-        gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
-        gun1.setImage('gun', p1K + 1)
-    
-    elif DifficultyType == 2:
-        # Scrapyard, Player vs Player Simple Tanks
-        tank1 = DefaultTank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
-        tank1.setData(player1PackageTank)
-        tank1.setImage('tank', p1L + 1)
-        tank1.setSoundDictionary(soundDictionary)
-        tank1.settileList(tileList)
-        tank1.effect = [0,0,0]
-
-        gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
-        gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
-        gun1.setImage('gun', p1K + 1)
-
-    elif DifficultyType == 3:
-        # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Normal Tanks
-        tank1 = copy.copy(hullList[p1J]) # Tank 1 setup
-        tank1.setAI(True, currentTargetPackage)
-        tank1.setData(player1PackageTank)
-        tank1.setImage(hullList[p1J].getName(), p1L + 1)
-        tank1.setSoundDictionary(soundDictionary)
-        tank1.settileList(tileList)
-        tank1.effect = [0,0,0]
+            gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
+            gun1.setAI(True)
+            gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
+            gun1.setImage('gun', p1K + 1)
         
-        #Because silencer and watcher aren't made yet, skip them
-        if p1I == 1 or p1I == 2:
-            print("Skipping Silencer or Watcher, selecting Chamber")
-            gun1 = copy.copy(turretList[3]) # Gun 1 setup
-        else:
+        case DifficultyType.OnePlayerScrapYard:
+            # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Normal Tanks
+            tank1 = copy.copy(hullList[p1J]) # Tank 1 setup
+            tank1.setAI(True, currentTargetPackage)
+            tank1.setData(player1PackageTank)
+            tank1.setImage(hullList[p1J].getName(), p1L + 1)
+            tank1.setSoundDictionary(soundDictionary)
+            tank1.settileList(tileList)
+            tank1.effect = [0,0,0]
+            
+            #Because silencer and watcher aren't made yet, skip them
+            if p1I == 1 or p1I == 2:
+                print("Skipping Silencer or Watcher, selecting Chamber")
+                gun1 = copy.copy(turretList[3]) # Gun 1 setup
+            else:
+                gun1 = copy.copy(turretList[p1I]) # Gun 1 setup
+            gun1.setAI(True)
+            gun1.setHard()
+            gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
+            gun1.setImage(turretList[p1I].getGunName(), p1K + 1)
+
+        case DifficultyType.TwoPlayerYard:
+            # Scrapyard, Player vs Player Simple Tanks
+            tank1 = DefaultTank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
+            tank1.setData(player1PackageTank)
+            tank1.setImage('tank', p1L + 1)
+            tank1.setSoundDictionary(soundDictionary)
+            tank1.settileList(tileList)
+            tank1.effect = [0,0,0]
+
+            gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
+            gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
+            gun1.setImage('gun', p1K + 1)
+
+        case DifficultyType.TwoPlayerScrapYard:
+            # Scrapyard, Player vs Player Normal Tanks
+            tank1 = copy.copy(hullList[p1J]) # Tank 1 setup
+            tank1.setData(player1PackageTank)
+            tank1.setImage(hullList[p1J].getName(), p1L + 1)
+            tank1.setSoundDictionary(soundDictionary)
+            tank1.settileList(tileList)
+            tank1.effect = [0,0,0]
+
             gun1 = copy.copy(turretList[p1I]) # Gun 1 setup
-        gun1.setAI(True)
-        gun1.setHard()
-        gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
-        gun1.setImage(turretList[p1I].getGunName(), p1K + 1)
+            gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
+            gun1.setImage(turretList[p1I].getGunName(), p1K + 1)
 
-    elif DifficultyType == 4:
-        # Scrapyard, Player vs Player Normal Tanks
-        tank1 = copy.copy(hullList[p1J]) # Tank 1 setup
-        tank1.setData(player1PackageTank)
-        tank1.setImage(hullList[p1J].getName(), p1L + 1)
-        tank1.setSoundDictionary(soundDictionary)
-        tank1.settileList(tileList)
-        tank1.effect = [0,0,0]
+        case DifficultyType.OnePlayerBrawl:
+            # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Simple Tanks
+            tank1 = DefaultTank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
+            tank1.setAI(True, currentTargetPackage)
+            tank1.setData(player1PackageTank)
+            tank1.setImage('tank', p1L + 1)
+            tank1.setSoundDictionary(soundDictionary)
+            tank1.settileList(tileList)
+            tank1.effect = [0,0,0]
 
-        gun1 = copy.copy(turretList[p1I]) # Gun 1 setup
-        gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
-        gun1.setImage(turretList[p1I].getGunName(), p1K + 1)
+            gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
+            gun1.setAI(True)
+            gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
+            gun1.setImage('gun', p1K + 1)
+        
+        case DifficultyType.OnePlayerDeathMatch:
+            # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Normal Tanks
+            tank1 = copy.copy(hullList[p1J]) # Tank 1 setup
+            tank1.setAI(True, currentTargetPackage)
+            tank1.setData(player1PackageTank)
+            tank1.setImage(hullList[p1J].getName(), p1L + 1)
+            tank1.setSoundDictionary(soundDictionary)
+            tank1.settileList(tileList)
+            tank1.effect = [0,0,0]
+            
+            #Because silencer and watcher aren't made yet, skip them
+            if p1I == 1 or p1I == 2:
+                print("Skipping Silencer or Watcher, selecting Chamber")
+                gun1 = copy.copy(turretList[3]) # Gun 1 setup
+            else:
+                gun1 = copy.copy(turretList[p1I]) # Gun 1 setup
+            gun1.setAI(True)
+            gun1.setHard()
+            gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
+            gun1.setImage(turretList[p1I].getGunName(), p1K + 1)
 
-    elif DifficultyType == 5:
-        setUpTank1(1)
-    elif DifficultyType == 6:
-        setUpTank1(2)
-    elif DifficultyType == 7:
-        setUpTank1(3)
-    elif DifficultyType == 8:
-        setUpTank1(4)
+        case DifficultyType.TwoPlayerBrawl:
+            # Scrapyard, Player vs Player Simple Tanks
+            tank1 = DefaultTank(spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName)
+            tank1.setData(player1PackageTank)
+            tank1.setImage('tank', p1L + 1)
+            tank1.setSoundDictionary(soundDictionary)
+            tank1.settileList(tileList)
+            tank1.effect = [0,0,0]
 
+            gun1 = DefaultGun(tank1, controlsTank1, p1GunName) # Gun 1 setup
+            gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
+            gun1.setImage('gun', p1K + 1)
 
-def setUpTank2(DifficultyType = -1):
+        case DifficultyType.TwoPlayerDeathMatch:
+            # Scrapyard, Player vs Player Normal Tanks
+            tank1 = copy.copy(hullList[p1J]) # Tank 1 setup
+            tank1.setData(player1PackageTank)
+            tank1.setImage(hullList[p1J].getName(), p1L + 1)
+            tank1.setSoundDictionary(soundDictionary)
+            tank1.settileList(tileList)
+            tank1.effect = [0,0,0]
+
+            gun1 = copy.copy(turretList[p1I]) # Gun 1 setup
+            gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
+            gun1.setImage(turretList[p1I].getGunName(), p1K + 1)
+
+def setUpTank2(dType = 0):
     global tileList, spawnpoint, tank2, gun2, allSprites, bulletSprites
-    global p2I, p2J, p2K, p2L, spawnTank2
+    global p2I, p2J, p2K, p2L, spawnTank2, DifficultyType
     global player2PackageTank, player2PackageGun
     global player2Channels, p2TankName, p2GunName
-    if DifficultyType == -1:
-        print("Error: Difficulty type isn't valid")
-        raise Exception("Broken")
-    
-    elif DifficultyType == 1:
-        # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Simple Tanks
-        tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
-        tank2.setData(player2PackageTank)
-        tank2.setImage('tank', p2L + 1)
-        tank2.setSoundDictionary(soundDictionary)
-        tank2.settileList(tileList)
-        tank2.effect = [0,0,0]
 
-        gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
-        gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
-        gun2.setImage('gun', p2K + 1)
 
-    elif DifficultyType == 2:
-        # Scrapyard, Player vs Player Simple Tanks
-        tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
-        tank2.setData(player2PackageTank)
-        tank2.setImage('tank', p2L + 1)
-        tank2.setSoundDictionary(soundDictionary)
-        tank2.settileList(tileList)
-        tank2.effect = [0,0,0]
+    match dType:
+        case DifficultyType.OnePlayerYard:
+            # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Simple Tanks
+            tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
+            tank2.setData(player2PackageTank)
+            tank2.setImage('tank', p2L + 1)
+            tank2.setSoundDictionary(soundDictionary)
+            tank2.settileList(tileList)
+            tank2.effect = [0,0,0]
 
-        gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
-        gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
-        gun2.setImage('gun', p2K + 1)
+            gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
+            gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
+            gun2.setImage('gun', p2K + 1)
 
-    elif DifficultyType == 3:
-        # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Normal Tanks
-        tank1 = copy.copy(hullList[p1J]) # Tank 1 setup
-        tank1.setAI(True, currentTargetPackage)
-        tank1.setData(player1PackageTank)
-        tank1.setImage(hullList[p1J].getName(), p1L + 1)
-        tank1.setSoundDictionary(soundDictionary)
-        tank1.settileList(tileList)
-        tank1.effect = [0,0,0]
-        
-        #Because silencer and watcher aren't made yet, skip them
-        if p1I == 1 or p1I == 2:
-            print("Skipping Silencer or Watcher, selecting Chamber")
-            gun1 = copy.copy(turretList[3]) # Gun 1 setup
-        else:
-            gun1 = copy.copy(turretList[p1I]) # Gun 1 setup
-        gun1.setAI(True)
-        gun1.setHard()
-        gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
-        gun1.setImage(turretList[p1I].getGunName(), p1K + 1)
+        case DifficultyType.OnePlayerScrapYard:
+            # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Normal Tanks
 
-        tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
-        tank2.setData(player2PackageTank)
-        tank2.setImage(hullList[p2J].getName(), p2L + 1)
-        tank2.setSoundDictionary(soundDictionary)
-        tank2.settileList(tileList)
-        tank2.effect = [0,0,0]
+            tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
+            tank2.setData(player2PackageTank)
+            tank2.setImage(hullList[p2J].getName(), p2L + 1)
+            tank2.setSoundDictionary(soundDictionary)
+            tank2.settileList(tileList)
+            tank2.effect = [0,0,0]
 
-        gun2 = copy.copy(turretList[p2I]) # Gun 2 setup
-        gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
-        gun2.setImage(turretList[p2I].getGunName(), p2K + 1)
+            gun2 = copy.copy(turretList[p2I]) # Gun 2 setup
+            gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
+            gun2.setImage(turretList[p2I].getGunName(), p2K + 1)
 
-    elif DifficultyType == 4:
-        # Scrapyard, Player vs Player Normal Tanks
-        tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
-        tank2.setData(player2PackageTank)
-        tank2.setImage(hullList[p2J].getName(), p2L + 1)
-        tank2.setSoundDictionary(soundDictionary)
-        tank2.settileList(tileList)
-        tank2.effect = [0,0,0]
+        case DifficultyType.TwoPlayerYard:
+            # Scrapyard, Player vs Player Simple Tanks
+            tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
+            tank2.setData(player2PackageTank)
+            tank2.setImage('tank', p2L + 1)
+            tank2.setSoundDictionary(soundDictionary)
+            tank2.settileList(tileList)
+            tank2.effect = [0,0,0]
 
-        gun2 = copy.copy(turretList[p2I]) # Gun 2 setup
-        gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
-        gun2.setImage(turretList[p2I].getGunName(), p2K + 1)
+            gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
+            gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
+            gun2.setImage('gun', p2K + 1)
 
-    elif DifficultyType == 5:
-        setUpTank2(1)
-    elif DifficultyType == 6:
-        setUpTank2(2)
-    elif DifficultyType == 7:
-        setUpTank2(3)
-    elif DifficultyType == 8:
-        setUpTank2(4)
+        case DifficultyType.TwoPlayerScrapYard:
+            # Scrapyard, Player vs Player Normal Tanks
+            tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
+            tank2.setData(player2PackageTank)
+            tank2.setImage(hullList[p2J].getName(), p2L + 1)
+            tank2.setSoundDictionary(soundDictionary)
+            tank2.settileList(tileList)
+            tank2.effect = [0,0,0]
+
+            gun2 = copy.copy(turretList[p2I]) # Gun 2 setup
+            gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
+            gun2.setImage(turretList[p2I].getGunName(), p2K + 1)
+
+        case DifficultyType.OnePlayerBrawl:
+            # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Simple Tanks
+            tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
+            tank2.setData(player2PackageTank)
+            tank2.setImage('tank', p2L + 1)
+            tank2.setSoundDictionary(soundDictionary)
+            tank2.settileList(tileList)
+            tank2.effect = [0,0,0]
+
+            gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
+            gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
+            gun2.setImage('gun', p2K + 1)
+
+        case DifficultyType.OnePlayerDeathMatch:
+            # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Normal Tanks
+
+            tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
+            tank2.setData(player2PackageTank)
+            tank2.setImage(hullList[p2J].getName(), p2L + 1)
+            tank2.setSoundDictionary(soundDictionary)
+            tank2.settileList(tileList)
+            tank2.effect = [0,0,0]
+
+            gun2 = copy.copy(turretList[p2I]) # Gun 2 setup
+            gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
+            gun2.setImage(turretList[p2I].getGunName(), p2K + 1)
+
+        case DifficultyType.TwoPlayerBrawl:
+            # Scrapyard, Player vs Player Simple Tanks
+            tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName) # Tank 2 setup
+            tank2.setData(player2PackageTank)
+            tank2.setImage('tank', p2L + 1)
+            tank2.setSoundDictionary(soundDictionary)
+            tank2.settileList(tileList)
+            tank2.effect = [0,0,0]
+
+            gun2 = DefaultGun(tank2, controlsTank2, p2GunName) # Gun 2 setup
+            gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
+            gun2.setImage('gun', p2K + 1)
+
+        case DifficultyType.TwoPlayerDeathMatch:
+            # Scrapyard, Player vs Player Normal Tanks
+            tank2 = copy.copy(hullList[p2J]) # Tank 2 setup
+            tank2.setData(player2PackageTank)
+            tank2.setImage(hullList[p2J].getName(), p2L + 1)
+            tank2.setSoundDictionary(soundDictionary)
+            tank2.settileList(tileList)
+            tank2.effect = [0,0,0]
+
+            gun2 = copy.copy(turretList[p2I]) # Gun 2 setup
+            gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
+            gun2.setImage(turretList[p2I].getGunName(), p2K + 1)
 
 def setUpPlayers():
     # This function sets up the players for the game including reseting the respective global veriables
@@ -2307,12 +2385,12 @@ def setUpPlayers():
     # Inputs: None
     # Outputs: None
     global tileList, spawnpoint, tank1, tank2, gun1, gun2, allSprites, bulletSprites
-    global p1I, p1J, p2I, p2J, p1K, p2K, p1L, p2L, DifficultyType, spawnTank1, spawnTank2
+    global p1I, p1J, p2I, p2J, p1K, p2K, p1L, p2L, difficultyType, DifficultyType, spawnTank1, spawnTank2
     global player1PackageTank, player1PackageGun, player2PackageTank, player2PackageGun
     global player1Channels, player2Channels, p1TankName, p2TankName, p1GunName, p2GunName
     tileList = tileGen() # Get a new board
-    spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
-    spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
+    spawnTank1 = [tileList[spawnpoint[0]-1].x + const.TILE_SIZE//2, tileList[spawnpoint[0]-1].y + const.TILE_SIZE//2]
+    spawnTank2 = [tileList[spawnpoint[1]-1].x + const.TILE_SIZE//2, tileList[spawnpoint[1]-1].y + const.TILE_SIZE//2]
     player1Channels = {"move": {"channel": pygame.mixer.Channel(3), "volume": 0.05}, "rotate": {"channel": pygame.mixer.Channel(4), "volume": 0.2}, "death": {"channel" : pygame.mixer.Channel(5), "volume": 0.5}, "fire": {"channel": pygame.mixer.Channel(6), "volume": 1}, "hit": {"channel": pygame.mixer.Channel(7), "volume": 1}, "reload": {"channel": pygame.mixer.Channel(8), "volume": 0.5}}
     player2Channels = {"move": {"channel": pygame.mixer.Channel(9), "volume": 0.05}, "rotate": {"channel": pygame.mixer.Channel(10), "volume": 0.3}, "death": {"channel" : pygame.mixer.Channel(11), "volume": 0.5}, "fire": {"channel": pygame.mixer.Channel(12), "volume": 1}, "hit": {"channel": pygame.mixer.Channel(13), "volume": 1}, "reload": {"channel": pygame.mixer.Channel(14), "volume": 0.5}}
     #Updating the packages
@@ -2321,50 +2399,46 @@ def setUpPlayers():
     player2PackageTank = [spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName, player2Channels]
     player2PackageGun = [controlsTank2, p2GunName, player2Channels]
     # setup the tanks and guns
-    setUpTank1(DifficultyType)
-    setUpTank2(DifficultyType)
+    setUpTank1(difficultyType)
+    setUpTank2(difficultyType)
 
-    #Setup the tanks
-    if DifficultyType == 1:
-        # # easy AI, 1 Player
-        temp = tank2.getCurrentTile().getIndex()
-        tank1.setAim((temp, temp%14*tileSize + tileSize//2, ((temp)//14 + 1)*tileSize + tileSize//2))
-        # scrapyeard
-        timer.setDirection(True)
 
-    elif DifficultyType == 2:
-        # easy
-        # dm
-        timer.setDirection(True)
-
-    elif DifficultyType == 3:
-        # # normal AI, 1 Player
-        # scrapyard
-        timer.setDirection(True)
-
-    elif DifficultyType == 4: # 4
-        # scrapyard
-        #normal
-        timer.setDirection(True)
-    elif DifficultyType == 5:
-        #dm
-        timer.setDirection(False)
-        timer.setDuration(301)
-    elif DifficultyType == 6:
-        #dm
-        timer.setDirection(False)
-        timer.setDuration(301)
-    elif DifficultyType == 7:
-        #dm
-        timer.setDirection(False)
-        timer.setDuration(301)
-    elif DifficultyType == 8:
-        #dm
-        timer.setDirection(False)
-        timer.setDuration(301)
-    else:
-        print(f"Unknown Difficulty: {DifficultyType}")
-
+    # setup the tanks
+    match difficultyType:
+        case DifficultyType.OnePlayerYard:
+            # # easy AI, 1 Player
+            temp = tank2.getCurrentTile().getIndex()
+            tank1.setAim((temp, temp%14*const.TILE_SIZE + const.TILE_SIZE//2, ((temp)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
+            # scrapyard
+            timer.setDirection(True)
+        case DifficultyType.OnePlayerScrapYard:
+            temp = tank2.getCurrentTile().getIndex()
+            tank1.setAim((temp, temp%14*const.TILE_SIZE + const.TILE_SIZE//2, ((temp)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
+            # scrapyard
+            timer.setDirection(True)
+        case DifficultyType.TwoPlayerYard:
+            timer.setDirection(True)
+        case DifficultyType.TwoPlayerScrapYard:
+            timer.setDirection(True)
+        case DifficultyType.OnePlayerBrawl:
+            temp = tank2.getCurrentTile().getIndex()
+            tank1.setAim((temp, temp%14*const.TILE_SIZE + const.TILE_SIZE//2, ((temp)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
+            timer.setDirection(False)
+            timer.setDuration(301)
+        case DifficultyType.OnePlayerDeathMatch:
+            temp = tank2.getCurrentTile().getIndex()
+            tank1.setAim((temp, temp%14*const.TILE_SIZE + const.TILE_SIZE//2, ((temp)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
+            timer.setDirection(False)
+            timer.setDuration(301)
+        case DifficultyType.TwoPlayerBrawl:
+            timer.setDirection(False)
+            timer.setDuration(301)
+        case DifficultyType.TwoPlayerDeathMatch:
+            timer.setDirection(False)
+            timer.setDuration(301)
+        case _:
+            print("Unknown state")
+            return
     #Updating the groups
     
     for sprite in allSprites:
@@ -2382,7 +2456,7 @@ def constantHomeScreen():
     # Inputs: None
     # Outputs: None
     screen.fill(bg) # This is the first line when drawing a new frame
-    screen.blit(lpng, (windowWidth // 2 - lpng.get_width() // 2, 15))
+    screen.blit(lpng, (const.WINDOW_WIDTH // 2 - lpng.get_width() // 2, 15))
     print("Switching to lobby music")
     mixer.crossfade('lobby')
 
@@ -2394,46 +2468,45 @@ def constantSelectionScreen():
     mixer.crossfade('selection')
 
 def constantPlayGame():
-    global fontDictionary
     #This function handles the constant elements of the game screen
     # Inputs: None
     # Outputs: None
     screen.fill(bg) # This is the first line when drawing a new frame
-    screen.blit(gun1.getSprite(True), (tileSize, 0.78*windowHeight)) # Gun 2
-    screen.blit(tank1.getSprite(True), (tileSize, 0.78*windowHeight)) # Tank 2
+    screen.blit(gun1.getSprite(True), (const.TILE_SIZE, 0.78*const.WINDOW_HEIGHT)) # Gun 2
+    screen.blit(tank1.getSprite(True), (const.TILE_SIZE, 0.78*const.WINDOW_HEIGHT)) # Tank 2
 
-    screen.blit(gun2.getSprite(), (windowWidth - tileSize*3, 0.78*windowHeight)) # Gun 2
-    screen.blit(tank2.getSprite(), (windowWidth - tileSize*3, 0.78*windowHeight)) # Tank 2
+    screen.blit(gun2.getSprite(), (const.WINDOW_WIDTH - const.TILE_SIZE*3, 0.78*const.WINDOW_HEIGHT)) # Gun 2
+    screen.blit(tank2.getSprite(), (const.WINDOW_WIDTH - const.TILE_SIZE*3, 0.78*const.WINDOW_HEIGHT)) # Tank 2
     print("Switching to game music")
     mixer.crossfade('game')
 
     # Load the custom font
     fontString = "PLAYER 1             SCORE              PLAYER 2" # This is a bad way to write a string
     controlString = "WASD                            ↑↓→←" # This is a bad way to write a string
-    textp2Name = fontDictionary["playerStringFont"].render(fontString, True, c.geT("BLACK"))
-    controls = fontDictionary["ctrlFont"].render(controlString, True, c.geT("BLACK"))
-    screen.blit(textp2Name,[windowWidth//2 - textp2Name.get_width()//2, 0.78*windowHeight]) # This is the name on the right
-    screen.blit(controls,[windowWidth//2 - controls.get_width()//2, windowHeight*5/6]) # This is the name on the right
+    textp2Name = const.FONT_DICTIONARY["playerStringFont"].render(fontString, True, c.geT("BLACK"))
+    controls = const.FONT_DICTIONARY["ctrlFont"].render(controlString, True, c.geT("BLACK"))
+    screen.blit(textp2Name,[const.WINDOW_WIDTH//2 - textp2Name.get_width()//2, 0.78*const.WINDOW_HEIGHT]) # This is the name on the right
+    screen.blit(controls,[const.WINDOW_WIDTH//2 - controls.get_width()//2, const.WINDOW_HEIGHT*5/6]) # This is the name on the right
 
-    HealthBox = TextBox(tileSize*7/8-1, 0.88*windowHeight, "Londrina", "HEALTH", 20, c.geT("BLACK"))
+    HealthBox = TextBox(const.TILE_SIZE*7/8-1, 0.88*const.WINDOW_HEIGHT, "Londrina", "HEALTH", 20, c.geT("BLACK"))
     HealthBox.setPaddingHeight(0)
     HealthBox.setPaddingWidth(0)
     HealthBox.setBoxColor(bg)
     HealthBox.draw(screen)
 
-    ReloadBox = TextBox(tileSize*7/8-1, 0.88*windowHeight + mazeY//2, "Londrina", "RELOAD", 20, c.geT("BLACK"))
+    ReloadBox = TextBox(const.TILE_SIZE*7/8-1, 0.88*const.WINDOW_HEIGHT + const.MAZE_Y//2, "Londrina", "RELOAD", 20, c.geT("BLACK"))
     ReloadBox.setPaddingHeight(0)
     ReloadBox.setPaddingWidth(0)
     ReloadBox.setBoxColor(bg)
     ReloadBox.draw(screen)
 
-    HealthBox2 = TextBox(windowWidth-tileSize*2.2-1, 0.88*windowHeight, "Londrina", "HEALTH", 20, c.geT("BLACK"))
+    HealthBox2 = TextBox(const.WINDOW_WIDTH-const.TILE_SIZE*2.2-1, 0.88*const.WINDOW_HEIGHT, "Londrina", "HEALTH", 20, c.geT("BLACK"))
     HealthBox2.setPaddingHeight(0)
     HealthBox2.setPaddingWidth(0)
     HealthBox2.setBoxColor(bg)
     HealthBox2.draw(screen)
 
-    ReloadBox2 = TextBox(windowWidth-tileSize*2.2-1, 0.88*windowHeight + mazeY//2, "Londrina", "RELOAD", 20, c.geT("BLACK"))
+    ReloadBox2 = TextBox(const.WINDOW_WIDTH-const.TILE_SIZE*2.2-1, 0.88*const.WINDOW_HEIGHT + const.MAZE_Y//2, "Londrina", "RELOAD", 20, c.geT("BLACK"))
     ReloadBox2.setPaddingHeight(0)
     ReloadBox2.setPaddingWidth(0)
     ReloadBox2.setBoxColor(bg)
@@ -2449,14 +2522,14 @@ def fixMovement(tanks):
         tempX = t.x + t.changeX
         tempY = t.y - t.changeY
 
-        if tempX <= mazeX + t.originalTankImage.get_size()[0]/2:
-            tempX = mazeX + t.originalTankImage.get_size()[0]/2
-        if tempY <= mazeY + t.originalTankImage.get_size()[0]/2:
-            tempY = mazeY + t.originalTankImage.get_size()[0]/2
-        if tempX > mazeWidth + mazeX - t.originalTankImage.get_size()[0]/2:
-            tempX = mazeWidth + mazeX - t.originalTankImage.get_size()[0]/2
-        if tempY > mazeHeight + mazeY - t.originalTankImage.get_size()[0]/2:
-            tempY = mazeHeight + mazeY - t.originalTankImage.get_size()[0]/2
+        if tempX <= const.MAZE_X + t.originalTankImage.get_size()[0]/2:
+            tempX = const.MAZE_X + t.originalTankImage.get_size()[0]/2
+        if tempY <= const.MAZE_Y + t.originalTankImage.get_size()[0]/2:
+            tempY = const.MAZE_Y + t.originalTankImage.get_size()[0]/2
+        if tempX > mazeWidth + const.MAZE_X - t.originalTankImage.get_size()[0]/2:
+            tempX = mazeWidth + const.MAZE_X - t.originalTankImage.get_size()[0]/2
+        if tempY > mazeHeight + const.MAZE_Y - t.originalTankImage.get_size()[0]/2:
+            tempY = mazeHeight + const.MAZE_Y - t.originalTankImage.get_size()[0]/2
 
         t1 = tanks[(idx+2)%2]
         t2 = tanks[(idx+1+2)%2]
@@ -2498,8 +2571,8 @@ def fixMovement(tanks):
                 t2.setCoords(t2.x + directionX * pushAmountT2, t2.y + directionY * pushAmountT2)
         
         # Check for collision with walls
-        row = math.ceil((t.getCenter()[1] - mazeY) / tileSize)
-        col = math.ceil((t.getCenter()[0] - mazeX) / tileSize)
+        row = math.ceil((t.getCenter()[1] - const.MAZE_Y) / const.TILE_SIZE)
+        col = math.ceil((t.getCenter()[0] - const.MAZE_X) / const.TILE_SIZE)
         index = (row - 1) * colAmount + col
 
         if index in range(1, rowAmount * colAmount + 1):
@@ -2514,10 +2587,10 @@ def fixMovement(tanks):
             # Check top, bottom, left, and right borders
             if tile.border[0] and tempY - tank_height <= tile.y:  # Top border
                 futureY = tile.y + tank_height
-            if tile.border[1] and tempX + tank_width / 2 >= tile.x + tileSize:  # Right border
-                futureX = tile.x + tileSize - tank_width / 2
-            if tile.border[2] and tempY + tank_height > tile.y + tileSize:  # Bottom border
-                futureY = tile.y + tileSize - tank_height
+            if tile.border[1] and tempX + tank_width / 2 >= tile.x + const.TILE_SIZE:  # Right border
+                futureX = tile.x + const.TILE_SIZE - tank_width / 2
+            if tile.border[2] and tempY + tank_height > tile.y + const.TILE_SIZE:  # Bottom border
+                futureY = tile.y + const.TILE_SIZE - tank_height
             if tile.border[3] and tempX - tank_width / 2 < tile.x:  # Left border
                 futureX = tile.x + tank_width / 2
 
@@ -2527,17 +2600,17 @@ def fixMovement(tanks):
                     futureX = tile.x + tank_width / 2
                     futureY = tile.y + tank_height
             elif tile.border[0] and tile.border[1]:  # Top-right corner
-                if tempX + tank_width / 2 >= tile.x + tileSize and tempY - tank_height <= tile.y:
-                    futureX = tile.x + tileSize - tank_width / 2
+                if tempX + tank_width / 2 >= tile.x + const.TILE_SIZE and tempY - tank_height <= tile.y:
+                    futureX = tile.x + const.TILE_SIZE - tank_width / 2
                     futureY = tile.y + tank_height
             elif tile.border[2] and tile.border[3]:  # Bottom-left corner
-                if tempX - tank_width / 2 < tile.x and tempY + tank_height > tile.y + tileSize:
+                if tempX - tank_width / 2 < tile.x and tempY + tank_height > tile.y + const.TILE_SIZE:
                     futureX = tile.x + tank_width / 2
-                    futureY = tile.y + tileSize - tank_height
+                    futureY = tile.y + const.TILE_SIZE - tank_height
             elif tile.border[2] and tile.border[1]:  # Bottom-right corner
-                if tempX + tank_width / 2 >= tile.x + tileSize and tempY + tank_height > tile.y + tileSize:
-                    futureX = tile.x + tileSize - tank_width / 2
-                    futureY = tile.y + tileSize - tank_height
+                if tempX + tank_width / 2 >= tile.x + const.TILE_SIZE and tempY + tank_height > tile.y + const.TILE_SIZE:
+                    futureX = tile.x + const.TILE_SIZE - tank_width / 2
+                    futureY = tile.y + const.TILE_SIZE - tank_height
 
             # Apply the corrected positions
             tempX, tempY = futureX, futureY
@@ -2574,27 +2647,24 @@ def damage(tank, damage):
 def playGame():
 
     def checkGameOver(t):
-        global tank1Dead, tank2Dead
-        # checking if the game is over
-        if t == 1:
-            return tank1Dead or tank2Dead
-        elif t == 2:
-            return tank1Dead or tank2Dead
-        elif t == 3:
-            return tank1Dead or tank2Dead
-        elif t == 4:
-            return tank1Dead or tank2Dead
-        elif t == 5:
-            return timer.isExpired()
-        elif t == 6:
-            return timer.isExpired()
-        elif t == 7:
-            return timer.isExpired()
-        elif t == 8:
-            return timer.isExpired()
-        else:
-            print(f"{t} is not a known gamemode")
-            return 1 # broken
+        global tank1Dead, tank2Dead, DifficultyType, difficultyType
+        match t:
+            case DifficultyType.OnePlayerYard:
+                return tank1Dead or tank2Dead
+            case DifficultyType.OnePlayerScrapYard:
+                return tank1Dead or tank2Dead
+            case DifficultyType.TwoPlayerYard:
+                return tank1Dead or tank2Dead
+            case DifficultyType.TwoPlayerScrapYard:
+                return tank1Dead or tank2Dead
+            case DifficultyType.OnePlayerBrawl:
+                return timer.isExpired()
+            case DifficultyType.OnePlayerDeathMatch:
+                return timer.isExpired()
+            case DifficultyType.TwoPlayerBrawl:
+                return timer.isExpired()
+            case DifficultyType.TwoPlayerDeathMatch:
+                return timer.isExpired()
     # This function controls the main execution of the game
     # Inputs: None
     # Outputs: None
@@ -2602,9 +2672,9 @@ def playGame():
     global gameOverFlag, cooldownTimer, systemTime, p1Score, p2Score, startTreads
     global tank1Dead, tank2Dead, tileList, spawnpoint, player1Channels, player2Channels
     global tank1, tank2, gun1, gun2, allSprites, bulletSprites
-    global currentTime, deltaTime, lastUpdateTime, DifficultyType
-    global fontDictionary, supplyAssets, timerClock
-    if checkGameOver(t = DifficultyType) and not cooldownTimer:
+    global currentTime, deltaTime, lastUpdateTime, difficultyType
+    global upplyAssets, timerClock
+    if checkGameOver(t = difficultyType) and not cooldownTimer:
         #The game is over
         systemTime = time.time() #Start a 3s timer
         cooldownTimer = True
@@ -2624,13 +2694,13 @@ def playGame():
 
     seconds = timer.getTime()
     textString = f"{seconds // 60:02d}:{seconds % 60:02d}"
-    text = fontDictionary["scoreFont"].render(textString, True, c.geT("BLACK"))
+    text = const.FONT_DICTIONARY["scoreFont"].render(textString, True, c.geT("BLACK"))
 
     #UI Elements
     pauseButton.update_display(pygame.mouse.get_pos())
     pauseButton.draw(screen, outline = True)
 
-    pygame.draw.rect(screen, bg, [tileSize*0.72, tileSize*0.72, windowWidth - tileSize*1.4, tileSize*8.5]) # Draw a box for the maze
+    pygame.draw.rect(screen, bg, [const.TILE_SIZE*0.72, const.TILE_SIZE*0.72, const.WINDOW_WIDTH - const.TILE_SIZE*1.4, const.TILE_SIZE*8.5]) # Draw a box for the maze
     
     #Making the string for score
     p1ScoreText = str(p1Score)
@@ -2638,33 +2708,33 @@ def playGame():
     #Setting up the tex
 
     # Load the custom font
-    pygame.draw.rect(screen, bg, [tileSize*2.1, 0.87*windowHeight, windowWidth-tileSize*1.2-barWidth, windowHeight*0.15]) # The bottom bar
+    pygame.draw.rect(screen, bg, [const.TILE_SIZE*2.1, 0.87*const.WINDOW_HEIGHT, const.WINDOW_WIDTH-const.TILE_SIZE*1.2-barWidth, const.WINDOW_HEIGHT*0.15]) # The bottom bar
 
-    text3 = fontDictionary["playerScore"].render(p1ScoreText + ":" + p2ScoreText, True, c.geT("BLACK"))
-    screen.blit(text3, [windowWidth/2 - text3.get_width()/2, 0.85*windowHeight])
+    text3 = const.FONT_DICTIONARY["playerScore"].render(p1ScoreText + ":" + p2ScoreText, True, c.geT("BLACK"))
+    screen.blit(text3, [const.WINDOW_WIDTH/2 - text3.get_width()/2, 0.85*const.WINDOW_HEIGHT])
 
     #Box around the bottom of the screen for the health and reload bars
 
 
-    pygame.draw.rect(screen, c.geT("RED"), [tileSize*2.2, 0.88*windowHeight, barWidth*(tank1.getHealthPercentage()),
+    pygame.draw.rect(screen, c.geT("RED"), [const.TILE_SIZE*2.2, 0.88*const.WINDOW_HEIGHT, barWidth*(tank1.getHealthPercentage()),
                                             barHeight]) # Bar
-    pygame.draw.rect(screen, c.geT("BLACK"), [tileSize*2.2, 0.88*windowHeight, barWidth, barHeight], 2) # Outline
+    pygame.draw.rect(screen, c.geT("BLACK"), [const.TILE_SIZE*2.2, 0.88*const.WINDOW_HEIGHT, barWidth, barHeight], 2) # Outline
     #Reload bars
-    pygame.draw.rect(screen, c.geT("BLUE"), [tileSize*2.2, 0.88*windowHeight + mazeY//2, barWidth*(min(1,1-gun1.getReloadPercentage())),
+    pygame.draw.rect(screen, c.geT("BLUE"), [const.TILE_SIZE*2.2, 0.88*const.WINDOW_HEIGHT + const.MAZE_Y//2, barWidth*(min(1,1-gun1.getReloadPercentage())),
                                              barHeight]) # The 25 is to space from the health bar
 
-    pygame.draw.rect(screen, c.geT("BLACK"), [tileSize*2.2, 0.88*windowHeight + mazeY//2, barWidth, barHeight], 2) # Outline
+    pygame.draw.rect(screen, c.geT("BLACK"), [const.TILE_SIZE*2.2, 0.88*const.WINDOW_HEIGHT + const.MAZE_Y//2, barWidth, barHeight], 2) # Outline
 
 
     #Health bars
-    pygame.draw.rect(screen, c.geT("RED"), [windowWidth - tileSize*2.2 - barWidth, 0.88*windowHeight, barWidth*(tank2.getHealthPercentage()),
+    pygame.draw.rect(screen, c.geT("RED"), [const.WINDOW_WIDTH - const.TILE_SIZE*2.2 - barWidth, 0.88*const.WINDOW_HEIGHT, barWidth*(tank2.getHealthPercentage()),
                                             barHeight])
-    pygame.draw.rect(screen, c.geT("BLACK"), [windowWidth - tileSize*2.2 - barWidth, 0.88*windowHeight, barWidth, barHeight], 2)
+    pygame.draw.rect(screen, c.geT("BLACK"), [const.WINDOW_WIDTH - const.TILE_SIZE*2.2 - barWidth, 0.88*const.WINDOW_HEIGHT, barWidth, barHeight], 2)
     #Reload bars
-    pygame.draw.rect(screen, c.geT("BLUE"), [windowWidth - tileSize*2.2 - barWidth, 0.88*windowHeight + mazeY//2,
+    pygame.draw.rect(screen, c.geT("BLUE"), [const.WINDOW_WIDTH - const.TILE_SIZE*2.2 - barWidth, 0.88*const.WINDOW_HEIGHT + const.MAZE_Y//2,
                                              barWidth*(min(1,1-gun2.getReloadPercentage())),
                                              barHeight]) # The 25 is to space from the health bar
-    pygame.draw.rect(screen, c.geT("BLACK"), [windowWidth - tileSize*2.2 - barWidth, 0.88*windowHeight + mazeY//2, barWidth, barHeight], 2) # Outline
+    pygame.draw.rect(screen, c.geT("BLACK"), [const.WINDOW_WIDTH - const.TILE_SIZE*2.2 - barWidth, 0.88*const.WINDOW_HEIGHT + const.MAZE_Y//2, barWidth, barHeight], 2) # Outline
 
     #draw the supplies # Draw more on top of them
 
@@ -2687,7 +2757,7 @@ def playGame():
         tile.draw(screen)
 
     # Draw the edge of themaze
-    pygame.draw.rect(screen, c.geT("BLACK"), [mazeX, mazeY, mazeWidth, mazeHeight], 2)
+    pygame.draw.rect(screen, c.geT("BLACK"), [const.MAZE_X, const.MAZE_Y, mazeWidth, mazeHeight], 2)
     #Anything below here will be drawn on top of the maze and hence is game updates
 
     if pygame.time.get_ticks() - startTreads > 50:
@@ -2710,18 +2780,18 @@ def playGame():
         screen.blit(pos[0], pos[1])
 
     # fill up the area covered by the tank with the background color
-    pygame.draw.rect(screen, bg, [windowWidth//2 - (text.get_width()//2) * 1.1, 8, text.get_width()* 1.1, text.get_height()])
+    pygame.draw.rect(screen, bg, [const.WINDOW_WIDTH//2 - (text.get_width()//2) * 1.1, 8, text.get_width()* 1.1, text.get_height()])
     # draw the text again
-    screen.blit(text, [windowWidth//2 - text.get_width()//2, 8])
+    screen.blit(text, [const.WINDOW_WIDTH//2 - text.get_width()//2, 8])
 
     # pygame.draw.polygon(screen, c.geT("GREEN"), tank1.getCorners(), 2) #Hit box outline
     # pygame.draw.polygon(screen, c.geT("GREEN"), tank2.getCorners(), 2) #Hit box outline
     # if we are using AI we need to set the target to go to the other tank
-    if (DifficultyType == 1 or DifficultyType == 3 or DifficultyType == 5 or DifficultyType == 7) and pygame.time.get_ticks() - tank1.getAimTime() > 2000:
+    if difficultyType.ai and pygame.time.get_ticks() - tank1.getAimTime() > 2000:
         # AI difficulty
         if not tank2Dead: # if the tank is still alive
             temp = tank2.getCurrentTile().getIndex()
-            tank1.setAim((temp, temp%14*tileSize + tileSize//2, ((temp)//14 + 1)*tileSize + tileSize//2))
+            tank1.setAim((temp, temp%14*const.TILE_SIZE + const.TILE_SIZE//2, ((temp)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
 
     currentTime = time.time()
     deltaTime = currentTime - lastUpdateTime
@@ -2732,9 +2802,9 @@ def playGame():
             tank1.setDelta(TPS)
             gun1.setDelta(TPS)
         else:
-            if DifficultyType == 5 or DifficultyType == 6 or DifficultyType == 7 or DifficultyType == 8:
+            if difficultyType.respawn:
                 # easy
-                setUpTank1(DifficultyType)
+                setUpTank1(difficultyType)
                 tank1.setCentre(spawnTank1[0], spawnTank1[1])
                 tank1Dead = False
                 allSprites.add(tank1, gun1) # Add the new sprites
@@ -2744,15 +2814,13 @@ def playGame():
             tank2.setDelta(TPS)
             gun2.setDelta(TPS)
         else:
-            if DifficultyType == 5 or DifficultyType == 6 or DifficultyType == 7 or DifficultyType == 8:
-                setUpTank2(DifficultyType)
+            if difficultyType.respawn:
+                setUpTank2(difficultyType)
                 tank2Dead = False
                 allSprites.add(tank2, gun2) # Add the new sprites
             
         for bullet in bulletSprites:
             bullet.setDelta(TPS)
-        # if not(tank1Dead or tank2Dead):
-        #     allSprites.update()
 
         #Fixing tank movement
         # don't update the bullets if the game is over
@@ -2778,26 +2846,6 @@ def playGame():
         timer.tick()
     # 125 is the reference for the FPS
     timerClock = (timerClock + 1) % 120 # This is to make sure that the timer doesn't go too fast
-
-def pauseScreen(fromHome = 1):
-    # This function will draw the pause screen
-    # Inputs: None
-    # Outputs: None
-    pauseWidth = windowWidth - mazeX * 2
-    pauseHeight = windowHeight - mazeY * 2
-    pygame.draw.rect(screen, c.geT("OFF_WHITE"), [mazeX, mazeY, pauseWidth, pauseHeight])
-    pygame.draw.rect(screen, c.geT("BLACK"), [mazeX, mazeY, pauseWidth, pauseHeight], 5)
-
-    #Buttons
-    if fromHome:
-        creditButton.draw(screen, outline = True)
-    else:
-        unPause.draw(screen, outline = True)
-        
-    home.draw(screen, outline = True)
-    quitButton.draw(screen, outline = True)
-    mute.draw(screen, outline = False)
-    sfx.draw(screen, outline = False)
 
 def reset():
     # This function is to reset the board everytime we want to restart the game
@@ -2828,7 +2876,7 @@ def updateTankHealth():
     # This function will update the tank health and check if the tank is dead
     # Inputs: None
     # Outputs: None
-    global explosionGroup, tank1Dead, tank2Dead, respawnTank1, respawnTank2
+    global explosionGroup, tank1Dead, tank2Dead
     global p1Score, p2Score
     global allSprites, tank1, tank2, gun1, gun2
     #Update the tank health
@@ -2844,7 +2892,6 @@ def updateTankHealth():
             for sprite in allSprites:
                 sprite.kill()
             allSprites = pygame.sprite.Group()
-        respawnTank1 = True #The game is over
     if tank2.getHealth() <= 0:
         if not tank2Dead:
             p1Score = (p1Score + 1) % 99 # Fix the maximum to 99
@@ -2857,23 +2904,6 @@ def updateTankHealth():
             for sprite in allSprites:
                 sprite.kill()            
             allSprites = pygame.sprite.Group()
-        respawnTank2 = True #The game is over
-
-def infoScreen():
-
-    global mazeX, mazeY, windowWidth, windowHeight
-    pauseWidth = windowWidth - mazeX * 2
-    pauseHeight = windowHeight - mazeY * 2
-    pygame.draw.rect(screen, (240, 240, 240), [mazeX, mazeY, pauseWidth, pauseHeight])
-    pygame.draw.rect(screen, (0,0,0), [mazeX, mazeY, pauseWidth, pauseHeight], 5)
-
-    for i in infoButtons:
-        i.draw(screen = screen, outline = True)
-    
-    startY = 325
-    gap = 25
-    for i in range(len(iListRender[iIndex])):
-        screen.blit(iListRender[iIndex][i], (mazeX + 50, startY + i*gap))
 
 timer = UpDownTimer(1000, True)
 
@@ -2900,17 +2930,10 @@ global startTreads
 startTreads = 0
 global gameOverFlag
 gameOverFlag = False
-global respawnTank1, respawnTank2
-respawnTank1 = False
-respawnTank2 = False
 #Constants
 done = False
-windowWidth = 800
-windowHeight = 600
-
-#let's set the window to full screen
-# windowWidth, windowHeight = pygame.display.Info().current_w, pygame.display.Info().current_h
-
+const.WINDOW_WIDTH = 800
+const.WINDOW_HEIGHT = 600
 
 TPS = 30 #Ticks per second
 
@@ -2919,7 +2942,7 @@ currentTime = 0
 deltaTime = 0
 lastUpdateTime = 0
 
-screen = pygame.display.set_mode((windowWidth,windowHeight))  # Windowed (safer/ superior)
+screen = pygame.display.set_mode((const.WINDOW_WIDTH,const.WINDOW_HEIGHT))  # Windowed (safer/ superior)
 
 # Fullscreen but it renders your computer useless otherwise
 supplyAssets = ["Assets/Double_Armor.png", "Assets/Speed_Boost.png"]
@@ -2938,10 +2961,9 @@ for i in range(3):
 
 #safe full screen
 # screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN) # For fullscreen enjoyers
-# windowWidth, windowHeight = pygame.display.get_surface().get_size()
-# print(windowWidth, windowHeight)
+# const.WINDOW_WIDTH, const.WINDOW_HEIGHT = pygame.display.get_surface().get_size()
+# print(const.WINDOW_WIDTH, const.WINDOW_HEIGHT)
 
-tileSize = 50
 weightTrue = 0.16 # The percentage change that side on a tile will have a border
 rowAmount = 14
 colAmount = 8
@@ -2950,19 +2972,18 @@ p1Score = 0
 p2Score = 0
 
 p1NameIndent = 25
-p2NameIndent = windowWidth - 25
+p2NameIndent = const.WINDOW_WIDTH - 25
 
 #Defining the variables that make up the main maze screen
-mazeX = 50 # We want at least a little indent or border
-mazeY = 50
-mazeWidth = windowWidth - mazeX*2 # We want it to span most of the screen
-mazeHeight = windowHeight - mazeY*4
-rowAmount = mazeHeight//tileSize # Assigning the amount of rows
-colAmount = mazeWidth//tileSize # Assigning the amount of columns
+mazeWidth = const.WINDOW_WIDTH - const.MAZE_X*2 # We want it to span most of the screen
+mazeHeight = const.WINDOW_HEIGHT - const.MAZE_Y*4
+rowAmount = mazeHeight//const.TILE_SIZE # Assigning the amount of rows
+colAmount = mazeWidth//const.TILE_SIZE # Assigning the amount of columns
 barWidth = 150
 barHeight = 20
 bg = c.geT('SOFT_WHITE')
 gameMode = GameMode.home
+difficultyType = DifficultyType.NotInGame
 #Changing variables
 p1TankName = "Plwasd1"
 p2TankName = "Plarro2"
@@ -2972,186 +2993,26 @@ p2GunName = "Gun2"
 
 tileList = tileGen()
 
-#defining buttons in pause menu
-indentFromLeft = mazeX
-indentFromRight = mazeY
-sliderX = indentFromLeft * 2.5
-sliderY = windowHeight/8
-#Buttons
-home = Button(c.geT("GREEN"), c.geT("WHITE"),indentFromLeft * 1.5 , indentFromRight * 1.8, tileSize, tileSize, 'Home')
-quitButton = Button(c.geT("GREEN"), c.geT("WHITE"), windowWidth - indentFromLeft * 2.5, indentFromRight * 1.8, tileSize, tileSize, 'Quit')
-unPause = Button(c.geT("GREEN"), c.geT("WHITE"), windowWidth/2 - 200, 0.8 * windowHeight, 400, tileSize, 'Return to Game')
-mute = ButtonSlider(c.geT("BLACK"), c.geT("BLUE"), sliderX, sliderY*3, tileSize, tileSize, tileSize*8,
-                    tileSize*2, 'mute', c.geT("WHITE"), c.geT("BLACK"), c.geT("RED"))
-sfx = ButtonSlider(c.geT("BLACK"), c.geT("BLUE"), sliderX, sliderY*5 - tileSize, tileSize, tileSize,
-                   tileSize*8, tileSize*2, 'SFX', c.geT("WHITE"), c.geT("BLACK"), c.geT("RED"))
-creditButton = Button(c.geT("GREEN"), c.geT("WHITE"), windowWidth/2 - 200, 0.8 * windowHeight, 400, tileSize, 'Credits')
 selectionBackground = c.geT("SOFT_WHITE")
-selectionFont = 'Londrina Solid'
 monoFont = 'Courier New'
-
-#Credits Screen
-creditsBackButton = Button(c.geT("GREEN"), c.geT("WHITE"), windowWidth - 175, 75, 100, tileSize, 'Back', c.geT("BLACK"), 20, (100, 100, 255))
-creditsTitle = TextBox(windowWidth//2 - 175, 100, font=selectionFont,fontSize=104, text="Credits", textColor=c.geT("BLACK"))
-creditsTitle.selectable(False)
-creditsTitle.setBoxColor(c.geT("OFF_WHITE"))
-
-disclaimer = TextBox(57, windowHeight - 110, font=selectionFont,fontSize=35, text="ALL RIGHTS BELONG TO THEIR RESPECTIVE OWNERS", textColor=c.geT("BLACK"))
-disclaimer.selectable(False)
-disclaimer.setBoxColor(c.geT("OFF_WHITE"))
-
-creditbox = [
-    "Lead Developer: Beta",
-    "UI Design: Bin-Coder14",
-    "Sounds: Beta",
-    "Music: Beta, Goodnews888",
-    "Art: Beta, Goodnews888, Ekiel",
-]
-
-creditsurfaces = [fontDictionary["cFont"].render(line, True, c.geT("BLACk")) for line in creditbox]
-
-# info screen
-infoButtons = []
-iList = ["Controls", "Tempest", "Silencer", "Watcher", "Chamber", "Huntsman", "Judge", "Sidewinder", "Panther", "Cicada", "Gater", "Bonsai", "Fossil"] # This list contains all the changing elements
-iListDesc = [["Player 1 Movement: WASD", "Player 1 Turret: RT", "Player 1 Shoot: Y", "", "Player 2 Movement: Arrow Keys", "Player 2 Turret: ,.", "Player 2 Shoot: /"],
-["Type: TURRET",
-"The Tempest is a single-barreled turret with infinite",
-"range, perfect for aggressive, close-quarters combat.",
-"It’s not a sniper but a relentless pressure tool,",
-"firing steady, low-damage shots while you charge at",
-"enemies. The Tempest thrives in high-paced",
-"engagements, wearing opponents down through sheer",
-"volume rather than precision."],
-["Type: TURRET",
-"The Silencer is a sniper turret built for precision",
-"strikes, delivering devastating high-damage shots.",
-"Its powerful rounds come with a noticeable wind-up",
-"time and lengthy reload, making it crucial to choose",
-"your shots wisely. Patience and timing are key, as",
-"this turret rewards those who can strike with",
-"pinpoint accuracy in the heat of battle."],
-["Type: TURRET",
-"The Watcher is a precision sniper turret with a laser",
-"scope that grows more lethal the longer you maintain",
-"your aim. While charging, your tank becomes immobile,",
-"allowing you to focus on lining up the perfect shot.",
-"Patience is crucial, as the longer you hold your aim,",
-"the more devastating the damage—but staying too long",
-"may expose you to enemy fire."],
- ["Type: TURRET",
-"The Chamber is a medium-range turret with explosive",
-"rounds that deal splash damage, making it perfect for",
-"applying pressure in one-on-one duels. With medium",
-"damage and a balanced reload speed, it’s a versatile",
-"tool for controlling space. Just be cautious in close",
-"quarters—your own explosive shots can easily backfire",
-"on you if you’re too close to your target."],
-["Type: TURRET",
-"The Huntsman is a versatile, beginner-friendly turret",
-"that performs decently in any situation. Its fast",
-"reload and balanced stats make it reliable, while the",
-"chance for a random critical shot adds some",
-"unpredictability. Perfect for those learning the",
-"ropes, it’s a solid all-rounder with a bit of extra",
-"punch when luck is on your side."],
-["Type: TURRET",
-"The Judge is a close-range shotgun turret with a",
-"medium-sized cone spread, perfect for punishing",
-"enemies in tight spaces. Its shrapnel rounds can hit",
-"multiple targets or ricochet around corners, but be",
-"careful—those bouncing shots can also come back to",
-"haunt you. With just two players on the map, it",
-"excels in fast, decisive confrontations where",
-"positioning is everything."],
-["Type: TURRET",
-"The Sidewinder is a short-range turret with plasma",
-"rounds that can bounce off surfaces, hitting enemies",
-"even outside your line of sight. While great for",
-"creative tactics and surprising foes, its ricocheting",
-"shots can also backfire and damage you if you’re not",
-"careful. With limited energy that recharges over time,",
-"mastering this turret is all about timing and smart",
-"positioning."],
-["Type: HULL",
-"The Panther is a lightweight, high-speed hull built",
-"for those who prioritize agility over durability. Its",
-"incredible speed makes it perfect for quick strikes",
-"and evasive maneuvers, though its low health leaves",
-"little room for error. With the Panther, it’s all",
-"about outpacing your opponents while avoiding direct",
-"hits."],
-["Type: HULL",
-"The Cicada is a nimble, fast-moving hull with just",
-"enough health to handle quick engagements. Its",
-"responsive handling makes it ideal for weaving",
-"through tight spots and quickly repositioning.",
-"The Cicada strikes a balance between speed and",
-"survivability, perfect for those who want agility",
-"without feeling too fragile."],
-["Type: HULL",
-"The Gater is a wide, medium-class hull that offers",
-"solid speed without sacrificing too much durability.",
-"With its balanced movement and health, it’s versatile",
-"enough for various tactics while leaning toward",
-"faster, aggressive plays. The Gater’s broad base",
-"provides stability, making it a reliable choice for",
-"those who like a mix of power and mobility."],
-["Type: HULL",
-"The Bonsai is a tall hull with robust health and",
-"medium movement, offering excellent protection in",
-"battles. Its sturdy design makes it a reliable",
-"frontline tank, absorbing damage while still",
-"maintaining reasonable agility. The Bonsai is",
-"perfect for players who need a durable tank that",
-"can withstand heavy hits while keeping up with the",
-"pace of the fight."],
-["Type: HULL",
-"The Fossil is an incredibly tanky hull built to",
-"endure heavy assaults with minimal speed. Its",
-"formidable armor allows it to absorb significant",
-"damage, making it a fortress on the battlefield.",
-"Though slow-moving, the Fossil’s resilience ensures",
-"it can withstand even the toughest enemy fire,",
-"crushing anything that stands in its way."]] # Description of all the elements
-
-iIndex = 0
-infoLArrow = Button(c.geT("BLACK"), c.geT("BLACK"), 100, 200, 100, 100, '<', c.geT("WHITE"), 100, c.geT("BLACK"))
-infoButtons.append(infoLArrow)
-infoText = TextBox(windowWidth//2 - 125, 75, font="Courier New",fontSize=30, text="Information", textColor=c.geT("BLACK"))
-infoText.selectable(False)
-infoText.setBoxColor(c.geT("OFF_WHITE"))
-infoButtons.append(infoText)
-iBox = TextBox(200, 201, font="Courier New",fontSize=46, text=iList[iIndex], textColor=c.geT("BLACK"))
-iBox.selectable(False)
-iBox.setCharacterPad(14)
-iBox.setPaddingHeight(23)
-iBox.setText(iList[iIndex])
-iBox.setBoxColor(c.geT("OFF_WHITE"))
-infoButtons.append(iBox)
-infoRArrow = Button(c.geT("BLACK"), c.geT("BLACK"), windowWidth - 200, 200, 100, 100, '>', c.geT("WHITE"), 100, c.geT("BLACK"))
-infoButtons.append(infoRArrow)
-infoBackButton = Button(c.geT("GREEN"), c.geT("WHITE"), windowWidth - 175, 75, 100, tileSize, 'Back', c.geT("BLACK"), 20, (100, 100, 255))
-infoButtons.append(infoBackButton)
-
-iListRender = [[fontDictionary["iFont"].render(line, True, c.geT("BLACk")) for line in iListDesc[i]] for i in range(len(iListDesc))]
 
 #Selection Screen
 buttonList = []
 
-homeButton = TextBox(tileSize//4, tileSize//4, font=selectionFont,fontSize=26, text="BACK", textColor=c.geT("BLACK"))
+homeButton = TextBox(const.TILE_SIZE//4, const.TILE_SIZE//4, font=const.SELECTION_FONT,fontSize=26, text="BACK", textColor=c.geT("BLACK"))
 homeButton.setBoxColor(selectionBackground)
 homeButton.setOutline(True, 5)
 homeButton.selectable(True)
 buttonList.append(homeButton)
 
 #How to play button
-howToPlayButton = TextBox(windowWidth - 150, tileSize//4, font=selectionFont,fontSize=26, text="HOW TO PLAY", textColor=c.geT("BLACK"))
+howToPlayButton = TextBox(const.WINDOW_WIDTH - 150, const.TILE_SIZE//4, font=const.SELECTION_FONT,fontSize=26, text="HOW TO PLAY", textColor=c.geT("BLACK"))
 howToPlayButton.setBoxColor(selectionBackground)
 howToPlayButton.setOutline(True, 5)
 howToPlayButton.selectable(True)
 buttonList.append(howToPlayButton)
 
-playButton = TextBox(windowWidth//2-84, 95, font=selectionFont,fontSize=52, text="PLAY", textColor=c.geT("BLACK"))
+playButton = TextBox(const.WINDOW_WIDTH//2-84, 95, font=const.SELECTION_FONT,fontSize=52, text="PLAY", textColor=c.geT("BLACK"))
 playButton.setBoxColor(selectionBackground)
 playButton.setOutline(True, 5)
 playButton.selectable(True)
@@ -3169,8 +3030,6 @@ turretList = [Tempest(Tank(0,0,None, "Default"), None, "Tempest"), Silencer(Tank
 
 hullList = [Panther(0, 0, None, "Panther"), Cicada(0, 0, None, "Cicada"), Gater(0, 0, None, "Gater"), Bonsai(0, 0, None, "Bonsai"),
             Fossil(0, 0, None, "Fossil")]
-
-DifficultyType = 0
 
 turretListLength = len(turretList)
 hullListLength = len(hullList)
@@ -3338,12 +3197,12 @@ buttonList.append(rArrowP2Colour2)
 playerX = 100
 playerY = 100
 
-textP1 = TextBox(playerX, playerY, font=selectionFont,fontSize=38, text="PLAYER 1", textColor=c.geT("BLACK"))
+textP1 = TextBox(playerX, playerY, font=const.SELECTION_FONT,fontSize=38, text="PLAYER 1", textColor=c.geT("BLACK"))
 textP1.setBoxColor(selectionBackground)
 textP1.setOutline(True, outlineWidth = 5)
 buttonList.append(textP1)
 
-textP2 = TextBox(windowWidth - playerX*2.5, playerY, font=selectionFont,fontSize=38, text="PLAYER 2", textColor=c.geT("BLACK"))
+textP2 = TextBox(const.WINDOW_WIDTH - playerX*2.5, playerY, font=const.SELECTION_FONT,fontSize=38, text="PLAYER 2", textColor=c.geT("BLACK"))
 textP2.setBoxColor(selectionBackground)
 textP2.setOutline(True, outlineWidth = 5)
 buttonList.append(textP2)
@@ -3361,7 +3220,7 @@ rectX = 280
 rectY = 25
 barFontSize = 36
 
-speedText = TextBox(50, speedBarX, font=selectionFont,fontSize=barFontSize, text="SPEED", textColor=c.geT("BLACK"))
+speedText = TextBox(50, speedBarX, font=const.SELECTION_FONT,fontSize=barFontSize, text="SPEED", textColor=c.geT("BLACK"))
 speedText.setPaddingHeight(0)
 speedText.setPaddingWidth(0)
 speedText.setCharacterPad(7)
@@ -3369,7 +3228,7 @@ speedText.setBoxColor(selectionBackground)
 speedText.setText("SPEED", 'right')
 buttonList.append(speedText)
 
-healthText = TextBox(42, healthBarX, font=selectionFont,fontSize=barFontSize, text="Health", textColor=c.geT("BLACK"))
+healthText = TextBox(42, healthBarX, font=const.SELECTION_FONT,fontSize=barFontSize, text="Health", textColor=c.geT("BLACK"))
 healthText.setPaddingHeight(0)
 healthText.setPaddingWidth(0)
 healthText.setCharacterPad(7)
@@ -3377,7 +3236,7 @@ healthText.setBoxColor(selectionBackground)
 healthText.setText("HEALTH", "right")
 buttonList.append(healthText)
 
-damageBar = TextBox(31, damageBarX, font=selectionFont,fontSize=barFontSize, text="Damage", textColor=c.geT("BLACK"))
+damageBar = TextBox(31, damageBarX, font=const.SELECTION_FONT,fontSize=barFontSize, text="Damage", textColor=c.geT("BLACK"))
 damageBar.setPaddingHeight(0)
 damageBar.setPaddingWidth(0)
 damageBar.setCharacterPad(7)
@@ -3385,7 +3244,7 @@ damageBar.setBoxColor(selectionBackground)
 damageBar.setText("DAMAGE", "right")
 buttonList.append(damageBar)
 
-reloadBar = TextBox(37, reloadBarX, font=selectionFont,fontSize=barFontSize, text="Reload", textColor=c.geT("BLACK"))
+reloadBar = TextBox(37, reloadBarX, font=const.SELECTION_FONT,fontSize=barFontSize, text="Reload", textColor=c.geT("BLACK"))
 reloadBar.setPaddingHeight(0)
 reloadBar.setPaddingWidth(0)
 reloadBar.setCharacterPad(7)
@@ -3393,7 +3252,7 @@ reloadBar.setBoxColor(selectionBackground)
 reloadBar.setText("RELOAD", "right")
 buttonList.append(reloadBar)
 
-speedText2 = TextBox(650, speedBarX, font=selectionFont,fontSize=barFontSize, text="Speed", textColor=c.geT("BLACK"))
+speedText2 = TextBox(650, speedBarX, font=const.SELECTION_FONT,fontSize=barFontSize, text="Speed", textColor=c.geT("BLACK"))
 speedText2.setPaddingHeight(0)
 speedText2.setPaddingWidth(0)
 speedText2.setCharacterPad(7)
@@ -3401,7 +3260,7 @@ speedText2.setBoxColor(selectionBackground)
 speedText2.setText("SPEED", "left")
 buttonList.append(speedText2)
 
-healthText2 = TextBox(650, healthBarX, font=selectionFont,fontSize=barFontSize, text="Health", textColor=c.geT("BLACK"))
+healthText2 = TextBox(650, healthBarX, font=const.SELECTION_FONT,fontSize=barFontSize, text="Health", textColor=c.geT("BLACK"))
 healthText2.setPaddingHeight(0)
 healthText2.setPaddingWidth(0)
 healthText2.setCharacterPad(7)
@@ -3409,7 +3268,7 @@ healthText2.setBoxColor(selectionBackground)
 healthText2.setText("HEALTH", "left")
 buttonList.append(healthText2)
 
-damageBar2 = TextBox(650, damageBarX, font=selectionFont,fontSize=barFontSize, text="Damage", textColor=c.geT("BLACK"))
+damageBar2 = TextBox(650, damageBarX, font=const.SELECTION_FONT,fontSize=barFontSize, text="Damage", textColor=c.geT("BLACK"))
 damageBar2.setPaddingHeight(0)
 damageBar2.setPaddingWidth(0)
 damageBar2.setCharacterPad(7)
@@ -3417,7 +3276,7 @@ damageBar2.setBoxColor(selectionBackground)
 damageBar2.setText("DAMAGE", "left")
 buttonList.append(damageBar2)
 
-reloadBar2 = TextBox(650, reloadBarX, font=selectionFont,fontSize=barFontSize, text="Reload", textColor=c.geT("BLACK"))
+reloadBar2 = TextBox(650, reloadBarX, font=const.SELECTION_FONT,fontSize=barFontSize, text="Reload", textColor=c.geT("BLACK"))
 reloadBar2.setPaddingHeight(0)
 reloadBar2.setPaddingWidth(0)
 reloadBar2.setCharacterPad(7)
@@ -3511,35 +3370,35 @@ def checkButtons(mouse):
     if howToPlayButton.buttonClick(mouse):
         print("How to Play")
         gameMode = GameMode.info # Switch to the info screen
-        infoScreen()
+        infoScreen.draw(screen)
 
 def checkHomeButtons(mouse):
     # This function checks all the buttons of the mouse in the home screen
     # Inputs: Mouse: The current location of the mouse
     # Outputs: None
-    global gameMode, DifficultyType, pageNum
+    global gameMode, difficultyType, pageNum
 
     if HomeButton1.buttonClick(mouse):
-        DifficultyType = 1 + pageNum
+        difficultyType = DifficultyType.from_index(1 + pageNum)
         setUpPlayers()
         gameMode=GameMode.play
         #Switch the the play screen
         print("One Player Easy")
         constantPlayGame()
     if HomeButton2.buttonClick(mouse):
-        DifficultyType = 2 + pageNum
+        difficultyType = DifficultyType.from_index(2 + pageNum)
+        print("One Player Hard")
+        gameMode = GameMode.selection
+        constantSelectionScreen()
+    if HomeButton3.buttonClick(mouse):
+        difficultyType = DifficultyType.from_index(3 + pageNum)
         setUpPlayers()
         gameMode=GameMode.play
         #Switch the the play screen
         print("Two Player Easy")
         constantPlayGame()
-    if HomeButton3.buttonClick(mouse):
-        DifficultyType = 3 + pageNum
-        print("One Player Hard")
-        gameMode = GameMode.selection
-        constantSelectionScreen()
     if HomeButton4.buttonClick(mouse):
-        DifficultyType = 4 + pageNum
+        difficultyType = DifficultyType.from_index(4 + pageNum)
         print("Two Player Hard")
         gameMode = GameMode.selection
         constantSelectionScreen()
@@ -3647,7 +3506,7 @@ def selectionScreen():
     originalTankImage2 = pygame.image.load(tankPath2).convert_alpha()
     tankImage2 = pygame.transform.scale(originalTankImage2, (20*4, 13*4))
     tankImage2 = pygame.transform.flip(tankImage2, True, False) # Flipped    
-    screen.blit(tankImage2, (windowWidth - hullImageX - 4 * 20, hullImageY))
+    screen.blit(tankImage2, (const.WINDOW_WIDTH - hullImageX - 4 * 20, hullImageY))
 
     gunPath2 = os.path.join(currentDir, 'Sprites', turretList[p2I].getGunName() + str(p2K+1) + '.png')
     originalGunImage2 = pygame.image.load(gunPath2).convert_alpha()
@@ -3656,27 +3515,14 @@ def selectionScreen():
 
     gunImage2 = pygame.transform.scale(originalGunImage2, (15*gunScale, 15*gunScale))
     gunImage2 = pygame.transform.flip(gunImage2, True, False) # Flipped
-    screen.blit(gunImage2, (windowWidth - gunImageX - gunScale * 15 - (centerX - gX)*gunScale, gunImageY + centerY*gunScale - 6*gunScale))
+    screen.blit(gunImage2, (const.WINDOW_WIDTH - gunImageX - gunScale * 15 - (centerX - gX)*gunScale, gunImageY + centerY*gunScale - 6*gunScale))
 
-def creditDraw():
-    # Draw the credits screen
-    # Inputs: None
-    # Outputs: None
-    #Draw a box
-    global mazeX, mazeY, windowWidth, windowHeight
-    pauseWidth = windowWidth - mazeX * 2
-    pauseHeight = windowHeight - mazeY * 2
-    pygame.draw.rect(screen, (240, 240, 240), [mazeX, mazeY, pauseWidth, pauseHeight])
-    pygame.draw.rect(screen, (0,0,0), [mazeX, mazeY, pauseWidth, pauseHeight], 5)
-    creditsBackButton.draw(screen = screen, outline = True)
-    creditsTitle.draw(screen = screen, outline= True)
-    disclaimer.draw(screen = screen, outline = True)
-    
-    startY = 200
-    gap = 50
-    for c in creditsurfaces:
-        screen.blit(c, (mazeX + 50, startY))
-        startY += gap
+# UI Screens
+creditsScreen = CreditScreen()
+settingsScreen = SettingsScreen()
+pauseScreen = PauseScreen()
+infoScreen = InfoScreen()
+homeScreen = HomeScreen()
 
 #Menu screen
 homeButtonList = []
@@ -3690,11 +3536,8 @@ tankPath = os.path.join(currentDir, './Assets/tank_menu_logo.png')
 originalTankImage = pygame.image.load(tankPath).convert_alpha()
 originalTankImage = pygame.transform.scale(originalTankImage, (originalTankImage.get_size()[0]/2.25, originalTankImage.get_size()[1]//2.25))
 
-# Construct the correct path for the logo image
-logo_path = os.path.join(currentDir, "Assets", "logo.png")
-
 # Load the logo image
-lpng = pygame.image.load(logo_path).convert_alpha()
+lpng = pygame.image.load(os.path.join(currentDir, "Assets", "logo.png")).convert_alpha()
 lpng = pygame.transform.scale(lpng, (lpng.get_size()[0]//15, lpng.get_size()[1]//15))
 
 # number to keep track of which page we are on
@@ -3725,9 +3568,9 @@ homeButtonList.append(settingsButton)
 homeButtonList.append(quitButtonHome)
 
 # Define title text properties
-titleText = fontDictionary["titleFont"].render('FLANKI', True, (0, 0, 0))  # Render the title text
+titleText = const.FONT_DICTIONARY["titleFont"].render('FLANKI', True, (0, 0, 0))  # Render the title text
 
-pauseButton = Button(bg ,bg, windowWidth-tileSize*3, tileSize//5,tileSize*2,tileSize//2, "PAUSE", c.geT("BLACK"), 20, c.geT("OFF_WHITE"))
+pauseButton = Button(bg ,bg, const.WINDOW_WIDTH-const.TILE_SIZE*3, const.TILE_SIZE//5,const.TILE_SIZE*2,const.TILE_SIZE//2, "PAUSE", c.geT("BLACK"), 20, c.geT("OFF_WHITE"))
 pauseButton.setOutline(True, 2)
 
 # Controls for the first tank
@@ -3801,13 +3644,14 @@ pygame.mixer.set_num_channels(32)
 
 for sound in soundDictionary:
     soundDictionary[sound].set_volume(volume[sound])
+
 global spawnpoint
-spawnTank1 = [tileList[spawnpoint[0]-1].x + tileSize//2, tileList[spawnpoint[0]-1].y + tileSize//2]
-spawnTank2 = [tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2]
+spawnTank1 = [tileList[spawnpoint[0]-1].x + const.TILE_SIZE//2, tileList[spawnpoint[0]-1].y + const.TILE_SIZE//2]
+spawnTank2 = [tileList[spawnpoint[1]-1].x + const.TILE_SIZE//2, tileList[spawnpoint[1]-1].y + const.TILE_SIZE//2]
 global tank1Dead, tank2Dead
 tank1Dead = False
 tank2Dead = False
-currentTargetPackage = (spawnpoint[1]-1, tileList[spawnpoint[1]-1].x + tileSize//2, tileList[spawnpoint[1]-1].y + tileSize//2)
+currentTargetPackage = (spawnpoint[1]-1, tileList[spawnpoint[1]-1].x + const.TILE_SIZE//2, tileList[spawnpoint[1]-1].y + const.TILE_SIZE//2)
 player1PackageTank = [spawnTank1[0], spawnTank1[1], controlsTank1, p1TankName]
 player1PackageGun = [controlsTank1, p1GunName]
 player2PackageTank = [spawnTank2[0], spawnTank2[1], controlsTank2, p2TankName]
@@ -3817,11 +3661,9 @@ allSprites = pygame.sprite.Group()
 bulletSprites = pygame.sprite.Group()
 
 constantHomeScreen()
-totalfps = 0
-fpsCounter = 0
 
 def main():
-    global done, gameMode
+    global done, gameMode, iIndex
     #Main loop
     while not done:
         # Early define probably not a good idea, but will help with reducing function calls
@@ -3832,20 +3674,7 @@ def main():
                 done = True
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse = pygame.mouse.get_pos() # Update on button press
-                if event.button != 1:
-                    #if it is right click
-                    if event.button == 3 and gameMode == GameMode.play:
-                        #if the mosue is within the maze, make the tile the target
-                        for tile in tileList:
-                            if DifficultyType == 1 or DifficultyType == 3:
-                                if tile.isWithin(): # If the mouse is within the tile
-                                    (targetx, targety) = tile.getCenter()
-                                    currentTargetPackage = (tile.getIndex(), targetx, targety)
-                                    # if we have the AI we need to update the target
-                                    # We have the AI
-                                    tank1.setAim(currentTargetPackage)
-                                    break
-                elif event.button == 1:
+                if event.button == 1:
                     #If it is left click
                     #If we are in the play screen
                     if gameMode == GameMode.play:
@@ -3856,28 +3685,21 @@ def main():
                             gameMode = GameMode.pause
                     elif gameMode == GameMode.pause:
                         #We are paused
-                        # set the sounds to 60%
-                        
-                        if (unPause.getCorners()[0] <= mouse[0] <= unPause.getCorners()[2] and
-                            unPause.getCorners()[1] <= mouse[1] <= unPause.getCorners()[3]): #If we click the return to game button
+                        if pauseScreen.isWithinUnpauseButton(mouse):
                             constantPlayGame()
                             gameMode = GameMode.play # Return to game if button was clicked
-                        if (home.getCorners()[0] <= mouse[0] <= home.getCorners()[2] and
-                            home.getCorners()[1] <= mouse[1] <= home.getCorners()[3]): # Home button
+                        if pauseScreen.isWithinHomeButton(mouse):
                             for i in range(3, pygame.mixer.get_num_channels()): # Stop all sounds
                                 pygame.mixer.Channel(i).stop()
                             constantHomeScreen()
                             gameMode = GameMode.home
-                        if (quitButton.getCorners()[0] <= mouse[0] <= quitButton.getCorners()[2]and
-                            quitButton.getCorners()[1] <= mouse[1] <= quitButton.getCorners()[3]): # If we hit the quit butotn
+                        if pauseScreen.isWithinQuitButton(mouse):
                             print("Quitting the game")
                             done = True # We quit the appplication
-                        if (mute.getCorners()[0] <= mouse[0] <= mute.getCorners()[2] and
-                            mute.getCorners()[1] <= mouse[1] <= mute.getCorners()[3]): # If we hit the mute button
-                            mute.buttonClick()
-                        if (sfx.getCorners()[0] <= mouse[0] <= sfx.getCorners()[2] and 
-                            sfx.getCorners()[1] <= mouse[1] <= sfx.getCorners()[3]): # If we hit the sfx button
-                            sfx.buttonClick()
+                        if pauseScreen.isWithinMuteButton(mouse):
+                            pauseScreen.volume.mute.buttonClick()
+                        if pauseScreen.isWithinSFXButton(mouse):
+                            pauseScreen.volume.sfx.buttonClick()
                         if pauseButton.buttonClick(mouse):
                             constantPlayGame()
                             gameMode = GameMode.play
@@ -3899,46 +3721,35 @@ def main():
                                 pygame.mixer.Channel(i).stop()
                             gameMode = GameMode.pause
                     elif gameMode == GameMode.credit:
-                        if (creditsBackButton.getCorners()[0] <= mouse[0] <= creditsBackButton.getCorners()[2] and 
-                            creditsBackButton.getCorners()[1] <= mouse[1] <= creditsBackButton.getCorners()[3]): # If we hit the sfx button
+                        if creditsScreen.isWithinBackButton(mouse):
                             print("Returning to the settings menu")
-                            gameMode = GameMode.pause
+                            gameMode = GameMode.settings
                     elif gameMode == GameMode.info:
                         # L/R/ buttons
-                        if (infoBackButton.getCorners()[0] <= mouse[0] <= infoBackButton.getCorners()[2] and
-                            infoBackButton.getCorners()[1] <= mouse[1] <= infoBackButton.getCorners()[3]):
+
+                        if infoScreen.isWithinBackButton(mouse):
                             gameMode = GameMode.selection
                             constantSelectionScreen()
-                        if (infoLArrow.buttonClick(mouse)):
+                        if infoScreen.isWithinLArrowButton(mouse):
                             # Update the list
-                            iIndex = (iIndex - 1) % len(iList)
-                            iBox.setText(iList[iIndex])
-                        if (infoRArrow.buttonClick(mouse)):
+                            infoScreen.updateBox(-1)
+                        if infoScreen.isWithinRArrowButton(mouse):
                             # Update the list
-                            iIndex = (iIndex + 1) % len(iList)
-                            iBox.setText(iList[iIndex])
+                            infoScreen.updateBox(1)
                     elif gameMode == GameMode.settings:
-                        #We are paused
-                        if (creditButton.getCorners()[0] <= mouse[0] <= creditButton.getCorners()[2] and
-                            creditButton.getCorners()[1] <= mouse[1] <= creditButton.getCorners()[3]): #If we click the return to game button
-                            creditDraw()
+                        if settingsScreen.isWithinCreditButton(mouse):
+                            creditsScreen.draw(screen = screen)
                             gameMode = GameMode.credit
-                        if (home.getCorners()[0] <= mouse[0] <= home.getCorners()[2] and
-                            home.getCorners()[1] <= mouse[1] <= home.getCorners()[3]): # Home button
-                            for i in range(3, pygame.mixer.get_num_channels()): # Stop all sounds
-                                pygame.mixer.Channel(i).stop()
-                            constantHomeScreen()
+                        if settingsScreen.isWithinHomeButton(mouse):
                             gameMode = GameMode.home
-                        if (quitButton.getCorners()[0] <= mouse[0] <= quitButton.getCorners()[2]and
-                            quitButton.getCorners()[1] <= mouse[1] <= quitButton.getCorners()[3]): # If we hit the quit butotn
+                            constantHomeScreen()
+                        if settingsScreen.isWithinQuitButton(mouse):
                             print("Quitting the game")
                             done = True # We quit the appplication
-                        if (mute.getCorners()[0] <= mouse[0] <= mute.getCorners()[2] and
-                            mute.getCorners()[1] <= mouse[1] <= mute.getCorners()[3]): # If we hit the mute button
-                            mute.buttonClick()
-                        if (sfx.getCorners()[0] <= mouse[0] <= sfx.getCorners()[2] and 
-                            sfx.getCorners()[1] <= mouse[1] <= sfx.getCorners()[3]): # If we hit the sfx button
-                            sfx.buttonClick()
+                        if settingsScreen.isWithinMuteButton(mouse):
+                            settingsScreen.volume.mute.buttonClick()
+                        if settingsScreen.isWithinSFXButton(mouse):
+                            settingsScreen.volume.sfx.buttonClick()
 
             elif event.type == pygame.KEYDOWN: # Any key pressed
                 if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
@@ -3960,19 +3771,19 @@ def main():
                     #Calculate and track the average FPS
                     print("The FPS is: ", clock.get_fps())
                 if event.key == pygame.K_m:
-                    mute.mute()
-                    sfx.mute()
+                    settingsScreen.volume.mute.mute()
+                    settingsScreen.volume.sfx.mute()
                     for sound in soundDictionary:
-                        soundDictionary[sound].set_volume(volume[sound] * sfx.getValue())
+                        soundDictionary[sound].set_volume(volume[sound] * settingsScreen.volume.sfx.getValue())
         if gameMode == GameMode.play:
             playGame() # Play the game
         elif gameMode == GameMode.pause:
-            pauseScreen(0) # Pause screen
+            pauseScreen.draw(screen = screen) # Pause screen
             if mouse[0] and pygame.mouse.get_pressed()[0]:
-                mute.updateSlider(mouse[0], mouse[1])
-                sfx.updateSlider(mouse[0], mouse[1])
+                pauseScreen.updateMute(mouse)
+                pauseScreen.updateSFX(mouse)
                 for sound in soundDictionary:
-                    soundDictionary[sound].set_volume(volume[sound] * sfx.getValue())
+                    soundDictionary[sound].set_volume(volume[sound] * pauseScreen.getSFXValue())
         elif gameMode == GameMode.selection:
             screen.fill(selectionBackground) # This is the first line when drawing a new frame
             for button in buttonList:
@@ -3980,32 +3791,35 @@ def main():
                 button.draw(screen, outline = False)
             selectionScreen()
         elif gameMode == GameMode.home:
-            # Draw the tank image
-            screen.blit(originalTankImage, (windowWidth//2 - originalTankImage.get_width()//2, windowHeight//2 - originalTankImage.get_height()//2))  # Centered horizontally
+            # # Draw the tank image
+            screen.blit(originalTankImage, (const.WINDOW_WIDTH//2 - originalTankImage.get_width()//2, const.WINDOW_HEIGHT//2 - originalTankImage.get_height()//2))  # Centered horizontally
 
             # Draw the title text
-            screen.blit(titleText, (windowWidth // 2 - titleText.get_width() // 2, 110))  # Centered horizontally, 50 pixels from top
+            screen.blit(titleText, (const.WINDOW_WIDTH // 2 - titleText.get_width() // 2, 110))  # Centered horizontally, 50 pixels from top
 
             # Handle hover effect and draw buttons
             for button in homeButtonList:
                 button.update_display(mouse)
                 button.draw(screen, outline=True)
+            homeScreen.draw(screen, mouse) # we need the mouse argument in order to update the hover effect
+
         elif gameMode == GameMode.credit:
             pass # Do nothing
         elif gameMode == GameMode.info:
-            infoScreen() # Info screen
+            infoScreen.draw(screen) # Info screen
             # we need to update the info screen if the user changes the input # however there may be the case where we don't need to do it and only update once ever click
         elif gameMode == GameMode.settings:
-            pauseScreen() # Pause screen
+            # pauseScreen() # Pause screen
+            settingsScreen.draw(screen = screen)
             if mouse[0] and pygame.mouse.get_pressed()[0]:
-                mute.updateSlider(mouse[0], mouse[1])
-                sfx.updateSlider(mouse[0], mouse[1])
+                settingsScreen.updateMute(mouse)
+                settingsScreen.updateSFX(mouse)
                 for sound in soundDictionary:
-                    soundDictionary[sound].set_volume(volume[sound] * sfx.getValue())
+                    soundDictionary[sound].set_volume(volume[sound] * settingsScreen.getSFXValue())
         else:
             screen.fill(c.geT("WHITE")) # Errornous state
         clock.tick(240) # Set the FPS
-        mixer.update(mute.getValue()) # Update the mixer
+        mixer.update(settingsScreen.getMuteValue()) # Update the mixer
         # print(spawnTank1, spawnTank2)
         pygame.display.flip()# Update the screen
 
