@@ -5,13 +5,13 @@ import time
 import os, sys
 from ColorDictionary import ColourDictionary as c # colors
 from enum import Enum
-from UIUtility import Button, ButtonSlider, TextBox
+from UIUtility import Button, TextBox
 from music import Music
 import copy
 from tanks import *
 from Screen import *
 import constants as const
-
+from timer import UpDownTimer
 # Safety Checks
 if getattr(sys, 'frozen', False):  # Running as an .exe
     tempList = os.listdir(os.path.join(sys._MEIPASS, 'Sprites'))
@@ -93,79 +93,7 @@ timerClock = 0
 #init
 pygame.init()
 
-
-# setup font dictionary
-if getattr(sys, 'frozen', False):  # Running as an .exe
-    base_path = sys._MEIPASS
-else:  # Running as a .py script
-    base_path = os.path.dirname(os.path.abspath(__file__))
-font_path = os.path.join(base_path, 'fonts', 'LondrinaSolid-Regular.otf')
-
 #Classes
-class UpDownTimer():
-    def __init__(self, duration = 0, up = True):
-        self.duration = duration * 1e9 # duration in nano seconds
-        self.startTime = time.time_ns()
-        self.timer = self.startTime
-        self.up = up
-        self.expired = False
-        self.paused = False
-        self.pausedTime = 0
-
-    def tick(self):
-        if self.paused:
-            return # exit early
-        if self.isExpired():
-            return # exit early
-        # we are counting up
-        if self.timer < self.duration + self.startTime:
-            self.timer = time.time_ns()
-        if self.timer >= self.duration + self.startTime:
-            self.timer = self.duration + self.startTime
-            self.expired = True
-            
-    def reset(self):
-        self.timer = time.time_ns()
-        self.startTime = time.time_ns()
-        self.expired = False
-        self.paused = False
-    
-    def setDirection(self, up):
-        # up is True and down is False
-        self.up = up
-        self.startTime = time.time_ns()
-
-    def setDuration(self, duration):
-        # set the duration of the timer in seconds
-        self.duration = duration * 1e9
-        self.startTime = time.time_ns()
-
-    def start(self):
-        self.startTime = time.time_ns()
-        self.timer = self.startTime if self.up else self.duration
-        self.expired = False
-
-    def pause(self):
-        self.pausedTime = time.time_ns()
-        self.paused = True
-
-    def resume(self):
-        self.paused = False
-        cTime = time.time_ns()
-        self.timer -= (cTime - self.pausedTime) # capture
-        self.startTime += (cTime - self.pausedTime)
-
-    def getElapsed(self):
-        return self.timer - self.startTime if self.up else self.duration - self.timer + self.startTime
-
-    def getElapsedAsSeconds(self):
-        return self.getElapsed()/1e9
-
-    def isExpired(self):
-        return self.expired
-
-    def getTime(self):
-        return int(self.getElapsed()//1e9)
 
 class Gun(pygame.sprite.Sprite):
 
@@ -1364,8 +1292,7 @@ class Explosion(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (x, y)
         self.lastUpdate = pygame.time.get_ticks()
-        global animationCool
-        self.animationCooldown = animationCool
+        self.animationCooldown = 12
 
     def getImage(self, sheet, frame, width, height, scale):
         # This function will use the spritesheet to get the respective image from the sprite sheet
@@ -2402,7 +2329,6 @@ def setUpPlayers():
     setUpTank1(difficultyType)
     setUpTank2(difficultyType)
 
-
     # setup the tanks
     match difficultyType:
         case DifficultyType.OnePlayerYard:
@@ -2455,8 +2381,7 @@ def constantHomeScreen():
     #This funciton handles the constant elements of the home screen
     # Inputs: None
     # Outputs: None
-    screen.fill(bg) # This is the first line when drawing a new frame
-    screen.blit(lpng, (const.WINDOW_WIDTH // 2 - lpng.get_width() // 2, 15))
+    homeScreen.draw(screen, pygame.mouse.get_pos())
     print("Switching to lobby music")
     mixer.crossfade('lobby')
 
@@ -2795,12 +2720,12 @@ def playGame():
 
     currentTime = time.time()
     deltaTime = currentTime - lastUpdateTime
-    if deltaTime >= 1/TPS:
+    if deltaTime >= 1/const.TPS:
         #Update the location of the corners
         if not tank1Dead:
             tank1.updateCorners()
-            tank1.setDelta(TPS)
-            gun1.setDelta(TPS)
+            tank1.setDelta(const.TPS)
+            gun1.setDelta(const.TPS)
         else:
             if difficultyType.respawn:
                 # easy
@@ -2811,8 +2736,8 @@ def playGame():
 
         if not tank2Dead:
             tank2.updateCorners()
-            tank2.setDelta(TPS)
-            gun2.setDelta(TPS)
+            tank2.setDelta(const.TPS)
+            gun2.setDelta(const.TPS)
         else:
             if difficultyType.respawn:
                 setUpTank2(difficultyType)
@@ -2820,7 +2745,7 @@ def playGame():
                 allSprites.add(tank2, gun2) # Add the new sprites
             
         for bullet in bulletSprites:
-            bullet.setDelta(TPS)
+            bullet.setDelta(const.TPS)
 
         #Fixing tank movement
         # don't update the bullets if the game is over
@@ -2914,15 +2839,9 @@ mixer.play()
 pygame.display.set_caption("Flanki") # Name the window
 clock = pygame.time.Clock() # Start the clock
 
-initialStartTime = pygame.time.get_ticks()
-soundPlayed = False
-global animationCool
-animationCool = 12
-
 global explosionGroup
 explosionGroup = pygame.sprite.Group() #All the explosions
 
-resetFlag = True
 systemTime = 0
 cooldownTimer = False
 
@@ -2932,10 +2851,6 @@ global gameOverFlag
 gameOverFlag = False
 #Constants
 done = False
-const.WINDOW_WIDTH = 800
-const.WINDOW_HEIGHT = 600
-
-TPS = 30 #Ticks per second
 
 global currentTime, deltaTime, lastUpdateTime
 currentTime = 0
@@ -3039,7 +2954,6 @@ gunColors = []
 
 treadsp1 = []
 treadsp2 = []
-treadslen = 10
 
 # Load all the images
 if getattr(sys, 'frozen', False):  # Running as an .exe
@@ -3372,56 +3286,6 @@ def checkButtons(mouse):
         gameMode = GameMode.info # Switch to the info screen
         infoScreen.draw(screen)
 
-def checkHomeButtons(mouse):
-    # This function checks all the buttons of the mouse in the home screen
-    # Inputs: Mouse: The current location of the mouse
-    # Outputs: None
-    global gameMode, difficultyType, pageNum
-
-    if HomeButton1.buttonClick(mouse):
-        difficultyType = DifficultyType.from_index(1 + pageNum)
-        setUpPlayers()
-        gameMode=GameMode.play
-        #Switch the the play screen
-        print("One Player Easy")
-        constantPlayGame()
-    if HomeButton2.buttonClick(mouse):
-        difficultyType = DifficultyType.from_index(2 + pageNum)
-        print("One Player Hard")
-        gameMode = GameMode.selection
-        constantSelectionScreen()
-    if HomeButton3.buttonClick(mouse):
-        difficultyType = DifficultyType.from_index(3 + pageNum)
-        setUpPlayers()
-        gameMode=GameMode.play
-        #Switch the the play screen
-        print("Two Player Easy")
-        constantPlayGame()
-    if HomeButton4.buttonClick(mouse):
-        difficultyType = DifficultyType.from_index(4 + pageNum)
-        print("Two Player Hard")
-        gameMode = GameMode.selection
-        constantSelectionScreen()
-    if homeLeftButton.buttonClick(mouse):
-        pageNum = (pageNum - 4) % len(homeButtonNameArray)
-        HomeButton1.setText(homeButtonNameArray[(pageNum) % len(homeButtonNameArray)])
-        HomeButton2.setText(homeButtonNameArray[(pageNum + 1) % len(homeButtonNameArray)])
-        HomeButton3.setText(homeButtonNameArray[(pageNum + 2) % len(homeButtonNameArray)])
-        HomeButton4.setText(homeButtonNameArray[(pageNum + 3) % len(homeButtonNameArray)])
-    if homeRightButton.buttonClick(mouse):
-        pageNum = (pageNum + 4) % len(homeButtonNameArray)
-        HomeButton1.setText(homeButtonNameArray[(pageNum) % len(homeButtonNameArray)])
-        HomeButton2.setText(homeButtonNameArray[(pageNum + 1) % len(homeButtonNameArray)])
-        HomeButton3.setText(homeButtonNameArray[(pageNum + 2) % len(homeButtonNameArray)])
-        HomeButton4.setText(homeButtonNameArray[(pageNum + 3) % len(homeButtonNameArray)])
-
-    if settingsButton.buttonClick(mouse):
-        print("Settings")
-        gameMode = GameMode.settings
-    if quitButtonHome.buttonClick(mouse):
-        global done
-        done = True
-
 def selectionScreen():
     barBorder = 3
     
@@ -3527,48 +3391,9 @@ homeScreen = HomeScreen()
 #Menu screen
 homeButtonList = []
 
-# Load the tank image
-if getattr(sys, 'frozen', False):  # Running as an .exe
-    currentDir = sys._MEIPASS
-else:  # Running as a .py script
-    currentDir = os.path.dirname(os.path.abspath(__file__))
-tankPath = os.path.join(currentDir, './Assets/tank_menu_logo.png')
-originalTankImage = pygame.image.load(tankPath).convert_alpha()
-originalTankImage = pygame.transform.scale(originalTankImage, (originalTankImage.get_size()[0]/2.25, originalTankImage.get_size()[1]//2.25))
-
-# Load the logo image
-lpng = pygame.image.load(os.path.join(currentDir, "Assets", "logo.png")).convert_alpha()
-lpng = pygame.transform.scale(lpng, (lpng.get_size()[0]//15, lpng.get_size()[1]//15))
-
 # number to keep track of which page we are on
 global pageNum
 pageNum = 0
-
-# homeButtonNameArray = ["1P Easy", "1P Hard", "2P Easy", "2P Hard"] #<!>
-homeButtonNameArray = ["1P Yard", "1P Scrapyard", "2P Yard", "2P Scrapyard", "1p Brawl", "1P DeathMatch", "2P Brawl", "2P DeathMatch"] #<!>
-
-# Create buttons with specified positions and text
-homeLeftButton = Button(c.geT("BLACK"), c.geT("BLACK"), 30, 490, 40, 80, '←', (255, 255, 255), 25, hoverColor=(100, 100, 255))
-HomeButton1 = Button(c.geT("BLACK"),c.geT("BLACK"), 106, 490, 120, 80, homeButtonNameArray[0], (255, 255, 255), 15, hoverColor=(100, 100, 255))
-HomeButton2 = Button(c.geT("BLACK"),c.geT("BLACK"), 262, 490, 120, 80, homeButtonNameArray[1], (255, 255, 255), 15, hoverColor=(100, 100, 255))
-HomeButton3 = Button(c.geT("BLACK"),c.geT("BLACK"), 418, 490, 120, 80, homeButtonNameArray[2], (255, 255, 255), 15, hoverColor=(100, 100, 255))
-HomeButton4 = Button(c.geT("BLACK"),c.geT("BLACK"), 574, 490, 120, 80, homeButtonNameArray[3], (255, 255, 255), 15, hoverColor=(100, 100, 255))
-homeRightButton = Button(c.geT("BLACK"), c.geT("BLACK"), 730, 490, 40, 80, '→', (255, 255, 255), 25, hoverColor=(100, 100, 255))
-
-quitButtonHome = Button(c.geT("BLACK"), c.geT("BLACK"), 30, 30, 140, 80, 'Quit', (255, 255, 255), 25, hoverColor=(100, 100, 255))
-settingsButton = Button(c.geT("BLACK"), c.geT("BLACK"), 570, 30, 210, 80, 'Settings', (255, 255, 255), 25, hoverColor=(100, 100, 255))
-
-homeButtonList.append(homeLeftButton)
-homeButtonList.append(HomeButton1)
-homeButtonList.append(HomeButton3)
-homeButtonList.append(HomeButton2)
-homeButtonList.append(HomeButton4)
-homeButtonList.append(homeRightButton)
-homeButtonList.append(settingsButton)
-homeButtonList.append(quitButtonHome)
-
-# Define title text properties
-titleText = const.FONT_DICTIONARY["titleFont"].render('FLANKI', True, (0, 0, 0))  # Render the title text
 
 pauseButton = Button(bg ,bg, const.WINDOW_WIDTH-const.TILE_SIZE*3, const.TILE_SIZE//5,const.TILE_SIZE*2,const.TILE_SIZE//2, "PAUSE", c.geT("BLACK"), 20, c.geT("OFF_WHITE"))
 pauseButton.setOutline(True, 2)
@@ -3703,16 +3528,67 @@ def main():
                         if pauseButton.buttonClick(mouse):
                             constantPlayGame()
                             gameMode = GameMode.play
+
                     elif gameMode == GameMode.selection: # Selection screen
                         textP1Turret.setText(turretList[p1I].getGunName())
                         textP2Turret.setText(turretList[p2I].getGunName())
                         textP1Hull.setText(hullList[p1J].getTankName())
                         textP2Hull.setText(hullList[p2J].getTankName())
                         checkButtons(mouse)
+
                     elif gameMode == GameMode.home: # Home screen
-                        checkHomeButtons(mouse)
-                        global p1Score, p2Score
+
+                        global p1Score, p2Score, difficultyType, pageNum
                         p1Score, p2Score = 0, 0 # reset the player scores
+
+                        if homeScreen.isWithinHomeButton1(mouse):
+                            difficultyType = DifficultyType.from_index(1 + pageNum)
+                            setUpPlayers()
+                            gameMode=GameMode.play
+                            #Switch the the play screen
+                            print("One Player Easy")
+                            constantPlayGame()
+
+                        if homeScreen.isWithinHomeButton2(mouse):
+                            difficultyType = DifficultyType.from_index(2 + pageNum)
+                            print("One Player Hard")
+                            gameMode = GameMode.selection
+                            constantSelectionScreen()
+
+                        if homeScreen.isWithinHomeButton3(mouse):
+                            difficultyType = DifficultyType.from_index(3 + pageNum)
+                            setUpPlayers()
+                            gameMode=GameMode.play
+                            #Switch the the play screen
+                            print("Two Player Easy")
+                            constantPlayGame()
+
+                        if homeScreen.isWithinHomeButton4(mouse):
+                            difficultyType = DifficultyType.from_index(4 + pageNum)
+                            print("Two Player Hard")
+                            gameMode = GameMode.selection
+                            constantSelectionScreen()
+
+                        if homeScreen.isWithinHomeLeftButton(mouse):
+                            pageNum = (pageNum - 4) % homeScreen.getLenNameArray()
+                            homeScreen.setTextHomeButton1(pageNum)
+                            homeScreen.setTextHomeButton2(pageNum + 1)
+                            homeScreen.setTextHomeButton3(pageNum + 2)
+                            homeScreen.setTextHomeButton4(pageNum + 3)
+
+                        if homeScreen.isWithinHomeRightButton(mouse):
+                            pageNum = (pageNum + 4) % homeScreen.getLenNameArray()
+                            homeScreen.setTextHomeButton1(pageNum)
+                            homeScreen.setTextHomeButton2(pageNum + 1)
+                            homeScreen.setTextHomeButton3(pageNum + 2)
+                            homeScreen.setTextHomeButton4(pageNum + 3)
+
+                        if homeScreen.isWithinSettingsButton(mouse):
+                            print("Settings")
+                            gameMode = GameMode.settings
+
+                        if homeScreen.isWithinQuitButton(mouse):
+                            done = True # We quit the appplication
 
                     elif gameMode == GameMode.play:
                         if pauseButton.buttonClick(mouse):
@@ -3720,63 +3596,79 @@ def main():
                             for i in range(3, pygame.mixer.get_num_channels()): # Stop all sounds
                                 pygame.mixer.Channel(i).stop()
                             gameMode = GameMode.pause
+
                     elif gameMode == GameMode.credit:
                         if creditsScreen.isWithinBackButton(mouse):
                             print("Returning to the settings menu")
                             gameMode = GameMode.settings
+
                     elif gameMode == GameMode.info:
                         # L/R/ buttons
-
                         if infoScreen.isWithinBackButton(mouse):
                             gameMode = GameMode.selection
                             constantSelectionScreen()
+
                         if infoScreen.isWithinLArrowButton(mouse):
                             # Update the list
                             infoScreen.updateBox(-1)
+
                         if infoScreen.isWithinRArrowButton(mouse):
                             # Update the list
                             infoScreen.updateBox(1)
+
                     elif gameMode == GameMode.settings:
                         if settingsScreen.isWithinCreditButton(mouse):
                             creditsScreen.draw(screen = screen)
                             gameMode = GameMode.credit
+
                         if settingsScreen.isWithinHomeButton(mouse):
                             gameMode = GameMode.home
                             constantHomeScreen()
+
                         if settingsScreen.isWithinQuitButton(mouse):
                             print("Quitting the game")
                             done = True # We quit the appplication
+
                         if settingsScreen.isWithinMuteButton(mouse):
                             settingsScreen.volume.mute.buttonClick()
+
                         if settingsScreen.isWithinSFXButton(mouse):
                             settingsScreen.volume.sfx.buttonClick()
 
             elif event.type == pygame.KEYDOWN: # Any key pressed
+
                 if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
                     done = True
+
                 if event.key == pygame.K_i:
                     print("The current mouse position is: ", mouse)
+
                 if event.key == pygame.K_p:
                     #Pause
                     if gameMode == GameMode.pause:
                         constantPlayGame()
                         gameMode = GameMode.play # Return to game if button was clicked
                         timer.resume()
+
                     elif gameMode == GameMode.play:
                         for i in range(3, pygame.mixer.get_num_channels()): # Stop all sounds
                             pygame.mixer.Channel(i).stop()
                         gameMode = GameMode.pause # Pause the game
                         timer.pause()
+
                 if event.key == pygame.K_f:
                     #Calculate and track the average FPS
                     print("The FPS is: ", clock.get_fps())
+
                 if event.key == pygame.K_m:
                     settingsScreen.volume.mute.mute()
                     settingsScreen.volume.sfx.mute()
                     for sound in soundDictionary:
                         soundDictionary[sound].set_volume(volume[sound] * settingsScreen.volume.sfx.getValue())
+
         if gameMode == GameMode.play:
             playGame() # Play the game
+
         elif gameMode == GameMode.pause:
             pauseScreen.draw(screen = screen) # Pause screen
             if mouse[0] and pygame.mouse.get_pressed()[0]:
@@ -3784,30 +3676,25 @@ def main():
                 pauseScreen.updateSFX(mouse)
                 for sound in soundDictionary:
                     soundDictionary[sound].set_volume(volume[sound] * pauseScreen.getSFXValue())
+
         elif gameMode == GameMode.selection:
             screen.fill(selectionBackground) # This is the first line when drawing a new frame
             for button in buttonList:
                 button.update_display(mouse)
                 button.draw(screen, outline = False)
             selectionScreen()
+
         elif gameMode == GameMode.home:
             # # Draw the tank image
-            screen.blit(originalTankImage, (const.WINDOW_WIDTH//2 - originalTankImage.get_width()//2, const.WINDOW_HEIGHT//2 - originalTankImage.get_height()//2))  # Centered horizontally
-
-            # Draw the title text
-            screen.blit(titleText, (const.WINDOW_WIDTH // 2 - titleText.get_width() // 2, 110))  # Centered horizontally, 50 pixels from top
-
-            # Handle hover effect and draw buttons
-            for button in homeButtonList:
-                button.update_display(mouse)
-                button.draw(screen, outline=True)
-            homeScreen.draw(screen, mouse) # we need the mouse argument in order to update the hover effect
+            homeScreen.draw(screen, mouse) # Home screen
 
         elif gameMode == GameMode.credit:
             pass # Do nothing
+
         elif gameMode == GameMode.info:
             infoScreen.draw(screen) # Info screen
             # we need to update the info screen if the user changes the input # however there may be the case where we don't need to do it and only update once ever click
+
         elif gameMode == GameMode.settings:
             # pauseScreen() # Pause screen
             settingsScreen.draw(screen = screen)
@@ -3816,8 +3703,10 @@ def main():
                 settingsScreen.updateSFX(mouse)
                 for sound in soundDictionary:
                     soundDictionary[sound].set_volume(volume[sound] * settingsScreen.getSFXValue())
+
         else:
             screen.fill(c.geT("WHITE")) # Errornous state
+
         clock.tick(240) # Set the FPS
         mixer.update(settingsScreen.getMuteValue()) # Update the mixer
         # print(spawnTank1, spawnTank2)
