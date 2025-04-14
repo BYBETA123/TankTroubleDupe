@@ -32,11 +32,9 @@ FONT_DICTIONARY = {"tileFont":pygame.font.SysFont('Calibri', 25, True, False),
                     "titleFont" : pygame.font.SysFont('Arial', 60),
                   }
 
-TITLE_TEXT = FONT_DICTIONARY["titleFont"].render('FLANKI', True, (0, 0, 0))  # Render the title text
 BACKGROUND_COLOR = c.geT('SOFT_WHITE')
 
-LOGO_PNG = pygame.image.load(os.path.join(BASE_PATH, "Assets", "logo.png")).convert_alpha()
-LOGO_PNG = pygame.transform.scale(LOGO_PNG, (LOGO_PNG.get_size()[0]//15, LOGO_PNG.get_size()[1]//15))
+SELECTION_BACKGROUND = c.geT('SOFT_WHITE')
 
-ORIGINAL_TANK_IMAGE = pygame.image.load(os.path.join(BASE_PATH, './Assets/tank_menu_logo.png')).convert_alpha()
-ORIGINAL_TANK_IMAGE = pygame.transform.scale(ORIGINAL_TANK_IMAGE, (ORIGINAL_TANK_IMAGE.get_size()[0]/2.25, ORIGINAL_TANK_IMAGE.get_size()[1]//2.25))
+MONO_FONT = 'Courier New'
+

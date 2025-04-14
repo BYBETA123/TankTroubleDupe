@@ -91,7 +91,7 @@ class Music:
                     self.channels[channel].set_volume(0)
             self.fadeTrack += 0.01
 
-            if self.fadeTrack >= 1:
+            if self.fadeTrack >= 1: # This might need to be altered to better suit the music bug
                 self.currentTrack = self.nextTrack
                 self.currentTrackString = self.nextTrackString
                 self.channels[self.nextTrackString].set_volume(self.volume[self.nextTrackString]*newVolumes) # Set the volume of the next track to 1
