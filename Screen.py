@@ -9,7 +9,7 @@ from UIUtility import Button, ButtonSlider, TextBox
 from music import Music
 import copy
 from tanks import *
-# from main import Tempest, Silencer, Watcher, Chamber, Huntsman, Judge, Sidewinder
+from Players import PlayerInformation
 import constants as const
 
 class SharedVolumeScreen:
@@ -19,7 +19,7 @@ class SharedVolumeScreen:
                         const.TILE_SIZE*2, 'mute', c.geT("WHITE"), c.geT("BLACK"), c.geT("RED"))
     sfx = ButtonSlider(c.geT("BLACK"), c.geT("BLUE"), const.MAZE_X * 2.5, const.WINDOW_HEIGHT/8*5 - const.TILE_SIZE, const.TILE_SIZE, const.TILE_SIZE,
                     const.TILE_SIZE*8, const.TILE_SIZE*2, 'SFX', c.geT("WHITE"), c.geT("BLACK"), c.geT("RED"))
-
+    
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(SharedVolumeScreen, cls).__new__(cls)
@@ -430,125 +430,99 @@ class SelectionScreen:
     playButton.selectable(True)
     buttonList.append(playButton)
 
-    buttonPrimary = c.geT("BLACK")
-    buttonSecondary = c.geT("WHITE")
-    buttonText = c.geT("WHITE")
-    optionText = c.geT("GREY")
-
-
-
-
-    ColorIndex = ["TANK_GREEN", "BURGUNDY", "ORANGE", "YELLOW", "SKY_BLUE", "LIGHT_BROWN", "DARK_LILAC", "BRIGHT_PINK"]
-    hullColors = ColorIndex
-    gunColors = ColorIndex # ???
-
-    #List indexes for player selection
-    #Turret index
-    p1I = 0
-    p2I = 0
-    #Hull index
-    p1J = 0
-    p2J = 0
-    #Colour index
-    p1K = 0
-    p2K = 1
-
-    p1L = 1
-    p2L = 0
-
-    lArrowP1Turret = Button(buttonPrimary, buttonPrimary, 70, 420, 30, 30, '<', buttonText, 30)
+    lArrowP1Turret = Button(c.geT("BLACK"), c.geT("BLACK"), 70, 420, 30, 30, '<', c.geT("WHITE"), 30)
     lArrowP1Turret.selectable(False)
     buttonList.append(lArrowP1Turret)
-    textP1Turret = TextBox(100, 420, font=const.MONO_FONT,fontSize=26, text="", textColor=buttonText)
-    textP1Turret.setBoxColor(optionText)
+    textP1Turret = TextBox(100, 420, font=const.MONO_FONT,fontSize=26, text="", textColor=c.geT("WHITE"))
+    textP1Turret.setBoxColor(c.geT("GREY"))
     textP1Turret.selectable(False)
     textP1Turret.setPaddingHeight(0)
     buttonList.append(textP1Turret)
-    rArrowP1Turret = Button(buttonPrimary, buttonPrimary, 280, 420, 30, 30, '>', buttonText, 30)
+    rArrowP1Turret = Button(c.geT("BLACK"), c.geT("BLACK"), 280, 420, 30, 30, '>', c.geT("WHITE"), 30)
     rArrowP1Turret.selectable(False)
     buttonList.append(rArrowP1Turret)
 
-    lArrowP1Hull = Button(buttonPrimary, buttonPrimary, 70, 460, 30, 30, '<', buttonText, 30)
+    lArrowP1Hull = Button(c.geT("BLACK"), c.geT("BLACK"), 70, 460, 30, 30, '<', c.geT("WHITE"), 30)
     lArrowP1Hull.selectable(False)
     buttonList.append(lArrowP1Hull)
-    textP1Hull = TextBox(100, 460, font=const.MONO_FONT,fontSize=26, text="", textColor=buttonText)
-    textP1Hull.setBoxColor(optionText)
+    textP1Hull = TextBox(100, 460, font=const.MONO_FONT,fontSize=26, text="", textColor=c.geT("WHITE"))
+    textP1Hull.setBoxColor(c.geT("GREY"))
     textP1Hull.selectable(False)
     textP1Hull.setPaddingHeight(0)
     buttonList.append(textP1Hull)
-    rArrowP1Hull = Button(buttonPrimary, buttonPrimary, 280, 460, 30, 30, '>', buttonText, 30)
+    rArrowP1Hull = Button(c.geT("BLACK"), c.geT("BLACK"), 280, 460, 30, 30, '>', c.geT("WHITE"), 30)
     rArrowP1Hull.selectable(False)
     buttonList.append(rArrowP1Hull)
 
-    lArrowP1Colour = Button(buttonPrimary, buttonPrimary, 70, 500, 30, 30, '<', buttonText, 30)
+    lArrowP1Colour = Button(c.geT("BLACK"), c.geT("BLACK"), 70, 500, 30, 30, '<', c.geT("WHITE"), 30)
     lArrowP1Colour.selectable(False)
     buttonList.append(lArrowP1Colour)
-    textP1Colour = TextBox(100, 500, font=const.MONO_FONT,fontSize=26, text="", textColor=buttonText)
-    textP1Colour.setBoxColor(c.geT(ColorIndex[p1K]))
+    textP1Colour = TextBox(100, 500, font=const.MONO_FONT,fontSize=26, text="", textColor=c.geT("WHITE"))
+    textP1Colour.setBoxColor(c.geT("BLACK"))
     textP1Colour.selectable(False)
     textP1Colour.setPaddingHeight(0)
     buttonList.append(textP1Colour)
-    rArrowP1Colour = Button(buttonPrimary, buttonPrimary, 280, 500, 30, 30, '>', buttonText, 30)
+    rArrowP1Colour = Button(c.geT("BLACK"), c.geT("BLACK"), 280, 500, 30, 30, '>', c.geT("WHITE"), 30)
     rArrowP1Colour.selectable(False)
     buttonList.append(rArrowP1Colour)
 
-    lArrowP1Colour2 = Button(buttonPrimary, buttonPrimary, 70, 540, 30, 30, '<', buttonText, 30)
+    lArrowP1Colour2 = Button(c.geT("BLACK"), c.geT("BLACK"), 70, 540, 30, 30, '<', c.geT("WHITE"), 30)
     lArrowP1Colour2.selectable(False)
     buttonList.append(lArrowP1Colour2)
-    textP1Colour2 = TextBox(100, 540, font=const.MONO_FONT,fontSize=26, text="", textColor=buttonText)
-    textP1Colour2.setBoxColor(c.geT(ColorIndex[p1L]))
+    textP1Colour2 = TextBox(100, 540, font=const.MONO_FONT,fontSize=26, text="", textColor=c.geT("WHITE"))
+    textP1Colour2.setBoxColor(c.geT("BLACK"))
     textP1Colour2.selectable(False)
     textP1Colour2.setPaddingHeight(0)
     buttonList.append(textP1Colour2)
-    rArrowP1Colour2 = Button(buttonPrimary, buttonPrimary, 280, 540, 30, 30, '>', buttonText, 30)
+    rArrowP1Colour2 = Button(c.geT("BLACK"), c.geT("BLACK"), 280, 540, 30, 30, '>', c.geT("WHITE"), 30)
     rArrowP1Colour2.selectable(False)
     buttonList.append(rArrowP1Colour2)
 
-    lArrowP2Turret = Button(buttonPrimary, buttonPrimary, 493, 420, 30, 30, '<', buttonText, 30)
+    lArrowP2Turret = Button(c.geT("BLACK"), c.geT("BLACK"), 493, 420, 30, 30, '<', c.geT("WHITE"), 30)
     lArrowP2Turret.selectable(False)
     buttonList.append(lArrowP2Turret)
-    textP2Turret = TextBox(523, 420, font=const.MONO_FONT,fontSize=26, text="", textColor=buttonText)
-    textP2Turret.setBoxColor(optionText)
+    textP2Turret = TextBox(523, 420, font=const.MONO_FONT,fontSize=26, text="", textColor=c.geT("WHITE"))
+    textP2Turret.setBoxColor(c.geT("GREY"))
     textP2Turret.selectable(False)
     textP2Turret.setPaddingHeight(0)
     buttonList.append(textP2Turret)
-    rArrowP2Turret = Button(buttonPrimary, buttonPrimary,703, 420, 30, 30, '>', buttonText, 30)
+    rArrowP2Turret = Button(c.geT("BLACK"), c.geT("BLACK"),703, 420, 30, 30, '>', c.geT("WHITE"), 30)
     rArrowP2Turret.selectable(False)
     buttonList.append(rArrowP2Turret)
 
-    lArrowP2Hull = Button(buttonPrimary, buttonPrimary, 493, 460, 30, 30, '<', buttonText, 30)
+    lArrowP2Hull = Button(c.geT("BLACK"), c.geT("BLACK"), 493, 460, 30, 30, '<', c.geT("WHITE"), 30)
     lArrowP2Hull.selectable(False)
     buttonList.append(lArrowP2Hull)
-    textP2Hull = TextBox(523, 460, font=const.MONO_FONT,fontSize=26, text="", textColor=buttonText)
-    textP2Hull.setBoxColor(optionText)
+    textP2Hull = TextBox(523, 460, font=const.MONO_FONT,fontSize=26, text="", textColor=c.geT("WHITE"))
+    textP2Hull.setBoxColor(c.geT("GREY"))
     textP2Hull.selectable(False)
     textP2Hull.setPaddingHeight(0)
     buttonList.append(textP2Hull)
-    rArrowP2Hull = Button(buttonPrimary, buttonPrimary,  703, 460, 30, 30, '>', buttonText, 30)
+    rArrowP2Hull = Button(c.geT("BLACK"), c.geT("BLACK"),  703, 460, 30, 30, '>', c.geT("WHITE"), 30)
     rArrowP2Hull.selectable(False)
     buttonList.append(rArrowP2Hull)
 
-    lArrowP2Colour = Button(buttonPrimary, buttonPrimary, 493, 500, 30, 30, '<', buttonText, 30)
+    lArrowP2Colour = Button(c.geT("BLACK"), c.geT("BLACK"), 493, 500, 30, 30, '<', c.geT("WHITE"), 30)
     lArrowP2Colour.selectable(False)
     buttonList.append(lArrowP2Colour)
-    textP2Colour = TextBox(523, 500, font=const.MONO_FONT,fontSize=26, text="", textColor=buttonText)
-    textP2Colour.setBoxColor(c.geT(ColorIndex[p2K]))
+    textP2Colour = TextBox(523, 500, font=const.MONO_FONT,fontSize=26, text="", textColor=c.geT("WHITE"))
+    textP2Colour.setBoxColor(c.geT("BLACK"))
     textP2Colour.selectable(False)
     textP2Colour.setPaddingHeight(0)
     buttonList.append(textP2Colour)
-    rArrowP2Colour = Button(buttonPrimary, buttonPrimary,  703, 500, 30, 30, '>', buttonText, 30)
+    rArrowP2Colour = Button(c.geT("BLACK"), c.geT("BLACK"),  703, 500, 30, 30, '>', c.geT("WHITE"), 30)
     rArrowP2Colour.selectable(False)
     buttonList.append(rArrowP2Colour)
 
-    lArrowP2Colour2 = Button(buttonPrimary, buttonPrimary, 493, 540, 30, 30, '<', buttonText, 30)
+    lArrowP2Colour2 = Button(c.geT("BLACK"), c.geT("BLACK"), 493, 540, 30, 30, '<', c.geT("WHITE"), 30)
     lArrowP2Colour2.selectable(False)
     buttonList.append(lArrowP2Colour2)
-    textP2Colour2 = TextBox(523, 540, font=const.MONO_FONT,fontSize=26, text="", textColor=buttonText)
-    textP2Colour2.setBoxColor(c.geT(ColorIndex[p2L]))
+    textP2Colour2 = TextBox(523, 540, font=const.MONO_FONT,fontSize=26, text="", textColor=c.geT("WHITE"))
+    textP2Colour2.setBoxColor(c.geT("BLACK"))
     textP2Colour2.selectable(False)
     textP2Colour2.setPaddingHeight(0)
     buttonList.append(textP2Colour2)
-    rArrowP2Colour2 = Button(buttonPrimary, buttonPrimary,  703, 540, 30, 30, '>', buttonText, 30)
+    rArrowP2Colour2 = Button(c.geT("BLACK"), c.geT("BLACK"),  703, 540, 30, 30, '>', c.geT("WHITE"), 30)
     rArrowP2Colour2.selectable(False)
     buttonList.append(rArrowP2Colour2)
 
@@ -633,6 +607,7 @@ class SelectionScreen:
         self.turretListLength = len(self.turretList)
         self.hullListLength = len(self.hullList)
         self.update(mousePos)
+        self.setAll()
 
     def update(self, mousePos):
         # do all the buttons
@@ -653,12 +628,6 @@ class SelectionScreen:
         self.isWithinRArrowP2Colour2(mousePos)
         self.isWithinLArrowP2Colour2(mousePos)
 
-
-        self.textP1Turret.setText(self.turretList[self.p1I].getGunName())
-        self.textP2Turret.setText(self.turretList[self.p2I].getGunName())
-        self.textP1Hull.setText(self.hullList[self.p1J].getTankName())
-        self.textP2Hull.setText(self.hullList[self.p2J].getTankName())
-
     def draw(self, screen, mouse):
 
 
@@ -669,77 +638,77 @@ class SelectionScreen:
             button.draw(screen, outline = False)
 
         # Player 1 Speed
-        pygame.draw.rect(screen, c.geT("GREEN"), (157, 250, 50 * self.hullList[self.p1J].getSpeedStatistic(), 25)) # Green bar
+        pygame.draw.rect(screen, c.geT("GREEN"), (157, 250, 50 * self.playerInformation.getPlayer1Hull().getSpeedStatistic(), 25)) # Green bar
         #Outlines
         pygame.draw.rect(screen, c.geT("BLACK"), (157, 250, 150, 25), 3) # Green bar outline
         pygame.draw.rect(screen, c.geT("BLACK"), (207, 250, 50, 25), 3) # Thirding
 
         #Player 1 Health
-        pygame.draw.rect(screen, c.geT("GREEN"), (157, 285, 50 * self.hullList[self.p1J].getHealthStatistic(), 25)) # Green bar
+        pygame.draw.rect(screen, c.geT("GREEN"), (157, 285, 50 * self.playerInformation.getPlayer1Hull().getHealthStatistic(), 25)) # Green bar
         #Outlines
         pygame.draw.rect(screen, c.geT("BLACK"), (157, 285, 150, 25), 3) # Green bar outline
         pygame.draw.rect(screen, c.geT("BLACK"), (207, 285, 50,25), 3) # Thirding
 
         # Player 1 damage
-        pygame.draw.rect(screen, c.geT("GREEN"), (157, 320, 50 * self.turretList[self.p1I].getDamageStatistic(), 25)) # Green bar
+        pygame.draw.rect(screen, c.geT("GREEN"), (157, 320, 50 * self.playerInformation.getPlayer1Turret().getDamageStatistic(), 25)) # Green bar
         #Outlines
         pygame.draw.rect(screen, c.geT("BLACK"), (157, 320, 150, 25), 3) # Green bar outline
         pygame.draw.rect(screen, c.geT("BLACK"), (207, 320, 50,25), 3) # Thirding
 
         # Player 1 reload
-        pygame.draw.rect(screen, c.geT("GREEN"), (157, 355, 50 * self.turretList[self.p1I].getReloadStatistic(), 25)) # Green bar
+        pygame.draw.rect(screen, c.geT("GREEN"), (157, 355, 50 * self.playerInformation.getPlayer1Turret().getReloadStatistic(), 25)) # Green bar
         #Outlines
         pygame.draw.rect(screen, c.geT("BLACK"), (157, 355, 150, 25), 3) # Green bar outline
         pygame.draw.rect(screen, c.geT("BLACK"), (207, 355, 50,25), 3) # Thirding
 
         #Player 2 Speed
-        pygame.draw.rect(screen, c.geT("GREEN"), (493, 250, 50 * self.hullList[self.p2J].getSpeedStatistic(), 25)) # Green bar
+        pygame.draw.rect(screen, c.geT("GREEN"), (493, 250, 50 * self.playerInformation.getPlayer2Hull().getSpeedStatistic(), 25)) # Green bar
         #Outlines
         pygame.draw.rect(screen, c.geT("BLACK"), (493, 250, 50 * 3, 25), 3) # Green bar outline
         pygame.draw.rect(screen, c.geT("BLACK"), (543, 250, 50,25), 3) # Thirding
 
         # Player 2 Health
-        pygame.draw.rect(screen, c.geT("GREEN"), (493, 285, 50 * self.hullList[self.p2J].getHealthStatistic(), 25)) # Green bar
+        pygame.draw.rect(screen, c.geT("GREEN"), (493, 285, 50 * self.playerInformation.getPlayer2Hull().getHealthStatistic(), 25)) # Green bar
         #Outlines
         pygame.draw.rect(screen, c.geT("BLACK"), (493, 285, 150, 25), 3) # Green bar outline
         pygame.draw.rect(screen, c.geT("BLACK"), (543, 285, 50,25), 3) # Thirding
 
         # Player 2 Damage
-        pygame.draw.rect(screen, c.geT("GREEN"), (493, 320,50 * self.turretList[self.p2I].getDamageStatistic(), 25)) # Green bar
+        pygame.draw.rect(screen, c.geT("GREEN"), (493, 320,50 * self.playerInformation.getPlayer2Turret().getDamageStatistic(), 25)) # Green bar
         #Outlines
         pygame.draw.rect(screen, c.geT("BLACK"), (493, 320, 150, 25), 3) # Green bar outline
         pygame.draw.rect(screen, c.geT("BLACK"), (543, 320, 50, 25), 3) # Thirding
 
         # Player 2 Reload
-        pygame.draw.rect(screen, c.geT("GREEN"), (493, 355, 50 * self.turretList[self.p2I].getReloadStatistic(), 25)) # Green bar
+        pygame.draw.rect(screen, c.geT("GREEN"), (493, 355, 50 * self.playerInformation.getPlayer2Turret().getReloadStatistic(), 25)) # Green bar
         #Outlines
         pygame.draw.rect(screen, c.geT("BLACK"), (493, 355, 150, 25), 3) # Green bar outline
         pygame.draw.rect(screen, c.geT("BLACK"), (543, 355, 50,25), 3) # Thirding
 
         #Draw the tank image
 
-        tankPath = os.path.join(const.BASE_PATH, 'Sprites', self.hullList[self.p1J].getTankName() + str(self.p1L + 1) + '.png')
+        tankPath = os.path.join(const.BASE_PATH, 'Sprites', self.playerInformation.getPlayer1Hull().getTankName() + str(self.playerInformation.Player1HullColourIndex() + 1) + '.png')
         originalTankImage = pygame.image.load(tankPath).convert_alpha()
         tankImage = pygame.transform.scale(originalTankImage, (20*4, 13*4))
         screen.blit(tankImage, (130, 174))
 
-        gunPath = os.path.join(const.BASE_PATH, 'Sprites', self.turretList[self.p1I].getGunName() + str(self.p1K+1) + '.png')
+        gunPath = os.path.join(const.BASE_PATH, 'Sprites', self.playerInformation.getPlayer1Turret().getGunName() + str(self.playerInformation.Player1TurretColourIndex()+1) + '.png')
         originalGunImage = pygame.image.load(gunPath).convert_alpha()
-        centerX, centerY = self.hullList[self.p1J].getGunCenter()
-        gX, _ = self.turretList[self.p1I].getGunCenter()
+        centerX, centerY = self.playerInformation.getPlayer1Hull().getGunCenter()
+        gX, _ = self.playerInformation.getPlayer1Turret().getGunCenter()
         gunImage = pygame.transform.scale(originalGunImage, (15*5, 15*5))
         screen.blit(gunImage, (170 + (centerX - gX) * 5, 194 - (centerY + 6) * 5))
         
-        tankPath2 = os.path.join(const.BASE_PATH, 'Sprites', self.hullList[self.p2J].getTankName() + str(self.p2L + 1) + '.png')
+        tankPath2 = os.path.join(const.BASE_PATH, 'Sprites', self.playerInformation.getPlayer2Hull().getTankName() + str(self.playerInformation.Player2HullColourIndex() + 1) + '.png')
         originalTankImage2 = pygame.image.load(tankPath2).convert_alpha()
         tankImage2 = pygame.transform.scale(originalTankImage2, (20*4, 13*4))
         tankImage2 = pygame.transform.flip(tankImage2, True, False) # Flipped    
         screen.blit(tankImage2, (const.WINDOW_WIDTH - 130 - 4 * 20, 174))
 
-        gunPath2 = os.path.join(const.BASE_PATH, 'Sprites', self.turretList[self.p2I].getGunName() + str(self.p2K+1) + '.png')
+        gunPath2 = os.path.join(const.BASE_PATH, 'Sprites', self.playerInformation.getPlayer2Turret().getGunName() + str(self.playerInformation.Player2TurretColourIndex()+1) + '.png')
         originalGunImage2 = pygame.image.load(gunPath2).convert_alpha()
-        centerX, centerY = self.hullList[self.p2J].getGunCenter()
-        gX, _ = self.turretList[self.p2I].getGunCenter()
+        centerX, centerY = self.playerInformation.getPlayer2Hull().getGunCenter()
+        gX, _ = self.playerInformation.getPlayer2Turret().getGunCenter()
 
         gunImage2 = pygame.transform.scale(originalGunImage2, (15*5, 15*5))
         gunImage2 = pygame.transform.flip(gunImage2, True, False) # Flipped
@@ -754,122 +723,97 @@ class SelectionScreen:
     def isWithinHomeButton(self, mousePos):
         return self.homeButton.buttonClick(mousePos)
     
+    def setAll(self):
+        # set all the text boxes
+        self.textP1Turret.setText(self.playerInformation.getPlayer1Turret().getGunName())
+        self.textP1Hull.setText(self.playerInformation.getPlayer1Hull().getTankName())
+        self.textP1Colour.setBoxColor(c.geT(self.playerInformation.getPlayer1TurretColour()))
+        self.textP1Colour2.setBoxColor(c.geT(self.playerInformation.getPlayer1HullColour()))
+        self.textP2Turret.setText(self.playerInformation.getPlayer2Turret().getGunName())
+        self.textP2Hull.setText(self.playerInformation.getPlayer2Hull().getTankName())
+        self.textP2Colour.setBoxColor(c.geT(self.playerInformation.getPlayer2TurretColour()))
+        self.textP2Colour2.setBoxColor(c.geT(self.playerInformation.getPlayer2HullColour()))
+
     def isWithinLArrowP1Turret(self, mousePos):
         if self.lArrowP1Turret.is_hovered(mousePos):
-            self.p1I = (self.p1I - 1) % self.turretListLength
-            self.textP1Turret.setText(self.turretList[self.p1I].getGunName())
+            self.playerInformation.movePlayer1TurretIndex(-1)
+            self.textP1Turret.setText(self.playerInformation.getPlayer1Turret().getGunName())
     
     def isWithinRArrowP1Turret(self, mousePos):
         if self.rArrowP1Turret.is_hovered(mousePos):
-            self.p1I = (self.p1I + 1) % self.turretListLength
-            self.textP1Turret.setText(self.turretList[self.p1I].getGunName())
+            self.playerInformation.movePlayer1TurretIndex(1)
+            self.textP1Turret.setText(self.playerInformation.getPlayer1Turret().getGunName())
     
     def isWithinLArrowP1Hull(self, mousePos):
         if self.lArrowP1Hull.is_hovered(mousePos):
-            self.p1J = (self.p1J - 1) % self.hullListLength
-            self.textP1Hull.setText(self.hullList[self.p1J].getTankName())
+            self.playerInformation.movePlayer1HullIndex(-1)
+            self.textP1Hull.setText(self.playerInformation.getPlayer1Hull().getTankName())
     
     def isWithinRArrowP1Hull(self, mousePos):
         if self.rArrowP1Hull.is_hovered(mousePos):
-            self.p1J = (self.p1J + 1) % self.hullListLength
-            self.textP1Hull.setText(self.hullList[self.p1J].getTankName())
+            self.playerInformation.movePlayer1HullIndex(1)
+            self.textP1Hull.setText(self.playerInformation.getPlayer1Hull().getTankName())
     
     def isWithinLArrowP1Colour(self, mousePos):
         if self.lArrowP1Colour.is_hovered(mousePos):
-            self.p1K = (self.p1K - 1) % len(self.hullColors)
-            if self.p1K == self.p2K:
-                self.p1K = (self.p1K - 1) % len(self.hullColors)
-            self.textP1Colour.setBoxColor(c.geT(self.ColorIndex[self.p1K]))
+            self.playerInformation.movePlayer1TurretColourIndex(-1)
+            self.textP1Colour.setBoxColor(c.geT(self.playerInformation.getPlayer1TurretColour()))
 
     def isWithinRArrowP1Colour(self, mousePos):
         if self.rArrowP1Colour.is_hovered(mousePos):
-            self.p1K = (self.p1K + 1) % len(self.hullColors)
-            if self.p1K == self.p2K:
-                self.p1K = (self.p1K + 1) % len(self.hullColors)
-            self.textP1Colour.setBoxColor(c.geT(self.ColorIndex[self.p1K]))
+            self.playerInformation.movePlayer1TurretColourIndex(1)
+            self.textP1Colour.setBoxColor(c.geT(self.playerInformation.getPlayer1TurretColour()))
     
     def isWithinLArrowP1Colour2(self, mousePos):
         if self.lArrowP1Colour2.is_hovered(mousePos):
-            self.p1L = (self.p1L - 1) % len(self.hullColors)
-            if self.p1L == self.p2L:
-                self.p1L = (self.p1L - 1) % len(self.hullColors)
-            self.textP1Colour2.setBoxColor(c.geT(self.ColorIndex[self.p1L]))
+            self.playerInformation.movePlayer1HullColourIndex(-1)
+            self.textP1Colour2.setBoxColor(c.geT(self.playerInformation.getPlayer1HullColour()))
     
     def isWithinRArrowP1Colour2(self, mousePos):
         if self.rArrowP1Colour2.is_hovered(mousePos):
-            self.p1L = (self.p1L + 1) % len(self.hullColors)
-            if self.p1L == self.p2L:
-                self.p1L = (self.p1L + 1) % len(self.hullColors)
-            self.textP1Colour2.setBoxColor(c.geT(self.ColorIndex[self.p1L]))
+            self.playerInformation.movePlayer1HullColourIndex(1)
+            self.textP1Colour2.setBoxColor(c.geT(self.playerInformation.getPlayer1HullColour()))
 
     def isWithinLArrowP2Turret(self, mousePos):
         if self.lArrowP2Turret.is_hovered(mousePos):
-            self.p2I = (self.p2I - 1) % self.turretListLength
-            self.textP2Turret.setText(self.turretList[self.p2I].getGunName())
+            self.playerInformation.movePlayer2TurretIndex(-1)
+            self.textP2Turret.setText(self.playerInformation.getPlayer2Turret().getGunName())
     
     def isWithinRArrowP2Turret(self, mousePos):
         if self.rArrowP2Turret.is_hovered(mousePos):
-            self.p2I = (self.p2I + 1) % self.turretListLength
-            self.textP2Turret.setText(self.turretList[self.p2I].getGunName())
-    
+            self.playerInformation.movePlayer2TurretIndex(1)
+            self.textP2Turret.setText(self.playerInformation.getPlayer2Turret().getGunName())
+
     def isWithinLArrowP2Hull(self, mousePos):
         if self.lArrowP2Hull.is_hovered(mousePos):
-            self.p2J = (self.p2J - 1) % self.hullListLength
-            self.textP2Hull.setText(self.hullList[self.p2J].getTankName())    
+            self.playerInformation.movePlayer2HullIndex(-1)
+            self.textP2Hull.setText(self.playerInformation.getPlayer2Hull().getTankName())
 
     def isWithinRArrowP2Hull(self, mousePos):
         if self.rArrowP2Hull.is_hovered(mousePos):
-            self.p2J = (self.p2J + 1) % self.hullListLength
-            self.textP2Hull.setText(self.hullList[self.p2J].getTankName())
+            self.playerInformation.movePlayer2HullIndex(1)
+            self.textP2Hull.setText(self.playerInformation.getPlayer2Hull().getTankName())
     
     def isWithinLArrowP2Colour(self, mousePos):
         if self.lArrowP2Colour.is_hovered(mousePos):
-            self.p2K = (self.p2K - 1) % len(self.hullColors)
-            if self.p2K == self.p1K:
-                self.p2K = (self.p2K - 1) % len(self.hullColors)
-            self.textP2Colour.setBoxColor(c.geT(self.ColorIndex[self.p2K]))
+            self.playerInformation.movePlayer2TurretColourIndex(-1)
+            self.textP2Colour.setBoxColor(c.geT(self.playerInformation.getPlayer2TurretColour()))
+
 
     def isWithinRArrowP2Colour(self, mousePos):
         if self.rArrowP2Colour.is_hovered(mousePos):
-            self.p2K = (self.p2K + 1) % len(self.hullColors)
-            if self.p2K == self.p1K:
-                self.p2K = (self.p2K + 1) % len(self.hullColors)
-            self.textP2Colour.setBoxColor(c.geT(self.ColorIndex[self.p2K]))
+            self.playerInformation.movePlayer2TurretColourIndex(1)
+            self.textP2Colour.setBoxColor(c.geT(self.playerInformation.getPlayer2TurretColour()))
 
     def isWithinLArrowP2Colour2(self, mousePos):
         if self.lArrowP2Colour2.is_hovered(mousePos):
-            self.p2L = (self.p2L - 1) % len(self.hullColors)
-            if self.p2L == self.p1L:
-                self.p2L = (self.p2L - 1) % len(self.hullColors)
-            self.textP2Colour2.setBoxColor(c.geT(self.ColorIndex[self.p2L]))
-
+            self.playerInformation.movePlayer2HullColourIndex(-1)
+            self.textP2Colour2.setBoxColor(c.geT(self.playerInformation.getPlayer2HullColour()))
+    
     def isWithinRArrowP2Colour2(self, mousePos):
         if self.rArrowP2Colour2.is_hovered(mousePos):
-            self.p2L = (self.p2L + 1) % len(self.hullColors)
-            if self.p2L == self.p1L:
-                self.p2L = (self.p2L + 1) % len(self.hullColors)
-            self.textP2Colour2.setBoxColor(c.geT(self.ColorIndex[self.p2L]))
+            self.playerInformation.movePlayer2HullColourIndex(1)
+            self.textP2Colour2.setBoxColor(c.geT(self.playerInformation.getPlayer2HullColour()))
 
-
-    #broken list: rArrowP1Color2, lArrowP2Color, rArrowP2Color
-
-class PlayerInformation:
-    # This class will hold the turret / hulls for each of the players
-
-    #Hull and turret list
-
-    def __init__(self, tList, hList):
-        self.turretList = tList
-        self.hullList = hList
-
-    def getTurretList(self):
-        return self.turretList
-    
-    def getHullList(self):
-        return self.hullList
-    
-    def getTurretListLength(self):
-        return self.turretListLength
-    
-    def getHullListLength(self):
-        return self.hullListLength
+    def getPlayerInformation(self):
+        return self.playerInformation # returns the PlayerInformation Class
