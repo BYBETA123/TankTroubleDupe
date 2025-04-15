@@ -1262,6 +1262,7 @@ class GameMode(Enum):
     selection = 4
     credit = 5
     info = 6
+    end = 7
 
 class DifficultyType(Enum):
     # format is <Number> <Respawn> <AI>
@@ -2529,7 +2530,7 @@ def playGame():
     global tank1Dead, tank2Dead, tileList, spawnpoint, player1Channels, player2Channels
     global tank1, tank2, gun1, gun2, allSprites, bulletSprites
     global currentTime, deltaTime, lastUpdateTime, difficultyType
-    global upplyAssets, timerClock
+    global upplyAssets, timerClock, gameMode
     if checkGameOver(t = difficultyType) and not cooldownTimer:
         #The game is over
         systemTime = time.time() #Start a 3s timer
@@ -2544,9 +2545,10 @@ def playGame():
         pygame.mixer.Channel(10).stop()
         if time.time() - systemTime >= 3: # 3 seconds
             #Reset the game
-            reset()
-            constantPlayGame()
-            timer.reset() # rest the clock
+            gameMode = GameMode.end # end screen
+            # reset()
+            # constantPlayGame()
+            # timer.reset() # rest the clock
 
     seconds = timer.getTime()
     textString = f"{seconds // 60:02d}:{seconds % 60:02d}"
@@ -2813,6 +2815,8 @@ turretList = [Tempest(Tank(0,0,None, "Default"), None, "Tempest"), Silencer(Tank
 hullList = [Panther(0, 0, None, "Panther"), Cicada(0, 0, None, "Cicada"), Gater(0, 0, None, "Gater"), Bonsai(0, 0, None, "Bonsai"),
         Fossil(0, 0, None, "Fossil")]
 
+
+endScreen = EndScreen()
 creditsScreen = CreditScreen()
 settingsScreen = SettingsScreen()
 pauseScreen = PauseScreen()
@@ -2893,11 +2897,6 @@ def main():
                             gameMode = GameMode.play
 
                     elif gameMode == GameMode.selection: # Selection screen
-                        # textP1Turret.setText(turretList[p1I].getGunName())
-                        # textP2Turret.setText(turretList[p2I].getGunName())
-                        # textP1Hull.setText(hullList[p1J].getTankName())
-                        # textP2Hull.setText(hullList[p2J].getTankName())
-                        # checkButtons(mouse)
 
                         if selectionScreen.isWithinPlayButton(mouse):
                             setUpPlayers()
@@ -3015,6 +3014,17 @@ def main():
                         if settingsScreen.isWithinSFXButton(mouse):
                             settingsScreen.volume.sfx.buttonClick()
 
+                    elif gameMode == GameMode.end:
+                        if endScreen.isWithinPlayAgainButton(mouse):
+                            print("Play Again")
+                            reset()
+                            constantPlayGame()
+                            gameMode = GameMode.play
+                        if endScreen.isWithinHomeButton(mouse):
+                            print("Home")
+                            constantHomeScreen()
+                            gameMode = GameMode.home
+
             elif event.type == pygame.KEYDOWN: # Any key pressed
 
                 if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
@@ -3078,14 +3088,14 @@ def main():
             # we need to update the info screen if the user changes the input # however there may be the case where we don't need to do it and only update once ever click
 
         elif gameMode == GameMode.settings:
-            # pauseScreen() # Pause screen
             settingsScreen.draw(screen = screen)
             if mouse[0] and pygame.mouse.get_pressed()[0]:
                 settingsScreen.updateMute(mouse)
                 settingsScreen.updateSFX(mouse)
                 for sound in const.SOUND_DICTIONARY:
                     const.SOUND_DICTIONARY[sound].set_volume(const.VOLUME[sound] * settingsScreen.getSFXValue())
-
+        elif gameMode == GameMode.end:
+            endScreen.draw(screen)
         else:
             screen.fill(c.geT("WHITE")) # Errornous state
 

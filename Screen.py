@@ -817,3 +817,115 @@ class SelectionScreen:
 
     def getPlayerInformation(self):
         return self.playerInformation # returns the PlayerInformation Class
+    
+class EndScreen:
+
+    class TableRow:
+        # 4 text boxes
+        def __init__(self, height = 370, boxHeight = 60):
+            self.text1 = Button(c.geT("GREY"), c.geT("GREY"), 124, height, 138, boxHeight, 'Player', c.geT("WHITE"), 26, c.geT("GREY"))
+            self.text2 = Button(c.geT("GREY"), c.geT("GREY"), 262, height, 138, boxHeight, 'Kills', c.geT("WHITE"), 26, c.geT("GREY"))
+            self.text3 = Button(c.geT("GREY"), c.geT("GREY"), 400, height, 138, boxHeight, 'Deaths', c.geT("WHITE"), 26, c.geT("GREY"))
+            self.text4 = Button(c.geT("GREY"), c.geT("GREY"), 538, height, 138, boxHeight, 'Ratio', c.geT("WHITE"), 26, c.geT("GREY"))
+            self.text1.setOutline(True, 5)
+            self.text2.setOutline(True, 5)
+            self.text3.setOutline(True, 5)
+            self.text4.setOutline(True, 5)
+            self.text1.selectable(False)
+            self.text2.selectable(False)
+            self.text3.selectable(False)
+            self.text4.selectable(False)
+            self.drawMe = False
+
+        def draw(self, screen):
+            if self.drawMe:
+                self.text1.draw(screen, outline = True)
+                self.text2.draw(screen, outline = True)
+                self.text3.draw(screen, outline = True)
+                self.text4.draw(screen, outline = True)
+            return
+
+        def setPlayerName(self, playerName):
+            self.text1.setText(playerName)
+
+        def setPlayerKills(self, playerKills):
+            self.text2.setText(str(playerKills))
+
+        def setPlayerDeaths(self, playerDeaths):
+            self.text3.setText(str(playerDeaths))
+
+        def setPlayerRatio(self, playerRatio):
+            self.text4.setText(str(playerRatio))
+
+        def setDraw(self, draw):
+            self.drawMe = draw
+
+    blist = []
+    font_size = 30
+    width = 255
+    height = 70
+    playAgainButton = Button(c.geT("BLACK"), c.geT("BLACK"), 115, 455, width, height, "Play Again", c.geT("WHITE"), font_size, c.geT("BLACK"))
+    blist.append(playAgainButton)
+    backToHomeButton = Button(c.geT("BLACK"), c.geT("BLACK"), 430, 455, width, height, "Back to Home", c.geT("WHITE"), font_size, c.geT("BLACK"))
+    blist.append(backToHomeButton)
+
+
+    TableInfo = []
+
+    def __init__(self):
+        a = 72
+        b = 40
+        self.tableRow1 = self.TableRow(a, b)
+        self.tableRow1.setDraw(True)
+        self.tableRow2 = self.TableRow(a+b, b)
+        self.tableRow3 = self.TableRow(a + 2*b, b)
+        self.tableRow4 = self.TableRow(a + 3*b, b)
+        self.tableRow5 = self.TableRow(a + 4*b, b)
+        self.tableRow6 = self.TableRow(a + 5*b, b)
+        self.tableRow7 = self.TableRow(a + 6*b, b)
+        self.tableRow8 = self.TableRow(a + 7*b, b)
+        self.tableRow9 = self.TableRow(a + 8*b, b)
+        self.TableInfo.append(self.tableRow1)
+        self.TableInfo.append(self.tableRow2)
+        self.TableInfo.append(self.tableRow3)
+        self.TableInfo.append(self.tableRow4)
+        self.TableInfo.append(self.tableRow5)
+        self.TableInfo.append(self.tableRow6)
+        self.TableInfo.append(self.tableRow7)
+        self.TableInfo.append(self.tableRow8)
+        self.TableInfo.append(self.tableRow9)
+
+        self.makeTable(["Player 1", "0", "0", "0"],["Player 2", "0", "0", "0"],["Player 3", "0", "0", "0"])
+
+    def draw(self, screen):
+        # screen.fill((0, 0, 0)) # temp
+
+        pygame.draw.rect(screen, (240, 240, 240), [const.MAZE_X, const.MAZE_Y, const.WINDOW_WIDTH - const.MAZE_X * 2, const.WINDOW_HEIGHT - const.MAZE_Y * 2])
+        pygame.draw.rect(screen, (0,0,0), [const.MAZE_X, const.MAZE_Y, const.WINDOW_WIDTH - const.MAZE_X * 2, const.WINDOW_HEIGHT - const.MAZE_Y * 2], 5)
+
+        for button in self.blist:
+            button.draw(screen, outline = True)
+
+        # Draw the table rows
+        for row in self.TableInfo:
+            row.draw(screen)
+
+    def isWithinPlayAgainButton(self, mousePos):
+        return self.playAgainButton.is_hovered(mousePos)
+    
+    def isWithinHomeButton(self, mousePos):
+        return self.backToHomeButton.is_hovered(mousePos)
+
+    def makeTable(self, *rows):
+        # set all table rows to not draw
+        # make all 0 except for the first one
+        for row in self.TableInfo:
+            row.setDraw(False)
+        # set the first row to draw
+        self.TableInfo[0].setDraw(True)
+        for idx, row in enumerate(rows):
+            self.TableInfo[idx+1].setDraw(True)
+            self.TableInfo[idx+1].setPlayerName(row[0])
+            self.TableInfo[idx+1].setPlayerKills(row[1])
+            self.TableInfo[idx+1].setPlayerDeaths(row[2])
+            self.TableInfo[idx+1].setPlayerRatio(row[3])
