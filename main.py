@@ -2545,10 +2545,43 @@ def playGame():
         pygame.mixer.Channel(10).stop()
         if time.time() - systemTime >= 3: # 3 seconds
             #Reset the game
-            gameMode = GameMode.end # end screen
-            # reset()
-            # constantPlayGame()
-            # timer.reset() # rest the clock
+            match difficultyType:
+                case DifficultyType.OnePlayerYard:
+                    if p1Score == 99 or p2Score == 99:
+                        gameMode = GameMode.end
+                    else:
+                        reset()
+                        constantPlayGame()
+                        timer.reset() # rest the clock
+                case DifficultyType.OnePlayerScrapYard:
+                    if p1Score == 99 or p2Score == 99:
+                        gameMode = GameMode.end
+                    else:
+                        reset()
+                        constantPlayGame()
+                        timer.reset() # rest the clock
+                case DifficultyType.TwoPlayerYard:
+                    if p1Score == 99 or p2Score == 99:
+                        gameMode = GameMode.end
+                    else:
+                        reset()
+                        constantPlayGame()
+                        timer.reset() # rest the clock
+                case DifficultyType.TwoPlayerScrapYard:
+                    if p1Score == 99 or p2Score == 99:
+                        gameMode = GameMode.end
+                    else:
+                        reset()
+                        constantPlayGame()
+                        timer.reset() # rest the clock
+                case DifficultyType.OnePlayerBrawl:
+                    gameMode = GameMode.end
+                case DifficultyType.OnePlayerDeathMatch:
+                    gameMode = GameMode.end
+                case DifficultyType.TwoPlayerBrawl:
+                    gameMode = GameMode.end
+                case DifficultyType.TwoPlayerDeathMatch:
+                    gameMode = GameMode.end
 
     seconds = timer.getTime()
     textString = f"{seconds // 60:02d}:{seconds % 60:02d}"
