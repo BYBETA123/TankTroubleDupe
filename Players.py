@@ -4,20 +4,6 @@ class PlayerInformation:
 
     ColorIndex = ["TANK_GREEN", "BURGUNDY", "ORANGE", "YELLOW", "SKY_BLUE", "LIGHT_BROWN", "DARK_LILAC", "BRIGHT_PINK"]
 
-    #List indexes for player selection
-    #Turret index
-    p1I = 0
-    p2I = 0
-    #Hull index
-    p1J = 0
-    p2J = 0
-    #Colour index
-    p1K = 0
-    p2K = 1
-
-    p1L = 1
-    p2L = 0
-
     #Hull and turret list
 
     _instance = None
@@ -32,6 +18,20 @@ class PlayerInformation:
             self.turretList = tList
             self.hullList = hList
             self.initialized = True
+
+            #List indexes for player selection
+            #Turret index
+            self.p1I = 0
+            self.p2I = 0
+            #Hull index
+            self.p1J = 0
+            self.p2J = 0
+            #Colour index
+            self.p1K = 0
+            self.p2K = 1
+
+            self.p1L = 1
+            self.p2L = 0
 
     def getTurretList(self):
         return self.turretList
@@ -130,3 +130,31 @@ class PlayerInformation:
     
     def specificHull(self, index):
         return self.hullList[index]
+
+class Player(): # This is a class that is being reported to
+    def __init__(self, name):
+        self.name = name
+        self.kills = 0
+        self.deaths = 0
+
+    def getTableEntry(self):
+        return [self.name, self.kills, self.deaths, self.kills / max(self.deaths, 1)]
+    
+    def addKill(self):
+        self.kills += 1
+
+    def addDeath(self):
+        self.deaths += 1
+
+    def addShoot(self):
+        self.shoot += 1
+
+    def addHit(self):
+        self.hit += 1
+
+    def getName(self):
+        return self.name
+    
+    def resetPlayer(self):
+        self.kills = 0
+        self.deaths = 0

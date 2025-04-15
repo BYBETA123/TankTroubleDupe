@@ -12,9 +12,14 @@ from tanks import *
 from Screen import *
 import constants as const
 from timer import UpDownTimer
+from Players import Player # maybe this is needed
 
 global timerClock
 timerClock = 0
+# final set up of the players
+global player1, player2
+player1 = Player("Player 1")
+player2 = Player("Player 2")
 #init
 pygame.init()
 
@@ -77,6 +82,7 @@ class Gun(pygame.sprite.Sprite):
         self.default = False
         self.reload = False
         self.deltaTime = 0
+        self.player = None
 
     def update(self):
         """
@@ -214,7 +220,7 @@ class Gun(pygame.sprite.Sprite):
         # Outputs: None
         # Calculating where the bullet should spawn
         bulletX, bulletY = self.getTank().getGunCenter()
-        bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
+        bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet, self)
         bullet.setDamage(self._getDamage())
         bullet.setName(self.getTank().getName())
         bulletSprites.add(bullet)
@@ -367,6 +373,12 @@ class Gun(pygame.sprite.Sprite):
     def setDelta(self, delta):
         self.deltaTime = delta
 
+    def setPlayer(self, player):
+        self.player = player
+    
+    def getPlayer(self):
+        return self.player
+
 class Bullet(pygame.sprite.Sprite):
 
     originalCollision = True
@@ -375,7 +387,7 @@ class Bullet(pygame.sprite.Sprite):
     initialY = 0
     selfCollision = False
     originalBounce = 1
-    def __init__(self, x, y, angle, gunLength, tipOffSet):
+    def __init__(self, x, y, angle, gunLength, tipOffSet, gunOwner):
         """
         Initializes the Bullet class.
 
@@ -425,6 +437,7 @@ class Bullet(pygame.sprite.Sprite):
         self.initialX = x
         self.initialY = y
         self.deltaTime = 0
+        self.gunOwner = gunOwner # who shot ya 
 
     def update(self):
         """
@@ -477,11 +490,11 @@ class Bullet(pygame.sprite.Sprite):
             tank2Collision = self.getCollision(tank2.getCorners(), (tempX, tempY))
 
             if self.name == tank1.getName() and tank2Collision and tank2.getInvincibility() == 0:
-                damage(tank2, self.damage)
+                damage(tank2, self.damage, self.gunOwner.getPlayer())
                 self.kill()
                 return
             if self.name == tank2.getName() and tank1Collision and tank1.getInvincibility() == 0:
-                damage(tank1, self.damage)
+                damage(tank1, self.damage, self.gunOwner.getPlayer())
                 self.kill()
                 return
             # Checking for self damage
@@ -490,11 +503,11 @@ class Bullet(pygame.sprite.Sprite):
 
             if self.selfCollision:
                 if tank1Collision and tank1.getInvincibility()==0:
-                    damage(tank1, self.damage)
+                    damage(tank1, self.damage, self.gunOwner.getPlayer())
                     self.kill()
                     return
                 if tank2Collision and tank2.getInvincibility()==0:
-                    damage(tank2, self.damage)
+                    damage(tank2, self.damage, self.gunOwner.getPlayer())
                     self.kill()
                     return
 
@@ -595,20 +608,20 @@ class Bullet(pygame.sprite.Sprite):
 
 class SidewinderBullet(Bullet):
 
-    def __init__(self, x, y, angle, gunLength, tipOffSet):
-        super().__init__(x, y, angle, gunLength, tipOffSet)
+    def __init__(self, x, y, angle, gunLength, tipOffSet, gunOwner):
+        super().__init__(x, y, angle, gunLength, tipOffSet, gunOwner)
         self.setBounce(5)
 
 class JudgeBullet(Bullet):
 
-    def __init__(self, x, y, angle, gunLength, tipOffSet):
-        super().__init__(x, y, angle, gunLength, tipOffSet)
+    def __init__(self, x, y, angle, gunLength, tipOffSet, gunOwner):
+        super().__init__(x, y, angle, gunLength, tipOffSet, gunOwner)
         self.setBounce(2)
 
 class SilencerBullet(Bullet):
 
-    def __init__(self, x, y, angle, gunLength, tipOffSet):
-        super().__init__(x, y, angle, gunLength, tipOffSet)
+    def __init__(self, x, y, angle, gunLength, tipOffSet, gunOwner):
+        super().__init__(x, y, angle, gunLength, tipOffSet, gunOwner)
         self.speed = 0.13
     
     def update(self):
@@ -684,8 +697,8 @@ class WatcherBullet(Bullet):
 
     trailColor = (255, 0, 0)
 
-    def __init__(self, x, y, angle, gunLength, tipOffSet):
-        super().__init__(x, y, angle, gunLength, tipOffSet)
+    def __init__(self, x, y, angle, gunLength, tipOffSet, gunOwner):
+        super().__init__(x, y, angle, gunLength, tipOffSet, gunOwner)
         self.speed = 0.2
 
     def update(self):
@@ -725,11 +738,11 @@ class WatcherBullet(Bullet):
             tank2_collision = (self.getCollision(tank2.getCorners(), (temp_x, temp_y)))
 
             if self.name == tank1.getName() and tank2_collision and tank2.getInvincibility() == 0:
-                damage(tank2, self.damage)
+                damage(tank2, self.damage, self.gunOwner.getPlayer())
                 self.kill()
                 return
             if self.name == tank2.getName() and tank1_collision and tank1.getInvincibility() == 0:
-                damage(tank1, self.damage)
+                damage(tank1, self.damage, self.gunOwner.getPlayer())
                 self.kill()
                 return
 
@@ -738,11 +751,11 @@ class WatcherBullet(Bullet):
 
             if self.selfCollision:
                 if tank1_collision:
-                    damage(tank1, self.damage)
+                    damage(tank1, self.damage, self.gunOwner.getPlayer())
                     self.kill()
                     return
                 if tank2_collision:
-                    damage(tank2, self.damage)
+                    damage(tank2, self.damage, self.gunOwner.getPlayer())
                     self.kill()
                     return
 
@@ -797,8 +810,8 @@ class ChamberBullet(Bullet):
 
     splash = True
 
-    def __init__(self, x, y, angle, gunLength, tipOffSet):
-        super().__init__(x, y, angle, gunLength, tipOffSet)
+    def __init__(self, x, y, angle, gunLength, tipOffSet, gunOwner):
+        super().__init__(x, y, angle, gunLength, tipOffSet, gunOwner)
         self.speed = 0.5
         self.drawable = True
 
@@ -853,21 +866,21 @@ class ChamberBullet(Bullet):
             tank2Collision = pygame.sprite.collide_rect(self, tank2)
             
             if self.name == tank1.getName() and tank2Collision and tank2.getInvincibility() == 0:
-                damage(tank2, self.damage)
+                damage(tank2, self.damage, self.gunOwner.getPlayer())
                 self.explode()
                 return
             if self.name == tank2.getName() and tank1Collision and tank1.getInvincibility() == 0:
-                damage(tank1, self.damage)
+                damage(tank1, self.damage, self.gunOwner.getPlayer())
                 self.explode()
                 return
 
             if self.selfCollision:
                 if tank1Collision and tank1.getInvincibility() == 0:
-                    damage(tank1, self.damage)
+                    damage(tank1, self.damage, self.gunOwner.getPlayer())
                     self.explode()
                     return
                 if tank2Collision and tank2.getInvincibility() == 0:
-                    damage(tank2, self.damage)
+                    damage(tank2, self.damage, self.gunOwner.getPlayer())
                     self.explode()
                     return
 
@@ -892,11 +905,11 @@ class ChamberBullet(Bullet):
                 self.angle = 360 - self.angle
             if wallCollision:
                 if self.name == tank1.getName() and tank1Collision and tank1.getInvincibility() == 0:
-                    damage(tank1, self.damage)
+                    damage(tank1, self.damage, self.gunOwner.getPlayer())
                     self.explode()
                     return
                 if self.name == tank2.getName() and tank2Collision and tank2.getInvincibility() == 0:
-                    damage(tank2, self.damage)
+                    damage(tank2, self.damage, self.gunOwner.getPlayer())
                     self.explode()
                     return
                 self.bounce -= 1
@@ -939,7 +952,7 @@ class ChamberBullet(Bullet):
         # Outputs: None
         if self.splash:
             #Middle radius
-            splash1 = ChamberBullet(self.x, self.y, 0, 0, 0)
+            splash1 = ChamberBullet(self.x, self.y, 0, 0, 0, self.gunOwner)
             splash1.sizeImage(10)
             splash1.updateCorners()
             splash1.setSplash(False)
@@ -949,7 +962,7 @@ class ChamberBullet(Bullet):
             splash1.update()
             splash1.kill()
             # Outer radius
-            splash2 = ChamberBullet(self.x, self.y, 0, 0, 0)
+            splash2 = ChamberBullet(self.x, self.y, 0, 0, 0, self.gunOwner)
             splash2.sizeImage(20)
             splash2.updateCorners()
             splash2.setSplash(False)
@@ -1309,7 +1322,7 @@ class Chamber(Gun):
         # Outputs: None
 
         bulletX, bulletY = self.getTank().getGunCenter()
-        bullet = ChamberBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
+        bullet = ChamberBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet, self)
         bullet.setName(self.getTank().getName())
         bullet.setDamage(self._getDamage())
         bullet.setBulletSpeed(10)
@@ -1342,7 +1355,7 @@ class DefaultGun(Gun):
 
         # Calculating where the bullet should spawn
         bulletX, bulletY = self.getTank().getGunCenter()
-        bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
+        bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet, self)
         bullet.setDamage(self._getDamage())
         bullet.setBounce(5)
         bullet.setName(self.getTank().getName())
@@ -1364,7 +1377,7 @@ class Huntsman(Gun):
 
     def fire(self):
         bulletX, bulletY = self.getTank().getGunCenter()
-        bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
+        bullet = Bullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet, self)
         bullet.setName(self.getTank().getName())
         if random.random() <= 0.4:  # 40% chance
             bullet.setDamage(self._getDamage() * 2)
@@ -1422,7 +1435,7 @@ class Judge(Gun):
         scatterAngle = random.uniform(-7.5, 7.5) # cone of 10 degrees
         bulletAngle = self.angle + scatterAngle
         bulletX, bulletY = self.getTank().getGunCenter()
-        bullet = JudgeBullet(bulletX + random.uniform(-3, 3), bulletY + random.uniform(-3, 3), bulletAngle, self.gunLength, self.tipOffSet)
+        bullet = JudgeBullet(bulletX + random.uniform(-3, 3), bulletY + random.uniform(-3, 3), bulletAngle, self.gunLength, self.tipOffSet, self)
         bullet.setName(self.getTank().getName())
         bullet.setDamage(self._getDamage())
         bullet.setBulletSpeed(8)
@@ -1459,7 +1472,7 @@ class Sidewinder(Gun):
         
     def fire(self):
         bulletX, bulletY = self.getTank().getGunCenter()
-        bullet = SidewinderBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
+        bullet = SidewinderBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet, self)
         bullet.setName(self.getTank().getName())
         bullet.setBulletSpeed(10)
         bullet.setDamage(self._getDamage())
@@ -1580,7 +1593,7 @@ class Silencer(Gun):
         # Outputs: None
         #Setup bullet (Trailed/ Temp)
         bulletX, bulletY = self.getTank().getGunCenter()
-        bullet = SilencerBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
+        bullet = SilencerBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet, self)
         bullet.setDamage(0)
         bullet.setBulletSpeed(50)
         bullet.setName(self.getTank().getName())
@@ -1588,7 +1601,7 @@ class Silencer(Gun):
         bullet.trail = True
         bulletSprites.add(bullet)
         # Real bullet
-        bullet1 = WatcherBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
+        bullet1 = WatcherBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet, self)
         bullet1.setDamage(self._getDamage())
         bullet1.setBulletSpeed(50)
         bullet1.setName(self.getTank().getName())
@@ -1748,7 +1761,7 @@ class Watcher(Gun):
         # Outputs: None
         # Setup bullet
         bulletX, bulletY = self.getTank().getGunCenter()
-        bullet = WatcherBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet)
+        bullet = WatcherBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet, self)
         bullet.setDamage(self.getDamage())
         bullet.setBulletSpeed(50)
         bullet.setName(self.getTank().getName())
@@ -1989,7 +2002,7 @@ def tileGen():
 
 def setUpTank1(dType = 0):
     global tileList, spawnpoint, tank1, gun1, allSprites, bulletSprites
-    global spawnTank1
+    global spawnTank1, player1
     global player1PackageTank, player1PackageGun
     global player1Channels, DifficultyType
 
@@ -2125,9 +2138,12 @@ def setUpTank1(dType = 0):
             gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
             gun1.setImage(playerInformation.getPlayer1Turret().getGunName(), playerInformation.Player1TurretColourIndex() + 1)
 
+    gun1.setPlayer(player1)
+    tank1.setPlayer(player1)
+
 def setUpTank2(dType = 0):
     global tileList, spawnpoint, tank2, gun2, allSprites, bulletSprites
-    global spawnTank2, DifficultyType
+    global spawnTank2, DifficultyType, player2
     global player2PackageTank, player2PackageGun
     global player2Channels
 
@@ -2238,6 +2254,9 @@ def setUpTank2(dType = 0):
             gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
             gun2.setImage(playerInformation.getPlayer2Turret().getGunName(), playerInformation.Player2TurretColourIndex() + 1)
 
+    gun2.setPlayer(player2)
+    tank2.setPlayer(player2)
+
 def setUpPlayers():
     # This function sets up the players for the game including reseting the respective global veriables
     #This function has no real dependencies on things outside of its control
@@ -2306,7 +2325,8 @@ def setUpPlayers():
     allSprites.add(tank1, gun1, tank2, gun2) # Add the new sprites
     for bullet in bulletSprites:
         bullet.kill()
-    bulletSprites = pygame.sprite.Group()
+    bulletSprites = pygame.sprite.Group()   
+
     timer.reset() # Reset the timer
 
 def constantHomeScreen():
@@ -2477,12 +2497,10 @@ def fixMovement(tanks):
         t.changeX = 0
         t.changeY = 0
     
-def damage(tank, damage):
+def damage(tank, damage, owner):
     # This function will adjust the damage that the tank has taken
     # Inputs: damage: The amount of damage that the tank has taken
     # Outputs: None
-    # if tank.getInvincibility() != 0: # we are still invincible
-    #     return
     tank.health -= (damage * (0.5 if tank.effect[1] != 0 else 1))
     if tank.health > 0:
         if not tank.channelDict["death"]["channel"].get_busy(): # if the sound isn't playing
@@ -2491,6 +2509,10 @@ def damage(tank, damage):
             spareChannels(const.SOUND_DICTIONARY["tankHurt"])
     else: # if tank is dead
         # if the tank is dead everything should stop
+
+        if owner.getName() != tank.getPlayer().getName(): # as long as it is not a self-kill
+            owner.addKill()
+        tank.getPlayer().addDeath()
         for channel in tank.channelDict:
             if tank.channelDict[channel]["channel"].get_busy():
                 tank.channelDict[channel]["channel"].stop()
@@ -2568,7 +2590,9 @@ def playGame():
                         constantPlayGame()
                         timer.reset() # rest the clock
                 case DifficultyType.TwoPlayerScrapYard:
-                    if p1Score == 99 or p2Score == 99:
+                    if p1Score == 2 or p2Score == 2:
+                        # endScreen.makeTable(["Player 1", 3, 4, 3/4],["Player 2", 2, 3, 2/3])
+                        endScreen.makeTable(player1.getTableEntry(), player2.getTableEntry())
                         gameMode = GameMode.end
                     else:
                         reset()
@@ -2605,7 +2629,6 @@ def playGame():
     screen.blit(text3, [const.WINDOW_WIDTH/2 - text3.get_width()/2, 0.85*const.WINDOW_HEIGHT])
 
     #Box around the bottom of the screen for the health and reload bars
-
 
     pygame.draw.rect(screen, c.geT("RED"), [const.TILE_SIZE*2.2, 0.88*const.WINDOW_HEIGHT, 150*(tank1.getHealthPercentage()),
                                             20]) # Bar
@@ -2815,7 +2838,6 @@ global startTreads
 startTreads = 0
 global gameOverFlag
 gameOverFlag = False
-#Constants
 done = False
 
 global currentTime, deltaTime, lastUpdateTime
@@ -2831,7 +2853,6 @@ p2Score = 0
 
 gameMode = GameMode.home
 difficultyType = DifficultyType.NotInGame
-#Changing variables
 
 tileList = tileGen()
 
@@ -2847,7 +2868,6 @@ turretList = [Tempest(Tank(0,0,None, "Default"), None, "Tempest"), Silencer(Tank
 
 hullList = [Panther(0, 0, None, "Panther"), Cicada(0, 0, None, "Cicada"), Gater(0, 0, None, "Gater"), Bonsai(0, 0, None, "Bonsai"),
         Fossil(0, 0, None, "Fossil")]
-
 
 endScreen = EndScreen()
 creditsScreen = CreditScreen()
@@ -3050,6 +3070,9 @@ def main():
                     elif gameMode == GameMode.end:
                         if endScreen.isWithinPlayAgainButton(mouse):
                             print("Play Again")
+                            p1Score, p2Score = 0, 0 # reset the player scores
+                            player1.resetPlayer()
+                            player2.resetPlayer()
                             reset()
                             constantPlayGame()
                             gameMode = GameMode.play

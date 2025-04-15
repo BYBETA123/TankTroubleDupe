@@ -111,7 +111,7 @@ class Tank(pygame.sprite.Sprite):
         self.tread_surface = pygame.image.load(image_path).convert_alpha()
         # rect_surface = pygame.transform.scale(rect_surface, (self.originalTankImage.get_size()))
         self.tread_surface = pygame.transform.scale(self.tread_surface, (8, self.originalTankImage.get_size()[1]))
-
+        self.player = None
 
     def update(self):
         # This function updates the tank's position and rotation based on the controls detected
@@ -499,6 +499,12 @@ class Tank(pygame.sprite.Sprite):
 
     def getInvincibility(self):
         return self.invincibility
+
+    def setPlayer(self, player):
+        self.player = player
+    
+    def getPlayer(self):
+        return self.player
 
 #Hulls
 class Bonsai(Tank):

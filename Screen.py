@@ -895,11 +895,9 @@ class EndScreen:
         self.TableInfo.append(self.tableRow8)
         self.TableInfo.append(self.tableRow9)
 
-        self.makeTable(["Player 1", "0", "0", "0"],["Player 2", "0", "0", "0"],["Player 3", "0", "0", "0"])
+        # self.makeTable(["Player 1", "0", "0", "0"],["Player 2", "0", "0", "0"],["Player 3", "0", "0", "0"])
 
     def draw(self, screen):
-        # screen.fill((0, 0, 0)) # temp
-
         pygame.draw.rect(screen, (240, 240, 240), [const.MAZE_X, const.MAZE_Y, const.WINDOW_WIDTH - const.MAZE_X * 2, const.WINDOW_HEIGHT - const.MAZE_Y * 2])
         pygame.draw.rect(screen, (0,0,0), [const.MAZE_X, const.MAZE_Y, const.WINDOW_WIDTH - const.MAZE_X * 2, const.WINDOW_HEIGHT - const.MAZE_Y * 2], 5)
 
@@ -919,13 +917,16 @@ class EndScreen:
     def makeTable(self, *rows):
         # set all table rows to not draw
         # make all 0 except for the first one
+        rows = list(zip(*rows))
+        rows = list(zip(*rows))
+        rows.sort(key=lambda x: x[3], reverse=True)
         for row in self.TableInfo:
             row.setDraw(False)
         # set the first row to draw
         self.TableInfo[0].setDraw(True)
-        for idx, row in enumerate(rows):
+        for idx, r in enumerate(rows):
             self.TableInfo[idx+1].setDraw(True)
-            self.TableInfo[idx+1].setPlayerName(row[0])
-            self.TableInfo[idx+1].setPlayerKills(row[1])
-            self.TableInfo[idx+1].setPlayerDeaths(row[2])
-            self.TableInfo[idx+1].setPlayerRatio(row[3])
+            self.TableInfo[idx+1].setPlayerName(r[0])
+            self.TableInfo[idx+1].setPlayerKills(r[1])
+            self.TableInfo[idx+1].setPlayerDeaths(r[2])
+            self.TableInfo[idx+1].setPlayerRatio(f"{r[3]:.2f}")
