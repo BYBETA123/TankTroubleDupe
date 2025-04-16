@@ -67,7 +67,7 @@ class Gun(pygame.sprite.Sprite):
         self.damage = 700
         self.damageStatistic = 1
         self.reloadStatistic = 1
-        self.turretSpeed = 0.27
+        self.turretSpeed = 0.15 # This number * 30 for deg / tick
         self.drawable = False
         self.topTurretSpeed = self.turretSpeed
         self.gunH = 7
@@ -190,9 +190,7 @@ class Gun(pygame.sprite.Sprite):
                 self.rotationSpeed += -self.tank.getRotationalSpeed() * self.deltaTime
 
             self.angle += self.rotationSpeed
-            # self.angle = round(self.angle)
             self.angle %= 360
-
             #Reload cooldown of bullet and determines the angle to fire the bullet,
             #which is relative to the posistion of the tank gun.
             if keys[self.controls['fire']] and self.canShoot:
@@ -368,7 +366,7 @@ class Gun(pygame.sprite.Sprite):
             self.channelDict["reload"]["channel"].play(const.SOUND_DICTIONARY["Reload"])
 
     def _getTurretSpeed(self):
-        return self.tank.getRotationalSpeed() * (1.2 if (self.tank.effect[2] != 0) else 1)
+        return self.turretSpeed * (1.5 if (self.tank.effect[2] != 0) else 1)
     
     def setDelta(self, delta):
         self.deltaTime = delta
@@ -2501,6 +2499,8 @@ def damage(tank, damage, owner):
     # This function will adjust the damage that the tank has taken
     # Inputs: damage: The amount of damage that the tank has taken
     # Outputs: None
+    if tank.health <= 0: # if it was already dead
+        return
     tank.health -= (damage * (0.5 if tank.effect[1] != 0 else 1))
     if tank.health > 0:
         if not tank.channelDict["death"]["channel"].get_busy(): # if the sound isn't playing
@@ -2511,6 +2511,7 @@ def damage(tank, damage, owner):
         # if the tank is dead everything should stop
 
         if owner.getName() != tank.getPlayer().getName(): # as long as it is not a self-kill
+            print("Kill")
             owner.addKill()
         tank.getPlayer().addDeath()
         for channel in tank.channelDict:
@@ -2570,6 +2571,7 @@ def playGame():
             match difficultyType:
                 case DifficultyType.OnePlayerYard:
                     if p1Score == 99 or p2Score == 99:
+                        endScreen.makeTable(player1.getTableEntry(), player2.getTableEntry())
                         gameMode = GameMode.end
                     else:
                         reset()
@@ -2577,6 +2579,7 @@ def playGame():
                         timer.reset() # rest the clock
                 case DifficultyType.OnePlayerScrapYard:
                     if p1Score == 99 or p2Score == 99:
+                        endScreen.makeTable(player1.getTableEntry(), player2.getTableEntry())
                         gameMode = GameMode.end
                     else:
                         reset()
@@ -2584,6 +2587,7 @@ def playGame():
                         timer.reset() # rest the clock
                 case DifficultyType.TwoPlayerYard:
                     if p1Score == 99 or p2Score == 99:
+                        endScreen.makeTable(player1.getTableEntry(), player2.getTableEntry())
                         gameMode = GameMode.end
                     else:
                         reset()
@@ -2591,7 +2595,6 @@ def playGame():
                         timer.reset() # rest the clock
                 case DifficultyType.TwoPlayerScrapYard:
                     if p1Score == 2 or p2Score == 2:
-                        # endScreen.makeTable(["Player 1", 3, 4, 3/4],["Player 2", 2, 3, 2/3])
                         endScreen.makeTable(player1.getTableEntry(), player2.getTableEntry())
                         gameMode = GameMode.end
                     else:
@@ -2599,12 +2602,16 @@ def playGame():
                         constantPlayGame()
                         timer.reset() # rest the clock
                 case DifficultyType.OnePlayerBrawl:
+                    endScreen.makeTable(player1.getTableEntry(), player2.getTableEntry())
                     gameMode = GameMode.end
                 case DifficultyType.OnePlayerDeathMatch:
+                    endScreen.makeTable(player1.getTableEntry(), player2.getTableEntry())
                     gameMode = GameMode.end
                 case DifficultyType.TwoPlayerBrawl:
+                    endScreen.makeTable(player1.getTableEntry(), player2.getTableEntry())
                     gameMode = GameMode.end
                 case DifficultyType.TwoPlayerDeathMatch:
+                    endScreen.makeTable(player1.getTableEntry(), player2.getTableEntry())
                     gameMode = GameMode.end
 
     seconds = timer.getTime()
@@ -3126,11 +3133,6 @@ def main():
         elif gameMode == GameMode.selection:
 
             selectionScreen.draw(screen, mouse)
-            # screen.fill(selectionBackground) # This is the first line when drawing a new frame
-            # for button in buttonList:
-            #     button.update_display(mouse)
-            #     button.draw(screen, outline = False)
-            # selectionScreen()
 
         elif gameMode == GameMode.home:
             # # Draw the tank image

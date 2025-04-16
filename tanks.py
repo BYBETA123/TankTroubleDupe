@@ -228,7 +228,6 @@ class Tank(pygame.sprite.Sprite):
         self.angle += self.rotationSpeed
         # self.angle should always be between -360 and 360
         self.angle %= 360
-
         self.image = pygame.transform.rotate(self.originalTankImage, self.angle)
         self.rect = self.image.get_rect(center=(self.x, self.y))
 
@@ -515,7 +514,7 @@ class Bonsai(Tank):
         self.setSpeedStatistic(2)
         self.setHealthStatistic(2)
         self.setTopSpeed(0.05)
-        self.setTopRotationalSpeed(0.17)
+        self.setTopRotationalSpeed(0.133)
         self.setTankName("Bonsai")
         self.setWeight(900)
 
@@ -583,7 +582,7 @@ class Gater(Tank):
         self.setSpeedStatistic(2)
         self.setHealthStatistic(2)
         self.setTopSpeed(0.07)
-        self.setTopRotationalSpeed(0.17)
+        self.setTopRotationalSpeed(0.16)
         self.setTankName("Gater")
         self.setWeight(471)
 
@@ -602,7 +601,7 @@ class Panther(Tank):
         self.setSpeedStatistic(3)
         self.setHealthStatistic(1)
         self.setTopSpeed(0.1)
-        self.setTopRotationalSpeed(0.27)
+        self.setTopRotationalSpeed(0.22)
         self.setTankName("Panther")
         self.setWeight(150)
 
