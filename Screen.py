@@ -536,7 +536,7 @@ class SelectionScreen:
     textP2.setOutline(True, outlineWidth = 5)
     buttonList.append(textP2)
 
-    speedText = TextBox(50, 250, font=const.SELECTION_FONT,fontSize=36, text="SPEED", textColor=c.geT("BLACK"))
+    speedText = TextBox(50, 320, font=const.SELECTION_FONT,fontSize=36, text="SPEED", textColor=c.geT("BLACK"))
     speedText.setPaddingHeight(0)
     speedText.setPaddingWidth(0)
     speedText.setCharacterPad(7)
@@ -544,7 +544,7 @@ class SelectionScreen:
     speedText.setText("SPEED", 'right')
     buttonList.append(speedText)
 
-    healthText = TextBox(42, 285, font=const.SELECTION_FONT,fontSize=36, text="Health", textColor=c.geT("BLACK"))
+    healthText = TextBox(42, 355, font=const.SELECTION_FONT,fontSize=36, text="Health", textColor=c.geT("BLACK"))
     healthText.setPaddingHeight(0)
     healthText.setPaddingWidth(0)
     healthText.setCharacterPad(7)
@@ -552,7 +552,7 @@ class SelectionScreen:
     healthText.setText("HEALTH", "right")
     buttonList.append(healthText)
 
-    damageBar = TextBox(31, 320, font=const.SELECTION_FONT,fontSize=36, text="Damage", textColor=c.geT("BLACK"))
+    damageBar = TextBox(31, 250, font=const.SELECTION_FONT,fontSize=36, text="Damage", textColor=c.geT("BLACK"))
     damageBar.setPaddingHeight(0)
     damageBar.setPaddingWidth(0)
     damageBar.setCharacterPad(7)
@@ -560,7 +560,7 @@ class SelectionScreen:
     damageBar.setText("DAMAGE", "right")
     buttonList.append(damageBar)
 
-    reloadBar = TextBox(37, 355, font=const.SELECTION_FONT,fontSize=36, text="Reload", textColor=c.geT("BLACK"))
+    reloadBar = TextBox(37, 285, font=const.SELECTION_FONT,fontSize=36, text="Reload", textColor=c.geT("BLACK"))
     reloadBar.setPaddingHeight(0)
     reloadBar.setPaddingWidth(0)
     reloadBar.setCharacterPad(7)
@@ -568,7 +568,7 @@ class SelectionScreen:
     reloadBar.setText("RELOAD", "right")
     buttonList.append(reloadBar)
 
-    speedText2 = TextBox(650, 250, font=const.SELECTION_FONT,fontSize=36, text="Speed", textColor=c.geT("BLACK"))
+    speedText2 = TextBox(650, 320, font=const.SELECTION_FONT,fontSize=36, text="Speed", textColor=c.geT("BLACK"))
     speedText2.setPaddingHeight(0)
     speedText2.setPaddingWidth(0)
     speedText2.setCharacterPad(7)
@@ -576,7 +576,7 @@ class SelectionScreen:
     speedText2.setText("SPEED", "left")
     buttonList.append(speedText2)
 
-    healthText2 = TextBox(650, 285, font=const.SELECTION_FONT,fontSize=36, text="Health", textColor=c.geT("BLACK"))
+    healthText2 = TextBox(650, 355, font=const.SELECTION_FONT,fontSize=36, text="Health", textColor=c.geT("BLACK"))
     healthText2.setPaddingHeight(0)
     healthText2.setPaddingWidth(0)
     healthText2.setCharacterPad(7)
@@ -584,7 +584,7 @@ class SelectionScreen:
     healthText2.setText("HEALTH", "left")
     buttonList.append(healthText2)
 
-    damageBar2 = TextBox(650, 320, font=const.SELECTION_FONT,fontSize=36, text="Damage", textColor=c.geT("BLACK"))
+    damageBar2 = TextBox(650, 250, font=const.SELECTION_FONT,fontSize=36, text="Damage", textColor=c.geT("BLACK"))
     damageBar2.setPaddingHeight(0)
     damageBar2.setPaddingWidth(0)
     damageBar2.setCharacterPad(7)
@@ -592,7 +592,7 @@ class SelectionScreen:
     damageBar2.setText("DAMAGE", "left")
     buttonList.append(damageBar2)
 
-    reloadBar2 = TextBox(650, 355, font=const.SELECTION_FONT,fontSize=36, text="Reload", textColor=c.geT("BLACK"))
+    reloadBar2 = TextBox(650, 285, font=const.SELECTION_FONT,fontSize=36, text="Reload", textColor=c.geT("BLACK"))
     reloadBar2.setPaddingHeight(0)
     reloadBar2.setPaddingWidth(0)
     reloadBar2.setCharacterPad(7)
@@ -630,63 +630,64 @@ class SelectionScreen:
 
     def draw(self, screen, mouse):
 
-
         screen.fill(const.SELECTION_BACKGROUND) # This is the first line when drawing a new frame
 
         for button in self.buttonList:
             button.update_display(mouse)
             button.draw(screen, outline = False)
 
+        # Draw the green bars
+        pygame.draw.rect(screen, c.geT("GREEN"), (157, 320, 50 * self.playerInformation.getPlayer1Hull().getSpeedStatistic(), 25)) # Green bar
+        pygame.draw.rect(screen, c.geT("GREEN"), (157, 355, 50 * self.playerInformation.getPlayer1Hull().getHealthStatistic(), 25)) # Green bar
+        pygame.draw.rect(screen, c.geT("GREEN"), (157, 250, 50 * self.playerInformation.getPlayer1Turret().getDamageStatistic(), 25)) # Green bar
+        pygame.draw.rect(screen, c.geT("GREEN"), (157, 285, 50 * self.playerInformation.getPlayer1Turret().getReloadStatistic(), 25)) # Green bar
+        pygame.draw.rect(screen, c.geT("GREEN"), (493, 320, 50 * self.playerInformation.getPlayer2Hull().getSpeedStatistic(), 25)) # Green bar
+        pygame.draw.rect(screen, c.geT("GREEN"), (493, 355, 50 * self.playerInformation.getPlayer2Hull().getHealthStatistic(), 25)) # Green bar
+        pygame.draw.rect(screen, c.geT("GREEN"), (493, 250,50 * self.playerInformation.getPlayer2Turret().getDamageStatistic(), 25)) # Green bar
+        pygame.draw.rect(screen, c.geT("GREEN"), (493, 285, 50 * self.playerInformation.getPlayer2Turret().getReloadStatistic(), 25)) # Green bar
+
         # Player 1 Speed
-        pygame.draw.rect(screen, c.geT("GREEN"), (157, 250, 50 * self.playerInformation.getPlayer1Hull().getSpeedStatistic(), 25)) # Green bar
         #Outlines
         pygame.draw.rect(screen, c.geT("BLACK"), (157, 250, 150, 25), 3) # Green bar outline
         pygame.draw.rect(screen, c.geT("BLACK"), (207, 250, 50, 25), 3) # Thirding
 
         #Player 1 Health
-        pygame.draw.rect(screen, c.geT("GREEN"), (157, 285, 50 * self.playerInformation.getPlayer1Hull().getHealthStatistic(), 25)) # Green bar
         #Outlines
         pygame.draw.rect(screen, c.geT("BLACK"), (157, 285, 150, 25), 3) # Green bar outline
         pygame.draw.rect(screen, c.geT("BLACK"), (207, 285, 50,25), 3) # Thirding
 
         # Player 1 damage
-        pygame.draw.rect(screen, c.geT("GREEN"), (157, 320, 50 * self.playerInformation.getPlayer1Turret().getDamageStatistic(), 25)) # Green bar
         #Outlines
         pygame.draw.rect(screen, c.geT("BLACK"), (157, 320, 150, 25), 3) # Green bar outline
         pygame.draw.rect(screen, c.geT("BLACK"), (207, 320, 50,25), 3) # Thirding
 
         # Player 1 reload
-        pygame.draw.rect(screen, c.geT("GREEN"), (157, 355, 50 * self.playerInformation.getPlayer1Turret().getReloadStatistic(), 25)) # Green bar
         #Outlines
         pygame.draw.rect(screen, c.geT("BLACK"), (157, 355, 150, 25), 3) # Green bar outline
         pygame.draw.rect(screen, c.geT("BLACK"), (207, 355, 50,25), 3) # Thirding
 
         #Player 2 Speed
-        pygame.draw.rect(screen, c.geT("GREEN"), (493, 250, 50 * self.playerInformation.getPlayer2Hull().getSpeedStatistic(), 25)) # Green bar
         #Outlines
         pygame.draw.rect(screen, c.geT("BLACK"), (493, 250, 50 * 3, 25), 3) # Green bar outline
         pygame.draw.rect(screen, c.geT("BLACK"), (543, 250, 50,25), 3) # Thirding
 
         # Player 2 Health
-        pygame.draw.rect(screen, c.geT("GREEN"), (493, 285, 50 * self.playerInformation.getPlayer2Hull().getHealthStatistic(), 25)) # Green bar
         #Outlines
         pygame.draw.rect(screen, c.geT("BLACK"), (493, 285, 150, 25), 3) # Green bar outline
         pygame.draw.rect(screen, c.geT("BLACK"), (543, 285, 50,25), 3) # Thirding
 
         # Player 2 Damage
-        pygame.draw.rect(screen, c.geT("GREEN"), (493, 320,50 * self.playerInformation.getPlayer2Turret().getDamageStatistic(), 25)) # Green bar
         #Outlines
         pygame.draw.rect(screen, c.geT("BLACK"), (493, 320, 150, 25), 3) # Green bar outline
         pygame.draw.rect(screen, c.geT("BLACK"), (543, 320, 50, 25), 3) # Thirding
 
         # Player 2 Reload
-        pygame.draw.rect(screen, c.geT("GREEN"), (493, 355, 50 * self.playerInformation.getPlayer2Turret().getReloadStatistic(), 25)) # Green bar
         #Outlines
         pygame.draw.rect(screen, c.geT("BLACK"), (493, 355, 150, 25), 3) # Green bar outline
         pygame.draw.rect(screen, c.geT("BLACK"), (543, 355, 50,25), 3) # Thirding
 
-        #Draw the tank image
 
+        #Draw the tank image
         tankPath = os.path.join(const.BASE_PATH, 'Sprites', self.playerInformation.getPlayer1Hull().getTankName() + str(self.playerInformation.Player1HullColourIndex() + 1) + '.png')
         originalTankImage = pygame.image.load(tankPath).convert_alpha()
         tankImage = pygame.transform.scale(originalTankImage, (20*4, 13*4))
