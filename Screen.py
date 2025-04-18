@@ -321,7 +321,7 @@ class InfoScreen:
 
 class HomeScreen:
     
-    homeButtonNameArray = ["1P Yard", "1P Scrapyard", "2P Yard", "2P Scrapyard", "1p Brawl", "1P DeathMatch", "2P Brawl", "2P DeathMatch"] #<!>
+    homeButtonNameArray = ["1P Yard", "1P Scrapyard", "2P Yard", "2P Scrapyard", "1p Brawl", "1P DeathMatch", "2P Brawl", "2P DeathMatch", "1P TDM", "2P TDM", "1P CTF", "2P CTF"] #<!>
     homeButtonList = []
 
     # Create buttons with specified positions and text
@@ -930,3 +930,20 @@ class EndScreen:
             self.TableInfo[idx+1].setPlayerKills(r[1])
             self.TableInfo[idx+1].setPlayerDeaths(r[2])
             self.TableInfo[idx+1].setPlayerRatio(f"{r[3]:.2f}")
+
+class NotImplmented:
+
+    backButton = Button(c.geT("BLACK"), c.geT("BLACK"), 630, 175, 100, 50, "Back", c.geT("WHITE"), 30, c.geT("BLACK"))
+
+    txtBox = TextBox(100, 180, font=const.SELECTION_FONT,fontSize=30, text="This feature has not been implemented yet", textColor=c.geT("BLACK"))
+    txtBox.setBoxColor(const.SELECTION_BACKGROUND)
+
+    def draw(self, screen):
+
+        pygame.draw.rect(screen, const.SELECTION_BACKGROUND, [40, 160, 740, 80])
+        pygame.draw.rect(screen, c.geT("BLACK"), [40, 160, 740, 80], width = 5)
+        self.backButton.draw(screen, outline = True)
+        self.txtBox.draw(screen, outline = True)
+
+    def isWithinBackButton(self, mousePos):
+        return self.backButton.is_hovered(mousePos)

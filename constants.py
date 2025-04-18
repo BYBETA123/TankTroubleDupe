@@ -2,7 +2,10 @@ import pygame
 import os
 import sys
 from ColorDictionary import ColourDictionary as c # colors
+
+
 pygame.init() # all init
+pygame.mixer.set_num_channels(64) # set it here to
 ### Game Constants
 MAZE_X = 50
 MAZE_Y = 50
@@ -114,6 +117,28 @@ VOLUME = {
 
 PLAYER_1_TANK_NAME = "Plwasd1"
 PLAYER_2_TANK_NAME = "Plarro2"
+PLAYER_3_TANK_NAME = "PlAI3"
+PLAYER_4_TANK_NAME = "PlAI4"
+PLAYER_5_TANK_NAME = "PlAI5"
+PLAYER_6_TANK_NAME = "PlAI6"
+PLAYER_7_TANK_NAME = "PlAI7"
+PLAYER_8_TANK_NAME = "PlAI8"
 
 PLAYER_1_GUN_NAME = "Gun1"
 PLAYER_2_GUN_NAME = "Gun2"
+PLAYER_3_GUN_NAME = "Gun3"
+PLAYER_4_GUN_NAME = "Gun4"
+PLAYER_5_GUN_NAME = "Gun5"
+PLAYER_6_GUN_NAME = "Gun6"
+PLAYER_7_GUN_NAME = "Gun7"
+PLAYER_8_GUN_NAME = "Gun8"
+
+PLAYER_1_CHANNELS = {"move": {"channel": pygame.mixer.Channel(3), "volume": 0.05}, "rotate": {"channel": pygame.mixer.Channel(4), "volume": 0.2}, "death": {"channel" : pygame.mixer.Channel(5), "volume": 0.5}, "fire": {"channel": pygame.mixer.Channel(6), "volume": 1}, "hit": {"channel": pygame.mixer.Channel(7), "volume": 1}, "reload": {"channel": pygame.mixer.Channel(8), "volume": 0.5}}
+PLAYER_2_CHANNELS = {"move": {"channel": pygame.mixer.Channel(9), "volume": 0.05}, "rotate": {"channel": pygame.mixer.Channel(10), "volume": 0.3}, "death": {"channel" : pygame.mixer.Channel(11), "volume": 0.5}, "fire": {"channel": pygame.mixer.Channel(12), "volume": 1}, "hit": {"channel": pygame.mixer.Channel(13), "volume": 1}, "reload": {"channel": pygame.mixer.Channel(14), "volume": 0.5}}
+PLAYER_3_CHANNELS = {"move": {"channel": pygame.mixer.Channel(15), "volume": 0.05}, "rotate": {"channel": pygame.mixer.Channel(16), "volume": 0.2}, "death": {"channel" : pygame.mixer.Channel(17), "volume": 0.5}, "fire": {"channel": pygame.mixer.Channel(18), "volume": 1}, "hit": {"channel": pygame.mixer.Channel(19), "volume": 1}, "reload": {"channel": pygame.mixer.Channel(20), "volume": 0.5}}
+PLAYER_4_CHANNELS = {"move": {"channel": pygame.mixer.Channel(21), "volume": 0.05}, "rotate": {"channel": pygame.mixer.Channel(22), "volume": 0.2}, "death": {"channel" : pygame.mixer.Channel(23), "volume": 0.5}, "fire": {"channel": pygame.mixer.Channel(24), "volume": 1}, "hit": {"channel": pygame.mixer.Channel(25), "volume": 1}, "reload": {"channel": pygame.mixer.Channel(26), "volume": 0.5}}
+PLAYER_5_CHANNELS = {"move": {"channel": pygame.mixer.Channel(27), "volume": 0.05}, "rotate": {"channel": pygame.mixer.Channel(28), "volume": 0.2}, "death": {"channel" : pygame.mixer.Channel(29), "volume": 0.5}, "fire": {"channel": pygame.mixer.Channel(30), "volume": 1}, "hit": {"channel": pygame.mixer.Channel(31), "volume": 1}, "reload": {"channel": pygame.mixer.Channel(32), "volume": 0.5}}
+PLAYER_6_CHANNELS = {"move": {"channel": pygame.mixer.Channel(33), "volume": 0.05}, "rotate": {"channel": pygame.mixer.Channel(34), "volume": 0.2}, "death": {"channel" : pygame.mixer.Channel(35), "volume": 0.5}, "fire": {"channel": pygame.mixer.Channel(36), "volume": 1}, "hit": {"channel": pygame.mixer.Channel(37), "volume": 1}, "reload": {"channel": pygame.mixer.Channel(38), "volume": 0.5}}
+PLAYER_7_CHANNELS = {"move": {"channel": pygame.mixer.Channel(39), "volume": 0.05}, "rotate": {"channel": pygame.mixer.Channel(40), "volume": 0.2}, "death": {"channel" : pygame.mixer.Channel(41), "volume": 0.5}, "fire": {"channel": pygame.mixer.Channel(42), "volume": 1}, "hit": {"channel": pygame.mixer.Channel(43), "volume": 1}, "reload": {"channel": pygame.mixer.Channel(44), "volume": 0.5}}
+PLAYER_8_CHANNELS = {"move": {"channel": pygame.mixer.Channel(45), "volume": 0.05}, "rotate": {"channel": pygame.mixer.Channel(46), "volume": 0.2}, "death": {"channel" : pygame.mixer.Channel(47), "volume": 0.5}, "fire": {"channel": pygame.mixer.Channel(48), "volume": 1}, "hit": {"channel": pygame.mixer.Channel(49), "volume": 1}, "reload": {"channel": pygame.mixer.Channel(50), "volume": 0.5}}
+

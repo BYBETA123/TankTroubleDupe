@@ -373,9 +373,13 @@ class Tank(pygame.sprite.Sprite):
         # Outputs: None
         self.controls = data[2]
         self.name = data[3]
-        self.rect = self.tankImage.get_rect(center=(data[0], data[1]))
-        self.x = float(self.rect.centerx)
-        self.y = float(self.rect.centery)
+        # self.rect = self.tankImage.get_rect(center=(data[0], data[1]))
+        # self.x = float(self.rect.centerx)
+        # self.y = float(self.rect.centery)
+        self.x = data[0]
+        self.y = data[1]
+        self.rect = self.tankImage.get_rect(center=(self.x, self.y))
+
         # set up the audio channels
         self.channelDict = data[4]
 
@@ -467,10 +471,8 @@ class Tank(pygame.sprite.Sprite):
         self.BFSRefresh = True
         self.lastTargetPackage = aim
     
-    def setAI(self, AI, currentTargetPackage):
+    def setAI(self, AI):
         self.AI = AI
-        self.lastTargetPackage = currentTargetPackage
-        self.aim = currentTargetPackage
 
     def setSoundDictionary(self, soundDictionary):
         self.soundDictionary = soundDictionary

@@ -1,3 +1,5 @@
+import constants as const
+
 class PlayerInformation:
     # This class will hold the turret / hulls for each of the players
 
@@ -131,12 +133,19 @@ class PlayerInformation:
     def specificHull(self, index):
         return self.hullList[index]
 
+    def setPlayer1Turret(self, index):
+        self.p1I = index % len(self.turretList) # for safety
+
 class Player(): # This is a class that is being reported to
-    def __init__(self, name):
+    def __init__(self, name, CONTROLS = const.CONTROLS_TANK1, TANK_NAME = const.PLAYER_1_TANK_NAME, TANK_CHANNELS = const.PLAYER_1_CHANNELS, GUN_NAME = const.PLAYER_1_GUN_NAME, SPAWN = [(0,0)]):
         self.name = name
         self.kills = 0
         self.deaths = 0
-
+        self.controls = CONTROLS
+        self.tankName = TANK_NAME
+        self.tankChannels = TANK_CHANNELS
+        self.gunName = GUN_NAME
+        self.spawn = SPAWN
     def getTableEntry(self):
         return [self.name, self.kills, self.deaths, self.kills / max(self.deaths, 1)]
     
@@ -158,3 +167,18 @@ class Player(): # This is a class that is being reported to
     def resetPlayer(self):
         self.kills = 0
         self.deaths = 0
+
+    def getControls(self):
+        return self.controls
+    
+    def getTankName(self):
+        return self.tankName
+    
+    def getTankChannels(self):
+        return self.tankChannels
+    
+    def getGunName(self):
+        return self.gunName
+    
+    def getSpawn(self):
+        return self.spawn

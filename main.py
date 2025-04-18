@@ -17,10 +17,27 @@ from Players import Player # maybe this is needed
 global timerClock
 timerClock = 0
 # final set up of the players
-global player1, player2
-player1 = Player("Player 1")
-player2 = Player("Player 2")
+
+player1 = Player("Player 1", const.CONTROLS_TANK1, const.PLAYER_1_TANK_NAME, const.PLAYER_1_CHANNELS, const.PLAYER_1_GUN_NAME)# Player 1
+player2 = Player("Player 2", const.CONTROLS_TANK2, const.PLAYER_2_TANK_NAME, const.PLAYER_2_CHANNELS, const.PLAYER_2_GUN_NAME)# Player 2
+player3 = Player("Player 3", None, const.PLAYER_3_TANK_NAME, const.PLAYER_3_CHANNELS, const.PLAYER_3_GUN_NAME)# Player 3
+player4 = Player("Player 4", None, const.PLAYER_4_TANK_NAME, const.PLAYER_4_CHANNELS, const.PLAYER_4_GUN_NAME)# Player 4
+player5 = Player("Player 5", None, const.PLAYER_5_TANK_NAME, const.PLAYER_5_CHANNELS, const.PLAYER_5_GUN_NAME)# Player 5
+player6 = Player("Player 6", None, const.PLAYER_6_TANK_NAME, const.PLAYER_6_CHANNELS, const.PLAYER_6_GUN_NAME)# Player 6
+player7 = Player("Player 7", None, const.PLAYER_7_TANK_NAME, const.PLAYER_7_CHANNELS, const.PLAYER_7_GUN_NAME)# Player 7
+player8 = Player("Player 8", None, const.PLAYER_8_TANK_NAME, const.PLAYER_8_CHANNELS, const.PLAYER_8_GUN_NAME)# Player 8
+
+global playerlist
+playerlist = [player1, player2, player3, player4, player5, player6, player7, player8] # list of all the players in the game
+
+global tankDead
+tankDead = [False, False, False, False, False, False, False, False] # This is to keep track of the tanks that are dead
+
 #init
+global gunList, tankList
+tankList = [None for _ in range(8)] # list of all the current tanks in the game
+gunList = [None for _ in range(8)] # list of all the current guns in the game
+
 pygame.init()
 
 #Classes
@@ -102,7 +119,7 @@ class Gun(pygame.sprite.Sprite):
         None
         """
         if self.AI:
-            tank2x, tank2y = tank2.getCenter() # get the center
+            tank2x, tank2y = tankList[0].getCenter() # get the center
             
             c = self.tank.getCorners() # Our center
 
@@ -158,10 +175,8 @@ class Gun(pygame.sprite.Sprite):
                             break
                     if i == steps - 1:
                         self.fire()
-                        # print("Boom")
 
         else:
-
             keys = pygame.key.get_pressed()
             #Checks what keys are pressed, and changes speed accordingly
             #If tank hull moves left or right, the gun will also move simultaneously
@@ -484,15 +499,15 @@ class Bullet(pygame.sprite.Sprite):
             index = (row - 1) * const.COLUMN_AMOUNT + col
 
             # Check for collisions with tanks
-            tank1Collision = self.getCollision(tank1.getCorners(), (tempX, tempY))
-            tank2Collision = self.getCollision(tank2.getCorners(), (tempX, tempY))
+            tank1Collision = self.getCollision(tankList[0].getCorners(), (tempX, tempY))
+            tank2Collision = self.getCollision(tankList[1].getCorners(), (tempX, tempY))
 
-            if self.name == tank1.getName() and tank2Collision and tank2.getInvincibility() == 0:
-                damage(tank2, self.damage, self.gunOwner.getPlayer())
+            if self.name == tankList[0].getName() and tank2Collision and tankList[1].getInvincibility() == 0:
+                damage(tankList[1], self.damage, self.gunOwner.getPlayer())
                 self.kill()
                 return
-            if self.name == tank2.getName() and tank1Collision and tank1.getInvincibility() == 0:
-                damage(tank1, self.damage, self.gunOwner.getPlayer())
+            if self.name == tankList[1].getName() and tank1Collision and tankList[0].getInvincibility() == 0:
+                damage(tankList[0], self.damage, self.gunOwner.getPlayer())
                 self.kill()
                 return
             # Checking for self damage
@@ -500,12 +515,12 @@ class Bullet(pygame.sprite.Sprite):
                 self.selfCollision = True
 
             if self.selfCollision:
-                if tank1Collision and tank1.getInvincibility()==0:
-                    damage(tank1, self.damage, self.gunOwner.getPlayer())
+                if tank1Collision and tankList[0].getInvincibility()==0:
+                    damage(tankList[0], self.damage, self.gunOwner.getPlayer())
                     self.kill()
                     return
-                if tank2Collision and tank2.getInvincibility()==0:
-                    damage(tank2, self.damage, self.gunOwner.getPlayer())
+                if tank2Collision and tankList[1].getInvincibility()==0:
+                    damage(tankList[1], self.damage, self.gunOwner.getPlayer())
                     self.kill()
                     return
 
@@ -732,15 +747,15 @@ class WatcherBullet(Bullet):
 
             # Check for collisions with tanks
 
-            tank1_collision = (self.getCollision(tank1.getCorners(), (temp_x, temp_y)))
-            tank2_collision = (self.getCollision(tank2.getCorners(), (temp_x, temp_y)))
+            tank1_collision = (self.getCollision(tankList[0].getCorners(), (temp_x, temp_y)))
+            tank2_collision = (self.getCollision(tankList[1].getCorners(), (temp_x, temp_y)))
 
-            if self.name == tank1.getName() and tank2_collision and tank2.getInvincibility() == 0:
-                damage(tank2, self.damage, self.gunOwner.getPlayer())
+            if self.name == tankList[0].getName() and tank2_collision and tankList[1].getInvincibility() == 0:
+                damage(tankList[1], self.damage, self.gunOwner.getPlayer())
                 self.kill()
                 return
-            if self.name == tank2.getName() and tank1_collision and tank1.getInvincibility() == 0:
-                damage(tank1, self.damage, self.gunOwner.getPlayer())
+            if self.name == tankList[1].getName() and tank1_collision and tankList[0].getInvincibility() == 0:
+                damage(tankList[0], self.damage, self.gunOwner.getPlayer())
                 self.kill()
                 return
 
@@ -749,11 +764,11 @@ class WatcherBullet(Bullet):
 
             if self.selfCollision:
                 if tank1_collision:
-                    damage(tank1, self.damage, self.gunOwner.getPlayer())
+                    damage(tankList[0], self.damage, self.gunOwner.getPlayer())
                     self.kill()
                     return
                 if tank2_collision:
-                    damage(tank2, self.damage, self.gunOwner.getPlayer())
+                    damage(tankList[1], self.damage, self.gunOwner.getPlayer())
                     self.kill()
                     return
 
@@ -860,25 +875,25 @@ class ChamberBullet(Bullet):
             index = (row - 1) * const.COLUMN_AMOUNT + col
 
             # use the old collision
-            tank1Collision = pygame.sprite.collide_rect(self, tank1)
-            tank2Collision = pygame.sprite.collide_rect(self, tank2)
+            tank1Collision = pygame.sprite.collide_rect(self, tankList[0])
+            tank2Collision = pygame.sprite.collide_rect(self, tankList[1])
             
-            if self.name == tank1.getName() and tank2Collision and tank2.getInvincibility() == 0:
-                damage(tank2, self.damage, self.gunOwner.getPlayer())
+            if self.name == tankList[0].getName() and tank2Collision and tankList[1].getInvincibility() == 0:
+                damage(tankList[1], self.damage, self.gunOwner.getPlayer())
                 self.explode()
                 return
-            if self.name == tank2.getName() and tank1Collision and tank1.getInvincibility() == 0:
-                damage(tank1, self.damage, self.gunOwner.getPlayer())
+            if self.name == tankList[1].getName() and tank1Collision and tankList[0].getInvincibility() == 0:
+                damage(tankList[0], self.damage, self.gunOwner.getPlayer())
                 self.explode()
                 return
 
             if self.selfCollision:
-                if tank1Collision and tank1.getInvincibility() == 0:
-                    damage(tank1, self.damage, self.gunOwner.getPlayer())
+                if tank1Collision and tankList[0].getInvincibility() == 0:
+                    damage(tankList[0], self.damage, self.gunOwner.getPlayer())
                     self.explode()
                     return
-                if tank2Collision and tank2.getInvincibility() == 0:
-                    damage(tank2, self.damage, self.gunOwner.getPlayer())
+                if tank2Collision and tankList[1].getInvincibility() == 0:
+                    damage(tankList[1], self.damage, self.gunOwner.getPlayer())
                     self.explode()
                     return
 
@@ -902,12 +917,12 @@ class ChamberBullet(Bullet):
                 wallCollision = True
                 self.angle = 360 - self.angle
             if wallCollision:
-                if self.name == tank1.getName() and tank1Collision and tank1.getInvincibility() == 0:
-                    damage(tank1, self.damage, self.gunOwner.getPlayer())
+                if self.name == tankList[0].getName() and tank1Collision and tankList[0].getInvincibility() == 0:
+                    damage(tankList[0], self.damage, self.gunOwner.getPlayer())
                     self.explode()
                     return
-                if self.name == tank2.getName() and tank2Collision and tank2.getInvincibility() == 0:
-                    damage(tank2, self.damage, self.gunOwner.getPlayer())
+                if self.name == tankList[1].getName() and tank2Collision and tankList[1].getInvincibility() == 0:
+                    damage(tankList[1], self.damage, self.gunOwner.getPlayer())
                     self.explode()
                     return
                 self.bounce -= 1
@@ -1031,24 +1046,24 @@ class Tile(pygame.sprite.Sprite):
             self.supplyTimer = 0
             self.picked = False
         
-        # if tank1 or tank 2 is within the tile, then we want to grant the effect
+        # if tankList[0] or tank 2 is within the tile, then we want to grant the effect
         if self.supply is not None and not self.picked:
-            if self.isWithin(tank1.getCenter()):
+            if self.isWithin(tankList[0].getCenter()):
                 if self.supplyIndex == 0:
-                    tank1.applyDoubleDamage()
+                    tankList[0].applyDoubleDamage()
                 elif self.supplyIndex == 1:
-                    tank1.applyDoubleArmor()
+                    tankList[0].applyDoubleArmor()
                 elif self.supplyIndex == 2:
-                    tank1.applySpeedBoost()
+                    tankList[0].applySpeedBoost()
                 self.picked = True
                 self.supplyTimer = self.timer
-            if self.isWithin(tank2.getCenter()):
+            if self.isWithin(tankList[1].getCenter()):
                 if self.supplyIndex == 0:
-                    tank2.applyDoubleDamage()
+                    tankList[1].applyDoubleDamage()
                 elif self.supplyIndex == 1:
-                    tank2.applyDoubleArmor()
+                    tankList[1].applyDoubleArmor()
                 elif self.supplyIndex == 2:
-                    tank2.applySpeedBoost()
+                    tankList[1].applySpeedBoost()
                 self.picked = True
                 self.supplyTimer = self.timer
 
@@ -1205,6 +1220,9 @@ class Tile(pygame.sprite.Sprite):
         print("Neighbours: ", self.neighbours, end = " ")
         print("Bordering: ", self.bordering)
 
+    def setSpawn(self, spawn):
+        self.spawn = spawn
+
 class Explosion(pygame.sprite.Sprite):
 
     def __init__(self, x, y):
@@ -1274,23 +1292,31 @@ class GameMode(Enum):
     credit = 5
     info = 6
     end = 7
+    unimplemented = 8
 
 class DifficultyType(Enum):
-    # format is <Number> <Respawn> <AI>
-    NotInGame = (0, False, False)
-    OnePlayerYard = (1, False, True)
-    OnePlayerScrapYard = (2, False, True)
-    TwoPlayerYard = (3, False, False)
-    TwoPlayerScrapYard = (4, False, False)
-    OnePlayerBrawl = (5, True, True)
-    OnePlayerDeathMatch = (6, True, True)
-    TwoPlayerBrawl = (7, True, False)
-    TwoPlayerDeathMatch = (8, True, False)
+    # format is <Number> <Respawn> <AI> <No. of Players>, <humanCount>
+    NotInGame = (0, False, False, 0, 0)
+    OnePlayerYard = (1, False, True, 2, 1)
+    OnePlayerScrapYard = (2, False, True, 2, 1)
+    TwoPlayerYard = (3, False, False, 2, 2)
+    TwoPlayerScrapYard = (4, False, False, 2, 2)
+    OnePlayerBrawl = (5, True, True, 2, 1)
+    OnePlayerDeathMatch = (6, True, True, 2, 1)
+    TwoPlayerBrawl = (7, True, False, 2, 2)
+    TwoPlayerDeathMatch = (8, True, False, 2, 2)
+    OnePlayerTDM = (9, True, True, 2, 1)
+    TeamDeathMatch = (10, True, False, 2, 2)
+    OnePlayerCaptureTheFlag = (11, True, True, 2, 1)
+    CaptureTheFlag = (12, True, False, 2, 2)
 
-    def __init__(self, number, respawn, ai):
+
+    def __init__(self, number, respawn, ai, playerCount, human):
         self._value_ = number
         self.respawn = respawn
         self.ai = ai
+        self.playerCount = playerCount
+        self.humanCount = human
 
     @classmethod
     def from_index(cls, index):
@@ -1926,58 +1952,90 @@ def spareChannels(sound):
     print("No available channels")
     return
 
-def tileGen():
+def tileGen(numSpawns = 2): # Default is 2 spawns
     # This function is responsible for generating the tiles for the maze
     # Inputs: No inputs
     # Outputs: A list of tiles that make up the maze
     #
 
-    validMaze = False
-    while not validMaze: # While our maze isn't valid
-        tileList = []
+    def gen():
+        tempTiles = []
         index = 1
-        choice = [i for i in range(1,const.ROW_AMOUNT*const.COLUMN_AMOUNT+1)] # Make all the choices
-        choices = []
-        option = random.choice(choice) # Select the spawn zones
-        failsafe = 0
-        while len(choices) < 2 and failsafe < 10: # We only 2 spawns
-            if validateChoice(option, choices):
-                choices.append(option)
-                tempChoice = choices.copy()
-                #Remove close choices that are invalid so that we can choose a valid one more easily
-                for i in range(2, len(choice)):
-                    row1, col1 = choices[0]//const.COLUMN_AMOUNT, choices[0]%const.COLUMN_AMOUNT
-                    row2, col2 = i//const.COLUMN_AMOUNT, i%const.COLUMN_AMOUNT
-                    if abs(col1-col2) >= 6 and abs(row1-row2) >= 3:
-                        tempChoice.append(i)
-            option = random.choice(tempChoice) # Try again
-            failsafe += 1
-        if failsafe == 10: # In case we are running for too long
-            print("failsafe activated")
-            choices = [1,const.ROW_AMOUNT*const.COLUMN_AMOUNT]
         for j in range(const.MAZE_Y, const.MAZE_HEIGHT + 1, const.TILE_SIZE): # Assign the tiles and spawns once everything is found
             for i in range(const.MAZE_X, const.MAZE_WIDTH + 1, const.TILE_SIZE):
-                if index in choices:
-                    spawn = True
-                else:
-                    spawn = False
-
-                tileList.append(Tile(index, i, j, c.geT("LIGHT_GREY"), spawn))
+                tempTiles.append(Tile(index, i, j, c.geT("LIGHT_GREY"), False))
                 index += 1
 
-        #We need to make sure that all the borders are bordered on both sides
-        for tile in tileList:
+        # #We need to make sure that all the borders are bordered on both sides
+        for tile in tempTiles:
             bordering = tile.getBordering()
             for border in bordering:
                 if border != -1:
-                    tileList[border-1].setBorder((bordering.index(border)+2)%4, tile.border[bordering.index(border)])
+                    tempTiles[border-1].setBorder((bordering.index(border)+2)%4, tile.border[bordering.index(border)])
+        return tempTiles
 
-        #Validate the tileList
-        validMaze = breathFirstSearch(tileList, choices, 0) and breathFirstSearch(tileList, choices, 1)
+    choices = []
+    side = 0 # start with the right
+    # maze generated
+
+    tileList = gen()
+
+    # validate that we have a working maze
+    # get 2 choices
+
+
+    cArrL = [1, 2, 3, 15, 16, 17, 29, 30, 31, 43, 44, 45, 57, 58, 59, 71, 72, 73, 85, 86, 87, 99, 100, 101]
+    cArrR = [12, 13, 14, 26, 27, 28, 40, 41, 42, 54, 55, 56, 68, 69, 70, 82, 83, 84, 96, 97, 98, 110, 111, 112]
+    option = random.choice(cArrL) # Select the spawn zones
+    cArrL.remove(option) # Remove the spawn zone from the list of choices
+    choices.append(option) # Add the spawn zone to the list of choices
+
+    while len(choices) < numSpawns:
+        while len(cArrL) != 0 and len(cArrR) != 0:
+            # we need to generate enough spawns to fill the maximum amount of spawns
+            if side:
+                # Left
+                option = random.choice(cArrL) # Select the spawn zones
+                cArrL.remove(option)
+            else:
+                # Right
+                option = random.choice(cArrR) # Select the spawn zones
+                cArrR.remove(option)
+
+            # verify that this can reach another choice within the maze
+            if breathFirstSearch(tileList, [choices[-1], option], 0):
+                # if success we can break this while
+                choices.append(option)
+                # validate that the spawn is valid
+                break 
+
+        side = (side+1)%2 # now we switch to the other
+        # have we run out of options?
+        if (len(cArrL) == 0 or len(cArrR) == 0): # just in case we actually passed
+            # reset and try again
+            print(f"Failed to generate at {len(choices)}")
+            choices = []
+            side = 0 # start with the right
+            # maze generated
+
+            tileList = gen()
+
+            # get 2 choices
+            cArrL = [1, 2, 3, 15, 16, 17, 29, 30, 31, 43, 44, 45, 57, 58, 59, 71, 72, 73, 85, 86, 87, 99, 100, 101]
+            cArrR = [12, 13, 14, 26, 27, 28, 40, 41, 42, 54, 55, 56, 68, 69, 70, 82, 83, 84, 96, 97, 98, 110, 111, 112]
+            option = random.choice(cArrL) # Select the spawn zones
+            cArrL.remove(option) # Remove the spawn zone from the list of choices
+            choices.append(option) # Add the spawn zone to the list of choices
+
+    # turn the spawnpoints into something usable
+    choices_remaster = []
+    for i in range(len(choices)):
+        choices_remaster.append([tileList[choices[i] - 1].x + const.TILE_SIZE // 2, tileList[choices[i] - 1].y + const.TILE_SIZE // 2])
+
+    # supplies
     global spawnpoint
     spawnpoint = []
-    spawnpoint = choices
-    # supplies
+    spawnpoint = choices_remaster
 
     if getattr(sys, 'frozen', False):  # Running as an .exe
         currentDir = sys._MEIPASS
@@ -1998,297 +2056,236 @@ def tileGen():
 
     return tileList
 
-def setUpTank1(dType = 0):
-    global tileList, spawnpoint, tank1, gun1, allSprites, bulletSprites
-    global spawnTank1, player1
-    global player1PackageTank, player1PackageGun
-    global player1Channels, DifficultyType
+def nextType(difficultyType):
+    global gameMode
 
-    match dType:
+    match difficultyType:
         case DifficultyType.OnePlayerYard:
-            # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Simple Tanks
-            tank1 = DefaultTank(spawnTank1[0], spawnTank1[1], const.CONTROLS_TANK1, const.PLAYER_1_TANK_NAME)
-            tank1.setAI(True, currentTargetPackage)
-            tank1.setData(player1PackageTank)
-            tank1.setImage('tank', playerInformation.Player1HullColourIndex() + 1)
-            tank1.setSoundDictionary(const.SOUND_DICTIONARY)
-            tank1.settileList(tileList)
-            tank1.effect = [0,0,0]
-
-            gun1 = DefaultGun(tank1, const.CONTROLS_TANK1, const.PLAYER_1_GUN_NAME) # Gun 1 setup
-            gun1.setAI(True)
-            gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
-            gun1.setImage('gun', playerInformation.Player1TurretColourIndex() + 1)
-        
+            setUpPlayers()
+            gameMode=GameMode.play
+            #Switch the the play screen
+            constantPlayGame()
         case DifficultyType.OnePlayerScrapYard:
-            # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Normal Tanks
-            tank1 = copy.copy(playerInformation.getPlayer1Hull()) # Tank 1 setup
-            tank1.setAI(True, currentTargetPackage)
-            tank1.setData(player1PackageTank)
-            tank1.setImage(playerInformation.getPlayer1Hull().getName(), playerInformation.Player1HullColourIndex() + 1)
-            tank1.setSoundDictionary(const.SOUND_DICTIONARY)
-            tank1.settileList(tileList)
-            tank1.effect = [0,0,0]
-            
-            #Because silencer and watcher aren't made yet, skip them
-            if playerInformation.Player1TurretIndex() == 1 or playerInformation.Player1TurretIndex() == 2:
-                print("Skipping Silencer or Watcher, selecting Chamber")
-                gun1 = copy.copy(playerInformation.specificTurret(3)) # Gun 1 setup
-                gun1.setImage(playerInformation.specificTurret(3).getGunName(), playerInformation.Player1TurretColourIndex() + 1)
-            else:
-                gun1 = copy.copy(playerInformation.getPlayer1Turret()) # Gun 1 setup
-                gun1.setImage(playerInformation.getPlayer1Turret().getGunName(), playerInformation.Player1TurretColourIndex() + 1)
-            gun1.setAI(True)
-            gun1.setHard()
-            gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
-            # gun1.setImage(playerInformation.getPlayer1Turret().getGunName(), playerInformation.Player1TurretColourIndex() + 1)
-
-
+            gameMode = GameMode.selection
+            constantSelectionScreen()
         case DifficultyType.TwoPlayerYard:
-            # Scrapyard, Player vs Player Simple Tanks
-            tank1 = DefaultTank(spawnTank1[0], spawnTank1[1], const.CONTROLS_TANK1, const.PLAYER_1_TANK_NAME)
-            tank1.setData(player1PackageTank)
-            tank1.setImage('tank', playerInformation.Player1HullColourIndex() + 1)
-            tank1.setSoundDictionary(const.SOUND_DICTIONARY)
-            tank1.settileList(tileList)
-            tank1.effect = [0,0,0]
-
-            gun1 = DefaultGun(tank1, const.CONTROLS_TANK1, const.PLAYER_1_GUN_NAME) # Gun 1 setup
-            gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
-            gun1.setImage('gun', playerInformation.Player1TurretColourIndex() + 1)
-
+            setUpPlayers()
+            gameMode=GameMode.play
+            #Switch the the play screen
+            constantPlayGame()
         case DifficultyType.TwoPlayerScrapYard:
-            # Scrapyard, Player vs Player Normal Tanks
-            tank1 = copy.copy(playerInformation.getPlayer1Hull()) # Tank 1 setup
-            tank1.setData(player1PackageTank)
-            tank1.setImage(playerInformation.getPlayer1Hull().getName(), playerInformation.Player1HullColourIndex() + 1)
-            tank1.setSoundDictionary(const.SOUND_DICTIONARY)
-            tank1.settileList(tileList)
-            tank1.effect = [0,0,0]
-
-            gun1 = copy.copy(playerInformation.getPlayer1Turret()) # Gun 1 setup
-            gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
-            gun1.setImage(playerInformation.getPlayer1Turret().getGunName(), playerInformation.Player1TurretColourIndex() + 1)
-
+            gameMode = GameMode.selection
+            constantSelectionScreen()
         case DifficultyType.OnePlayerBrawl:
-            # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Simple Tanks
-            tank1 = DefaultTank(spawnTank1[0], spawnTank1[1], const.CONTROLS_TANK1, const.PLAYER_1_TANK_NAME)
-            tank1.setAI(True, currentTargetPackage)
-            tank1.setData(player1PackageTank)
-            tank1.setImage('tank', playerInformation.Player1HullColourIndex() + 1)
-            tank1.setSoundDictionary(const.SOUND_DICTIONARY)
-            tank1.settileList(tileList)
-            tank1.effect = [0,0,0]
-
-            gun1 = DefaultGun(tank1, const.CONTROLS_TANK1, const.PLAYER_1_GUN_NAME) # Gun 1 setup
-            gun1.setAI(True)
-            gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
-            gun1.setImage('gun', playerInformation.Player1TurretColourIndex() + 1)
-        
+            setUpPlayers()
+            gameMode=GameMode.play
+            #Switch the the play screen
+            constantPlayGame()
         case DifficultyType.OnePlayerDeathMatch:
-            # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Normal Tanks
-            tank1 = copy.copy(playerInformation.getPlayer1Hull()) # Tank 1 setup
-            tank1.setAI(True, currentTargetPackage)
-            tank1.setData(player1PackageTank)
-            tank1.setImage(playerInformation.getPlayer1Hull().getName(), playerInformation.Player1HullColourIndex() + 1)
-            tank1.setSoundDictionary(const.SOUND_DICTIONARY)
-            tank1.settileList(tileList)
-            tank1.effect = [0,0,0]
-            
-            #Because silencer and watcher aren't made yet, skip them
-            if playerInformation.Player1TurretIndex() == 1 or playerInformation.Player1TurretIndex() == 2:
-                print("Skipping Silencer or Watcher, selecting Chamber")
-                gun1 = copy.copy(playerInformation.specificTurret(3)) # Gun 1 setup
-                gun1.setImage(playerInformation.specificTurret(3).getGunName(), playerInformation.Player1TurretColourIndex() + 1)
-    
-            else:
-                gun1 = copy.copy(playerInformation.getPlayer1Turret()) # Gun 1 setup
-                gun1.setImage(playerInformation.getPlayer1Turret().getGunName(), playerInformation.Player1TurretColourIndex() + 1)
-
-            gun1.setAI(True)
-            gun1.setHard()
-            gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
-            # gun1.setImage(playerInformation.getPlayer1Turret().getGunName(), playerInformation.Player1TurretColourIndex() + 1)
-
+            gameMode = GameMode.selection
+            constantSelectionScreen()
         case DifficultyType.TwoPlayerBrawl:
-            # Scrapyard, Player vs Player Simple Tanks
-            tank1 = DefaultTank(spawnTank1[0], spawnTank1[1], const.CONTROLS_TANK1, const.PLAYER_1_TANK_NAME)
-            tank1.setData(player1PackageTank)
-            tank1.setImage('tank', playerInformation.Player1HullColourIndex() + 1)
-            tank1.setSoundDictionary(const.SOUND_DICTIONARY)
-            tank1.settileList(tileList)
-            tank1.effect = [0,0,0]
-
-            gun1 = DefaultGun(tank1, const.CONTROLS_TANK1, const.PLAYER_1_GUN_NAME) # Gun 1 setup
-            gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
-            gun1.setImage('gun', playerInformation.Player1TurretColourIndex() + 1)
-
+            setUpPlayers()
+            gameMode=GameMode.play
+            #Switch the the play screen
+            constantPlayGame()
         case DifficultyType.TwoPlayerDeathMatch:
-            # Scrapyard, Player vs Player Normal Tanks
-            tank1 = copy.copy(playerInformation.getPlayer1Hull()) # Tank 1 setup
-            tank1.setData(player1PackageTank)
-            tank1.setImage(playerInformation.getPlayer1Hull().getName(), playerInformation.Player1HullColourIndex() + 1)
-            tank1.setSoundDictionary(const.SOUND_DICTIONARY)
-            tank1.settileList(tileList)
-            tank1.effect = [0,0,0]
+            gameMode = GameMode.selection
+            constantSelectionScreen()
+        case _:
+            print("Invalid difficulty type")
+            gameMode = GameMode.unimplemented
 
-            gun1 = copy.copy(playerInformation.getPlayer1Turret()) # Gun 1 setup
-            gun1.setData(tank1, player1PackageGun[0], player1PackageGun[1], player1Channels)
-            gun1.setImage(playerInformation.getPlayer1Turret().getGunName(), playerInformation.Player1TurretColourIndex() + 1)
-
-    gun1.setPlayer(player1)
-    tank1.setPlayer(player1)
-
-def setUpTank2(dType = 0):
-    global tileList, spawnpoint, tank2, gun2, allSprites, bulletSprites
-    global spawnTank2, DifficultyType, player2
-    global player2PackageTank, player2PackageGun
-    global player2Channels
-
+def setUpTank(dType = -1, AI = False, spawn = [0,0], player = None):
+    global player1PackageTank
+    global DifficultyType
     match dType:
+        
         case DifficultyType.OnePlayerYard:
-            # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Simple Tanks
-            tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], const.CONTROLS_TANK2, const.PLAYER_2_TANK_NAME) # Tank 2 setup
-            tank2.setData(player2PackageTank)
-            tank2.setImage('tank', playerInformation.Player2HullColourIndex() + 1)
-            tank2.setSoundDictionary(const.SOUND_DICTIONARY)
-            tank2.settileList(tileList)
-            tank2.effect = [0,0,0]
+            # Scrapyard, Player vs AI (AI is player 1 and Player is p2) Simple Tanks
+            tank = DefaultTank(0, 0, player.getControls(), player.getTankName())
+            tank.setData([spawn[0], spawn[1], player.getControls(), player.getTankName(), player.getTankChannels()])
+            tank.setImage('tank', playerInformation.Player1HullColourIndex() + 1)
+            tank.setSoundDictionary(const.SOUND_DICTIONARY)
+            tank.settileList(tileList)
+            tank.setAI(AI)
+            tank.effect = [0,0,0]
+            tank.setPlayer(player)
 
-            gun2 = DefaultGun(tank2, const.CONTROLS_TANK2, const.PLAYER_2_GUN_NAME) # Gun 2 setup
-            gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
-            gun2.setImage('gun', playerInformation.Player2TurretColourIndex() + 1)
+            gun = DefaultGun(tank, player.getTankName(), player.getGunName()) # Gun 1 setup
+            gun.setData(tank, player.getControls(), player.getGunName(), player.getTankChannels())
+            gun.setImage('gun', playerInformation.Player1TurretColourIndex() + 1)
+            gun.setAI(AI)
+            gun.setPlayer(player)
 
         case DifficultyType.OnePlayerScrapYard:
             # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Normal Tanks
-
-            tank2 = copy.copy(selectionScreen.playerInformation.getPlayer2Hull()) # Tank 2 setup
-            tank2.setData(player2PackageTank)
-            tank2.setImage(playerInformation.getPlayer2Hull().getName(), playerInformation.Player2HullColourIndex() + 1)
-            tank2.setSoundDictionary(const.SOUND_DICTIONARY)
-            tank2.settileList(tileList)
-            tank2.effect = [0,0,0]
-
-            gun2 = copy.copy(playerInformation.getPlayer2Turret()) # Gun 2 setup
-            gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
-            gun2.setImage(playerInformation.getPlayer2Turret().getGunName(), playerInformation.Player2TurretColourIndex() + 1)
+            tank = copy.copy(playerInformation.getPlayer1Hull()) # Tank 1 setup
+            tank.setData([spawn[0], spawn[1], player.getControls(), player.getTankName(), player.getTankChannels()])
+            tank.setImage(playerInformation.getPlayer1Hull().getName(), playerInformation.Player1HullColourIndex() + 1)
+            tank.setSoundDictionary(const.SOUND_DICTIONARY)
+            tank.settileList(tileList)
+            tank.effect = [0,0,0]
+            tank.setAI(AI)
+            tank.setPlayer(player)
+            
+            #Because silencer and watcher aren't made yet, skip them
+            if playerInformation.Player1TurretIndex() == 1 or playerInformation.Player1TurretIndex() == 2:
+                playerInformation.setPlayer1Turret(3)
+                print("Skipping Silencer or Watcher, selecting Chamber")
+            gun = copy.copy(playerInformation.getPlayer1Turret()) # Gun 1 setup
+            gun.setImage(playerInformation.getPlayer1Turret().getGunName(), playerInformation.Player1TurretColourIndex() + 1)
+            gun.setHard()
+            gun.setData(tank, player.getControls(), player.getGunName(), player.getTankChannels())
+            gun.setAI(AI)
+            gun.setPlayer(player)
 
         case DifficultyType.TwoPlayerYard:
             # Scrapyard, Player vs Player Simple Tanks
-            tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], const.CONTROLS_TANK2, const.PLAYER_2_TANK_NAME) # Tank 2 setup
-            tank2.setData(player2PackageTank)
-            tank2.setImage('tank', playerInformation.Player2HullColourIndex() + 1)
-            tank2.setSoundDictionary(const.SOUND_DICTIONARY)
-            tank2.settileList(tileList)
-            tank2.effect = [0,0,0]
+            tank = DefaultTank(0, 0, player.getControls(), player.getTankName())
+            tank.setData([spawn[0], spawn[1], player.getControls(), player.getTankName(), player.getTankChannels()])
+            tank.setImage('tank', playerInformation.Player1HullColourIndex() + 1)
+            tank.setSoundDictionary(const.SOUND_DICTIONARY)
+            tank.settileList(tileList)
+            tank.setAI(AI)
+            tank.effect = [0,0,0]
+            tank.setPlayer(player)
 
-            gun2 = DefaultGun(tank2, const.CONTROLS_TANK2, const.PLAYER_2_GUN_NAME) # Gun 2 setup
-            gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
-            gun2.setImage('gun', playerInformation.Player2TurretColourIndex() + 1)
+            gun = DefaultGun(tank, player.getTankName(), player.getGunName()) # Gun 1 setup
+            gun.setData(tank, player.getControls(), player.getGunName(), player.getTankChannels())
+            gun.setImage('gun', playerInformation.Player1TurretColourIndex() + 1)
+            gun.setAI(AI)
+            gun.setPlayer(player)
 
         case DifficultyType.TwoPlayerScrapYard:
             # Scrapyard, Player vs Player Normal Tanks
-            tank2 = copy.copy(playerInformation.getPlayer2Hull()) # Tank 2 setup
-            tank2.setData(player2PackageTank)
-            tank2.setImage(playerInformation.getPlayer2Hull().getName(), playerInformation.Player2HullColourIndex() + 1)
-            tank2.setSoundDictionary(const.SOUND_DICTIONARY)
-            tank2.settileList(tileList)
-            tank2.effect = [0,0,0]
-
-            gun2 = copy.copy(playerInformation.getPlayer2Turret()) # Gun 2 setup
-            gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
-            gun2.setImage(playerInformation.getPlayer2Turret().getGunName(), playerInformation.Player2TurretColourIndex() + 1)
+            tank = copy.copy(playerInformation.getPlayer1Hull()) # Tank 1 setup
+            tank.setData([spawn[0], spawn[1], player.getControls(), player.getTankName(), player.getTankChannels()])
+            tank.setImage(playerInformation.getPlayer1Hull().getName(), playerInformation.Player1HullColourIndex() + 1)
+            tank.setSoundDictionary(const.SOUND_DICTIONARY)
+            tank.settileList(tileList)
+            tank.effect = [0,0,0]
+            tank.setAI(AI)
+            tank.setPlayer(player)
+            
+            #Because silencer and watcher aren't made yet, skip them
+            if playerInformation.Player1TurretIndex() == 1 or playerInformation.Player1TurretIndex() == 2:
+                playerInformation.setPlayer1Turret(3)
+                print("Skipping Silencer or Watcher, selecting Chamber")
+            gun = copy.copy(playerInformation.getPlayer1Turret()) # Gun 1 setup
+            gun.setImage(playerInformation.getPlayer1Turret().getGunName(), playerInformation.Player1TurretColourIndex() + 1)
+            gun.setHard()
+            gun.setData(tank, player.getControls(), player.getGunName(), player.getTankChannels())
+            gun.setAI(AI)
+            gun.setPlayer(player)
 
         case DifficultyType.OnePlayerBrawl:
             # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Simple Tanks
-            tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], const.CONTROLS_TANK2, const.PLAYER_2_TANK_NAME) # Tank 2 setup
-            tank2.setData(player2PackageTank)
-            tank2.setImage('tank', playerInformation.Player2HullColourIndex() + 1)
-            tank2.setSoundDictionary(const.SOUND_DICTIONARY)
-            tank2.settileList(tileList)
-            tank2.effect = [0,0,0]
+            tank = DefaultTank(0, 0, player.getControls(), player.getTankName())
+            tank.setData([spawn[0], spawn[1], player.getControls(), player.getTankName(), player.getTankChannels()])
+            tank.setImage('tank', playerInformation.Player1HullColourIndex() + 1)
+            tank.setSoundDictionary(const.SOUND_DICTIONARY)
+            tank.settileList(tileList)
+            tank.setAI(AI)
+            tank.effect = [0,0,0]
+            tank.setPlayer(player)
 
-            gun2 = DefaultGun(tank2, const.CONTROLS_TANK2, const.PLAYER_2_GUN_NAME) # Gun 2 setup
-            gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
-            gun2.setImage('gun', playerInformation.Player2TurretColourIndex() + 1)
-
+            gun = DefaultGun(tank, player.getTankName(), player.getGunName()) # Gun 1 setup
+            gun.setData(tank, player.getControls(), player.getGunName(), player.getTankChannels())
+            gun.setImage('gun', playerInformation.Player1TurretColourIndex() + 1)
+            gun.setAI(AI)
+            gun.setPlayer(player)
+        
         case DifficultyType.OnePlayerDeathMatch:
             # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Normal Tanks
-
-            tank2 = copy.copy(playerInformation.getPlayer2Hull()) # Tank 2 setup
-            tank2.setData(player2PackageTank)
-            tank2.setImage(playerInformation.getPlayer2Hull().getName(), playerInformation.Player2HullColourIndex() + 1)
-            tank2.setSoundDictionary(const.SOUND_DICTIONARY)
-            tank2.settileList(tileList)
-            tank2.effect = [0,0,0]
-
-            gun2 = copy.copy(playerInformation.getPlayer2Turret()) # Gun 2 setup
-            gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
-            gun2.setImage(playerInformation.getPlayer2Turret().getGunName(), playerInformation.Player2TurretColourIndex() + 1)
+            tank = copy.copy(playerInformation.getPlayer1Hull()) # Tank 1 setup
+            tank.setData([spawn[0], spawn[1], player.getControls(), player.getTankName(), player.getTankChannels()])
+            tank.setImage(playerInformation.getPlayer1Hull().getName(), playerInformation.Player1HullColourIndex() + 1)
+            tank.setSoundDictionary(const.SOUND_DICTIONARY)
+            tank.settileList(tileList)
+            tank.effect = [0,0,0]
+            tank.setAI(AI)
+            tank.setPlayer(player)
+            
+            #Because silencer and watcher aren't made yet, skip them
+            if playerInformation.Player1TurretIndex() == 1 or playerInformation.Player1TurretIndex() == 2:
+                playerInformation.setPlayer1Turret(3)
+                print("Skipping Silencer or Watcher, selecting Chamber")
+            gun = copy.copy(playerInformation.getPlayer1Turret()) # Gun 1 setup
+            gun.setImage(playerInformation.getPlayer1Turret().getGunName(), playerInformation.Player1TurretColourIndex() + 1)
+            gun.setHard()
+            gun.setData(tank, player.getControls(), player.getGunName(), player.getTankChannels())
+            gun.setAI(AI)
+            gun.setPlayer(player)
 
         case DifficultyType.TwoPlayerBrawl:
             # Scrapyard, Player vs Player Simple Tanks
-            tank2 = DefaultTank(spawnTank2[0], spawnTank2[1], const.CONTROLS_TANK2, const.PLAYER_2_TANK_NAME) # Tank 2 setup
-            tank2.setData(player2PackageTank)
-            tank2.setImage('tank', playerInformation.Player2HullColourIndex() + 1)
-            tank2.setSoundDictionary(const.SOUND_DICTIONARY)
-            tank2.settileList(tileList)
-            tank2.effect = [0,0,0]
+            tank = DefaultTank(0, 0, player.getControls(), player.getTankName())
+            tank.setData([spawn[0], spawn[1], player.getControls(), player.getTankName(), player.getTankChannels()])
+            tank.setImage('tank', playerInformation.Player1HullColourIndex() + 1)
+            tank.setSoundDictionary(const.SOUND_DICTIONARY)
+            tank.settileList(tileList)
+            tank.setAI(AI)
+            tank.effect = [0,0,0]
+            tank.setPlayer(player)
 
-            gun2 = DefaultGun(tank2, const.CONTROLS_TANK2, const.PLAYER_2_GUN_NAME) # Gun 2 setup
-            gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
-            gun2.setImage('gun', playerInformation.Player2TurretColourIndex() + 1)
+            gun = DefaultGun(tank, player.getTankName(), player.getGunName()) # Gun 1 setup
+            gun.setData(tank, player.getControls(), player.getGunName(), player.getTankChannels())
+            gun.setImage('gun', playerInformation.Player1TurretColourIndex() + 1)
+            gun.setAI(AI)
+            gun.setPlayer(player)
 
         case DifficultyType.TwoPlayerDeathMatch:
             # Scrapyard, Player vs Player Normal Tanks
-            tank2 = copy.copy(playerInformation.getPlayer2Hull()) # Tank 2 setup
-            tank2.setData(player2PackageTank)
-            tank2.setImage(playerInformation.getPlayer2Hull().getName(), playerInformation.Player2HullColourIndex() + 1)
-            tank2.setSoundDictionary(const.SOUND_DICTIONARY)
-            tank2.settileList(tileList)
-            tank2.effect = [0,0,0]
-
-            gun2 = copy.copy(playerInformation.getPlayer2Turret()) # Gun 2 setup
-            gun2.setData(tank2, player2PackageGun[0], player2PackageGun[1], player2Channels)
-            gun2.setImage(playerInformation.getPlayer2Turret().getGunName(), playerInformation.Player2TurretColourIndex() + 1)
-
-    gun2.setPlayer(player2)
-    tank2.setPlayer(player2)
+            tank = copy.copy(playerInformation.getPlayer1Hull()) # Tank 1 setup
+            tank.setData([spawn[0], spawn[1], player.getControls(), player.getTankName(), player.getTankChannels()])
+            tank.setImage(playerInformation.getPlayer1Hull().getName(), playerInformation.Player1HullColourIndex() + 1)
+            tank.setSoundDictionary(const.SOUND_DICTIONARY)
+            tank.settileList(tileList)
+            tank.effect = [0,0,0]
+            tank.setAI(AI)
+            tank.setPlayer(player)
+            
+            #Because silencer and watcher aren't made yet, skip them
+            if playerInformation.Player1TurretIndex() == 1 or playerInformation.Player1TurretIndex() == 2:
+                playerInformation.setPlayer1Turret(3)
+                print("Skipping Silencer or Watcher, selecting Chamber")
+            gun = copy.copy(playerInformation.getPlayer1Turret()) # Gun 1 setup
+            gun.setImage(playerInformation.getPlayer1Turret().getGunName(), playerInformation.Player1TurretColourIndex() + 1)
+            gun.setHard()
+            gun.setData(tank, player.getControls(), player.getGunName(), player.getTankChannels())
+            gun.setAI(AI)
+            gun.setPlayer(player)
+    return gun, tank
 
 def setUpPlayers():
     # This function sets up the players for the game including reseting the respective global veriables
     #This function has no real dependencies on things outside of its control
     # Inputs: None
     # Outputs: None
-    global tileList, spawnpoint, tank1, tank2, gun1, gun2, allSprites, bulletSprites
+    global tileList, spawnpoint, tankList, gunList, allSprites, bulletSprites
     global difficultyType, DifficultyType, spawnTank1, spawnTank2
     global player1PackageTank, player1PackageGun, player2PackageTank, player2PackageGun
-    global player1Channels, player2Channels
     tileList = tileGen() # Get a new board
-    spawnTank1 = [tileList[spawnpoint[0]-1].x + const.TILE_SIZE//2, tileList[spawnpoint[0]-1].y + const.TILE_SIZE//2]
-    spawnTank2 = [tileList[spawnpoint[1]-1].x + const.TILE_SIZE//2, tileList[spawnpoint[1]-1].y + const.TILE_SIZE//2]
-    player1Channels = {"move": {"channel": pygame.mixer.Channel(3), "volume": 0.05}, "rotate": {"channel": pygame.mixer.Channel(4), "volume": 0.2}, "death": {"channel" : pygame.mixer.Channel(5), "volume": 0.5}, "fire": {"channel": pygame.mixer.Channel(6), "volume": 1}, "hit": {"channel": pygame.mixer.Channel(7), "volume": 1}, "reload": {"channel": pygame.mixer.Channel(8), "volume": 0.5}}
-    player2Channels = {"move": {"channel": pygame.mixer.Channel(9), "volume": 0.05}, "rotate": {"channel": pygame.mixer.Channel(10), "volume": 0.3}, "death": {"channel" : pygame.mixer.Channel(11), "volume": 0.5}, "fire": {"channel": pygame.mixer.Channel(12), "volume": 1}, "hit": {"channel": pygame.mixer.Channel(13), "volume": 1}, "reload": {"channel": pygame.mixer.Channel(14), "volume": 0.5}}
-    #Updating the packages
-    player1PackageTank = [spawnTank1[0], spawnTank1[1], const.CONTROLS_TANK1, const.PLAYER_1_TANK_NAME, player1Channels]
-    player1PackageGun = [const.CONTROLS_TANK1, const.PLAYER_1_GUN_NAME, player1Channels]
-    player2PackageTank = [spawnTank2[0], spawnTank2[1], const.CONTROLS_TANK2, const.PLAYER_2_TANK_NAME, player2Channels]
-    player2PackageGun = [const.CONTROLS_TANK2, const.PLAYER_2_GUN_NAME, player2Channels]
-    # setup the tanks and guns
-    setUpTank1(difficultyType)
-    setUpTank2(difficultyType)
-
+    for sprite in allSprites:
+        sprite.kill()
+    allSprites = pygame.sprite.Group() # Wipe the current Sprite Group   
     # setup the tanks
+    for i in range(difficultyType.playerCount):
+        if i < difficultyType.humanCount:
+            gunList[i], tankList[i] = setUpTank(difficultyType, AI = False, spawn = spawnpoint[i], player = playerlist[i])
+        else:
+            gunList[i], tankList[i] = setUpTank(difficultyType, AI = True, spawn = spawnpoint[i], player = playerlist[i])
+            temp = tankList[0].getCurrentTile().getIndex() # for the most part we can guarantee this
+            tankList[i].setAim((temp, temp%14*const.TILE_SIZE + const.TILE_SIZE//2, ((temp)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
+        allSprites.add(tankList[i], gunList[i])
+
     match difficultyType:
-        case DifficultyType.OnePlayerYard:
+        case DifficultyType.OnePlayerYard: 
             # # easy AI, 1 Player
-            temp = tank2.getCurrentTile().getIndex()
-            tank1.setAim((temp, temp%14*const.TILE_SIZE + const.TILE_SIZE//2, ((temp)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
             # scrapyard
             timer.setDirection(True)
         case DifficultyType.OnePlayerScrapYard:
-            temp = tank2.getCurrentTile().getIndex()
-            tank1.setAim((temp, temp%14*const.TILE_SIZE + const.TILE_SIZE//2, ((temp)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
             # scrapyard
             timer.setDirection(True)
         case DifficultyType.TwoPlayerYard:
@@ -2296,13 +2293,9 @@ def setUpPlayers():
         case DifficultyType.TwoPlayerScrapYard:
             timer.setDirection(True)
         case DifficultyType.OnePlayerBrawl:
-            temp = tank2.getCurrentTile().getIndex()
-            tank1.setAim((temp, temp%14*const.TILE_SIZE + const.TILE_SIZE//2, ((temp)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
             timer.setDirection(False)
             timer.setDuration(301)
         case DifficultyType.OnePlayerDeathMatch:
-            temp = tank2.getCurrentTile().getIndex()
-            tank1.setAim((temp, temp%14*const.TILE_SIZE + const.TILE_SIZE//2, ((temp)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
             timer.setDirection(False)
             timer.setDuration(301)
         case DifficultyType.TwoPlayerBrawl:
@@ -2316,11 +2309,6 @@ def setUpPlayers():
             return
     #Updating the groups
     
-    for sprite in allSprites:
-        sprite.kill()
-    allSprites = pygame.sprite.Group() # Wipe the current Sprite Group   
-
-    allSprites.add(tank1, gun1, tank2, gun2) # Add the new sprites
     for bullet in bulletSprites:
         bullet.kill()
     bulletSprites = pygame.sprite.Group()   
@@ -2347,11 +2335,11 @@ def constantPlayGame():
     # Inputs: None
     # Outputs: None
     screen.fill(const.BACKGROUND_COLOR) # This is the first line when drawing a new frame
-    screen.blit(gun1.getSprite(True), (const.TILE_SIZE, 0.78*const.WINDOW_HEIGHT)) # Gun 2
-    screen.blit(tank1.getSprite(True), (const.TILE_SIZE, 0.78*const.WINDOW_HEIGHT)) # Tank 2
+    screen.blit(gunList[0].getSprite(True), (const.TILE_SIZE, 0.78*const.WINDOW_HEIGHT)) # Gun 2
+    screen.blit(tankList[0].getSprite(True), (const.TILE_SIZE, 0.78*const.WINDOW_HEIGHT)) # Tank 2
 
-    screen.blit(gun2.getSprite(), (const.WINDOW_WIDTH - const.TILE_SIZE*3, 0.78*const.WINDOW_HEIGHT)) # Gun 2
-    screen.blit(tank2.getSprite(), (const.WINDOW_WIDTH - const.TILE_SIZE*3, 0.78*const.WINDOW_HEIGHT)) # Tank 2
+    screen.blit(gunList[1].getSprite(), (const.WINDOW_WIDTH - const.TILE_SIZE*3, 0.78*const.WINDOW_HEIGHT)) # Gun 2
+    screen.blit(tankList[1].getSprite(), (const.WINDOW_WIDTH - const.TILE_SIZE*3, 0.78*const.WINDOW_HEIGHT)) # Tank 2
     print("Switching to game music")
     mixer.crossfade('game')
 
@@ -2509,9 +2497,7 @@ def damage(tank, damage, owner):
             spareChannels(const.SOUND_DICTIONARY["tankHurt"])
     else: # if tank is dead
         # if the tank is dead everything should stop
-
         if owner.getName() != tank.getPlayer().getName(): # as long as it is not a self-kill
-            print("Kill")
             owner.addKill()
         tank.getPlayer().addDeath()
         for channel in tank.channelDict:
@@ -2527,16 +2513,16 @@ def damage(tank, damage, owner):
 def playGame():
 
     def checkGameOver(t):
-        global tank1Dead, tank2Dead, DifficultyType, difficultyType
+        global tankDead, DifficultyType, difficultyType
         match t:
             case DifficultyType.OnePlayerYard:
-                return tank1Dead or tank2Dead
+                return tankDead[0] or tankDead[1]
             case DifficultyType.OnePlayerScrapYard:
-                return tank1Dead or tank2Dead
+                return tankDead[0] or tankDead[1]
             case DifficultyType.TwoPlayerYard:
-                return tank1Dead or tank2Dead
+                return tankDead[0] or tankDead[1]
             case DifficultyType.TwoPlayerScrapYard:
-                return tank1Dead or tank2Dead
+                return tankDead[0] or tankDead[1]
             case DifficultyType.OnePlayerBrawl:
                 return timer.isExpired()
             case DifficultyType.OnePlayerDeathMatch:
@@ -2550,8 +2536,8 @@ def playGame():
     # Outputs: None
     # Because of the way the game is structured, these global variables can't be avoided
     global gameOverFlag, cooldownTimer, systemTime, p1Score, p2Score, startTreads
-    global tank1Dead, tank2Dead, tileList, spawnpoint, player1Channels, player2Channels
-    global tank1, tank2, gun1, gun2, allSprites, bulletSprites
+    global tankDead, tileList, spawnpoint
+    global tankList, gunList, allSprites, bulletSprites
     global currentTime, deltaTime, lastUpdateTime, difficultyType
     global upplyAssets, timerClock, gameMode
     if checkGameOver(t = difficultyType) and not cooldownTimer:
@@ -2637,36 +2623,37 @@ def playGame():
 
     #Box around the bottom of the screen for the health and reload bars
 
-    pygame.draw.rect(screen, c.geT("RED"), [const.TILE_SIZE*2.2, 0.88*const.WINDOW_HEIGHT, 150*(tank1.getHealthPercentage()),
+    pygame.draw.rect(screen, c.geT("RED"), [const.TILE_SIZE*2.2, 0.88*const.WINDOW_HEIGHT, 150*(tankList[0].getHealthPercentage()),
                                             20]) # Bar
     pygame.draw.rect(screen, c.geT("BLACK"), [const.TILE_SIZE*2.2, 0.88*const.WINDOW_HEIGHT, 150, 20], 2) # Outline
     #Reload bars
-    pygame.draw.rect(screen, c.geT("BLUE"), [const.TILE_SIZE*2.2, 0.88*const.WINDOW_HEIGHT + const.MAZE_Y//2, 150*(min(1,1-gun1.getReloadPercentage())),
+    pygame.draw.rect(screen, c.geT("BLUE"), [const.TILE_SIZE*2.2, 0.88*const.WINDOW_HEIGHT + const.MAZE_Y//2, 150*(min(1,1-gunList[0].getReloadPercentage())),
                                              20]) # The 25 is to space from the health bar
 
     pygame.draw.rect(screen, c.geT("BLACK"), [const.TILE_SIZE*2.2, 0.88*const.WINDOW_HEIGHT + const.MAZE_Y//2, 150, 20], 2) # Outline
 
 
     #Health bars
-    pygame.draw.rect(screen, c.geT("RED"), [const.WINDOW_WIDTH - const.TILE_SIZE*2.2 - 150, 0.88*const.WINDOW_HEIGHT, 150*(tank2.getHealthPercentage()),
+    pygame.draw.rect(screen, c.geT("RED"), [const.WINDOW_WIDTH - const.TILE_SIZE*2.2 - 150, 0.88*const.WINDOW_HEIGHT, 150*(tankList[1].getHealthPercentage()),
                                             20])
     pygame.draw.rect(screen, c.geT("BLACK"), [const.WINDOW_WIDTH - const.TILE_SIZE*2.2 - 150, 0.88*const.WINDOW_HEIGHT, 150, 20], 2)
     #Reload bars
     pygame.draw.rect(screen, c.geT("BLUE"), [const.WINDOW_WIDTH - const.TILE_SIZE*2.2 - 150, 0.88*const.WINDOW_HEIGHT + const.MAZE_Y//2,
-                                             150*(min(1,1-gun2.getReloadPercentage())),
+                                             150*(min(1,1-gunList[1].getReloadPercentage())),
                                              20]) # The 25 is to space from the health bar
     pygame.draw.rect(screen, c.geT("BLACK"), [const.WINDOW_WIDTH - const.TILE_SIZE*2.2 - 150, 0.88*const.WINDOW_HEIGHT + const.MAZE_Y//2, 150, 20], 2) # Outline
 
     #draw the supplies # Draw more on top of them
 
-    ef, mx = tank1.getEffect()
+    # only displaying 2 so it's ok
+    ef, mx = tankList[0].getEffect()
 
     # Dynamic updating of the current supply status
     screen.blit(const.SUPPLY_ASSETS[0][min(int(((ef[0]/mx[0])*10)//1) + 1, 10) if ef[0] != 0 else 0], [270, 550])
     screen.blit(const.SUPPLY_ASSETS[1][min(int(((ef[1]/mx[1])*10)//1) + 1, 10) if ef[1] != 0 else 0], [300, 550])
     screen.blit(const.SUPPLY_ASSETS[2][min(int(((ef[2]/mx[2])*10)//1) + 1, 10) if ef[2] != 0 else 0], [270, 520])
 
-    ef2, mx2 = tank2.getEffect()
+    ef2, mx2 = tankList[1].getEffect()
 
     screen.blit(const.SUPPLY_ASSETS[0][min(int(((ef2[0]/mx2[0])*10)//1) + 1, 10) if ef2[0] != 0 else 0], [510, 550])
     screen.blit(const.SUPPLY_ASSETS[1][min(int(((ef2[1]/mx2[1])*10)//1) + 1, 10) if ef2[1] != 0 else 0], [480, 550])
@@ -2682,17 +2669,17 @@ def playGame():
     #Anything below here will be drawn on top of the maze and hence is game updates
 
     if pygame.time.get_ticks() - startTreads > 50:
-        if tank1Dead:
+        if tankDead[0]:
             treadsp1.clear()
         else:
-            if tank1.invincibility==0:
-                tank1.treads(treadsp1)
+            if tankList[0].invincibility==0:
+                tankList[0].treads(treadsp1)
 
-        if tank2Dead:
+        if tankDead[1]:
             treadsp2.clear()
         else:
-            if tank2.invincibility==0:
-                tank2.treads(treadsp2)
+            if tankList[1].invincibility==0:
+                tankList[1].treads(treadsp2)
         startTreads = pygame.time.get_ticks() # Reset the timer
 
     for pos in treadsp1:
@@ -2705,40 +2692,36 @@ def playGame():
     # draw the text again
     screen.blit(text, [const.WINDOW_WIDTH//2 - text.get_width()//2, 8])
 
-    # pygame.draw.polygon(screen, c.geT("GREEN"), tank1.getCorners(), 2) #Hit box outline
-    # pygame.draw.polygon(screen, c.geT("GREEN"), tank2.getCorners(), 2) #Hit box outline
+    # for i in range(difficultyType.playerCount):
+    #     pygame.draw.polygon(screen, c.geT("GREEN"), tankList[i].getCorners(), 2) #Hit box outline
+
     # if we are using AI we need to set the target to go to the other tank
-    if difficultyType.ai and pygame.time.get_ticks() - tank1.getAimTime() > 2000:
+    if difficultyType.ai and pygame.time.get_ticks() - tankList[1].getAimTime() > 2000:
         # AI difficulty
-        if not tank2Dead: # if the tank is still alive
-            temp = tank2.getCurrentTile().getIndex()
-            tank1.setAim((temp, temp%14*const.TILE_SIZE + const.TILE_SIZE//2, ((temp)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
+        if not tankDead[1]: # if the tank is still alive
+            temp = tankList[0].getCurrentTile().getIndex()
+            tankList[1].setAim((temp, temp%14*const.TILE_SIZE + const.TILE_SIZE//2, ((temp)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
 
     currentTime = time.time()
     deltaTime = currentTime - lastUpdateTime
     if deltaTime >= 1/const.TPS:
         #Update the location of the corners
-        if not tank1Dead:
-            tank1.updateCorners()
-            tank1.setDelta(const.TPS)
-            gun1.setDelta(const.TPS)
-        else:
-            if difficultyType.respawn:
-                # easy
-                setUpTank1(difficultyType)
-                tank1.setCentre(spawnTank1[0], spawnTank1[1])
-                tank1Dead = False
-                allSprites.add(tank1, gun1) # Add the new sprites
 
-        if not tank2Dead:
-            tank2.updateCorners()
-            tank2.setDelta(const.TPS)
-            gun2.setDelta(const.TPS)
-        else:
-            if difficultyType.respawn:
-                setUpTank2(difficultyType)
-                tank2Dead = False
-                allSprites.add(tank2, gun2) # Add the new sprites
+        for i in range(difficultyType.playerCount):
+            if not tankDead[i]:
+                tankList[i].updateCorners()
+                tankList[i].setDelta(const.TPS)
+                gunList[i].setDelta(const.TPS)
+            else:
+                if difficultyType.respawn:
+                    if i < difficultyType.humanCount:
+                        gunList[i], tankList[i] = setUpTank(difficultyType, AI = False, spawn = spawnpoint[i], player = playerlist[i])
+                    else:
+                        gunList[i], tankList[i] = setUpTank(difficultyType, AI = True, spawn = spawnpoint[i], player = playerlist[i])
+                        temp = tankList[0].getCurrentTile().getIndex() # for the most part we can guarantee this
+                        tankList[i].setAim((temp, temp%14*const.TILE_SIZE + const.TILE_SIZE//2, ((temp)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
+                    allSprites.add(tankList[i], gunList[i])
+                    tankDead[i] = False
             
         for bullet in bulletSprites:
             bullet.setDelta(const.TPS)
@@ -2747,7 +2730,7 @@ def playGame():
         # don't update the bullets if the game is over
         if not cooldownTimer:
             allSprites.update()
-            fixMovement([tank1, tank2])
+            fixMovement([tankList[0], tankList[1]]) #<! HERE>
             bulletSprites.update()
         explosionGroup.update()
         lastUpdateTime = currentTime
@@ -2774,7 +2757,7 @@ def reset():
     # Outputs: None
     # Because of the way it's coded, these global declarations can't be avoided
     global gameOverFlag, cooldownTimer, systemTime, p1Score, p2Score
-    global tank1Dead, tank2Dead
+    global tankDead
     global allSprites, bulletSprites
     gameOverFlag = False
     cooldownTimer = False
@@ -2787,8 +2770,8 @@ def reset():
     bulletSprites = pygame.sprite.Group()
     #Nautural constants
     systemTime = 0
-    tank1Dead = False
-    tank2Dead = False
+    tankDead[0] = False
+    tankDead[1] = False
     treadsp1.clear()
     treadsp2.clear()
     setUpPlayers()
@@ -2797,31 +2780,29 @@ def updateTankHealth():
     # This function will update the tank health and check if the tank is dead
     # Inputs: None
     # Outputs: None
-    global explosionGroup, tank1Dead, tank2Dead
+    global explosionGroup, tankDead
     global p1Score, p2Score
-    global allSprites, tank1, tank2, gun1, gun2
+    global allSprites, tankList, gunList
     #Update the tank health
-    if tank1.getHealth() <= 0:
-        if not tank1Dead:
+    if tankList[0].getHealth() <= 0:
+        if not tankDead[0]:
             p2Score = (p2Score + 1) % 99 # Fix the maximum to 99
-            tank1Dead = True
-            explosionGroup.add(Explosion(tank1.getCenter()[0], tank1.getCenter()[1]))
-        tank1.setCentre(2000, 2000)
-        gun1.kill()
-        tank1.kill()
-        if tank2.getHealth() <= 0:
+            tankDead[0] = True
+            explosionGroup.add(Explosion(tankList[0].getCenter()[0], tankList[0].getCenter()[1]))
+        gunList[0].kill()
+        tankList[0].kill()
+        if tankList[1].getHealth() <= 0:
             for sprite in allSprites:
                 sprite.kill()
             allSprites = pygame.sprite.Group()
-    if tank2.getHealth() <= 0:
-        if not tank2Dead:
+    if tankList[1].getHealth() <= 0:
+        if not tankDead[1]:
             p1Score = (p1Score + 1) % 99 # Fix the maximum to 99
-            tank2Dead = True
-            explosionGroup.add(Explosion(tank2.getCenter()[0], tank2.getCenter()[1]))
-        tank2.setCentre(-2000, -2000)
-        gun2.kill()
-        tank2.kill()
-        if tank1.getHealth() <= 0:
+            tankDead[1] = True
+            explosionGroup.add(Explosion(tankList[1].getCenter()[0], tankList[1].getCenter()[1]))
+        gunList[1].kill()
+        tankList[1].kill()
+        if tankList[0].getHealth() <= 0:
             for sprite in allSprites:
                 sprite.kill()            
             allSprites = pygame.sprite.Group()
@@ -2861,8 +2842,6 @@ p2Score = 0
 gameMode = GameMode.home
 difficultyType = DifficultyType.NotInGame
 
-tileList = tileGen()
-
 treadsp1 = []
 treadsp2 = []
 
@@ -2884,6 +2863,7 @@ infoScreen = InfoScreen()
 homeScreen = HomeScreen()
 playerInformation = PlayerInformation(turretList, hullList)
 selectionScreen = SelectionScreen(turretList, hullList, mousePos = pygame.mouse.get_pos())
+broken = NotImplmented()
 
 # number to keep track of which page we are on
 global pageNum
@@ -2892,22 +2872,10 @@ pageNum = 0
 pauseButton = Button(const.BACKGROUND_COLOR ,const.BACKGROUND_COLOR, const.WINDOW_WIDTH-const.TILE_SIZE*3, const.TILE_SIZE//5,const.TILE_SIZE*2,const.TILE_SIZE//2, "PAUSE", c.geT("BLACK"), 20, c.geT("OFF_WHITE"))
 pauseButton.setOutline(True, 2)
 
-pygame.mixer.set_num_channels(32)
+pygame.mixer.set_num_channels(64) #MORE
 
 for sound in const.SOUND_DICTIONARY:
     const.SOUND_DICTIONARY[sound].set_volume(const.VOLUME[sound])
-
-global spawnpoint
-spawnTank1 = [tileList[spawnpoint[0]-1].x + const.TILE_SIZE//2, tileList[spawnpoint[0]-1].y + const.TILE_SIZE//2]
-spawnTank2 = [tileList[spawnpoint[1]-1].x + const.TILE_SIZE//2, tileList[spawnpoint[1]-1].y + const.TILE_SIZE//2]
-global tank1Dead, tank2Dead
-tank1Dead = False
-tank2Dead = False
-currentTargetPackage = (spawnpoint[1]-1, tileList[spawnpoint[1]-1].x + const.TILE_SIZE//2, tileList[spawnpoint[1]-1].y + const.TILE_SIZE//2)
-player1PackageTank = [spawnTank1[0], spawnTank1[1], const.CONTROLS_TANK1, const.PLAYER_1_TANK_NAME]
-player1PackageGun = [const.CONTROLS_TANK1, const.PLAYER_1_GUN_NAME]
-player2PackageTank = [spawnTank2[0], spawnTank2[1], const.CONTROLS_TANK2, const.PLAYER_2_TANK_NAME]
-player2PackageGun = [const.CONTROLS_TANK2, const.PLAYER_2_GUN_NAME]
 
 allSprites = pygame.sprite.Group()
 bulletSprites = pygame.sprite.Group()
@@ -2952,9 +2920,6 @@ def main():
                             pauseScreen.volume.mute.buttonClick()
                         if pauseScreen.isWithinSFXButton(mouse):
                             pauseScreen.volume.sfx.buttonClick()
-                        if pauseButton.buttonClick(mouse):
-                            constantPlayGame()
-                            gameMode = GameMode.play
 
                     elif gameMode == GameMode.selection: # Selection screen
 
@@ -2975,7 +2940,6 @@ def main():
                             infoScreen.draw(screen)
                         selectionScreen.update(mouse)
 
-
                     elif gameMode == GameMode.home: # Home screen
 
                         global p1Score, p2Score, difficultyType, pageNum
@@ -2983,31 +2947,19 @@ def main():
 
                         if homeScreen.isWithinHomeButton1(mouse):
                             difficultyType = DifficultyType.from_index(1 + pageNum)
-                            setUpPlayers()
-                            gameMode=GameMode.play
-                            #Switch the the play screen
-                            print("One Player Easy")
-                            constantPlayGame()
+                            nextType(difficultyType)
 
                         if homeScreen.isWithinHomeButton2(mouse):
                             difficultyType = DifficultyType.from_index(2 + pageNum)
-                            print("One Player Hard")
-                            gameMode = GameMode.selection
-                            constantSelectionScreen()
+                            nextType(difficultyType)
 
                         if homeScreen.isWithinHomeButton3(mouse):
                             difficultyType = DifficultyType.from_index(3 + pageNum)
-                            setUpPlayers()
-                            gameMode=GameMode.play
-                            #Switch the the play screen
-                            print("Two Player Easy")
-                            constantPlayGame()
+                            nextType(difficultyType)
 
                         if homeScreen.isWithinHomeButton4(mouse):
                             difficultyType = DifficultyType.from_index(4 + pageNum)
-                            print("Two Player Hard")
-                            gameMode = GameMode.selection
-                            constantSelectionScreen()
+                            nextType(difficultyType)
 
                         if homeScreen.isWithinHomeLeftButton(mouse):
                             pageNum = (pageNum - 4) % homeScreen.getLenNameArray()
@@ -3088,6 +3040,11 @@ def main():
                             constantHomeScreen()
                             gameMode = GameMode.home
 
+                    elif gameMode == GameMode.unimplemented:
+                        if broken.isWithinBackButton(mouse):
+                            gameMode = GameMode.home
+                            constantHomeScreen()
+
             elif event.type == pygame.KEYDOWN: # Any key pressed
 
                 if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
@@ -3152,14 +3109,18 @@ def main():
                 settingsScreen.updateSFX(mouse)
                 for sound in const.SOUND_DICTIONARY:
                     const.SOUND_DICTIONARY[sound].set_volume(const.VOLUME[sound] * settingsScreen.getSFXValue())
+        
         elif gameMode == GameMode.end:
             endScreen.draw(screen)
+        
+        elif gameMode == GameMode.unimplemented:
+            broken.draw(screen)
+        
         else:
             screen.fill(c.geT("WHITE")) # Errornous state
 
         clock.tick(240) # Set the FPS
         mixer.update(settingsScreen.getMuteValue()) # Update the mixer
-        # print(spawnTank1, spawnTank2)
         pygame.display.flip()# Update the screen
 
     pygame.quit()
