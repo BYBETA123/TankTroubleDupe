@@ -1,4 +1,5 @@
 import constants as const
+import random
 
 class PlayerInformation:
     # This class will hold the turret / hulls for each of the players
@@ -34,6 +35,10 @@ class PlayerInformation:
 
             self.p1L = 1
             self.p2L = 0
+
+            self.TurretColors = [i for i in range(len(self.ColorIndex))]
+            self.HullColors = [i for i in range(len(self.ColorIndex))]
+            self.updateColors()
 
     def getTurretList(self):
         return self.turretList
@@ -87,21 +92,68 @@ class PlayerInformation:
         self.p1K = (self.p1K + move) % len(self.ColorIndex)
         if self.p1K == self.p2K:
             self.p1K = (self.p1K + move) % len(self.ColorIndex)
+        self.updateColors()
     
     def movePlayer2TurretColourIndex(self, move):
         self.p2K = (self.p2K + move) % len(self.ColorIndex)
         if self.p2K == self.p1K:
             self.p2K = (self.p2K + move) % len(self.ColorIndex)
+        self.updateColors()
     
     def movePlayer1HullColourIndex(self, move):
         self.p1L = (self.p1L + move) % len(self.ColorIndex)
         if self.p1L == self.p2L:
             self.p1L = (self.p1L + move) % len(self.ColorIndex)
+        self.updateColors()
 
     def movePlayer2HullColourIndex(self, move):
         self.p2L = (self.p2L + move) % len(self.ColorIndex)
         if self.p2L == self.p1L:
             self.p2L = (self.p2L + move) % len(self.ColorIndex)
+        self.updateColors()
+
+    def updateColors(self):
+        temp = [i for i in range(len(self.ColorIndex))]
+        self.TurretColors[0] = self.p1K
+        temp.remove(self.p1K)
+        self.TurretColors[1] = self.p2K
+        temp.remove(self.p2K)
+        for i in range(2, len(self.turretList)):
+            item = random.choice(temp)
+            self.TurretColors[i] = item
+            temp.remove(item)
+        temp = [i for i in range(len(self.ColorIndex))]
+        self.HullColors[0] = self.p1L
+        temp.remove(self.p1L)
+        self.HullColors[1] = self.p2L
+        temp.remove(self.p2L)
+        for i in range(2, len(self.hullList)):
+            item = random.choice(temp)
+            self.HullColors[i] = item
+            temp.remove(item)
+
+    def getPlayerTurret(self, index):
+        if index == 0:
+            return self.turretList[self.p1I]
+        elif index == 1:
+            return self.turretList[self.p2I]
+        else: # no more players, just AI
+            vChoice = [i for i in range(0, len(self.turretList) - 1) if i != 1 and i != 2]
+            return random.choice(vChoice)
+
+    def getPlayerHull(self, index):
+        if index == 0:
+            return self.hullList[self.p1J]
+        elif index == 1:
+            return self.hullList[self.p2J]
+        else: # no more players, just AI
+            return self.hullList[random.randint(0, len(self.hullList) - 1)]
+
+    def getPlayerTurretColour(self, index):
+        return self.TurretColors[index]
+    
+    def getPlayerHullColour(self, index):
+        return self.HullColors[index]
 
     def getPlayer1Turret(self):
         return self.turretList[self.p1I]

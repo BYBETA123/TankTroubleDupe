@@ -109,7 +109,6 @@ class Tank(pygame.sprite.Sprite):
 
         # Load the image with the corrected path
         self.tread_surface = pygame.image.load(image_path).convert_alpha()
-        # rect_surface = pygame.transform.scale(rect_surface, (self.originalTankImage.get_size()))
         self.tread_surface = pygame.transform.scale(self.tread_surface, (8, self.originalTankImage.get_size()[1]))
         self.player = None
 
@@ -124,7 +123,6 @@ class Tank(pygame.sprite.Sprite):
             # current tile
             (currentTiley, currentTilex) = ((self.getCenter()[0]-50)//50 + 1, (self.getCenter()[1]-50)//50)
             currentTile = currentTilex * 14 + currentTiley
-            
             currentTarget = self.lastTargetPackage[0]
             for t in self.tileList:
                 t.setTarget(False)
@@ -139,6 +137,7 @@ class Tank(pygame.sprite.Sprite):
             targetTilex, targetTiley = self.lastTargetPackage[1], self.lastTargetPackage[2]
 
             if currentTile != self.aim[0] and self.BFSRefresh:
+
                 self.BFSRefresh = False
                 # we haven't reached the goal
                 self.pseudoTargetarray = breathFirstSearchShort(self.tileList, [currentTile, self.aim[0]], 0)
@@ -151,6 +150,7 @@ class Tank(pygame.sprite.Sprite):
 
             # we are within the target tile
             if (abs(targetTilex - self.getCenter()[0]) < 10 and abs(targetTiley - self.getCenter()[1]) < 10):
+
                 self.speed = 0
                 self.rotationSpeed = 0
                 self.BFSRefresh = True
@@ -195,7 +195,11 @@ class Tank(pygame.sprite.Sprite):
 
                 self.rotationSpeed = getRotation(vAngle, self.angle)
                 # if we are facing the target, go forward
-                self.speed = self.maxSpeed # I don't like this
+                if abs(vAngle - self.angle) < 2: #if we are basically matching the target
+                    self.speed = self.maxSpeed
+                else:
+                    self.speed = 0
+                # self.speed = self.maxSpeed # I don't like this
 
         else:
             keys = pygame.key.get_pressed()
