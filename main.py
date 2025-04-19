@@ -38,6 +38,9 @@ global gunList, tankList
 tankList = [None for _ in range(8)] # list of all the current tanks in the game
 gunList = [None for _ in range(8)] # list of all the current guns in the game
 
+global constantList
+constantList = [None, None, None, None]
+
 pygame.init()
 
 #Classes
@@ -2043,9 +2046,15 @@ def tileGen(numSpawns = 2): # Default is 2 spawns
     return tileList
 
 def nextType(difficultyType):
-    global gameMode
+    global gameMode, constantList, gunList, tankList
 
     reset()
+    # quickly assign the game sprites
+    constantList[0] = gunList[0].getSprite(True)
+    constantList[1] = tankList[0].getSprite(True)
+    constantList[2] = gunList[1].getSprite()
+    constantList[3] = tankList[1].getSprite()
+
     match difficultyType:
         case DifficultyType.OnePlayerYard:
             gameMode=GameMode.play
@@ -2331,15 +2340,16 @@ def constantSelectionScreen():
     mixer.crossfade('selection')
 
 def constantPlayGame():
+    global constantList
     #This function handles the constant elements of the game screen
     # Inputs: None
     # Outputs: None
     screen.fill(const.BACKGROUND_COLOR) # This is the first line when drawing a new frame
-    screen.blit(gunList[0].getSprite(True), (const.TILE_SIZE, 0.78*const.WINDOW_HEIGHT)) # Gun 2
-    screen.blit(tankList[0].getSprite(True), (const.TILE_SIZE, 0.78*const.WINDOW_HEIGHT)) # Tank 2
+    screen.blit(constantList[0], (const.TILE_SIZE, 0.78*const.WINDOW_HEIGHT)) # Gun 2
+    screen.blit(constantList[1], (const.TILE_SIZE, 0.78*const.WINDOW_HEIGHT)) # Tank 2
 
-    screen.blit(gunList[1].getSprite(), (const.WINDOW_WIDTH - const.TILE_SIZE*3, 0.78*const.WINDOW_HEIGHT)) # Gun 2
-    screen.blit(tankList[1].getSprite(), (const.WINDOW_WIDTH - const.TILE_SIZE*3, 0.78*const.WINDOW_HEIGHT)) # Tank 2
+    screen.blit(constantList[2], (const.WINDOW_WIDTH - const.TILE_SIZE*3, 0.78*const.WINDOW_HEIGHT)) # Gun 2
+    screen.blit(constantList[3], (const.WINDOW_WIDTH - const.TILE_SIZE*3, 0.78*const.WINDOW_HEIGHT)) # Tank 2
     print("Switching to game music")
     mixer.crossfade('game')
 
