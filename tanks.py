@@ -518,6 +518,33 @@ class Tank(pygame.sprite.Sprite):
     def getTeam(self):
         return self.player.getTeam()
 
+    def getCornersInflated(self, inflateAmount):
+        inflatedCorners = []
+        cx, cy = self.rect.centerx, self.rect.centery
+        corners = self.getCorners()
+
+        for corner in corners:
+            dx = corner[0] - cx
+            dy = corner[1] - cy
+
+            # Get the distance from the center to the corner
+            distance = math.hypot(dx, dy)
+            if distance == 0:
+                inflatedCorners.append((corner[0], corner[1]))
+                continue
+
+            # Normalize the direction vector
+            dx /= distance
+            dy /= distance
+
+            # Apply inflation
+            new_x = corner[0] + dx * inflateAmount
+            new_y = corner[1] + dy * inflateAmount
+
+            inflatedCorners.append((new_x, new_y))
+
+        return inflatedCorners
+
 #Hulls
 class Bonsai(Tank):
 

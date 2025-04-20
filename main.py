@@ -18,17 +18,17 @@ global timerClock
 timerClock = 0
 # final set up of the players
 
-player1 = Player("Player 1", const.CONTROLS_TANK1, const.PLAYER_1_TANK_NAME, const.PLAYER_1_CHANNELS, const.PLAYER_1_GUN_NAME)# Player 1
-player2 = Player("Player 2", const.CONTROLS_TANK2, const.PLAYER_2_TANK_NAME, const.PLAYER_2_CHANNELS, const.PLAYER_2_GUN_NAME)# Player 2
-player3 = Player("Player 3", None, const.PLAYER_3_TANK_NAME, const.PLAYER_3_CHANNELS, const.PLAYER_3_GUN_NAME)# Player 3
-player4 = Player("Player 4", None, const.PLAYER_4_TANK_NAME, const.PLAYER_4_CHANNELS, const.PLAYER_4_GUN_NAME)# Player 4
-player5 = Player("Player 5", None, const.PLAYER_5_TANK_NAME, const.PLAYER_5_CHANNELS, const.PLAYER_5_GUN_NAME)# Player 5
-player6 = Player("Player 6", None, const.PLAYER_6_TANK_NAME, const.PLAYER_6_CHANNELS, const.PLAYER_6_GUN_NAME)# Player 6
-player7 = Player("Player 7", None, const.PLAYER_7_TANK_NAME, const.PLAYER_7_CHANNELS, const.PLAYER_7_GUN_NAME)# Player 7
-player8 = Player("Player 8", None, const.PLAYER_8_TANK_NAME, const.PLAYER_8_CHANNELS, const.PLAYER_8_GUN_NAME)# Player 8
-
 global playerlist
-playerlist = [player1, player2, player3, player4, player5, player6, player7, player8] # list of all the players in the game
+playerlist = [Player("Player 1", const.CONTROLS_TANK1, const.PLAYER_1_TANK_NAME, const.PLAYER_1_CHANNELS, const.PLAYER_1_GUN_NAME),
+              Player("Player 2", const.CONTROLS_TANK2, const.PLAYER_2_TANK_NAME, const.PLAYER_2_CHANNELS, const.PLAYER_2_GUN_NAME),
+              Player("Player 3", None, const.PLAYER_3_TANK_NAME, const.PLAYER_3_CHANNELS, const.PLAYER_3_GUN_NAME),
+              Player("Player 4", None, const.PLAYER_4_TANK_NAME, const.PLAYER_4_CHANNELS, const.PLAYER_4_GUN_NAME),
+              Player("Player 5", None, const.PLAYER_5_TANK_NAME, const.PLAYER_5_CHANNELS, const.PLAYER_5_GUN_NAME),
+              Player("Player 6", None, const.PLAYER_6_TANK_NAME, const.PLAYER_6_CHANNELS, const.PLAYER_6_GUN_NAME),
+              Player("Player 7", None, const.PLAYER_7_TANK_NAME, const.PLAYER_7_CHANNELS, const.PLAYER_7_GUN_NAME),
+              Player("Player 8", None, const.PLAYER_8_TANK_NAME, const.PLAYER_8_CHANNELS, const.PLAYER_8_GUN_NAME)]
+
+# playerlist = [player1, player2, player3, player4, player5, player6, player7, player8] # list of all the players in the game
 
 # quick adjustment
 for i in range(len(playerlist)):
@@ -429,10 +429,12 @@ class Gun(pygame.sprite.Sprite):
         return self.player.getTeam()
 
     def updateAim(self):
-        if self.target is not None:
+        if self.target is not None: # find a new target
+            lst = [i for i in range(0, self.playerCount) if ((not tankDead[i]) and self.enemy[i].getName() != self.tank.name and self.enemy[i].getTeam() != self.tank.getTeam())]
+            self.targetIndex = random.choice(lst)
+            self.target = self.enemy[self.targetIndex] # I think this works
             temp = self.target.getCurrentTile().getIndex() # for the most part we can guarantee this
             self.tank.setAim((temp, temp%14*const.TILE_SIZE + const.TILE_SIZE//2, ((temp)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
-
 
 class Bullet(pygame.sprite.Sprite):
 
@@ -700,6 +702,19 @@ class SilencerBullet(Bullet):
             # Checking for self-damage
             if self.bounce != self.originalBounce:
                 self.selfCollision = True
+
+            # Check for collisions with tanks
+            for i in range(difficultyType.playerCount):
+                #<!HELP>
+                # i'm not sure which collision to use so here is both
+                if not tankDead[i]:
+                    tankCollision = self.getCollision(tankList[i].getCorners(), (tempX, tempY))
+                    # tankCollision = pygame.sprite.collide_rect(self, tankList[i])
+                    if self.name != tankList[i].getName() and tankCollision and tankList[i].getInvincibility() == 0:
+                        damage(tankList[i], self.damage, self.gunOwner.getPlayer())
+                    if self.bounce != self.originalBounce:
+                        if tankCollision and tankList[i].getInvincibility() == 0:
+                            damage(tankList[i], self.damage, self.gunOwner.getPlayer())
 
             # Handle wall collision
             tile = tileList[index - 1]
@@ -1317,8 +1332,8 @@ class DifficultyType(Enum):
     OnePlayerDeathMatch = (6, True, True, 2, 1, 2)
     TwoPlayerBrawl = (7, True, False, 2, 2, 2)
     TwoPlayerDeathMatch = (8, True, False, 2, 2, 2)
-    OnePlayerTDM = (9, False, True, 8, 1, 2)
-    TeamDeathMatch = (10, True, True, 8, 1, 2)
+    OnePlayerTDM = (9, True, True, 8, 1, 2)
+    TeamDeathMatch = (10, True, True, 8, 2, 2)
     OnePlayerCaptureTheFlag = (11, True, True, 2, 1, 2)
     CaptureTheFlag = (12, True, False, 2, 2, 2)
 
@@ -1645,19 +1660,12 @@ class Silencer(Gun):
         #Setup bullet (Trailed/ Temp)
         bulletX, bulletY = self.getTank().getGunCenter()
         bullet = SilencerBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet, self)
-        bullet.setDamage(0)
+        bullet.setDamage(self._getDamage())
         bullet.setBulletSpeed(50)
         bullet.setName(self.getTank().getName())
         bullet.drawable = True
         bullet.trail = True
         bulletSprites.add(bullet)
-        # Real bullet
-        bullet1 = WatcherBullet(bulletX, bulletY, self.angle, self.gunLength, self.tipOffSet, self)
-        bullet1.setDamage(self._getDamage())
-        bullet1.setBulletSpeed(50)
-        bullet1.setName(self.getTank().getName())
-        bullet1.drawable = True
-        bulletSprites.add(bullet1)
         self.sound = True
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
@@ -2132,9 +2140,8 @@ def nextType(difficultyType):
             gameMode = GameMode.selection
             constantSelectionScreen()
         case DifficultyType.OnePlayerTDM:
-            gameMode=GameMode.play
-            #Switch the the play screen
-            constantPlayGame()
+            gameMode = GameMode.selection
+            constantSelectionScreen()
         case DifficultyType.TeamDeathMatch:
             gameMode = GameMode.selection
             constantSelectionScreen()
@@ -2387,7 +2394,8 @@ def setUpPlayers():
             timer.setDirection(False)
             timer.setDuration(301)
         case DifficultyType.OnePlayerTDM:
-            timer.setDirection(True)
+            timer.setDirection(False)
+            timer.setDuration(61)
         case DifficultyType.TeamDeathMatch:
             timer.setDirection(False)
             timer.setDuration(61)
@@ -2605,6 +2613,14 @@ def damage(tank, damage, owner):
             spareChannels(const.SOUND_DICTIONARY["tankDeath"])
     updateTankHealth() # Manage the healthbar outside of the code
 
+def getColor(c):
+    if c == 0:
+        return c.geT("BLUE")
+    elif c == 1:
+        return c.geT("RED")
+    else:
+        return c.geT("GREY")
+
 def playGame():
 
     def checkGameOver(t):
@@ -2627,18 +2643,8 @@ def playGame():
             case DifficultyType.TwoPlayerDeathMatch:
                 return timer.isExpired()
             case DifficultyType.OnePlayerTDM:
-                return tankDead[:difficultyType.playerCount].count(False) == 1 # hehe it's last man standing
+                return timer.isExpired()
             case DifficultyType.TeamDeathMatch:
-
-                # t1Alive = 0
-                # t2Alive = 0
-                # for i in range(difficultyType.playerCount):
-                #     if not tankDead[i]: # if the tank is dead, skip it
-                #         if playerlist[i].getTeam() == 0:
-                #             t1Alive += 1
-                #         else:
-                #             t2Alive += 1
-                # return t1Alive == 0 or t2Alive == 0 # if one team is dead, the game is over
                 return timer.isExpired()
 
 
@@ -2732,13 +2738,6 @@ def playGame():
                         constantPlayGame()
                         timer.reset() # rest the clock
                 case DifficultyType.TeamDeathMatch:
-                    # if t1Score > 20 or t2Score > 20:
-                    #     makeTable()
-                    #     gameMode = GameMode.end
-                    # else:
-                    #     reset()
-                    #     constantPlayGame()
-                    #     timer.reset() # rest the clock
                     makeTable()
                     gameMode = GameMode.end
 
@@ -2828,10 +2827,6 @@ def playGame():
     # draw the text again
     screen.blit(text, [const.WINDOW_WIDTH//2 - text.get_width()//2, 8])
 
-    for i in range(difficultyType.playerCount):
-        if not tankDead[i]:
-            pygame.draw.polygon(screen, c.geT("BLUE") if tankList[i].getTeam() else c.geT("RED"), tankList[i].getCorners(), 2) #Hit box outline
-
     # temp solution while the AI needs to be improved
     if difficultyType.ai:
         for i in range(1, difficultyType.playerCount):
@@ -2881,6 +2876,10 @@ def playGame():
         if sprite.isDrawable():
             sprite.customDraw(screen)
 
+    for i in range(difficultyType.playerCount):
+        if not tankDead[i]:
+            pygame.draw.polygon(screen, getColor(tankList[i].getTeam()), tankList[i].getCornersInflated(3), 2) #Hit box outline
+
     # # we are drawing a surface to stick the health bars on top of the tanks # this should be a togglable feature because it impacts performance
     # for i in range(difficultyType.playerCount):
     #     if not tankDead[i]:
@@ -2898,10 +2897,12 @@ def reset():
     # Outputs: None
     # Because of the way it's coded, these global declarations can't be avoided
     global gameOverFlag, cooldownTimer, systemTime, t1Score, t2Score
-    global tankDead
+    global tankDead, playerlist
     global allSprites, bulletSprites
     gameOverFlag = False
     cooldownTimer = False
+    for p in playerlist:
+        p.resetPlayer()
     #Remove all the sprites
     for sprite in allSprites:
         sprite.kill()
@@ -3155,8 +3156,6 @@ def main():
                         if endScreen.isWithinPlayAgainButton(mouse):
                             print("Play Again")
                             t1Score, t2Score = 0, 0 # reset the player scores
-                            player1.resetPlayer()
-                            player2.resetPlayer()
                             reset()
                             constantPlayGame()
                             gameMode = GameMode.play

@@ -321,3 +321,42 @@ class Dropdown:
     
     def getState(self):
         return self.open
+    
+class Switch:
+
+    def __init__(self, onColor = (0,0,0), offColor = (255, 255, 255), x=0, y=0, barWidth = 100, barHeight = 10, square = 10, barColor = (0,0,0)):
+
+        self.onColor = onColor
+        self.offColor = offColor
+        self.x = x
+        self.y = y
+        self.barWidth = barWidth
+        self.barHeight = barHeight
+        self.square = square
+        self.barColor = barColor
+        self.on = True # default it to false to begin with
+
+    def draw(self, screen):
+        # pygame.draw.rect(screen, self.color, (self.x, self.y, self.width, self.height), 0)
+
+        # we have a square to draw
+        # draw the switch bar
+        pygame.draw.rect(screen, self.barColor, (self.x + self.square//2, self.y + self.square//2 - self.barHeight//2, self.barWidth - self.square, self.barHeight), 0, self.square//10)
+
+        if self.on:
+            pygame.draw.rect(screen, self.onColor, (self.x + self.barWidth - self.square, self.y, self.square, self.square), 0, self.square//10)
+        else:
+            pygame.draw.rect(screen, self.offColor, (self.x, self.y, self.square, self.square), 0, self.square//10)
+
+    def click(self, mousepos):
+        x, y = mousepos
+        if self.x < x < self.x + self.barWidth and self.y < y < self.y + self.square:
+            self.on = not self.on
+            return True
+        return False
+
+    def getColor(self):
+        return self.onColor if self.on else self.offColor
+
+
+
