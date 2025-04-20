@@ -111,6 +111,7 @@ class Tank(pygame.sprite.Sprite):
         self.tread_surface = pygame.image.load(image_path).convert_alpha()
         self.tread_surface = pygame.transform.scale(self.tread_surface, (8, self.originalTankImage.get_size()[1]))
         self.player = None
+        self.team = 0
 
     def update(self):
         # This function updates the tank's position and rotation based on the controls detected
@@ -511,6 +512,12 @@ class Tank(pygame.sprite.Sprite):
     def getPlayer(self):
         return self.player
 
+    def copy(self):
+        return Tank(self.x, self.y, self.controls, self.name)
+
+    def getTeam(self):
+        return self.player.getTeam()
+
 #Hulls
 class Bonsai(Tank):
 
@@ -529,7 +536,10 @@ class Bonsai(Tank):
         # Inputs: None
         # Outputs: The center of the gun
         return self.rotate_point((self.rect.centerx, self.rect.centery), -5, 0, self.angle)
-    
+
+    def copy(self):
+        return Bonsai(self.x, self.y, self.controls, self.name)
+
 class Cicada(Tank):
 
     def __init__(self, x, y, controls, name):
@@ -542,12 +552,14 @@ class Cicada(Tank):
         self.setTankName("Cicada")
         self.setWeight(233)
 
-
     def getGunCenter(self):
         #Since the point is not in the center of the tank, we need to adjust the gun position
         # Inputs: None
         # Outputs: The center of the gun
         return self.rotate_point((self.rect.centerx, self.rect.centery), -4, 0, self.angle)
+
+    def copy(self):
+        return Cicada(self.x, self.y, self.controls, self.name)
 
 class DefaultTank(Tank):
     def __init__(self, x, y, controls, name):
@@ -560,6 +572,8 @@ class DefaultTank(Tank):
         self.setTankName("tank")
         self.setWeight(1)
 
+    def copy(self):
+        return DefaultTank(self.x, self.y, self.controls, self.name)
 
 class Fossil(Tank):
 
@@ -580,6 +594,9 @@ class Fossil(Tank):
         # Outputs: The center of the gun
         return self.rotate_point((self.rect.centerx, self.rect.centery), 4, 0, self.angle)
     
+    def copy(self):
+        return Fossil(self.x, self.y, self.controls, self.name)
+
 class Gater(Tank):
 
     def __init__(self, x, y, controls, name):
@@ -599,6 +616,9 @@ class Gater(Tank):
         # Outputs: The center of the gun
         return self.rotate_point((self.rect.centerx, self.rect.centery), 0, 0, self.angle)
 
+    def copy(self):
+        return Gater(self.x, self.y, self.controls, self.name)
+
 class Panther(Tank):
 
     def __init__(self, x, y, controls, name):
@@ -611,9 +631,12 @@ class Panther(Tank):
         self.setTankName("Panther")
         self.setWeight(150)
 
-
     def getGunCenter(self):
         #Since the point is not in the center of the tank, we need to adjust the gun position
         # Inputs: None
         # Outputs: The center of the gun
         return self.rotate_point((self.rect.centerx, self.rect.centery), -4, 0, self.angle)
+
+    def copy(self):
+        return Panther(self.x, self.y, self.controls, self.name)
+    

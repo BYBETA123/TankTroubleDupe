@@ -30,6 +30,10 @@ player8 = Player("Player 8", None, const.PLAYER_8_TANK_NAME, const.PLAYER_8_CHAN
 global playerlist
 playerlist = [player1, player2, player3, player4, player5, player6, player7, player8] # list of all the players in the game
 
+# quick adjustment
+for i in range(len(playerlist)):
+    playerlist[i].setTeam(i%2) # temporarily set all the players to either team 0 or team 1
+
 global tankDead
 tankDead = [False, False, False, False, False, False, False, False] # This is to keep track of the tanks that are dead
 treads = [[] for _ in range(8)]
@@ -87,7 +91,7 @@ class Gun(pygame.sprite.Sprite):
         self.damage = 700
         self.damageStatistic = 1
         self.reloadStatistic = 1
-        self.turretSpeed = 0.15 # This number * 30 for deg / tick
+        self.turretSpeed = 0.23 # This number * 30 for deg / tick
         self.drawable = False
         self.topTurretSpeed = self.turretSpeed
         self.gunH = 7
@@ -129,64 +133,68 @@ class Gun(pygame.sprite.Sprite):
             # if the target is dead
             if self.dead[self.targetIndex]:
                 self.target = None # reset the target
-            if self.target is None:
-                self.target = self.enemy[random.choice([i for i in range(0, self.playerCount) if (not tankDead[i]) and self.enemy[i].getName() != self.tank.name])] # I think this works
-                self.targetIndex = self.enemy.index(self.target) # get the index of the target
-            tank2x, tank2y = self.target.getCenter()# get the center
-            c = self.tank.getCorners() # Our center
+                lst = [i for i in range(0, self.playerCount) if ((not self.dead[i]) and self.enemy[i].getName() != self.tank.name and self.enemy[i].getTeam() != self.tank.getTeam())]
+                if len(lst) != 0:
+                    self.targetIndex = random.choice(lst) if lst is not None else -1
+                    self.target = self.enemy[self.targetIndex] # I think this works
+                    temp = self.target.getCurrentTile().getIndex() # for the most part we can guarantee this
+                    self.tank.setAim((temp, temp%14*const.TILE_SIZE + const.TILE_SIZE//2, ((temp)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
+            if self.target is not None: # we have a target
+                tank2x, tank2y = self.target.getCenter()# get the center
+                c = self.tank.getCorners() # Our center
 
-            tank1x, tank1y = (c[0][0] + c[1][0])//2, (c[0][1] + c[2][1])//2
-            dx, dy = tank2x - tank1x, tank2y - tank1y
-            a = math.degrees(math.atan2(dx, dy))//1
-            a = (a + 360 - 90) % 360
-            temp = 0
-            if self.hard:
-                # make it find the shortest path and store in self.angle
-                if abs(a - self.angle) > 180:
-                    temp = self.angle - a
+                tank1x, tank1y = (c[0][0] + c[1][0])//2, (c[0][1] + c[2][1])//2
+                dx, dy = tank2x - tank1x, tank2y - tank1y
+                a = math.degrees(math.atan2(dx, dy))//1
+                a = (a + 360 - 90) % 360
+                temp = 0
+                if self.hard:
+                    # make it find the shortest path and store in self.angle
+                    if abs(a - self.angle) > 180:
+                        temp = self.angle - a
+                    else:
+                        temp = a - self.angle
+                    #limit the change to a max of 15 degrees
+                    if (temp>0):
+                        temp = min(temp, 15)
+                    else:
+                        temp = max(temp, -15)
                 else:
-                    temp = a - self.angle
-                #limit the change to a max of 15 degrees
-                if (temp>0):
-                    temp = min(temp, 15)
-                else:
-                    temp = max(temp, -15)
-            else:
-                temp =self.tank.getAngle() - self.angle
+                    temp =self.tank.getAngle() - self.angle
 
-            self.angle = (self.angle + temp)
-            self.angle = round(self.angle)
-            self.angle %= 360
-            # Line of sight for the tank to shoot
+                self.angle = (self.angle + temp)
+                self.angle = round(self.angle)
+                self.angle %= 360
+                # Line of sight for the tank to shoot
 
-            lowerlimit = ((self.angle + 5) + 360) % 360
-            upperlimit = ((self.angle - 5) + 360) % 360
+                lowerlimit = ((self.angle + 5) + 360) % 360
+                upperlimit = ((self.angle - 5) + 360) % 360
 
-            if self.canShoot:
-                if ((a <=lowerlimit and a >= upperlimit) or ((lowerlimit <= 5) and (upperlimit >= 355) and (a >= 355 or a <= 5))):
-                    distance = math.hypot(dx, dy)
-                    steps = int(distance)
-                    for i in range(steps):
-                        x = tank1x + (dx/distance) * i
-                        y = tank1y + (dy/distance) * i
-                        #check the tile it is in
-                        row = math.ceil((y - const.MAZE_Y)/const.TILE_SIZE)
-                        col = math.ceil((x - const.MAZE_X)/const.TILE_SIZE)
-                        index = (row-1)*const.COLUMN_AMOUNT + col
-                        tile = tileList[index-1]
+                if self.canShoot:
+                    if ((a <=lowerlimit and a >= upperlimit) or ((lowerlimit <= 5) and (upperlimit >= 355) and (a >= 355 or a <= 5))):
+                        distance = math.hypot(dx, dy)
+                        steps = int(distance)
+                        for i in range(steps):
+                            x = tank1x + (dx/distance) * i
+                            y = tank1y + (dy/distance) * i
+                            #check the tile it is in
+                            row = math.ceil((y - const.MAZE_Y)/const.TILE_SIZE)
+                            col = math.ceil((x - const.MAZE_X)/const.TILE_SIZE)
+                            index = (row-1)*const.COLUMN_AMOUNT + col
+                            tile = tileList[index-1]
 
-                        if tile.border[0] and y - 1 <= tile.y:
-                            break
-                        if tile.border[1] and x + 1 >= tile.x + const.TILE_SIZE:
-                            break
-                        if tile.border[2] and y + 1 >= tile.y + const.TILE_SIZE:
-                            break
-                        if tile.border[3] and x - 1 <= tile.x:
-                            break
-                        if x <= const.MAZE_X or y <= const.MAZE_Y or x >= const.MAZE_WIDTH + const.MAZE_X or y >= const.MAZE_HEIGHT + const.MAZE_Y:
-                            break
-                    if i == steps - 1:
-                        self.fire()
+                            if tile.border[0] and y - 1 <= tile.y:
+                                break
+                            if tile.border[1] and x + 1 >= tile.x + const.TILE_SIZE:
+                                break
+                            if tile.border[2] and y + 1 >= tile.y + const.TILE_SIZE:
+                                break
+                            if tile.border[3] and x - 1 <= tile.x:
+                                break
+                            if x <= const.MAZE_X or y <= const.MAZE_Y or x >= const.MAZE_WIDTH + const.MAZE_X or y >= const.MAZE_HEIGHT + const.MAZE_Y:
+                                break
+                        else:
+                            self.fire() # huh
                         
         else:
             keys = pygame.key.get_pressed()
@@ -404,14 +412,27 @@ class Gun(pygame.sprite.Sprite):
     def getPlayer(self):
         return self.player
 
-    def assignTeam(self, enemies, dead, randomNum, players):
+    def assignTeam(self, enemies, dead, players):
         self.enemy = enemies
         self.dead = dead
         self.playerCount = players
-        self.targetIndex = random.choice([i for i in range(0, self.playerCount) if (not tankDead[i]) and self.enemy[i].getName() != self.tank.name])
+        lst = [i for i in range(0, self.playerCount) if ((not tankDead[i]) and self.enemy[i].getName() != self.tank.name and self.enemy[i].getTeam() != self.tank.getTeam())]
+        self.targetIndex = random.choice(lst)
         self.target = self.enemy[self.targetIndex] # I think this works
         temp = self.target.getCurrentTile().getIndex() # for the most part we can guarantee this
         self.tank.setAim((temp, temp%14*const.TILE_SIZE + const.TILE_SIZE//2, ((temp)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
+
+    def copy(self):
+        return Gun(self.tank, self.controls, self.name)
+
+    def getTeam(self):
+        return self.player.getTeam()
+
+    def updateAim(self):
+        if self.target is not None:
+            temp = self.target.getCurrentTile().getIndex() # for the most part we can guarantee this
+            self.tank.setAim((temp, temp%14*const.TILE_SIZE + const.TILE_SIZE//2, ((temp)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
+
 
 class Bullet(pygame.sprite.Sprite):
 
@@ -758,17 +779,18 @@ class WatcherBullet(Bullet):
             for i in range(difficultyType.playerCount):
                 #<!HELP>
                 # i'm not sure which collision to use so here is both
-                tankCollision = self.getCollision(tankList[i].getCorners(), (temp_x, temp_y))
-                # tankCollision = pygame.sprite.collide_rect(self, tankList[i])
-                if self.name != tankList[i].getName() and tankCollision and tankList[i].getInvincibility() == 0:
-                    damage(tankList[i], self.damage, self.gunOwner.getPlayer())
-                    self.kill()
-                    return
-                if self.bounce != self.originalBounce:
-                    if tankCollision and tankList[i].getInvincibility() == 0:
+                if not tankDead[i]:
+                    tankCollision = self.getCollision(tankList[i].getCorners(), (temp_x, temp_y))
+                    # tankCollision = pygame.sprite.collide_rect(self, tankList[i])
+                    if self.name != tankList[i].getName() and tankCollision and tankList[i].getInvincibility() == 0:
                         damage(tankList[i], self.damage, self.gunOwner.getPlayer())
                         self.kill()
                         return
+                    if self.bounce != self.originalBounce:
+                        if tankCollision and tankList[i].getInvincibility() == 0:
+                            damage(tankList[i], self.damage, self.gunOwner.getPlayer())
+                            self.kill()
+                            return
 
             # Handle wall collisions and bouncing
             tile = tileList[index - 1]
@@ -1285,27 +1307,28 @@ class GameMode(Enum):
     unimplemented = 8
 
 class DifficultyType(Enum):
-    # format is <Number> <Respawn> <AI> <No. of Players>, <humanCount>
-    NotInGame = (0, False, False, 0, 0)
-    OnePlayerYard = (1, False, True, 2, 1)
-    OnePlayerScrapYard = (2, False, True, 2, 1)
-    TwoPlayerYard = (3, False, False, 2, 2)
-    TwoPlayerScrapYard = (4, False, False, 2, 2)
-    OnePlayerBrawl = (5, True, True, 2, 1)
-    OnePlayerDeathMatch = (6, True, True, 2, 1)
-    TwoPlayerBrawl = (7, True, False, 2, 2)
-    TwoPlayerDeathMatch = (8, True, False, 2, 2)
-    OnePlayerTDM = (9, False, True, 8, 1)
-    TeamDeathMatch = (10, True, False, 8, 2)
-    OnePlayerCaptureTheFlag = (11, True, True, 2, 1)
-    CaptureTheFlag = (12, True, False, 2, 2)
+    # format is <Number> <Respawn> <AI> <No. of Players>, <humanCount>, <teamCount>
+    NotInGame = (0, False, False, 0, 0, 0)
+    OnePlayerYard = (1, False, True, 2, 1, 2)
+    OnePlayerScrapYard = (2, False, True, 2, 1, 2)
+    TwoPlayerYard = (3, False, False, 2, 2, 2)
+    TwoPlayerScrapYard = (4, False, False, 2, 2, 2)
+    OnePlayerBrawl = (5, True, True, 2, 1, 2)
+    OnePlayerDeathMatch = (6, True, True, 2, 1, 2)
+    TwoPlayerBrawl = (7, True, False, 2, 2, 2)
+    TwoPlayerDeathMatch = (8, True, False, 2, 2, 2)
+    OnePlayerTDM = (9, False, True, 8, 1, 2)
+    TeamDeathMatch = (10, True, True, 8, 1, 2)
+    OnePlayerCaptureTheFlag = (11, True, True, 2, 1, 2)
+    CaptureTheFlag = (12, True, False, 2, 2, 2)
 
-    def __init__(self, number, respawn, ai, playerCount, human):
+    def __init__(self, number, respawn, ai, playerCount, human, teamCount):
         self._value_ = number
         self.respawn = respawn
         self.ai = ai
         self.playerCount = playerCount
         self.humanCount = human
+        self.teamCount = teamCount
 
     @classmethod
     def from_index(cls, index):
@@ -1354,6 +1377,9 @@ class Chamber(Gun):
         else:
             spareChannels(const.SOUND_DICTIONARY["Chamber"])
 
+    def copy(self):
+        return Chamber(self.getTank(), self.controls, self.getTank().getName())
+
 class DefaultGun(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
@@ -1376,6 +1402,9 @@ class DefaultGun(Gun):
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
         self.playSFX()
+
+    def copy(self):
+        return DefaultGun(self.getTank(), self.controls, self.getTank().getName())
 
 class Huntsman(Gun):
 
@@ -1410,6 +1439,9 @@ class Huntsman(Gun):
             self.channelDict["fire"]["channel"].play(const.SOUND_DICTIONARY["Huntsman"])  # Play sound indefinitely
         else:
             spareChannels(const.SOUND_DICTIONARY["Huntsman"])
+
+    def copy(self):
+        return Huntsman(self.getTank(), self.controls, self.getTank().getName())
 
 class Judge(Gun):
 
@@ -1472,6 +1504,9 @@ class Judge(Gun):
             temp = 1 - (self.currentUses % self.maxUses + self.shootCooldown / self.cooldownDuration) / self.maxUses
         return temp
 
+    def copy(self):
+        return Judge(self.getTank(), self.controls, self.getTank().getName())
+
 class Sidewinder(Gun):
 
     def __init__(self, tank, controls, name):
@@ -1502,6 +1537,9 @@ class Sidewinder(Gun):
             self.channelDict["fire"]["channel"].play(const.SOUND_DICTIONARY["Sidewinder"])  # Play sound indefinitely
         else:
             spareChannels(const.SOUND_DICTIONARY["Sidewinder"])
+
+    def copy(self):
+        return Sidewinder(self.getTank(), self.controls, self.getTank().getName())
 
 class Silencer(Gun):
 
@@ -1644,6 +1682,9 @@ class Silencer(Gun):
         else:
             spareChannels(const.SOUND_DICTIONARY["Silencer"])
 
+    def copy(self):
+        return Silencer(self.getTank(), self.controls, self.getTank().getName())
+
 class Tempest(Gun):
 
     def __init__(self, tank, controls, name):
@@ -1664,6 +1705,9 @@ class Tempest(Gun):
         else:
             spareChannels(const.SOUND_DICTIONARY["Tempest"])
 
+    def copy(self):
+        return Tempest(self.getTank(), self.controls, self.getTank().getName())
+    
 class Watcher(Gun):
 
     scoping = False
@@ -1860,6 +1904,9 @@ class Watcher(Gun):
             self.channelDict["fire"]["channel"].play(const.SOUND_DICTIONARY["Watcher"])  # Play sound indefinitely
         else:
             spareChannels(const.SOUND_DICTIONARY["Watcher"])
+
+    def copy(self):
+        return Watcher(self.getTank(), self.controls, self.getTank().getName())
 
 #Functions
 def validateChoice(option, choices):
@@ -2088,6 +2135,9 @@ def nextType(difficultyType):
             gameMode=GameMode.play
             #Switch the the play screen
             constantPlayGame()
+        case DifficultyType.TeamDeathMatch:
+            gameMode = GameMode.selection
+            constantSelectionScreen()
         case _:
             print("Invalid difficulty type")
             gameMode = GameMode.unimplemented
@@ -2264,6 +2314,31 @@ def setUpTank(dType = -1, AI = False, spawn = [0,0], player = None, index = 0):
             gun.setAI(AI)
             gun.setPlayer(player)          
 
+        case DifficultyType.TeamDeathMatch:
+            # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Normal Tanks
+            # tank = copy.copy(playerInformation.getPlayerHull(index)) # Tank 1 setup
+            tank = playerInformation.getPlayerHull(index).copy()
+            tank.setData([spawn[0], spawn[1], player.getControls(), player.getTankName(), player.getTankChannels()])
+            tank.setImage(playerInformation.getPlayerHull(index).getName(), playerInformation.getPlayerHullColour(index) + 1)
+            tank.setSoundDictionary(const.SOUND_DICTIONARY)
+            tank.settileList(tileList)
+            tank.effect = [0,0,0]
+            tank.setAI(AI)
+            tank.setPlayer(player)
+            
+            #Because silencer and watcher aren't made yet, skip them
+            if playerInformation.Player2TurretIndex() == 1 or playerInformation.Player2TurretIndex() == 2:
+                playerInformation.setPlayer2Turret(3)
+                print("Skipping Silencer or Watcher, selecting Chamber")
+
+            # gun = copy.copy(playerInformation.getPlayerTurret(index)) # Gun 1 setup
+            gun = playerInformation.getPlayerTurret(index).copy()
+            gun.setImage(playerInformation.getPlayerTurret(index).getGunName(), playerInformation.getPlayerTurretColour(index) + 1)
+            gun.setHard()
+            gun.setData(tank, player.getControls(), player.getGunName(), player.getTankChannels())
+            gun.setAI(AI)
+            gun.setPlayer(player)
+
     return gun, tank
 
 def setUpPlayers():
@@ -2284,10 +2359,11 @@ def setUpPlayers():
             gunList[i], tankList[i] = setUpTank(difficultyType, AI = False, spawn = spawnpoint[i], player = playerlist[i], index = i)
         else:
             gunList[i], tankList[i] = setUpTank(difficultyType, AI = True, spawn = spawnpoint[i], player = playerlist[i], index = i)
+        playerlist[i].setTeam(i%difficultyType.teamCount)
         allSprites.add(tankList[i], gunList[i])
 
     for i in range(difficultyType.playerCount):
-        gunList[i].assignTeam(tankList, tankDead, i%2, difficultyType.playerCount) # Assign the teams
+        gunList[i].assignTeam(tankList, tankDead, difficultyType.playerCount) # Assign the teams
 
     match difficultyType:
         case DifficultyType.OnePlayerYard: 
@@ -2312,7 +2388,9 @@ def setUpPlayers():
             timer.setDuration(301)
         case DifficultyType.OnePlayerTDM:
             timer.setDirection(True)
-
+        case DifficultyType.TeamDeathMatch:
+            timer.setDirection(False)
+            timer.setDuration(61)
         case _:
             print("Unknown state")
             return
@@ -2506,7 +2584,7 @@ def damage(tank, damage, owner):
     # Outputs: None
     if tank.health <= 0: # if it was already dead
         return
-    tank.health -= (damage * (0.5 if tank.effect[1] != 0 else 1))
+    tank.health -= (damage * (0.55 if tank.effect[1] != 0 else 1)) if ((owner.getTeam() != tank.getTeam()) or (owner.getName() == tank.getPlayer().getName())) else 0 # if the tank is on the same team, don't do damage
     if tank.health > 0:
         if not tank.channelDict["death"]["channel"].get_busy(): # if the sound isn't playing
             tank.channelDict["death"]["channel"].play(const.SOUND_DICTIONARY["tankHurt"])  # Play sound indefinitely
@@ -2550,13 +2628,26 @@ def playGame():
                 return timer.isExpired()
             case DifficultyType.OnePlayerTDM:
                 return tankDead[:difficultyType.playerCount].count(False) == 1 # hehe it's last man standing
+            case DifficultyType.TeamDeathMatch:
+
+                # t1Alive = 0
+                # t2Alive = 0
+                # for i in range(difficultyType.playerCount):
+                #     if not tankDead[i]: # if the tank is dead, skip it
+                #         if playerlist[i].getTeam() == 0:
+                #             t1Alive += 1
+                #         else:
+                #             t2Alive += 1
+                # return t1Alive == 0 or t2Alive == 0 # if one team is dead, the game is over
+                return timer.isExpired()
+
 
     def updateScore():
         global t1Score, t2Score
         t1Score = 0
         t2Score = 0
         for i in range(difficultyType.playerCount):
-            if i%2 == 0: # idk how to do the score yet
+            if playerlist[i].getTeam() == 0:
                 t1Score += playerlist[i].kills
             else:
                 t2Score += playerlist[i].kills
@@ -2640,6 +2731,16 @@ def playGame():
                         reset()
                         constantPlayGame()
                         timer.reset() # rest the clock
+                case DifficultyType.TeamDeathMatch:
+                    # if t1Score > 20 or t2Score > 20:
+                    #     makeTable()
+                    #     gameMode = GameMode.end
+                    # else:
+                    #     reset()
+                    #     constantPlayGame()
+                    #     timer.reset() # rest the clock
+                    makeTable()
+                    gameMode = GameMode.end
 
     seconds = timer.getTime()
     textString = f"{seconds // 60:02d}:{seconds % 60:02d}"
@@ -2687,6 +2788,7 @@ def playGame():
     #draw the supplies # Draw more on top of them
 
     # only displaying 2 so it's ok
+
     ef, mx = tankList[0].getEffect() if not tankDead[0] else ([0,0,0], [19000, 19000, 19000//3])
 
     # Dynamic updating of the current supply status
@@ -2702,7 +2804,7 @@ def playGame():
 
     # Draw the border
     for tile in tileList:
-        tile.update()
+        tile.update() # This should be a togglable feature because it impacts performance
         tile.draw(screen)
 
     # Draw the edge of themaze
@@ -2726,8 +2828,9 @@ def playGame():
     # draw the text again
     screen.blit(text, [const.WINDOW_WIDTH//2 - text.get_width()//2, 8])
 
-    # for i in range(difficultyType.playerCount):
-    #     pygame.draw.polygon(screen, c.geT("GREEN"), tankList[i].getCorners(), 2) #Hit box outline
+    for i in range(difficultyType.playerCount):
+        if not tankDead[i]:
+            pygame.draw.polygon(screen, c.geT("BLUE") if tankList[i].getTeam() else c.geT("RED"), tankList[i].getCorners(), 2) #Hit box outline
 
     # temp solution while the AI needs to be improved
     if difficultyType.ai:
@@ -2735,8 +2838,7 @@ def playGame():
             if not tankDead[i]: # if the tank is alive
                 if pygame.time.get_ticks() - tankList[i].getAimTime() > 2000:
                     if not tankDead[0]:
-                        temp = tankList[0].getCurrentTile().getIndex()
-                        tankList[i].setAim((temp, temp%14*const.TILE_SIZE + const.TILE_SIZE//2, ((temp)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
+                        gunList[i].updateAim()
 
     currentTime = time.time()
     deltaTime = currentTime - lastUpdateTime
@@ -2754,8 +2856,7 @@ def playGame():
                         gunList[i], tankList[i] = setUpTank(difficultyType, AI = False, spawn = spawnpoint[i], player = playerlist[i], index = i)
                     else:
                         gunList[i], tankList[i] = setUpTank(difficultyType, AI = True, spawn = spawnpoint[i], player = playerlist[i], index = i)
-                        gunList[i].assignTeam(tankList, tankDead, i%2, difficultyType.playerCount) # Assign the teams
-
+                        gunList[i].assignTeam(tankList, tankDead, difficultyType.playerCount) # Assign the teams
                     allSprites.add(tankList[i], gunList[i])
                     tankDead[i] = False
             
@@ -2770,7 +2871,6 @@ def playGame():
             bulletSprites.update()
         explosionGroup.update()
         lastUpdateTime = currentTime
-
     for sprite in allSprites:
         sprite.draw(screen)
         if sprite.isDrawable():
@@ -2780,6 +2880,11 @@ def playGame():
         sprite.draw(screen)
         if sprite.isDrawable():
             sprite.customDraw(screen)
+
+    # # we are drawing a surface to stick the health bars on top of the tanks # this should be a togglable feature because it impacts performance
+    # for i in range(difficultyType.playerCount):
+    #     if not tankDead[i]:
+    #         pygame.draw.rect(screen, c.geT("GREEN"), [tankList[i].getCenter()[0] - 10, tankList[i].getCenter()[1], 20, 5])
 
     explosionGroup.draw(screen)
     if timerClock == 0:
@@ -2821,11 +2926,11 @@ def updateTankHealth():
     for i in range(difficultyType.playerCount):
         if not tankDead[i]:
             if tankList[i].getHealth() <= 0:
+                gunList[i].kill()
+                tankList[i].kill()
                 if not tankDead[i]:
                     tankDead[i] = True
                     explosionGroup.add(Explosion(tankList[i].getCenter()[0], tankList[i].getCenter()[1]))
-                gunList[i].kill()
-                tankList[i].kill()
                 # try this
                 gunList[i] = None
                 tankList[i] = None

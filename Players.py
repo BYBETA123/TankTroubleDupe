@@ -39,6 +39,7 @@ class PlayerInformation:
             self.TurretColors = [i for i in range(len(self.ColorIndex))]
             self.HullColors = [i for i in range(len(self.ColorIndex))]
             self.updateColors()
+            self.team = 0 # temp
 
     def getTurretList(self):
         return self.turretList
@@ -132,14 +133,14 @@ class PlayerInformation:
             self.HullColors[i] = item
             temp.remove(item)
 
-    def getPlayerTurret(self, index):
+    def getPlayerTurret(self, index): # for the sake of framerate we need to do this
         if index == 0:
             return self.turretList[self.p1I]
         elif index == 1:
             return self.turretList[self.p2I]
         else: # no more players, just AI
-            vChoice = [i for i in range(0, len(self.turretList) - 1) if i != 1 and i != 2]
-            return random.choice(vChoice)
+            vChoice = [i for i in range(0, len(self.turretList) - 1) if i != 1 and i != 2 and i != 5] # Judge is playable but has been taken out to preseve frames
+            return self.turretList[random.choice(vChoice)]
 
     def getPlayerHull(self, index):
         if index == 0:
@@ -199,7 +200,7 @@ class Player(): # This is a class that is being reported to
         self.gunName = GUN_NAME
         self.spawn = SPAWN
     def getTableEntry(self):
-        return [self.name, self.kills, self.deaths, self.kills / max(self.deaths, 1)]
+        return [self.name, self.team, self.kills, self.deaths, self.kills / max(self.deaths, 1)]
     
     def addKill(self):
         self.kills += 1
@@ -234,3 +235,9 @@ class Player(): # This is a class that is being reported to
     
     def getSpawn(self):
         return self.spawn
+    
+    def setTeam(self, team):
+        self.team = team
+    
+    def getTeam(self):
+        return self.team

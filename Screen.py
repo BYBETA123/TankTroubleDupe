@@ -846,8 +846,9 @@ class EndScreen:
                 self.text4.draw(screen, outline = True)
             return
 
-        def setPlayerName(self, playerName):
+        def setPlayerName(self, playerName, c = c.geT("GREY")):
             self.text1.setText(playerName)
+            self.text1.display = c
 
         def setPlayerKills(self, playerKills):
             self.text2.setText(str(playerKills))
@@ -920,17 +921,17 @@ class EndScreen:
         # make all 0 except for the first one
         rows = list(zip(*rows))
         rows = list(zip(*rows))
-        rows.sort(key=lambda x: x[3], reverse=True)
+        rows.sort(key=lambda x: x[4], reverse=True)
         for row in self.TableInfo:
             row.setDraw(False)
         # set the first row to draw
         self.TableInfo[0].setDraw(True)
         for idx, r in enumerate(rows):
             self.TableInfo[idx+1].setDraw(True)
-            self.TableInfo[idx+1].setPlayerName(r[0])
-            self.TableInfo[idx+1].setPlayerKills(r[1])
-            self.TableInfo[idx+1].setPlayerDeaths(r[2])
-            self.TableInfo[idx+1].setPlayerRatio(f"{r[3]:.2f}")
+            self.TableInfo[idx+1].setPlayerName(r[0], c.geT("RED") if r[1] else c.geT("BLUE"))
+            self.TableInfo[idx+1].setPlayerKills(r[2])
+            self.TableInfo[idx+1].setPlayerDeaths(r[3])
+            self.TableInfo[idx+1].setPlayerRatio(f"{r[4]:.2f}")
 
 class NotImplmented:
 
