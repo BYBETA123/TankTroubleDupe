@@ -2103,46 +2103,90 @@ def tileGen(numSpawns = 2): # Default is 2 spawns
 def nextType(difficultyType):
     global gameMode, constantList, gunList, tankList
 
-    reset()
-    # quickly assign the game sprites
-    constantList[0] = gunList[0].getSprite(True)
-    constantList[1] = tankList[0].getSprite(True)
-    constantList[2] = gunList[1].getSprite()
-    constantList[3] = tankList[1].getSprite()
-
+    # quickly assign the game sprites    
     match difficultyType:
         case DifficultyType.OnePlayerYard:
+            reset()
+            constantList[0] = gunList[0].getSprite(True)
+            constantList[1] = tankList[0].getSprite(True)
+            constantList[2] = gunList[1].getSprite()
+            constantList[3] = tankList[1].getSprite()
             gameMode=GameMode.play
             #Switch the the play screen
             constantPlayGame()
         case DifficultyType.OnePlayerScrapYard:
+            reset()
+            constantList[0] = gunList[0].getSprite(True)
+            constantList[1] = tankList[0].getSprite(True)
+            constantList[2] = gunList[1].getSprite()
+            constantList[3] = tankList[1].getSprite()
             gameMode = GameMode.selection
             constantSelectionScreen()
         case DifficultyType.TwoPlayerYard:
+            reset()
+            constantList[0] = gunList[0].getSprite(True)
+            constantList[1] = tankList[0].getSprite(True)
+            constantList[2] = gunList[1].getSprite()
+            constantList[3] = tankList[1].getSprite()
             gameMode=GameMode.play
             #Switch the the play screen
             constantPlayGame()
         case DifficultyType.TwoPlayerScrapYard:
+            reset()
+            constantList[0] = gunList[0].getSprite(True)
+            constantList[1] = tankList[0].getSprite(True)
+            constantList[2] = gunList[1].getSprite()
+            constantList[3] = tankList[1].getSprite()
             gameMode = GameMode.selection
             constantSelectionScreen()
         case DifficultyType.OnePlayerBrawl:
+            reset()
+            constantList[0] = gunList[0].getSprite(True)
+            constantList[1] = tankList[0].getSprite(True)
+            constantList[2] = gunList[1].getSprite()
+            constantList[3] = tankList[1].getSprite()
             gameMode=GameMode.play
             #Switch the the play screen
             constantPlayGame()
         case DifficultyType.OnePlayerDeathMatch:
+            reset()
+            constantList[0] = gunList[0].getSprite(True)
+            constantList[1] = tankList[0].getSprite(True)
+            constantList[2] = gunList[1].getSprite()
+            constantList[3] = tankList[1].getSprite()
             gameMode = GameMode.selection
             constantSelectionScreen()
         case DifficultyType.TwoPlayerBrawl:
+            reset()
+            constantList[0] = gunList[0].getSprite(True)
+            constantList[1] = tankList[0].getSprite(True)
+            constantList[2] = gunList[1].getSprite()
+            constantList[3] = tankList[1].getSprite()
             gameMode=GameMode.play
             #Switch the the play screen
             constantPlayGame()
         case DifficultyType.TwoPlayerDeathMatch:
+            reset()
+            constantList[0] = gunList[0].getSprite(True)
+            constantList[1] = tankList[0].getSprite(True)
+            constantList[2] = gunList[1].getSprite()
+            constantList[3] = tankList[1].getSprite()
             gameMode = GameMode.selection
             constantSelectionScreen()
         case DifficultyType.OnePlayerTDM:
+            reset()
+            constantList[0] = gunList[0].getSprite(True)
+            constantList[1] = tankList[0].getSprite(True)
+            constantList[2] = gunList[1].getSprite()
+            constantList[3] = tankList[1].getSprite()
             gameMode = GameMode.selection
             constantSelectionScreen()
         case DifficultyType.TeamDeathMatch:
+            reset()
+            constantList[0] = gunList[0].getSprite(True)
+            constantList[1] = tankList[0].getSprite(True)
+            constantList[2] = gunList[1].getSprite()
+            constantList[3] = tankList[1].getSprite()
             gameMode = GameMode.selection
             constantSelectionScreen()
         case _:
@@ -2305,21 +2349,29 @@ def setUpTank(dType = -1, AI = False, spawn = [0,0], player = None, index = 0):
             gun.setPlayer(player)
 
         case DifficultyType.OnePlayerTDM:
-            # Scrapyard, Player vs Player Simple Tanks
-            tank = DefaultTank(0, 0, player.getControls(), player.getTankName())
+            # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Normal Tanks
+            # tank = copy.copy(playerInformation.getPlayerHull(index)) # Tank 1 setup
+            tank = playerInformation.getPlayerHull(index).copy()
             tank.setData([spawn[0], spawn[1], player.getControls(), player.getTankName(), player.getTankChannels()])
-            tank.setImage('tank', playerInformation.getPlayerHullColour(index) + 1)
+            tank.setImage(playerInformation.getPlayerHull(index).getName(), playerInformation.getPlayerHullColour(index) + 1)
             tank.setSoundDictionary(const.SOUND_DICTIONARY)
             tank.settileList(tileList)
-            tank.setAI(AI)
             tank.effect = [0,0,0]
+            tank.setAI(AI)
             tank.setPlayer(player)
+            
+            #Because silencer and watcher aren't made yet, skip them
+            if playerInformation.Player2TurretIndex() == 1 or playerInformation.Player2TurretIndex() == 2:
+                playerInformation.setPlayer2Turret(3)
+                print("Skipping Silencer or Watcher, selecting Chamber")
 
-            gun = DefaultGun(tank, player.getTankName(), player.getGunName()) # Gun 1 setup
+            # gun = copy.copy(playerInformation.getPlayerTurret(index)) # Gun 1 setup
+            gun = playerInformation.getPlayerTurret(index).copy()
+            gun.setImage(playerInformation.getPlayerTurret(index).getGunName(), playerInformation.getPlayerTurretColour(index) + 1)
+            gun.setHard()
             gun.setData(tank, player.getControls(), player.getGunName(), player.getTankChannels())
-            gun.setImage('gun', playerInformation.getPlayerTurretColour(index) + 1)
             gun.setAI(AI)
-            gun.setPlayer(player)          
+            gun.setPlayer(player)
 
         case DifficultyType.TeamDeathMatch:
             # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Normal Tanks
@@ -2613,10 +2665,10 @@ def damage(tank, damage, owner):
             spareChannels(const.SOUND_DICTIONARY["tankDeath"])
     updateTankHealth() # Manage the healthbar outside of the code
 
-def getColor(c):
-    if c == 0:
+def getColor(color):
+    if color == 0:
         return c.geT("BLUE")
-    elif c == 1:
+    elif color == 1:
         return c.geT("RED")
     else:
         return c.geT("GREY")
@@ -2647,7 +2699,6 @@ def playGame():
             case DifficultyType.TeamDeathMatch:
                 return timer.isExpired()
 
-
     def updateScore():
         global t1Score, t2Score
         t1Score = 0
@@ -2661,6 +2712,18 @@ def playGame():
     def makeTable():
         endScreen.makeTable(*[player.getTableEntry() for player in playerlist[:difficultyType.playerCount]])
 
+    def getHealthIndicator(health):
+        health *= 10 # so we can index an array
+        # return c.geT(healthColor[health]) # when the colors are decided
+        if health > 6:
+            return c.geT("GREEN")
+        elif health > 3:
+            return c.geT("YELLOW")
+        elif health > 0:
+            return c.geT("RED")
+        else:
+            return c.geT("BLACK")
+        
     # This function controls the main execution of the game
     # Inputs: None
     # Outputs: None
@@ -2710,7 +2773,7 @@ def playGame():
                         constantPlayGame()
                         timer.reset() # rest the clock
                 case DifficultyType.TwoPlayerScrapYard:
-                    if t1Score == 2 or t2Score == 2:
+                    if t1Score == 99 or t2Score == 99:
                         makeTable()
                         gameMode = GameMode.end
                     else:
@@ -2730,13 +2793,8 @@ def playGame():
                     makeTable()
                     gameMode = GameMode.end
                 case DifficultyType.OnePlayerTDM:
-                    if t1Score >20 or t2Score > 20:
-                        makeTable()
-                        gameMode = GameMode.end
-                    else:
-                        reset()
-                        constantPlayGame()
-                        timer.reset() # rest the clock
+                    makeTable()
+                    gameMode = GameMode.end
                 case DifficultyType.TeamDeathMatch:
                     makeTable()
                     gameMode = GameMode.end
@@ -2881,9 +2939,9 @@ def playGame():
             pygame.draw.polygon(screen, getColor(tankList[i].getTeam()), tankList[i].getCornersInflated(3), 2) #Hit box outline
 
     # # we are drawing a surface to stick the health bars on top of the tanks # this should be a togglable feature because it impacts performance
-    # for i in range(difficultyType.playerCount):
-    #     if not tankDead[i]:
-    #         pygame.draw.rect(screen, c.geT("GREEN"), [tankList[i].getCenter()[0] - 10, tankList[i].getCenter()[1], 20, 5])
+    for i in range(difficultyType.playerCount):
+        if not tankDead[i]:
+            pygame.draw.rect(screen, getHealthIndicator(tankList[i].getHealthPercentage()), [tankList[i].getCenter()[0] - 10, tankList[i].getCenter()[1], 20, 5])
 
     explosionGroup.draw(screen)
     if timerClock == 0:
