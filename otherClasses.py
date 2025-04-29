@@ -1,0 +1,288 @@
+import pygame
+import os, sys
+import constants as const
+import globalVariables as g
+import random
+from ColorDictionary import ColourDictionary as c # colors
+from DifficultyTypes import *
+
+
+class Tile(pygame.sprite.Sprite):
+    # border = [False, False, False, False]
+    #Border format is [Top, Right, Bottom, Left]
+    border = [True, True, True, True]
+    borderWidth = 2
+    spawn = False
+
+    def __init__(self, index, x, y, color, spawn = False):
+        self.index = index
+        self.x = x
+        self.y = y
+        self.color = color
+        self.spawn = spawn
+        self.border = self.borderControl()
+        self.neighbours, self.bordering = self.neighbourCheck()
+        self.AITarget = False
+        self.supply = None
+        self.timer = 8372 # Roughly one minute?
+        self.supplyTimer = self.timer # This is the timer for the supply
+        self.picked = False
+        self.supplyIndex = None # The index of the supply that is on the tile
+
+        # Determine the correct base path
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            base_path = sys._MEIPASS
+        else:  # Running as a .py script
+            base_path = os.path.dirname(os.path.abspath(__file__))
+
+        # Construct the tile path dynamically
+        self.tilePath = os.path.join(base_path, "Assets", "Tile")
+        cardinal = ["N", "E", "S", "W"]
+        self.rect = pygame.Rect(self.x, self.y, const.TILE_SIZE, const.TILE_SIZE)
+
+        for idx, el in enumerate(self.bordering):
+            if el != -1:
+                self.tilePath += str(cardinal[idx])  # Append direction suffix
+
+        self.tilePath += ".png"  # Add the file extension
+
+        # Load the correct tile image
+        self.image = pygame.image.load(self.tilePath).convert_alpha()
+
+        # Load the debug tile image
+        debugPath = os.path.join(base_path, "Assets", "TileDebug.png")
+        self.debug = pygame.image.load(debugPath).convert_alpha()
+
+    def update(self):
+        if self.picked:
+            self.supplyTimer -= 1
+        if self.supplyTimer < 0:
+            self.supplyTimer = 0
+            self.picked = False
+        
+        if self.supply is not None and not self.picked:
+            for i in range(g.difficultyType.playerCount):
+                if not g.tankDead[i]:
+                    if self.isWithin(g.tankList[i].getCenter()):
+                        if self.supplyIndex == 0:
+                            g.tankList[i].applyDoubleDamage()
+                        elif self.supplyIndex == 1:
+                            g.tankList[i].applyDoubleArmor()
+                        elif self.supplyIndex == 2:
+                            g.tankList[i].applySpeedBoost()
+                        self.picked = True
+                        self.supplyTimer = self.timer
+
+    def neighbourCheck(self):
+        #This function will return a list of the indexes of the neighbours based on the current list of border
+        # No inputs are needed
+        # The output will be an updated list of neighbours
+        #
+        neighbours = [self.index - const.COLUMN_AMOUNT, self.index + 1, self.index + const.COLUMN_AMOUNT, self.index - 1]
+        #Check if there are any invalid neighbours
+        newlist = []
+        oldlist = [-1, -1, -1, -1]
+        for idx, neighbour in enumerate(neighbours):
+            if neighbour < 1 or neighbour > const.ROW_AMOUNT*const.COLUMN_AMOUNT:
+                #We do not want this
+                pass
+            elif self.border[idx] == True:
+                #We do not want this
+                oldlist[idx] = neighbour
+            else:
+                newlist.append(neighbour)
+
+        return newlist, oldlist
+
+    def borderControl(self):
+        # This function checks and validates the borders for the tile
+        # No inputs
+        # Outputs: A list of boolean values representing whether the border is present
+        #
+        localIndex = self.index
+        border = [False, False, False, False] # Start with everything false
+        #Sides
+        # Top Row
+        if localIndex in range(1, const.COLUMN_AMOUNT+1):
+            border[0] = True
+        # Right Row
+        if localIndex in range(const.COLUMN_AMOUNT, const.ROW_AMOUNT*const.COLUMN_AMOUNT+1, const.COLUMN_AMOUNT):
+            border[1] = True
+        # Bottom Row
+        if localIndex in range(99, const.ROW_AMOUNT*const.COLUMN_AMOUNT + 1):
+            border[2] = True
+        #Left Row
+        if localIndex in range(1, const.ROW_AMOUNT*const.COLUMN_AMOUNT, const.COLUMN_AMOUNT):
+            border[3] = True
+
+        if self.spawn:
+            #If the tile is a spawn then its border should be handled carefully
+            return border
+
+        for i in range(len(border)):
+            if not border[i]:
+                border[i] = random.choices([True, False], weights = (0.16, 1-0.16))[0]
+
+        return border
+
+    def drawText(self, screen):
+        # access the "tileFont" key from the dictionary
+        text = const.FONT_DICTIONARY["tileFont"].render(str(self.index), True, c.geT("BLACK"))
+        screen.blit(text, [self.x + const.TILE_SIZE/2 - text.get_width()/2, self.y + const.TILE_SIZE/2 - text.get_height()/2])
+
+    def draw(self, screen):
+        # if self.AITarget:
+        #     screen.blit(self.debug, self.rect)
+        # else:
+        #     screen.blit(self.image, self.rect)
+        screen.blit(self.image, self.rect)
+
+        if self.supply is not None:
+            # draw the supply icon
+            if self.picked:
+                screen.blit(self.supply[0], (self.x + const.TILE_SIZE//2 - self.supply[0].get_width()//2, self.y + const.TILE_SIZE//2 - self.supply[0].get_height()//2))
+            else:
+                screen.blit(self.supply[1], (self.x + const.TILE_SIZE//2 - self.supply[1].get_width()//2, self.y + const.TILE_SIZE//2 - self.supply[1].get_height()//2))
+        # self.drawText(screen)
+    
+    def getNeighbours(self):
+        return self.neighbours
+
+    def getIndex(self):
+        return self.index
+
+    def getBordering(self):
+        return self.bordering
+
+    def setColor(self):
+        self.color = c.geT("WHITE")
+
+    def getCorners(self):
+        return [(self.x, self.y), (self.x + const.TILE_SIZE, self.y), (self.x + const.TILE_SIZE, self.y + const.TILE_SIZE), (self.x, self.y + const.TILE_SIZE)]
+
+    def isWithin(self, crds = None):
+        # This function will check if the mouse is within the tile
+        # Inputs: None
+        # Outputs: Boolean value representing whether the mouse is within the tile
+        if crds == None:
+            mouseX, mouseY = pygame.mouse.get_pos()
+        else:
+            mouseX, mouseY = crds[0], crds[1]
+
+        if mouseX >= self.x and mouseX <= self.x + const.TILE_SIZE and mouseY >= self.y and mouseY <= self.y + const.TILE_SIZE:
+            if crds == None:
+                self.printDebug()
+            return True
+        return False
+
+    def setBorder(self, borderidx, value = True):
+        self.border[borderidx] = value
+        self.neighbours, self.bordering = self.neighbourCheck() # Update the neighbours list
+        # Determine the correct base path
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            base_path = sys._MEIPASS
+        else:  # Running as a .py script
+            base_path = os.path.dirname(os.path.abspath(__file__))
+
+        # Construct the tile path dynamically
+        self.tilePath = os.path.join(base_path, "Assets", "Tile")
+        cardinal = ["N", "E", "S", "W"]
+        self.rect = pygame.Rect(self.x, self.y, const.TILE_SIZE, const.TILE_SIZE)
+
+        for idx, el in enumerate(self.bordering):
+            if el != -1:
+                self.tilePath += str(cardinal[idx])  # Append direction suffix
+
+        self.tilePath += ".png"  # Add the file extension
+
+        # Load the correct tile image
+        self.image = pygame.image.load(self.tilePath).convert_alpha()
+
+        # Load the debug tile image
+        debugPath = os.path.join(base_path, "Assets", "TileDebug.png")
+        self.debug = pygame.image.load(debugPath).convert_alpha()
+
+    def setSupply(self, supplyPath, index = None):
+        # This function will set the supply icon for the tile
+        # Inputs: supplyPath: The path to the supply icon
+        # Outputs: None
+        if supplyPath is not None:
+            self.supply = [None, None]
+            self.supply[0] = pygame.image.load(supplyPath[0]).convert_alpha()
+            self.supply[0] = pygame.transform.scale(self.supply[0], (const.TILE_SIZE//2, const.TILE_SIZE//2))
+            self.supply[1] = pygame.image.load(supplyPath[1]).convert_alpha()
+            self.supply[1] = pygame.transform.scale(self.supply[1], (const.TILE_SIZE//2, const.TILE_SIZE//2))
+            self.supplyIndex = index
+
+    def getCenter(self):
+        return (self.x + const.TILE_SIZE//2, self.y + const.TILE_SIZE//2) 
+
+    def setTarget(self, value):
+        self.AITarget = value
+
+    def printDebug(self):
+        print("Index: ", self.index, end = " ")
+        print(self.index%14, self.index//14)
+        print("Neighbours: ", self.neighbours, end = " ")
+        print("Bordering: ", self.bordering)
+
+    def setSpawn(self, spawn):
+        self.spawn = spawn
+
+class Explosion(pygame.sprite.Sprite):
+
+    def __init__(self, x, y):
+        super().__init__()
+        self.images = []
+        # Determine the correct base path
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            base_path = sys._MEIPASS
+        else:  # Running as a .py script
+            base_path = os.path.dirname(os.path.abspath(__file__))
+
+        # Construct the correct path for the sprite sheet
+        sprite_sheet_path = os.path.join(base_path, "Assets", "explosion.png")
+
+        # Load the sprite sheet
+        SpriteSheetImage = pygame.image.load(sprite_sheet_path).convert_alpha()
+        for i in range(48):
+            self.images.append(self.getImage(SpriteSheetImage, i, 128, 128, 0.5))
+        self.index = 0
+        self.image = self.images[self.index]
+        self.rect = self.image.get_rect()
+        self.rect.center = (x, y)
+        self.lastUpdate = pygame.time.get_ticks()
+        self.animationCooldown = 12
+
+    def getImage(self, sheet, frame, width, height, scale):
+        # This function will use the spritesheet to get the respective image from the sprite sheet
+        # Inputs: Sheet: The required sprite sheet for the animation
+        # Inputs: Frame: The frame index of the animation
+        # Inputs: Width: The width of the frame
+        # Inputs: Height: The height of the frame
+        # Inputs: Scale: The scale of which to scale the image to
+        # Outputs: The image of the frame
+        image = pygame.Surface((width, height)).convert_alpha()
+        image.blit(sheet, (0, 0), ((frame*width%1024), (frame//8 * width), width, height))
+        image = pygame.transform.scale(image, (width * scale, height * scale))
+        image.set_colorkey((0, 0, 0)) # Black
+        return image
+
+    def update(self):
+        # This function will update the explosion animation every frame
+        # Inputs: None
+        # Outputs: None
+        currentTime = pygame.time.get_ticks()
+        if currentTime - self.lastUpdate >= self.animationCooldown:
+            self.lastUpdate = currentTime
+            self.index += 1
+        if self.index >= len(self.images):
+            self.kill()
+        else:
+            self.image = self.images[self.index]
+
+    def setCooldown(self, num):
+        self.animationCooldown = num
+
+    def getCooldown(self):
+        return self.animationCooldown
