@@ -38,8 +38,6 @@ for i in range(len(playerlist)):
     playerlist[i].setTeam(i%2) # temporarily set all the players to either team 0 or team 1
 
 treads = [[] for _ in range(8)]
-global constantList
-constantList = [None, None, None, None]
 
 healthColor = ['#330000', '#990000', '#CC0000', '#FF3300', '#FF6600', '#FF9900', '#FFCC00', '#CCFF00', '#99FF33', '#66FF66']
 
@@ -58,52 +56,6 @@ class GameMode(Enum):
     info = 6
     end = 7
     unimplemented = 8
-
-#Functions
-def validateChoice(option, choices):
-    # This function validates whether or not a spawn location is valid with some arbitrary parameters
-    # Inputs: option: the current proposed spawn location
-    # Inputs: choices: the current list of spawn locations
-    # Outputs: True if the spawn location is valid, False otherwise
-
-    #Make sure the spawns are far away from each other
-    columnOffset = 6 # Max = 14
-    rowOffset = 3 # Max = 8
-    if len(choices)>0: # We have elements in the list
-        #We need to check how close it is to the other spawn
-        if option in choices:
-            return False
-        
-        #Extracting the row/col
-        row1, col1 = choices[0]//const.COLUMN_AMOUNT, choices[0]%const.COLUMN_AMOUNT
-        row2, col2 = option//const.COLUMN_AMOUNT, option%const.COLUMN_AMOUNT
-
-        if abs(col1-col2) < columnOffset:
-            print("Column Check Failed, ", col1, col2, "Difference: ", abs(col1-col2), "Offset: ", columnOffset)
-            return False
-        if abs(row1-row2) < rowOffset:
-            print("Row Check Failed, ", row1, row2, "Difference: ", abs(row1-row2), "Offset: ", rowOffset)
-            return False
-        #If they are edge cases, try the other side
-        if col1 == 0:
-            col1 = const.ROW_AMOUNT
-        if col2 == 0:
-            col2 = const.ROW_AMOUNT
-        if row1 == 0:
-            row1 = const.COLUMN_AMOUNT
-        if row2 == 0:
-            row2 = const.COLUMN_AMOUNT
-
-        #Sanity check with edge cases
-        if abs(col1-col2) < columnOffset:
-            print("Column Check Failed, ", col1, col2, "Difference: ", abs(col1-col2), "Offset: ", columnOffset)
-            return False
-        if abs(row1-row2) < rowOffset:
-            print("Row Check Failed, ", row1, row2, "Difference: ", abs(row1-row2), "Offset: ", rowOffset)
-            return False
-        return True # If we pass both checks then there is no other concern
-    else:
-        return True
 
 def breathFirstSearch(tileLst, choices, option):
     # This function will search the maze in a breath first manner to see if we can reach the second spawn
@@ -134,7 +86,6 @@ def tileGen(numSpawns = 2): # Default is 2 spawns
     # This function is responsible for generating the tiles for the maze
     # Inputs: No inputs
     # Outputs: A list of tiles that make up the maze
-    #
 
     def gen():
         tempTiles = []
@@ -154,13 +105,8 @@ def tileGen(numSpawns = 2): # Default is 2 spawns
 
     choices = []
     side = 0 # start with the right
-    # maze generated
 
     g.tileList = gen()
-
-    # validate that we have a working maze
-    # get 2 choices
-
 
     cArrL = [1, 2, 3, 15, 16, 17, 29, 30, 31, 43, 44, 45, 57, 58, 59, 71, 72, 73, 85, 86, 87, 99, 100, 101]
     cArrR = [12, 13, 14, 26, 27, 28, 40, 41, 42, 54, 55, 56, 68, 69, 70, 82, 83, 84, 96, 97, 98, 110, 111, 112]
@@ -235,92 +181,52 @@ def tileGen(numSpawns = 2): # Default is 2 spawns
     return g.tileList
 
 def nextType():
-    global gameMode, constantList
+    global gameMode
 
-    # quickly assign the game sprites    
+    # quickly assign the game sprites
     match g.difficultyType:
         case DifficultyType.OnePlayerYard:
             reset()
-            constantList[0] = g.gunList[0].getSprite(True)
-            constantList[1] = g.tankList[0].getSprite(True)
-            constantList[2] = g.gunList[1].getSprite()
-            constantList[3] = g.tankList[1].getSprite()
             gameMode=GameMode.play
             #Switch the the play screen
             constantPlayGame()
         case DifficultyType.OnePlayerScrapYard:
             reset()
-            constantList[0] = g.gunList[0].getSprite(True)
-            constantList[1] = g.tankList[0].getSprite(True)
-            constantList[2] = g.gunList[1].getSprite()
-            constantList[3] = g.tankList[1].getSprite()
             gameMode = GameMode.selection
             constantSelectionScreen()
         case DifficultyType.TwoPlayerYard:
             reset()
-            constantList[0] = g.gunList[0].getSprite(True)
-            constantList[1] = g.tankList[0].getSprite(True)
-            constantList[2] = g.gunList[1].getSprite()
-            constantList[3] = g.tankList[1].getSprite()
             gameMode=GameMode.play
             #Switch the the play screen
             constantPlayGame()
         case DifficultyType.TwoPlayerScrapYard:
             reset()
-            constantList[0] = g.gunList[0].getSprite(True)
-            constantList[1] = g.tankList[0].getSprite(True)
-            constantList[2] = g.gunList[1].getSprite()
-            constantList[3] = g.tankList[1].getSprite()
             gameMode = GameMode.selection
             constantSelectionScreen()
         case DifficultyType.OnePlayerBrawl:
             reset()
-            constantList[0] = g.gunList[0].getSprite(True)
-            constantList[1] = g.tankList[0].getSprite(True)
-            constantList[2] = g.gunList[1].getSprite()
-            constantList[3] = g.tankList[1].getSprite()
             gameMode=GameMode.play
             #Switch the the play screen
             constantPlayGame()
         case DifficultyType.OnePlayerDeathMatch:
             reset()
-            constantList[0] = g.gunList[0].getSprite(True)
-            constantList[1] = g.tankList[0].getSprite(True)
-            constantList[2] = g.gunList[1].getSprite()
-            constantList[3] = g.tankList[1].getSprite()
             gameMode = GameMode.selection
             constantSelectionScreen()
         case DifficultyType.TwoPlayerBrawl:
             reset()
-            constantList[0] = g.gunList[0].getSprite(True)
-            constantList[1] = g.tankList[0].getSprite(True)
-            constantList[2] = g.gunList[1].getSprite()
-            constantList[3] = g.tankList[1].getSprite()
             gameMode=GameMode.play
             #Switch the the play screen
             constantPlayGame()
         case DifficultyType.TwoPlayerDeathMatch:
             reset()
-            constantList[0] = g.gunList[0].getSprite(True)
-            constantList[1] = g.tankList[0].getSprite(True)
-            constantList[2] = g.gunList[1].getSprite()
-            constantList[3] = g.tankList[1].getSprite()
             gameMode = GameMode.selection
             constantSelectionScreen()
         case DifficultyType.OnePlayerTDM:
             reset()
-            constantList[0] = g.gunList[0].getSprite(True)
-            constantList[1] = g.tankList[0].getSprite(True)
-            constantList[2] = g.gunList[1].getSprite()
-            constantList[3] = g.tankList[1].getSprite()
             gameMode = GameMode.selection
             constantSelectionScreen()
         case DifficultyType.TeamDeathMatch:
             reset()
-            constantList[0] = g.gunList[0].getSprite(True)
-            constantList[1] = g.tankList[0].getSprite(True)
-            constantList[2] = g.gunList[1].getSprite()
-            constantList[3] = g.tankList[1].getSprite()
             gameMode = GameMode.selection
             constantSelectionScreen()
         case _:
@@ -328,7 +234,6 @@ def nextType():
             gameMode = GameMode.unimplemented
 
 def setUpTank(dType = -1, AI = False, spawn = [0,0], player = None, index = 0):
-    global player1PackageTank
     global DifficultyType
     match dType:
         
@@ -541,7 +446,6 @@ def setUpPlayers():
     # Outputs: None
     global spawnpoint, allSprites
     global DifficultyType
-    global player1PackageTank, player1PackageGun, player2PackageTank, player2PackageGun
     g.tileList = tileGen(g.difficultyType.playerCount) # Get a new board
     for sprite in allSprites:
         sprite.kill()
@@ -612,7 +516,6 @@ def constantSelectionScreen():
     mixer.crossfade('selection')
 
 def constantPlayGame():
-    global constantList
     #This function handles the constant elements of the game screen
     # Inputs: None
     # Outputs: None
@@ -1063,7 +966,7 @@ def reset():
     # Inputs: None
     # Outputs: None
     # Because of the way it's coded, these global declarations can't be avoided
-    global gameOverFlag, cooldownTimer, systemTime, t1Score, t2Score
+    global gameOverFlag, cooldownTimer, systemTime
     global playerlist
     global allSprites
     gameOverFlag = False
