@@ -249,6 +249,9 @@ class Tank(pygame.sprite.Sprite):
                     self.effect[i] = 0
 
     def draw(self, screen): # A manual entry of the draw screen so that we can update it with anything else we may need to draw
+        if self.x == 0 or self.y == 0:
+            return # don't draw
+
         if self.invincibility > 0:
             # Draw the tank with a transparent effect
             self.image.set_alpha(31)

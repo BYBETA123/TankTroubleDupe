@@ -12,8 +12,8 @@ class DifficultyType(Enum):
     OnePlayerDeathMatch = (6, True, True, 2, 1, 2)
     TwoPlayerBrawl = (7, True, False, 2, 2, 2)
     TwoPlayerDeathMatch = (8, True, False, 2, 2, 2)
-    OnePlayerTDM = (9, True, True, 8, 1, 2)
-    TeamDeathMatch = (10, True, True, 8, 2, 2)
+    OnePlayerTDM = (9, True, True, 4, 1, 2)
+    TeamDeathMatch = (10, True, True, 4, 2, 2)
     OnePlayerCaptureTheFlag = (11, True, True, 2, 1, 2)
     CaptureTheFlag = (12, True, False, 2, 2, 2)
 

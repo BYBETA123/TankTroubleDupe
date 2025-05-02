@@ -101,6 +101,9 @@ def tileGen(numSpawns = 2): # Default is 2 spawns
             for border in bordering:
                 if border != -1:
                     tempTiles[border-1].setBorder((bordering.index(border)+2)%4, tile.border[bordering.index(border)])
+        for tile in tempTiles:
+            tile.updateBorder()
+
         return tempTiles
 
     choices = []
@@ -404,7 +407,6 @@ def setUpTank(dType = -1, AI = False, spawn = [0,0], player = None, index = 0):
                 playerInformation.setPlayer2Turret(3)
                 print("Skipping Silencer or Watcher, selecting Chamber")
 
-            # gun = copy.copy(playerInformation.getPlayerTurret(index)) # Gun 1 setup
             gun = playerInformation.getPlayerTurret(index).copy()
             gun.setImage(playerInformation.getPlayerTurret(index).getGunName(), playerInformation.getPlayerTurretColour(index) + 1)
             gun.setHard()
@@ -423,13 +425,7 @@ def setUpTank(dType = -1, AI = False, spawn = [0,0], player = None, index = 0):
             tank.effect = [0,0,0]
             tank.setAI(AI)
             tank.setPlayer(player)
-            
-            #Because silencer and watcher aren't made yet, skip them
-            if playerInformation.Player2TurretIndex() == 1 or playerInformation.Player2TurretIndex() == 2:
-                playerInformation.setPlayer2Turret(3)
-                print("Skipping Silencer or Watcher, selecting Chamber")
 
-            # gun = copy.copy(playerInformation.getPlayerTurret(index)) # Gun 1 setup
             gun = playerInformation.getPlayerTurret(index).copy()
             gun.setImage(playerInformation.getPlayerTurret(index).getGunName(), playerInformation.getPlayerTurretColour(index) + 1)
             gun.setHard()
@@ -530,8 +526,8 @@ def constantPlayGame():
     mixer.crossfade('game')
 
     # Load the custom font
-    fontString = "PLAYER 1             SCORE              PLAYER 2" # This is a bad way to write a string
-    controlString = "WASD                            ↑↓→←" # This is a bad way to write a string
+    fontString = "PLAYER 1             SCORE              PLAYER 2"
+    controlString = "WASD                            ↑↓←→" 
     textp2Name = const.FONT_DICTIONARY["playerStringFont"].render(fontString, True, c.geT("BLACK"))
     controls = const.FONT_DICTIONARY["ctrlFont"].render(controlString, True, c.geT("BLACK"))
     screen.blit(textp2Name,[const.WINDOW_WIDTH//2 - textp2Name.get_width()//2, 0.78*const.WINDOW_HEIGHT]) # This is the name on the right

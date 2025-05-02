@@ -28,6 +28,7 @@ class Tile(pygame.sprite.Sprite):
         self.supplyTimer = self.timer # This is the timer for the supply
         self.picked = False
         self.supplyIndex = None # The index of the supply that is on the tile
+        self.borderindex = 0 # the index of the border
 
         # Determine the correct base path
         if getattr(sys, 'frozen', False):  # Running as an .exe
@@ -91,8 +92,22 @@ class Tile(pygame.sprite.Sprite):
                 oldlist[idx] = neighbour
             else:
                 newlist.append(neighbour)
-
         return newlist, oldlist
+
+    def updateBorder(self):
+        total = 0
+        if self.border[0]:
+            total += 8
+        if self.border[1]:
+            total += 4
+        if self.border[2]:
+            total += 2
+        if self.border[3]:
+            total += 1
+
+
+
+        self.borderindex = total
 
     def borderControl(self):
         # This function checks and validates the borders for the tile
@@ -122,7 +137,6 @@ class Tile(pygame.sprite.Sprite):
         for i in range(len(border)):
             if not border[i]:
                 border[i] = random.choices([True, False], weights = (0.16, 1-0.16))[0]
-
         return border
 
     def drawText(self, screen):
@@ -131,11 +145,59 @@ class Tile(pygame.sprite.Sprite):
         screen.blit(text, [self.x + const.TILE_SIZE/2 - text.get_width()/2, self.y + const.TILE_SIZE/2 - text.get_height()/2])
 
     def draw(self, screen):
-        # if self.AITarget:
-        #     screen.blit(self.debug, self.rect)
-        # else:
-        #     screen.blit(self.image, self.rect)
-        screen.blit(self.image, self.rect)
+        # Draw the tile w/ borders
+        match self.borderindex: # 0 - 15
+            case 0:
+                # nothing
+                pass
+            case 1:
+                # West (0001)
+                pygame.draw.line(screen, (0,0,0), [self.x, self.y], [self.x, self.y+const.TILE_SIZE - 1], 1) # West
+            case 2:
+                # South (0010)
+                pygame.draw.line(screen, (0,0,0), [self.x, self.y + const.TILE_SIZE - 1], [self.x+const.TILE_SIZE - 1, self.y+const.TILE_SIZE - 1], 1) # South
+            case 3:
+                # South West (0011)
+                pygame.draw.lines(screen, (0,0,0), False, [[self.x, self.y], [self.x, self.y + const.TILE_SIZE - 1], [self.x + const.TILE_SIZE - 1, self.y + const.TILE_SIZE - 1]], 1) # South West
+            case 4:
+                # East (0100)
+                pygame.draw.line(screen, (0,0,0), [self.x + const.TILE_SIZE - 1, self.y], [self.x+const.TILE_SIZE - 1, self.y+const.TILE_SIZE - 1], 1) # East
+            case 5:
+                # East West (0101)
+                pygame.draw.line(screen, (0,0,0), [self.x + const.TILE_SIZE - 1, self.y], [self.x+const.TILE_SIZE - 1, self.y+const.TILE_SIZE - 1], 1) # East
+                pygame.draw.line(screen, (0,0,0), [self.x, self.y], [self.x, self.y+const.TILE_SIZE - 1], 1) # West
+            case 6:
+                # South East (0110)
+                pygame.draw.lines(screen, (0,0,0), False, [[self.x, self.y + const.TILE_SIZE - 1], [self.x+const.TILE_SIZE - 1, self.y+const.TILE_SIZE - 1], [self.x + const.TILE_SIZE - 1, self.y]], 1) # South East
+            case 7:
+                # South East West (0111)
+                pygame.draw.lines(screen, (0,0,0), False, [[self.x, self.y], [self.x, self.y + const.TILE_SIZE-1], [self.x + const.TILE_SIZE - 1, self.y + const.TILE_SIZE-1], [self.x + const.TILE_SIZE - 1, self.y]], 1)
+            case 8:
+                # North (1000)
+                pygame.draw.line(screen, (0,0,0), [self.x, self.y], [self.x+const.TILE_SIZE - 1, self.y], 1) # North
+            case 9:
+                # North West (1001)
+                pygame.draw.lines(screen, (0,0,0), False, [[self.x + const.TILE_SIZE - 1, self.y], [self.x, self.y], [self.x, self.y+const.TILE_SIZE - 1]], 1) # North West
+            case 10:
+                # North South (1010)
+                pygame.draw.line(screen, (0,0,0), [self.x, self.y], [self.x+const.TILE_SIZE - 1, self.y], 1) # North
+                pygame.draw.line(screen, (0,0,0), [self.x, self.y + const.TILE_SIZE - 1], [self.x+const.TILE_SIZE - 1, self.y+const.TILE_SIZE - 1], 1) # South
+            case 11:
+                # North South West (1011)
+                pygame.draw.lines(screen, (0,0,0), False, [[self.x + const.TILE_SIZE - 1, self.y], [self.x, self.y], [self.x, self.y+const.TILE_SIZE-1], [self.x + const.TILE_SIZE - 1, self.y + const.TILE_SIZE-1]], 1) # North South West
+            case 12:
+                # North East (1100)
+                pygame.draw.lines(screen, (0,0,0), False, [[self.x, self.y], [self.x+const.TILE_SIZE - 1, self.y], [self.x + const.TILE_SIZE - 1, self.y + const.TILE_SIZE - 1]], 1)
+            case 13:
+                # North East West (1101)
+                pygame.draw.lines(screen, (0,0,0), False, [[self.x, self.y+const.TILE_SIZE], [self.x, self.y], [self.x + const.TILE_SIZE - 1, self.y], [self.x + const.TILE_SIZE - 1, self.y + const.TILE_SIZE]], 1) # North East West
+            case 14:
+                # North South East (1110)
+                pygame.draw.lines(screen, (0,0,0), False, [[self.x, self.y], [self.x+const.TILE_SIZE -1, self.y], [self.x + const.TILE_SIZE -1, self.y + const.TILE_SIZE -1], [self.x, self.y + const.TILE_SIZE -1]], 1) # North South East
+            case 15:
+                # North South East West (1111)
+                pygame.draw.rect(screen, (0,0,0), [self.x, self.y, const.TILE_SIZE, const.TILE_SIZE], 1) # all
+
 
         if self.supply is not None:
             # draw the supply icon
@@ -143,8 +205,9 @@ class Tile(pygame.sprite.Sprite):
                 screen.blit(self.supply[0], (self.x + const.TILE_SIZE//2 - self.supply[0].get_width()//2, self.y + const.TILE_SIZE//2 - self.supply[0].get_height()//2))
             else:
                 screen.blit(self.supply[1], (self.x + const.TILE_SIZE//2 - self.supply[1].get_width()//2, self.y + const.TILE_SIZE//2 - self.supply[1].get_height()//2))
-        # self.drawText(screen)
     
+        # self.drawText(screen)
+        
     def getNeighbours(self):
         return self.neighbours
 
@@ -224,10 +287,14 @@ class Tile(pygame.sprite.Sprite):
         print("Index: ", self.index, end = " ")
         print(self.index%14, self.index//14)
         print("Neighbours: ", self.neighbours, end = " ")
-        print("Bordering: ", self.bordering)
+        print("Bordering: ", self.bordering, end = " ")
+        print("Border: ", self.border)
+        print("Border Index: ", self.borderindex)
 
     def setSpawn(self, spawn):
         self.spawn = spawn
+
+    
 
 class Explosion(pygame.sprite.Sprite):
 
