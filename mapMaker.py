@@ -130,10 +130,13 @@ class makerTile():
         if self.spawnpoint: # automatically filters 0
             pygame.draw.rect(screen, self.spawnColor(), [self.x + self.height // 2 - 10, self.y + self.width // 2 - 10, 20, 20])
 
+        if self.flag: # automatically filters 0
+            pygame.draw.polygon(screen, (self.spawnColor()), [[self.x + 35, self.y + 25], [self.x + 20, self.y + 35], [self.x + 20, self.y + 15]])
+
     def spawnColor(self):
-        if self.spawnpoint == 1:
+        if self.spawnpoint == 1 or self.flag == 1:
             return (255, 0, 0)
-        if self.spawnpoint == 2:
+        if self.spawnpoint == 2 or self.flag == 2:
             return (0, 0, 255)
         
     def setColor(self, color = (255, 255, 255)):
@@ -151,8 +154,14 @@ class makerTile():
         self.borderindex |= addBorder
 
     def setSpawnpoint(self):
+        self.flag = 0
         self.spawnpoint = (self.spawnpoint+1) % 3 # 0 = no spawn 1 = blue 2 = red
         print(f"Set spawnpoint as {self.spawnpoint}")
+
+    def setFlag(self): # if the flag is set we can't have a spawnpoint
+        self.spawnpoint = 0
+        self.flag = (self.flag+1) % 3 # 0 = no spawn 1 = blue 2 = red
+        print(f"Set spawnpoint as {self.flag}")
 
     def reset(self):
         self.color = (198, 198, 198) # for the eraser tool
@@ -260,6 +269,8 @@ while not done:
                             s.update(squares)
                         elif currentTool == 3: # spawnpoints
                             s.setSpawnpoint()
+                        elif currentTool == 4: # flag
+                            s.setFlag()
                         else:
                             s.setColor((255, 0, 0))
 
@@ -274,7 +285,8 @@ while not done:
                 print("Setting to add spawnpoints")
                 currentTool = 3
             elif event.key == pygame.K_4:
-                print("Key 4 pressed")
+                print("Setting to add flags")
+                currentTool = 4
             elif event.key == pygame.K_5:
                 print("Key 5 pressed")
             elif event.key == pygame.K_6:
