@@ -232,8 +232,8 @@ def generate(tiles):
 
 
     # if the amount of spawnpoints is not 8 then we need to flag it
-    if len(spawnRed) == 4 and len(spawnBlue) == 4: # if we have 4 slots for each team
-        print("Error: Spawnpoints are not correct")
+    if len(spawnRed) != 4 and len(spawnBlue) != 4: # if we have 4 slots for each team
+        print(f"Error: Spawnpoints are not correct: Red: {spawnRed} {len(spawnRed)} Blue: {spawnBlue} {len(spawnBlue)}")
         returnType = False
 
     return returnType

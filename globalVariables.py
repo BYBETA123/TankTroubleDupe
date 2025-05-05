@@ -11,7 +11,7 @@ gunList = [None for _ in range(8)] # list of all the current guns in the game
 explosionGroup = pygame.sprite.Group() #All the explosions
 bulletSprites = pygame.sprite.Group()
 difficultyType = DifficultyType.NotInGame # difficulty Type
-
+selectedMap = "Maps/flags.txt"
 tileList = [] #All the tiles in the game
 
 def spareChannels(sound):

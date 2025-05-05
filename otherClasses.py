@@ -12,14 +12,14 @@ class Tile(pygame.sprite.Sprite):
     #Border format is [Top, Right, Bottom, Left]
     border = [True, True, True, True]
     borderWidth = 2
-    spawn = False
+    spawn = 0
 
-    def __init__(self, index, x, y, color, spawn = False):
+    def __init__(self, index, x, y, color, spawn = 0):
         self.index = index
         self.x = x
         self.y = y
         self.color = color
-        self.spawn = spawn
+        self.spawn = 0
         self.border = self.borderControl()
         self.neighbours, self.bordering = self.neighbourCheck()
         self.AITarget = False
@@ -29,6 +29,7 @@ class Tile(pygame.sprite.Sprite):
         self.picked = False
         self.supplyIndex = None # The index of the supply that is on the tile
         self.borderindex = 0 # the index of the border
+        self.flag = 0
 
         # Determine the correct base path
         if getattr(sys, 'frozen', False):  # Running as an .exe
@@ -74,6 +75,15 @@ class Tile(pygame.sprite.Sprite):
                         self.picked = True
                         self.supplyTimer = self.timer
 
+        # if we have a flag
+        if self.flag:
+            for i in range(g.difficultyType.playerCount):
+                if not g.tankDead[i]:
+                    if self.isWithin(g.tankList[i].getCenter()):
+                        print(f"Tank: {g.tankList[i].getTeam()} is attempting to pick up the flag")
+                        if g.tankList[i].getTeam()+1 == self.flag:
+                            print("Help the flag is being taken by the opposite team")
+
     def neighbourCheck(self):
         #This function will return a list of the indexes of the neighbours based on the current list of border
         # No inputs are needed
@@ -104,8 +114,6 @@ class Tile(pygame.sprite.Sprite):
             total += 2
         if self.border[3]:
             total += 1
-
-
 
         self.borderindex = total
 
@@ -198,6 +206,8 @@ class Tile(pygame.sprite.Sprite):
                 # North South East West (1111)
                 pygame.draw.rect(screen, (0,0,0), [self.x, self.y, const.TILE_SIZE, const.TILE_SIZE], 1) # all
 
+        if self.flag: # automatically filters 0
+            pygame.draw.polygon(screen, (self.spawnColor()), [[self.x + 35, self.y + 25], [self.x + 20, self.y + 35], [self.x + 20, self.y + 15]])
 
         if self.supply is not None:
             # draw the supply icon
@@ -208,6 +218,12 @@ class Tile(pygame.sprite.Sprite):
     
         # self.drawText(screen)
         
+    def spawnColor(self):
+        if self.flag == 1:
+            return c.geT("RED")
+        if self.flag == 2:
+            return c.geT("BLUE")
+
     def getNeighbours(self):
         return self.neighbours
 
@@ -283,6 +299,10 @@ class Tile(pygame.sprite.Sprite):
     def setTarget(self, value):
         self.AITarget = value
 
+    def setBorderIndex(self, index):
+        self.border = [index>=8,(index%8)>=4, (index%4)>=2, (index%2)==1]
+        self.borderindex = index
+
     def printDebug(self):
         print("Index: ", self.index, end = " ")
         print(self.index%14, self.index//14)
@@ -294,7 +314,14 @@ class Tile(pygame.sprite.Sprite):
     def setSpawn(self, spawn):
         self.spawn = spawn
 
-    
+    def setSpecial(self, num):
+        if num == 1 or num == 2:
+            # spawnpoint
+            self.spawn = True
+        if num == 3:
+            self.flag = 1 # red
+        if num == 4:
+            self.flag = 2 # blue
 
 class Explosion(pygame.sprite.Sprite):
 

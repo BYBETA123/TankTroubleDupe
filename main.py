@@ -59,7 +59,7 @@ class GameMode(Enum):
 
 def breathFirstSearch(tileLst, choices, option):
     # This function will search the maze in a breath first manner to see if we can reach the second spawn
-    # Inputs: g.tileList: The current list of tiles
+    # Inputs: tileList: The current list of tiles
     # Inputs: Choices: The locations of both spawns
     # Outputs: True if the second spawn is reachable, False otherwise
 
@@ -229,6 +229,10 @@ def nextType():
             gameMode = GameMode.selection
             constantSelectionScreen()
         case DifficultyType.TeamDeathMatch:
+            reset()
+            gameMode = GameMode.selection
+            constantSelectionScreen()
+        case DifficultyType.CaptureTheFlag:
             reset()
             gameMode = GameMode.selection
             constantSelectionScreen()
@@ -416,7 +420,24 @@ def setUpTank(dType = -1, AI = False, spawn = [0,0], player = None, index = 0):
 
         case DifficultyType.TeamDeathMatch:
             # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Normal Tanks
-            # tank = copy.copy(playerInformation.getPlayerHull(index)) # Tank 1 setup
+            tank = playerInformation.getPlayerHull(index).copy()
+            tank.setData([spawn[0], spawn[1], player.getControls(), player.getTankName(), player.getTankChannels()])
+            tank.setImage(playerInformation.getPlayerHull(index).getName(), playerInformation.getPlayerHullColour(index) + 1)
+            tank.setSoundDictionary(const.SOUND_DICTIONARY)
+            tank.settileList(g.tileList)
+            tank.effect = [0,0,0]
+            tank.setAI(AI)
+            tank.setPlayer(player)
+
+            gun = playerInformation.getPlayerTurret(index).copy()
+            gun.setImage(playerInformation.getPlayerTurret(index).getGunName(), playerInformation.getPlayerTurretColour(index) + 1)
+            gun.setHard()
+            gun.setData(tank, player.getControls(), player.getGunName(), player.getTankChannels())
+            gun.setAI(AI)
+            gun.setPlayer(player)
+
+        case DifficultyType.CaptureTheFlag:
+            # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Normal Tanks
             tank = playerInformation.getPlayerHull(index).copy()
             tank.setData([spawn[0], spawn[1], player.getControls(), player.getTankName(), player.getTankChannels()])
             tank.setImage(playerInformation.getPlayerHull(index).getName(), playerInformation.getPlayerHullColour(index) + 1)
@@ -435,6 +456,41 @@ def setUpTank(dType = -1, AI = False, spawn = [0,0], player = None, index = 0):
 
     return gun, tank
 
+def getMap(mapPath):
+    
+    with open(mapPath, "r") as f:
+        # opening the path
+        tList = []
+        choices = [0 for i in range(8)]
+        rIndex = 0
+        bIndex = 1
+        for line in f.readlines(): # for each line, we can extract the information
+            l = line.strip().split("||")
+            # cast the string to a tuple
+            t = l[2][1:-1].split(",")
+            temp = Tile(int(l[5]), int(l[0]), int(l[1]), (int(t[0]), int(t[1]), int(t[2])), False)
+            # temp.borderindex = int(l[6])
+            temp.setBorderIndex(int(l[6]))
+            temp.updateBorder()
+            temp.setSpecial(int(l[7]))
+            tList.append(temp)
+            if l[7] == "1":
+                # blue spawnpoint
+                choices[bIndex] = int(l[5])
+                bIndex += 2
+            if l[7] == "2":
+                # red spawnpoint
+                choices[rIndex] = int(l[5])
+                rIndex += 2
+    spwn = []
+    print(choices)
+
+    for i in range(len(choices)):
+        spwn.append([tList[choices[i] - 1].x + const.TILE_SIZE // 2, tList[choices[i] - 1].y + const.TILE_SIZE // 2])
+
+    print(spwn)
+    return tList, spwn
+
 def setUpPlayers():
     # This function sets up the players for the game including reseting the respective global veriables
     #This function has no real dependencies on things outside of its control
@@ -442,7 +498,13 @@ def setUpPlayers():
     # Outputs: None
     global spawnpoint, allSprites
     global DifficultyType
-    g.tileList = tileGen(g.difficultyType.playerCount) # Get a new board
+
+    if g.difficultyType.map:
+        # if we need a predefined map
+        global spawnpoint
+        g.tileList, spawnpoint = getMap(g.selectedMap)
+    else:
+        g.tileList = tileGen(g.difficultyType.playerCount) # Get a new board
     for sprite in allSprites:
         sprite.kill()
     allSprites = pygame.sprite.Group() # Wipe the current Sprite Group   
@@ -483,6 +545,9 @@ def setUpPlayers():
             timer.setDirection(False)
             timer.setDuration(61)
         case DifficultyType.TeamDeathMatch:
+            timer.setDirection(False)
+            timer.setDuration(61)
+        case DifficultyType.CaptureTheFlag:
             timer.setDirection(False)
             timer.setDuration(61)
         case _:
@@ -705,7 +770,8 @@ def playGame():
                 return timer.isExpired()
             case DifficultyType.TeamDeathMatch:
                 return timer.isExpired()
-
+            case DifficultyType.CaptureTheFlag:
+                return timer.isExpired()
     def updateScore():
         global t1Score, t2Score
         t1Score = 0
@@ -806,7 +872,9 @@ def playGame():
                 case DifficultyType.TeamDeathMatch:
                     makeTable()
                     gameMode = GameMode.end
-
+                case DifficultyType.CaptureTheFlag:
+                    makeTable()
+                    gameMode = GameMode.end
     seconds = timer.getTime()
     textString = f"{seconds // 60:02d}:{seconds % 60:02d}"
     text = const.FONT_DICTIONARY["scoreFont"].render(textString, True, c.geT("BLACK"))
