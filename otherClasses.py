@@ -30,7 +30,7 @@ class Tile(pygame.sprite.Sprite):
         self.supplyIndex = None # The index of the supply that is on the tile
         self.borderindex = 0 # the index of the border
         self.flag = 0
-
+        self.flagPicked = False # This is the flag that is picked up by the player
         # Determine the correct base path
         if getattr(sys, 'frozen', False):  # Running as an .exe
             base_path = sys._MEIPASS
@@ -82,6 +82,8 @@ class Tile(pygame.sprite.Sprite):
                     if self.isWithin(g.tankList[i].getCenter()):
                         print(f"Tank: {g.tankList[i].getTeam()} is attempting to pick up the flag")
                         if g.tankList[i].getTeam()+1 == self.flag:
+                            self.flagPicked = True
+                            g.tankList[i].setFlag(g.flag[self.flag-1])
                             print("Help the flag is being taken by the opposite team")
 
     def neighbourCheck(self):
@@ -207,8 +209,10 @@ class Tile(pygame.sprite.Sprite):
                 pygame.draw.rect(screen, (0,0,0), [self.x, self.y, const.TILE_SIZE, const.TILE_SIZE], 1) # all
 
         if self.flag: # automatically filters 0
-            pygame.draw.polygon(screen, (self.spawnColor()), [[self.x + 35, self.y + 25], [self.x + 20, self.y + 35], [self.x + 20, self.y + 15]])
-
+            if self.flagPicked:
+                pygame.draw.polygon(screen, (self.spawnColor()), [[self.x + 35, self.y + 25], [self.x + 20, self.y + 35], [self.x + 20, self.y + 15]], 3)
+            else:
+                pygame.draw.polygon(screen, (self.spawnColor()), [[self.x + 35, self.y + 25], [self.x + 20, self.y + 35], [self.x + 20, self.y + 15]])
         if self.supply is not None:
             # draw the supply icon
             if self.picked:
@@ -380,3 +384,33 @@ class Explosion(pygame.sprite.Sprite):
 
     def getCooldown(self):
         return self.animationCooldown
+
+
+class Flag():
+    def __init__(self, team):
+        self.team = team
+        self.dropped = False
+        self.returnTimer = 1400
+
+    def update(self):
+        if self.dropped:
+            self.returnTimer -= 1
+        if self.returnTimer < 0:
+            self.returnTimer = 0
+            # return the flag
+            self.returnFlag()
+
+    def draw(self, screen):
+        if self.dropped:
+            if self.team == 1:
+                pygame.draw.polygon(screen, c.geT("RED"), [[const.SCREEN_WIDTH//2, const.SCREEN_HEIGHT//2], [const.SCREEN_WIDTH//2 - 10, const.SCREEN_HEIGHT//2 + 10], [const.SCREEN_WIDTH//2 - 10, const.SCREEN_HEIGHT//2 - 10]])
+            else:
+                pygame.draw.polygon(screen, c.geT("BLUE"), [[const.SCREEN_WIDTH//2, const.SCREEN_HEIGHT//2], [const.SCREEN_WIDTH//2 - 10, const.SCREEN_HEIGHT//2 + 10], [const.SCREEN_WIDTH//2 - 10, const.SCREEN_HEIGHT//2 - 10]])
+
+    def returnFlag(self):
+        # idk
+        self.returnTimer = 1400
+
+    def getTeam(self):
+        return self.team
+

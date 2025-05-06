@@ -1,6 +1,8 @@
 import pygame
 import math
 import os, sys
+from ColorDictionary import ColourDictionary as c # colors
+
 # Main variables
 TIMER_MAX = 19000 # The maximum time for the timer I think this is 10s?
 
@@ -112,6 +114,7 @@ class Tank(pygame.sprite.Sprite):
         self.tread_surface = pygame.transform.scale(self.tread_surface, (8, self.originalTankImage.get_size()[1]))
         self.player = None
         self.team = 0
+        self.flag = None # if we have a flag
 
     def update(self):
         # This function updates the tank's position and rotation based on the controls detected
@@ -259,6 +262,12 @@ class Tank(pygame.sprite.Sprite):
             self.image.set_alpha(255)
         # Draw the tank image
         screen.blit(self.image, self.rect)
+        if self.flag is not None:
+            # Draw the flag image
+            pygame.draw.rect(screen, c.geT("BLACK"), (self.rect.x, self.rect.y, 10, 10))
+
+    def setFlag(self, flag):
+        self.flag = flag
 
     def updateCorners(self):
         # This function will update the corners of the tank based on the new position

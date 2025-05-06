@@ -1,7 +1,7 @@
 import pygame
 import globalVariables as g
 import constants as const
-from otherClasses import Explosion
+from otherClasses import Explosion, Flag
 from DifficultyTypes import *
 
 tankDead = [False, False, False, False, False, False, False, False] # This is to keep track of the tanks that are dead
@@ -13,6 +13,8 @@ bulletSprites = pygame.sprite.Group()
 difficultyType = DifficultyType.NotInGame # difficulty Type
 selectedMap = "Maps/flags.txt"
 tileList = [] #All the tiles in the game
+
+flag = [Flag(0), Flag(1)]
 
 def spareChannels(sound):
     soundList = [pygame.mixer.Channel(i) for i in range(15, pygame.mixer.get_num_channels())]

@@ -1019,6 +1019,9 @@ def playGame():
         if not g.tankDead[i]:
             pygame.draw.rect(screen, getHealthIndicator(g.tankList[i].getHealthPercentage()), [g.tankList[i].getCenter()[0] - 10, g.tankList[i].getCenter()[1], 20, 5])
 
+    for f in g.flag:
+        f.draw(screen)
+
     g.explosionGroup.draw(screen)
     if timerClock == 0:
         timer.tick()
