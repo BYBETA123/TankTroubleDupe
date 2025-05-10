@@ -217,9 +217,10 @@ class Player(): # This is a class that is being reported to
     def getName(self):
         return self.name
     
-    def resetPlayer(self):
-        self.kills = 0
-        self.deaths = 0
+    def resetPlayer(self, hard = False):
+        if hard:
+            self.kills = 0
+            self.deaths = 0
 
     def getControls(self):
         return self.controls

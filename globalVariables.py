@@ -13,8 +13,11 @@ bulletSprites = pygame.sprite.Group()
 difficultyType = DifficultyType.NotInGame # difficulty Type
 selectedMap = "Maps/flags.txt"
 tileList = [] #All the tiles in the game
+team1Score = 0
+team2Score = 0
+playScreen = pygame.Surface((const.WINDOW_WIDTH, const.WINDOW_HEIGHT))
 
-flag = [Flag(0), Flag(1)]
+flag = [Flag(0, (0,0)), Flag(1, (0,0))]
 
 def spareChannels(sound):
     soundList = [pygame.mixer.Channel(i) for i in range(15, pygame.mixer.get_num_channels())]
@@ -64,6 +67,9 @@ def updateTankHealth():
     for i in range(difficultyType.playerCount):
         if not tankDead[i]:
             if tankList[i].getHealth() <= 0:
+                # if the tank was holding a flag drop the flag
+                if tankList[i].getFlag() is not None: # we have a flag
+                    g.flag[tankList[i].getFlag()].drop()
                 gunList[i].kill()
                 tankList[i].kill()
                 if not tankDead[i]:

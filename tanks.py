@@ -262,12 +262,12 @@ class Tank(pygame.sprite.Sprite):
             self.image.set_alpha(255)
         # Draw the tank image
         screen.blit(self.image, self.rect)
-        if self.flag is not None:
-            # Draw the flag image
-            pygame.draw.rect(screen, c.geT("BLACK"), (self.rect.x, self.rect.y, 10, 10))
 
     def setFlag(self, flag):
         self.flag = flag
+
+    def getFlag(self):
+        return self.flag
 
     def updateCorners(self):
         # This function will update the corners of the tank based on the new position

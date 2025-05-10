@@ -549,7 +549,7 @@ def setUpPlayers():
             timer.setDuration(61)
         case DifficultyType.CaptureTheFlag:
             timer.setDirection(False)
-            timer.setDuration(61)
+            timer.setDuration(600) # 10 min
         case _:
             print("Unknown state")
             return
@@ -565,6 +565,8 @@ def constantHomeScreen():
     #This funciton handles the constant elements of the home screen
     # Inputs: None
     # Outputs: None
+    for p in playerlist:
+        p.resetPlayer()
     homeScreen.draw(screen, pygame.mouse.get_pos())
     print("Switching to lobby music")
     mixer.crossfade('lobby')
@@ -580,13 +582,16 @@ def constantPlayGame():
     #This function handles the constant elements of the game screen
     # Inputs: None
     # Outputs: None
-    screen.fill(const.BACKGROUND_COLOR) # This is the first line when drawing a new frame
-
-    screen.blit(g.gunList[0].getSprite(True), (const.TILE_SIZE, 0.78*const.WINDOW_HEIGHT)) # Gun 2
-    screen.blit(g.tankList[0].getSprite(True), (const.TILE_SIZE, 0.78*const.WINDOW_HEIGHT)) # Tank 2
-
-    screen.blit(g.gunList[1].getSprite(), (const.WINDOW_WIDTH - const.TILE_SIZE*3, 0.78*const.WINDOW_HEIGHT)) # Gun 2
-    screen.blit(g.tankList[1].getSprite(), (const.WINDOW_WIDTH - const.TILE_SIZE*3, 0.78*const.WINDOW_HEIGHT)) # Tank 2
+    # g.playScreen.fill(const.BACKGROUND_COLOR)
+    g.playScreen.fill(const.BACKGROUND_COLOR)
+    g.playScreen.blit(g.gunList[0].getSprite(True), (const.TILE_SIZE, 0.78*const.WINDOW_HEIGHT))
+    g.playScreen.blit(g.tankList[0].getSprite(True), (const.TILE_SIZE, 0.78*const.WINDOW_HEIGHT))
+    g.playScreen.blit(g.gunList[1].getSprite(), (const.WINDOW_WIDTH - const.TILE_SIZE*3, 0.78*const.WINDOW_HEIGHT)) # Gun 2
+    g.playScreen.blit(g.tankList[1].getSprite(), (const.WINDOW_WIDTH - const.TILE_SIZE*3, 0.78*const.WINDOW_HEIGHT)) # Tank 2
+    for tile in g.tileList:
+        tile.draw(g.playScreen)
+    pygame.draw.rect(g.playScreen, c.geT("BLACK"), [const.MAZE_X, const.MAZE_Y, const.MAZE_WIDTH, const.MAZE_HEIGHT], 2)
+    
     print("Switching to game music")
     mixer.crossfade('game')
 
@@ -595,32 +600,35 @@ def constantPlayGame():
     controlString = "WASD                            ↑↓←→" 
     textp2Name = const.FONT_DICTIONARY["playerStringFont"].render(fontString, True, c.geT("BLACK"))
     controls = const.FONT_DICTIONARY["ctrlFont"].render(controlString, True, c.geT("BLACK"))
-    screen.blit(textp2Name,[const.WINDOW_WIDTH//2 - textp2Name.get_width()//2, 0.78*const.WINDOW_HEIGHT]) # This is the name on the right
-    screen.blit(controls,[const.WINDOW_WIDTH//2 - controls.get_width()//2, const.WINDOW_HEIGHT*5/6]) # This is the name on the right
+    g.playScreen.blit(textp2Name,[const.WINDOW_WIDTH//2 - textp2Name.get_width()//2, 0.78*const.WINDOW_HEIGHT]) # This is the name on the right
+    g.playScreen.blit(controls,[const.WINDOW_WIDTH//2 - controls.get_width()//2, const.WINDOW_HEIGHT*5/6]) # This is the name on the right
 
     HealthBox = TextBox(const.TILE_SIZE*7/8-1, 0.88*const.WINDOW_HEIGHT, "Londrina", "HEALTH", 20, c.geT("BLACK"))
     HealthBox.setPaddingHeight(0)
     HealthBox.setPaddingWidth(0)
     HealthBox.setBoxColor(const.BACKGROUND_COLOR)
-    HealthBox.draw(screen)
+    HealthBox.draw(g.playScreen)
 
     ReloadBox = TextBox(const.TILE_SIZE*7/8-1, 0.88*const.WINDOW_HEIGHT + const.MAZE_Y//2, "Londrina", "RELOAD", 20, c.geT("BLACK"))
     ReloadBox.setPaddingHeight(0)
     ReloadBox.setPaddingWidth(0)
     ReloadBox.setBoxColor(const.BACKGROUND_COLOR)
-    ReloadBox.draw(screen)
+    ReloadBox.draw(g.playScreen)
 
     HealthBox2 = TextBox(const.WINDOW_WIDTH-const.TILE_SIZE*2.2-1, 0.88*const.WINDOW_HEIGHT, "Londrina", "HEALTH", 20, c.geT("BLACK"))
     HealthBox2.setPaddingHeight(0)
     HealthBox2.setPaddingWidth(0)
     HealthBox2.setBoxColor(const.BACKGROUND_COLOR)
-    HealthBox2.draw(screen)
+    HealthBox2.draw(g.playScreen)
 
     ReloadBox2 = TextBox(const.WINDOW_WIDTH-const.TILE_SIZE*2.2-1, 0.88*const.WINDOW_HEIGHT + const.MAZE_Y//2, "Londrina", "RELOAD", 20, c.geT("BLACK"))
     ReloadBox2.setPaddingHeight(0)
     ReloadBox2.setPaddingWidth(0)
     ReloadBox2.setBoxColor(const.BACKGROUND_COLOR)
-    ReloadBox2.draw(screen)
+    ReloadBox2.draw(g.playScreen)
+
+    # other constant things like tiles
+
 
 def fixMovement():
     # This function will fix the movements of the tanks so that they aren't colliding with each other
@@ -772,15 +780,101 @@ def playGame():
                 return timer.isExpired()
             case DifficultyType.CaptureTheFlag:
                 return timer.isExpired()
+    
     def updateScore():
-        global t1Score, t2Score
-        t1Score = 0
-        t2Score = 0
-        for i in range(g.difficultyType.playerCount):
-            if playerlist[i].getTeam() == 0:
-                t1Score += playerlist[i].kills
-            else:
-                t2Score += playerlist[i].kills
+        match g.difficultyType:
+            case DifficultyType.OnePlayerYard:
+                g.team1Score = 0
+                g.team2Score = 0
+                for i in range(g.difficultyType.playerCount):
+                    if playerlist[i].getTeam() == 0:
+                        g.team1Score += playerlist[i].kills
+                    else:
+                        g.team2Score += playerlist[i].kills
+
+            case DifficultyType.OnePlayerScrapYard:
+                g.team1Score = 0
+                g.team2Score = 0
+                for i in range(g.difficultyType.playerCount):
+                    if playerlist[i].getTeam() == 0:
+                        g.team1Score += playerlist[i].kills
+                    else:
+                        g.team2Score += playerlist[i].kills
+            case DifficultyType.TwoPlayerYard:
+                g.team1Score = 0
+                g.team2Score = 0
+                for i in range(g.difficultyType.playerCount):
+                    if playerlist[i].getTeam() == 0:
+                        g.team1Score += playerlist[i].kills
+                    else:
+                        g.team2Score += playerlist[i].kills
+            case DifficultyType.TwoPlayerScrapYard:
+                g.team1Score = 0
+                g.team2Score = 0
+                for i in range(g.difficultyType.playerCount):
+                    if playerlist[i].getTeam() == 0:
+                        g.team1Score += playerlist[i].kills
+                    else:
+                        g.team2Score += playerlist[i].kills
+            case DifficultyType.OnePlayerBrawl:
+                g.team1Score = 0
+                g.team2Score = 0
+                for i in range(g.difficultyType.playerCount):
+                    if playerlist[i].getTeam() == 0:
+                        g.team1Score += playerlist[i].kills
+                    else:
+                        g.team2Score += playerlist[i].kills
+            case DifficultyType.OnePlayerDeathMatch:
+                g.team1Score = 0
+                g.team2Score = 0
+                for i in range(g.difficultyType.playerCount):
+                    if playerlist[i].getTeam() == 0:
+                        g.team1Score += playerlist[i].kills
+                    else:
+                        g.team2Score += playerlist[i].kills
+            case DifficultyType.TwoPlayerBrawl:
+                g.team1Score = 0
+                g.team2Score = 0
+                for i in range(g.difficultyType.playerCount):
+                    if playerlist[i].getTeam() == 0:
+                        g.team1Score += playerlist[i].kills
+                    else:
+                        g.team2Score += playerlist[i].kills
+            case DifficultyType.TwoPlayerDeathMatch:
+                g.team1Score = 0
+                g.team2Score = 0
+                for i in range(g.difficultyType.playerCount):
+                    if playerlist[i].getTeam() == 0:
+                        g.team1Score += playerlist[i].kills
+                    else:
+                        g.team2Score += playerlist[i].kills
+            case DifficultyType.OnePlayerTDM:
+                g.team1Score = 0
+                g.team2Score = 0
+                for i in range(g.difficultyType.playerCount):
+                    if playerlist[i].getTeam() == 0:
+                        g.team1Score += playerlist[i].kills
+                    else:
+                        g.team2Score += playerlist[i].kills
+            case DifficultyType.TeamDeathMatch:
+                g.team1Score = 0
+                g.team2Score = 0
+                for i in range(g.difficultyType.playerCount):
+                    if playerlist[i].getTeam() == 0:
+                        g.team1Score += playerlist[i].kills
+                    else:
+                        g.team2Score += playerlist[i].kills
+            case DifficultyType.OnePlayerCaptureTheFlag:
+                g.team1Score = 0
+                g.team2Score = 0
+                for i in range(g.difficultyType.playerCount):
+                    if playerlist[i].getTeam() == 0:
+                        g.team1Score += playerlist[i].kills
+                    else:
+                        g.team2Score += playerlist[i].kills                
+            case DifficultyType.CaptureTheFlag:
+                g.team1Score = g.flag[0].getScore()
+                g.team2Score = g.flag[1].getScore()
 
     def makeTable():
         endScreen.makeTable(*[player.getTableEntry() for player in playerlist[:g.difficultyType.playerCount]])
@@ -789,20 +883,12 @@ def playGame():
         # This function is only active if health bars are being used
         # This function will return the color of the health bar based on the health of the tank
         return healthColor[max(int((health*10-1)//1),0)]
-        if health > 6:
-            return c.geT("GREEN")
-        elif health > 3:
-            return c.geT("YELLOW")
-        elif health > 0:
-            return c.geT("RED")
-        else:
-            return c.geT("BLACK")
         
     # This function controls the main execution of the game
     # Inputs: None
     # Outputs: None
     # Because of the way the game is structured, these global variables can't be avoided
-    global gameOverFlag, cooldownTimer, systemTime, t1Score, t2Score, startTreads
+    global gameOverFlag, cooldownTimer, systemTime, startTreads
     global spawnpoint
     global allSprites
     global currentTime, deltaTime, lastUpdateTime
@@ -823,7 +909,7 @@ def playGame():
             #Reset the game
             match g.difficultyType:
                 case DifficultyType.OnePlayerYard:
-                    if t1Score == 99 or t2Score == 99:
+                    if g.team1Score == 99 or g.team2Score == 99:
                         makeTable()
                         gameMode = GameMode.end
                     else:
@@ -831,7 +917,7 @@ def playGame():
                         constantPlayGame()
                         timer.reset() # rest the clock
                 case DifficultyType.OnePlayerScrapYard:
-                    if t1Score == 99 or t2Score == 99:
+                    if g.team1Score == 99 or g.team2Score == 99:
                         makeTable()
                         gameMode = GameMode.end
                     else:
@@ -839,7 +925,7 @@ def playGame():
                         constantPlayGame()
                         timer.reset() # rest the clock
                 case DifficultyType.TwoPlayerYard:
-                    if t1Score == 99 or t2Score == 99:
+                    if g.team1Score == 99 or g.team2Score == 99:
                         makeTable()
                         gameMode = GameMode.end
                     else:
@@ -847,7 +933,7 @@ def playGame():
                         constantPlayGame()
                         timer.reset() # rest the clock
                 case DifficultyType.TwoPlayerScrapYard:
-                    if t1Score == 99 or t2Score == 99:
+                    if g.team1Score == 99 or g.team2Score == 99:
                         makeTable()
                         gameMode = GameMode.end
                     else:
@@ -878,22 +964,16 @@ def playGame():
     seconds = timer.getTime()
     textString = f"{seconds // 60:02d}:{seconds % 60:02d}"
     text = const.FONT_DICTIONARY["scoreFont"].render(textString, True, c.geT("BLACK"))
+    screen.blit(g.playScreen, (0,0))
     updateScore()
     #UI Elements
     pauseButton.update_display(pygame.mouse.get_pos())
     pauseButton.draw(screen, outline = True)
 
-    pygame.draw.rect(screen, const.BACKGROUND_COLOR, [const.TILE_SIZE*0.72, const.TILE_SIZE*0.72, const.WINDOW_WIDTH - const.TILE_SIZE*1.4, const.TILE_SIZE*8.5]) # Draw a box for the maze
-    
-    #Making the string for score
-    p1ScoreText = str(t1Score)
-    p2ScoreText = str(t2Score)
-    #Setting up the tex
-
     # Load the custom font
     pygame.draw.rect(screen, const.BACKGROUND_COLOR, [const.TILE_SIZE*2.1, 0.87*const.WINDOW_HEIGHT, const.WINDOW_WIDTH-const.TILE_SIZE*1.2-150, const.WINDOW_HEIGHT*0.15]) # The bottom bar
 
-    text3 = const.FONT_DICTIONARY["playerScore"].render(p1ScoreText + ":" + p2ScoreText, True, c.geT("BLACK"))
+    text3 = const.FONT_DICTIONARY["playerScore"].render(str(g.team1Score) + ":" + str(g.team2Score), True, c.geT("BLACK"))
     screen.blit(text3, [const.WINDOW_WIDTH/2 - text3.get_width()/2, 0.85*const.WINDOW_HEIGHT])
 
     #Box around the bottom of the screen for the health and reload bars
@@ -901,7 +981,7 @@ def playGame():
     pygame.draw.rect(screen, c.geT("RED"), [const.TILE_SIZE*2.2, 0.88*const.WINDOW_HEIGHT, 150*(g.tankList[0].getHealthPercentage() if not g.tankDead[0] else 0),
                                             20]) # Bar
     pygame.draw.rect(screen, c.geT("BLACK"), [const.TILE_SIZE*2.2, 0.88*const.WINDOW_HEIGHT, 150, 20], 2) # Outline
-    #Reload bars
+    # #Reload bars
     pygame.draw.rect(screen, c.geT("BLUE"), [const.TILE_SIZE*2.2, 0.88*const.WINDOW_HEIGHT + const.MAZE_Y//2, 150*(min(1,1-g.gunList[0].getReloadPercentage() if not g.tankDead[0] else 0)),
                                              20]) # The 25 is to space from the health bar
 
@@ -918,13 +998,13 @@ def playGame():
                                              20]) # The 25 is to space from the health bar
     pygame.draw.rect(screen, c.geT("BLACK"), [const.WINDOW_WIDTH - const.TILE_SIZE*2.2 - 150, 0.88*const.WINDOW_HEIGHT + const.MAZE_Y//2, 150, 20], 2) # Outline
 
-    #draw the supplies # Draw more on top of them
+    # #draw the supplies # Draw more on top of them
 
-    # only displaying 2 so it's ok
+    # # only displaying 2 so it's ok
 
     ef, mx = g.tankList[0].getEffect() if not g.tankDead[0] else ([0,0,0], [19000, 19000, 19000//3])
 
-    # Dynamic updating of the current supply status
+    # # Dynamic updating of the current supply status
     screen.blit(const.SUPPLY_ASSETS[0][min(int(((ef[0]/mx[0])*10)//1) + 1, 10) if ef[0] != 0 else 0], [270, 550])
     screen.blit(const.SUPPLY_ASSETS[1][min(int(((ef[1]/mx[1])*10)//1) + 1, 10) if ef[1] != 0 else 0], [300, 550])
     screen.blit(const.SUPPLY_ASSETS[2][min(int(((ef[2]/mx[2])*10)//1) + 1, 10) if ef[2] != 0 else 0], [270, 520])
@@ -938,12 +1018,10 @@ def playGame():
     # Draw the border
     for tile in g.tileList:
         tile.update() # This should be a togglable feature because it impacts performance
-        tile.draw(screen)
+        # tile.draw(screen)
+        tile.drawUpdate(screen) # on top of the constant
 
-    # Draw the edge of themaze
-    pygame.draw.rect(screen, c.geT("BLACK"), [const.MAZE_X, const.MAZE_Y, const.MAZE_WIDTH, const.MAZE_HEIGHT], 2)
     #Anything below here will be drawn on top of the maze and hence is game updates
-
     if pygame.time.get_ticks() - startTreads > 50:
         for i in range(g.difficultyType.playerCount):
             if g.tankDead[i]:
@@ -956,12 +1034,11 @@ def playGame():
         for p in treads[i]:
             screen.blit(p[0], p[1])
 
-    # fill up the area covered by the tank with the background color
-    pygame.draw.rect(screen, const.BACKGROUND_COLOR, [const.WINDOW_WIDTH//2 - (text.get_width()//2) * 1.1, 8, text.get_width()* 1.1, text.get_height()])
-    # draw the text again
+    # # fill up the area covered by the tank with the background color
+    # # draw the text again
     screen.blit(text, [const.WINDOW_WIDTH//2 - text.get_width()//2, 8])
 
-    # temp solution while the AI needs to be improved
+    # # temp solution while the AI needs to be improved
     if g.difficultyType.ai:
         for i in range(1, g.difficultyType.playerCount):
             if not g.tankDead[i]: # if the tank is alive
@@ -1014,13 +1091,15 @@ def playGame():
         if not g.tankDead[i]:
             pygame.draw.polygon(screen, getColor(g.tankList[i].getTeam()), g.tankList[i].getCornersInflated(3), 2) #Hit box outline
 
-    # # we are drawing a surface to stick the health bars on top of the tanks # this should be a togglable feature because it impacts performance
+    # # # we are drawing a surface to stick the health bars on top of the tanks # this should be a togglable feature because it impacts performance
     for i in range(g.difficultyType.playerCount):
         if not g.tankDead[i]:
             pygame.draw.rect(screen, getHealthIndicator(g.tankList[i].getHealthPercentage()), [g.tankList[i].getCenter()[0] - 10, g.tankList[i].getCenter()[1], 20, 5])
 
-    for f in g.flag:
-        f.draw(screen)
+    if g.difficultyType == DifficultyType.CaptureTheFlag:
+        for f in g.flag:
+            f.update()
+            f.draw(screen)
 
     g.explosionGroup.draw(screen)
     if timerClock == 0:
@@ -1078,10 +1157,6 @@ deltaTime = 0
 lastUpdateTime = 0
 
 screen = pygame.display.set_mode((const.WINDOW_WIDTH,const.WINDOW_HEIGHT))  # Windowed (safer/ superior)
-
-# Keeping track of score
-t1Score = 0
-t2Score = 0
 
 gameMode = GameMode.home
 
@@ -1181,8 +1256,8 @@ def main():
 
                     elif gameMode == GameMode.home: # Home screen
 
-                        global t1Score, t2Score, pageNum
-                        t1Score, t2Score = 0, 0 # reset the player scores
+                        global pageNum
+                        g.team1Score, g.team2Score = 0, 0 # reset the player scores
 
                         if homeScreen.isWithinHomeButton1(mouse):
                             g.difficultyType = DifficultyType.from_index(1 + pageNum)
@@ -1268,7 +1343,7 @@ def main():
                     elif gameMode == GameMode.end:
                         if endScreen.isWithinPlayAgainButton(mouse):
                             print("Play Again")
-                            t1Score, t2Score = 0, 0 # reset the player scores
+                            g.team1Score, g.team2Score = 0, 0 # reset the player scores
                             reset()
                             constantPlayGame()
                             gameMode = GameMode.play
@@ -1286,6 +1361,12 @@ def main():
 
                 if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
                     done = True
+
+                if event.key == pygame.K_4:
+                    if gameMode == GameMode.play:
+                        for i in range(g.difficultyType.playerCount):
+                            if not g.tankDead[i]:
+                                g.tankList[i].applySpeedBoost()
 
                 if event.key == pygame.K_i:
                     print("The current mouse position is: ", mouse)

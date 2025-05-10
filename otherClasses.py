@@ -64,7 +64,7 @@ class Tile(pygame.sprite.Sprite):
         
         if self.supply is not None and not self.picked:
             for i in range(g.difficultyType.playerCount):
-                if not g.tankDead[i]:
+                if not g.tankDead[i] and g.tankList[i].invincibility == 0:
                     if self.isWithin(g.tankList[i].getCenter()):
                         if self.supplyIndex == 0:
                             g.tankList[i].applyDoubleDamage()
@@ -74,17 +74,6 @@ class Tile(pygame.sprite.Sprite):
                             g.tankList[i].applySpeedBoost()
                         self.picked = True
                         self.supplyTimer = self.timer
-
-        # if we have a flag
-        if self.flag:
-            for i in range(g.difficultyType.playerCount):
-                if not g.tankDead[i]:
-                    if self.isWithin(g.tankList[i].getCenter()):
-                        print(f"Tank: {g.tankList[i].getTeam()} is attempting to pick up the flag")
-                        if g.tankList[i].getTeam()+1 == self.flag:
-                            self.flagPicked = True
-                            g.tankList[i].setFlag(g.flag[self.flag-1])
-                            print("Help the flag is being taken by the opposite team")
 
     def neighbourCheck(self):
         #This function will return a list of the indexes of the neighbours based on the current list of border
@@ -208,20 +197,25 @@ class Tile(pygame.sprite.Sprite):
                 # North South East West (1111)
                 pygame.draw.rect(screen, (0,0,0), [self.x, self.y, const.TILE_SIZE, const.TILE_SIZE], 1) # all
 
+        # self.drawUpdate(screen)
+    def drawUpdate(self, screen):
         if self.flag: # automatically filters 0
-            if self.flagPicked:
-                pygame.draw.polygon(screen, (self.spawnColor()), [[self.x + 35, self.y + 25], [self.x + 20, self.y + 35], [self.x + 20, self.y + 15]], 3)
-            else:
+            if g.flag[self.flag - 1].isHome():
+
+            # if self.flagPicked:
                 pygame.draw.polygon(screen, (self.spawnColor()), [[self.x + 35, self.y + 25], [self.x + 20, self.y + 35], [self.x + 20, self.y + 15]])
+            else:
+                pygame.draw.polygon(screen, (self.spawnColor()), [[self.x + 35, self.y + 25], [self.x + 20, self.y + 35], [self.x + 20, self.y + 15]], 3)
+
         if self.supply is not None:
             # draw the supply icon
             if self.picked:
                 screen.blit(self.supply[0], (self.x + const.TILE_SIZE//2 - self.supply[0].get_width()//2, self.y + const.TILE_SIZE//2 - self.supply[0].get_height()//2))
             else:
                 screen.blit(self.supply[1], (self.x + const.TILE_SIZE//2 - self.supply[1].get_width()//2, self.y + const.TILE_SIZE//2 - self.supply[1].get_height()//2))
-    
         # self.drawText(screen)
-        
+
+
     def spawnColor(self):
         if self.flag == 1:
             return c.geT("RED")
@@ -324,8 +318,12 @@ class Tile(pygame.sprite.Sprite):
             self.spawn = True
         if num == 3:
             self.flag = 1 # red
+            g.flag[0].setxy((self.x, self.y))
+            g.flag[0].setHome((self.x, self.y))
         if num == 4:
             self.flag = 2 # blue
+            g.flag[1].setxy((self.x, self.y))
+            g.flag[1].setHome((self.x, self.y))
 
 class Explosion(pygame.sprite.Sprite):
 
@@ -387,11 +385,14 @@ class Explosion(pygame.sprite.Sprite):
 
 
 class Flag():
-    def __init__(self, team):
+    def __init__(self, team, coords):
         self.team = team
         self.dropped = False
         self.returnTimer = 1400
-
+        self.xy = coords
+        self.homexy = coords
+        self.tank = None
+        self.score = 0
     def update(self):
         if self.dropped:
             self.returnTimer -= 1
@@ -399,18 +400,77 @@ class Flag():
             self.returnTimer = 0
             # return the flag
             self.returnFlag()
+        for i in range(g.difficultyType.playerCount):
+            if not g.tankDead[i]:
+                if self.isWithin(g.tankList[i].getCenter()):
+                    # if we are within, award the flag
+                    # if the tank is on the same team as the flag, then auto return
+                    # if not, then give the flag
+
+                    if g.tankList[i].getTeam() != (self.team): # if they are not the same team
+                        if not self.isHome() and self.dropped:
+                            self.returnFlag()
+                        # if the tank has a flag, return the flag
+                        elif g.tankList[i].flag != None:
+                            # if one of the two flags is not home, return the flag
+                            if g.flag[0].isHome() or g.flag[1].isHome(): # if one is home
+                                g.flag[0].returnFlag()
+                                g.flag[1].returnFlag()
+                                g.flag[0].setTank(None)
+                                g.flag[1].setTank(None)
+                                g.tankList[i].setFlag(None)
+                                # we need to update the score
+                                self.score += 1
+                    else:
+                        if self.dropped or self.isHome():
+                            self.dropped = False
+                            self.returnTimer = 1400
+                            g.flag[self.team].setTank(g.tankList[i])
+                            g.tankList[i].setFlag(self.team) # give the tank the flag property
+        if self.tank is not None: # if we have been picked up
+            self.xy = self.tank.getCenter()
+        else: # if it is none
+            if self.xy != self.homexy:
+                self.dropped = True # it's been dropped somewhere
+                self.tank = None
+
+    def isWithin(self, coords):
+        cX, cY = coords[0], coords[1]
+        if cX >= self.xy[0] and cX <= self.xy[0] + const.TILE_SIZE and cY >= self.xy[1] and cY <= self.xy[1] + const.TILE_SIZE:
+            return True
+        return False
+
+    def isHome(self):
+        return self.xy == self.homexy # if these are equal we are at the spawn location of the flag
 
     def draw(self, screen):
-        if self.dropped:
-            if self.team == 1:
-                pygame.draw.polygon(screen, c.geT("RED"), [[const.SCREEN_WIDTH//2, const.SCREEN_HEIGHT//2], [const.SCREEN_WIDTH//2 - 10, const.SCREEN_HEIGHT//2 + 10], [const.SCREEN_WIDTH//2 - 10, const.SCREEN_HEIGHT//2 - 10]])
-            else:
-                pygame.draw.polygon(screen, c.geT("BLUE"), [[const.SCREEN_WIDTH//2, const.SCREEN_HEIGHT//2], [const.SCREEN_WIDTH//2 - 10, const.SCREEN_HEIGHT//2 + 10], [const.SCREEN_WIDTH//2 - 10, const.SCREEN_HEIGHT//2 - 10]])
+        if self.team == 1:
+            pygame.draw.rect(screen, c.geT("BLUE"), [self.xy[0], self.xy[1], 50, 50])
+            # pygame.draw.polygon(screen, c.geT("BLUE"), [[self.xy[0] + const.SCREEN_WIDTH//2, self.xy[1] + const.SCREEN_HEIGHT//2], [self.xy[0] + const.SCREEN_WIDTH//2 - 10, self.xy[1] + const.SCREEN_HEIGHT//2 + 10], [self.xy[0] + const.SCREEN_WIDTH//2 - 10, self.xy[1] + const.SCREEN_HEIGHT//2 - 10]])
+        else:
+            pygame.draw.rect(screen, c.geT("RED"), [self.xy[0], self.xy[1], 50, 50])
+            # pygame.draw.polygon(screen, c.geT("RED"), [[self.xy[0] + const.SCREEN_WIDTH//2, self.xy[1] + const.SCREEN_HEIGHT//2], [self.xy[0] + const.SCREEN_WIDTH//2 - 10, self.xy[1] + const.SCREEN_HEIGHT//2 + 10], [self.xy[0] + const.SCREEN_WIDTH//2 - 10, self.xy[1] + const.SCREEN_HEIGHT//2 - 10]]
 
     def returnFlag(self):
-        # idk
+        self.xy = self.homexy
         self.returnTimer = 1400
+        self.dropped = False
+        self.tank = None # remove the tank
 
     def getTeam(self):
         return self.team
 
+    def setxy(self, xy):
+        self.xy = xy
+    
+    def setHome(self, home):
+        self.homexy = home
+
+    def setTank(self, tank):
+        self.tank = tank
+
+    def drop(self):
+        self.dropped = True
+
+    def getScore(self):
+        return self.score

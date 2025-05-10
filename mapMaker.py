@@ -2,6 +2,7 @@ import pygame
 import tkinter as tk
 from tkinter import filedialog
 import os
+import random
 
 pygame.init()
 
@@ -206,6 +207,15 @@ def getIndex(i,j):
     result = i_calc * 14 + j_calc + 1
     return result
 
+def randomGen(tiles):
+    def rg():
+        return random.choices([True, False], weights = (0.16, 1-0.16))[0]
+    for t in tiles:
+        t.reset()
+    for t in tiles:
+        t.setBorder(rg()*8 + rg() * 4 + rg() * 2 + rg())
+
+
 def generate(tiles):
     # check that everything is good to go
     # go around the edge and make the borders true
@@ -315,7 +325,8 @@ while not done:
                 if l:
                     # load the file
                     squares = l
-
+            elif event.key == pygame.K_r:
+                randomGen(squares)
 
     screen.fill((217,217,217))
     # draw the grid of squres
