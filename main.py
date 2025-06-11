@@ -16,7 +16,7 @@ from Players import Player # maybe this is needed
 import globalVariables as g
 from guns import *
 from bullets import *
-from otherClasses import Tile
+from tile import Tile
 from DifficultyTypes import *
 
 global timerClock
@@ -58,10 +58,12 @@ class GameMode(Enum):
     unimplemented = 8
 
 def breathFirstSearch(tileLst, choices, option):
-    # This function will search the maze in a breath first manner to see if we can reach the second spawn
-    # Inputs: tileList: The current list of tiles
-    # Inputs: Choices: The locations of both spawns
-    # Outputs: True if the second spawn is reachable, False otherwise
+    """
+    This function will search the maze in a breadth-first manner to see if we can reach the second spawn
+    Inputs: tileLst: The current list of tiles
+    Inputs: choices: The locations of both spawns
+    Outputs: True if the second spawn is reachable, False otherwise
+    """
 
     #Setting up the BFS
     visitedQueue = []
@@ -83,11 +85,21 @@ def breathFirstSearch(tileLst, choices, option):
         return False
 
 def tileGen(numSpawns = 2): # Default is 2 spawns
-    # This function is responsible for generating the tiles for the maze
-    # Inputs: No inputs
-    # Outputs: A list of tiles that make up the maze
+    """
+    This function generates the tiles for the maze and sets up the spawn points
+    Inputs: numSpawns: The number of spawn points to generate
+    Outputs: A list of tiles that make up the maze
+    """
 
     def gen():
+        """
+        This function generates the tiles for the maze
+        Inputs: None
+        Outputs: A list of tiles that make up the maze with borders randomly generated
+        """
+        # This function will randomly generate the tiles that make up the background
+        # Inputs: None
+        # Outputs: A list of tiles that make up the maze
         tempTiles = []
         index = 1
         for j in range(const.MAZE_Y, const.MAZE_HEIGHT + 1, const.TILE_SIZE): # Assign the tiles and spawns once everything is found
@@ -184,6 +196,9 @@ def tileGen(numSpawns = 2): # Default is 2 spawns
     return g.tileList
 
 def nextType():
+    """
+    Setup the gamemode based on the selected difficulty type
+    """
     global gameMode
 
     # quickly assign the game sprites
@@ -232,6 +247,10 @@ def nextType():
             reset()
             gameMode = GameMode.selection
             constantSelectionScreen()
+        case DifficultyType.OnePlayerCaptureTheFlag:
+            reset()
+            gameMode = GameMode.selection
+            constantSelectionScreen()
         case DifficultyType.CaptureTheFlag:
             reset()
             gameMode = GameMode.selection
@@ -241,6 +260,14 @@ def nextType():
             gameMode = GameMode.unimplemented
 
 def setUpTank(dType = -1, AI = False, spawn = [0,0], player = None, index = 0):
+    """
+    Based on the dififculty type, setup the players
+    Inputs: dType: The difficulty type
+    Inputs: AI: If the player is an AI or not
+    Inputs: spawn: The spawn point for the player
+    Inputs: player: The player object
+    Inputs: index: The index of player's chosen color
+    """
     global DifficultyType
     match dType:
         
@@ -436,6 +463,24 @@ def setUpTank(dType = -1, AI = False, spawn = [0,0], player = None, index = 0):
             gun.setAI(AI)
             gun.setPlayer(player)
 
+        case DifficultyType.OnePlayerCaptureTheFlag:
+            # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Normal Tanks
+            tank = playerInformation.getPlayerHull(index).copy()
+            tank.setData([spawn[0], spawn[1], player.getControls(), player.getTankName(), player.getTankChannels()])
+            tank.setImage(playerInformation.getPlayerHull(index).getName(), playerInformation.getPlayerHullColour(index) + 1)
+            tank.setSoundDictionary(const.SOUND_DICTIONARY)
+            tank.settileList(g.tileList)
+            tank.effect = [0,0,0]
+            tank.setAI(AI)
+            tank.setPlayer(player)
+
+            gun = playerInformation.getPlayerTurret(index).copy()
+            gun.setImage(playerInformation.getPlayerTurret(index).getGunName(), playerInformation.getPlayerTurretColour(index) + 1)
+            gun.setHard()
+            gun.setData(tank, player.getControls(), player.getGunName(), player.getTankChannels())
+            gun.setAI(AI)
+            gun.setPlayer(player)
+
         case DifficultyType.CaptureTheFlag:
             # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Normal Tanks
             tank = playerInformation.getPlayerHull(index).copy()
@@ -457,7 +502,13 @@ def setUpTank(dType = -1, AI = False, spawn = [0,0], player = None, index = 0):
     return gun, tank
 
 def getMap(mapPath):
-    
+    """
+    This is a function that will read the map from a file and return the tiles and spawn points
+    The map file should be made by using the map editor provided in mapMaker.py
+    Inputs: mapPath: The path to the map file
+    Outputs: A list of tiles and a list of spawn points read from the file
+    """
+
     with open(mapPath, "r") as f:
         # opening the path
         tList = []
@@ -492,10 +543,11 @@ def getMap(mapPath):
     return tList, spwn
 
 def setUpPlayers():
-    # This function sets up the players for the game including reseting the respective global veriables
-    #This function has no real dependencies on things outside of its control
-    # Inputs: None
-    # Outputs: None
+    """
+    This function sets up the players for the game based on the selected difficulty type, this function will setup all the players
+    Inputs: None
+    Outputs: None
+    """
     global spawnpoint, allSprites
     global DifficultyType
 
@@ -507,20 +559,21 @@ def setUpPlayers():
         g.tileList = tileGen(g.difficultyType.playerCount) # Get a new board
     for sprite in allSprites:
         sprite.kill()
-    allSprites = pygame.sprite.Group() # Wipe the current Sprite Group   
+    allSprites = pygame.sprite.Group() # Wipe the current Sprite Group
     # setup the tanks
     for i in range(g.difficultyType.playerCount):
         if i < g.difficultyType.humanCount:
             g.gunList[i], g.tankList[i] = setUpTank(g.difficultyType, AI = False, spawn = spawnpoint[i], player = playerlist[i], index = i)
         else:
             g.gunList[i], g.tankList[i] = setUpTank(g.difficultyType, AI = True, spawn = spawnpoint[i], player = playerlist[i], index = i)
-        playerlist[i].setTeam(i%g.difficultyType.teamCount)
+        playerlist[i].setTeam(i%g.difficultyType.teamCount) # This team assignment is temporary, it will need to be updated to allow 2p on the same team
         allSprites.add(g.tankList[i], g.gunList[i])
 
     for i in range(g.difficultyType.playerCount):
         g.gunList[i].assignTeam(g.tankList, g.tankDead, g.difficultyType.playerCount) # Assign the teams
 
     match g.difficultyType:
+        # The code used here is to set the end conditions of the game
         case DifficultyType.OnePlayerYard: 
             timer.setDirection(True)
         case DifficultyType.OnePlayerScrapYard:
@@ -547,6 +600,9 @@ def setUpPlayers():
         case DifficultyType.TeamDeathMatch:
             timer.setDirection(False)
             timer.setDuration(61)
+        case DifficultyType.OnePlayerCaptureTheFlag:
+            timer.setDirection(False)
+            timer.setDuration(600) # 10 min
         case DifficultyType.CaptureTheFlag:
             timer.setDirection(False)
             timer.setDuration(600) # 10 min
@@ -562,9 +618,11 @@ def setUpPlayers():
     timer.reset() # Reset the timer
 
 def constantHomeScreen():
-    #This funciton handles the constant elements of the home screen
-    # Inputs: None
-    # Outputs: None
+    """
+    The constant elements of the home screen (Which at this point is just resetting players and background music)
+    Parameters: None
+    Returns: None
+    """
     for p in playerlist:
         p.resetPlayer()
     homeScreen.draw(screen, pygame.mouse.get_pos())
@@ -572,17 +630,21 @@ def constantHomeScreen():
     mixer.crossfade('lobby')
 
 def constantSelectionScreen():
-    #This function handles the constant elements of the selection screen
-    # Inputs: None
-    # Outputs: None
+    """
+    The constant elements of the selection screen (Which at this point is just changing background music)
+    Parameters: None
+    Returns: None
+    """
     print("Switching to selection music")
     mixer.crossfade('selection')
 
 def constantPlayGame():
-    #This function handles the constant elements of the game screen
-    # Inputs: None
-    # Outputs: None
-    # g.playScreen.fill(const.BACKGROUND_COLOR)
+    """
+    This function handles the constant elements of the game screen.
+    It blits the background such that it can be drawn quickly in every frame
+    Inputs: None
+    Outputs: None
+    """
     g.playScreen.fill(const.BACKGROUND_COLOR)
     g.playScreen.blit(g.gunList[0].getSprite(True), (const.TILE_SIZE, 0.78*const.WINDOW_HEIGHT))
     g.playScreen.blit(g.tankList[0].getSprite(True), (const.TILE_SIZE, 0.78*const.WINDOW_HEIGHT))
@@ -627,15 +689,13 @@ def constantPlayGame():
     ReloadBox2.setBoxColor(const.BACKGROUND_COLOR)
     ReloadBox2.draw(g.playScreen)
 
-    # other constant things like tiles
-
-
 def fixMovement():
-    # This function will fix the movements of the tanks so that they aren't colliding with each other
-    # Inputs: An array of the tanks that need to be processed
-    #force to only have 2 tanks
+    """
+    This function will fix the movements of the tanks such that they don't collide with each other, or with the walls or boundaries of the maze.
+    Inputs: None
+    Outputs: None
+    """
 
-    # for idx, t in enumerate(tanks):
     for i in range(g.difficultyType.playerCount):
         if not g.tankDead[i]: # if the tank is dead, skip it
             t = g.tankList[i]
@@ -656,9 +716,6 @@ def fixMovement():
                 t1 = t
                 if not g.tankDead[j]: # if the tank is alive
                     t2 = g.tankList[j]
-
-
-                    # between tanks
                     if pygame.sprite.collide_rect(t1, t2):
 
                         # Calculate the direction vector between the tanks
@@ -667,7 +724,6 @@ def fixMovement():
 
                         # Get the distance between the two tanks
                         distance = (deltaX**2 + deltaY**2)**0.5
-
                         # Define a minimum distance threshold (how far apart the tanks should be)
                         minDistance = 15  # Adjust this value as needed
 
@@ -746,6 +802,9 @@ def fixMovement():
             t.changeY = 0
         
 def getColor(color):
+    """
+    For a team's color, return the color of the team
+    """
     if color == 0:
         return c.geT("BLUE")
     elif color == 1:
@@ -754,8 +813,15 @@ def getColor(color):
         return c.geT("GREY")
 
 def playGame():
-
+    """
+    This function is the main game loop, it will handle the game logic and the rendering of the game
+    """
     def checkGameOver(t):
+        """
+        This function checks the ending conditions of the game based on the difficulty type
+        Inputs: t: The difficulty type
+        Outputs: True if the game is over, False otherwise
+        """
         global DifficultyType
         match t:
             case DifficultyType.OnePlayerYard:
@@ -778,10 +844,15 @@ def playGame():
                 return timer.isExpired()
             case DifficultyType.TeamDeathMatch:
                 return timer.isExpired()
+            case DifficultyType.OnePlayerCaptureTheFlag:
+                return timer.isExpired()
             case DifficultyType.CaptureTheFlag:
                 return timer.isExpired()
     
     def updateScore():
+        """
+        Based on the difficulty type, update the score of the game
+        """
         match g.difficultyType:
             case DifficultyType.OnePlayerYard:
                 g.team1Score = 0
@@ -865,29 +936,24 @@ def playGame():
                     else:
                         g.team2Score += playerlist[i].kills
             case DifficultyType.OnePlayerCaptureTheFlag:
-                g.team1Score = 0
-                g.team2Score = 0
-                for i in range(g.difficultyType.playerCount):
-                    if playerlist[i].getTeam() == 0:
-                        g.team1Score += playerlist[i].kills
-                    else:
-                        g.team2Score += playerlist[i].kills                
+                g.team1Score = g.flag[0].getScore()
+                g.team2Score = g.flag[1].getScore()
             case DifficultyType.CaptureTheFlag:
                 g.team1Score = g.flag[0].getScore()
                 g.team2Score = g.flag[1].getScore()
 
     def makeTable():
+        """
+        Generate the end screen table based on the players' scores and kills
+        """
         endScreen.makeTable(*[player.getTableEntry() for player in playerlist[:g.difficultyType.playerCount]])
 
     def getHealthIndicator(health):
-        # This function is only active if health bars are being used
-        # This function will return the color of the health bar based on the health of the tank
+        """
+        This function returns the color of the health bar based on the health of the tank
+        """
         return healthColor[max(int((health*10-1)//1),0)]
         
-    # This function controls the main execution of the game
-    # Inputs: None
-    # Outputs: None
-    # Because of the way the game is structured, these global variables can't be avoided
     global gameOverFlag, cooldownTimer, systemTime, startTreads
     global spawnpoint
     global allSprites
@@ -956,6 +1022,9 @@ def playGame():
                     makeTable()
                     gameMode = GameMode.end
                 case DifficultyType.TeamDeathMatch:
+                    makeTable()
+                    gameMode = GameMode.end
+                case DifficultyType.OnePlayerCaptureTheFlag:
                     makeTable()
                     gameMode = GameMode.end
                 case DifficultyType.CaptureTheFlag:
@@ -1096,7 +1165,7 @@ def playGame():
         if not g.tankDead[i]:
             pygame.draw.rect(screen, getHealthIndicator(g.tankList[i].getHealthPercentage()), [g.tankList[i].getCenter()[0] - 10, g.tankList[i].getCenter()[1], 20, 5])
 
-    if g.difficultyType == DifficultyType.CaptureTheFlag:
+    if (g.difficultyType == DifficultyType.CaptureTheFlag) or (g.difficultyType == DifficultyType.OnePlayerCaptureTheFlag):
         for f in g.flag:
             f.update()
             f.draw(screen)
@@ -1108,10 +1177,11 @@ def playGame():
     timerClock = (timerClock + 1) % 120 # This is to make sure that the timer doesn't go too fast
 
 def reset():
-    # This function is to reset the board everytime we want to restart the game
-    # Inputs: None
-    # Outputs: None
-    # Because of the way it's coded, these global declarations can't be avoided
+    """
+    This function is responsible for resetting the game state.
+    Inputs: None
+    Outputs: None
+    """
     global gameOverFlag, cooldownTimer, systemTime
     global playerlist
     global allSprites
@@ -1159,8 +1229,6 @@ lastUpdateTime = 0
 screen = pygame.display.set_mode((const.WINDOW_WIDTH,const.WINDOW_HEIGHT))  # Windowed (safer/ superior)
 
 gameMode = GameMode.home
-
-# UI Screens
 
 turretList = [Tempest(Tank(0,0,None, "Default"), None, "Tempest"), Silencer(Tank(0,0,None, "Default"), None, "Silencer"),
         Watcher(Tank(0,0,None, "Default"), None, "Watcher"), Chamber(Tank(0,0,None, "Default"), None, "Chamber"),
@@ -1314,11 +1382,9 @@ def main():
                             constantSelectionScreen()
 
                         if infoScreen.isWithinLArrowButton(mouse):
-                            # Update the list
                             infoScreen.updateBox(-1)
 
                         if infoScreen.isWithinRArrowButton(mouse):
-                            # Update the list
                             infoScreen.updateBox(1)
 
                     elif gameMode == GameMode.settings:
@@ -1418,7 +1484,6 @@ def main():
 
         elif gameMode == GameMode.info:
             infoScreen.draw(screen) # Info screen
-            # we need to update the info screen if the user changes the input # however there may be the case where we don't need to do it and only update once ever click
 
         elif gameMode == GameMode.settings:
             settingsScreen.draw(screen = screen)

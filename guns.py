@@ -6,7 +6,7 @@ import constants as const
 from bullets import *
 import globalVariables as g
 from ColorDictionary import ColourDictionary as c # colors
-
+from DifficultyTypes import DifficultyType
 
 class Gun(pygame.sprite.Sprite):
 
@@ -70,6 +70,7 @@ class Gun(pygame.sprite.Sprite):
         self.dead = []
         self.target = None
         self.targetIndex = -1
+        self.currentState = None
 
     def update(self):
         """
@@ -90,14 +91,8 @@ class Gun(pygame.sprite.Sprite):
         """
         if self.AI:
             # if the target is dead
-            if self.dead[self.targetIndex]:
-                self.target = None # reset the target
-                lst = [i for i in range(0, self.playerCount) if ((not self.dead[i]) and self.enemy[i].getName() != self.tank.name and self.enemy[i].getTeam() != self.tank.getTeam())]
-                if len(lst) != 0:
-                    self.targetIndex = random.choice(lst) if lst is not None else -1
-                    self.target = self.enemy[self.targetIndex] # I think this works
-                    temp = self.target.getCurrentTile().getIndex() # for the most part we can guarantee this
-                    self.tank.setAim((temp, temp%14*const.TILE_SIZE + const.TILE_SIZE//2, ((temp)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
+            if self.AI_exitCondition(): # if the AI should exit
+                self.getNewTarget() # find a new target
             if self.target is not None: # we have a target
                 tank2x, tank2y = self.target.getCenter()# get the center
                 c = self.tank.getCorners() # Our center
@@ -121,11 +116,8 @@ class Gun(pygame.sprite.Sprite):
                 else:
                     temp =self.tank.getAngle() - self.angle
 
-                self.angle = (self.angle + temp)
-                self.angle = round(self.angle)
-                self.angle %= 360
+                self.angle = round(self.angle + temp) % 360
                 # Line of sight for the tank to shoot
-
                 lowerlimit = ((self.angle + 5) + 360) % 360
                 upperlimit = ((self.angle - 5) + 360) % 360
 
@@ -154,7 +146,14 @@ class Gun(pygame.sprite.Sprite):
                                 break
                         else:
                             self.fire() # huh
-                        
+                            pass
+            else: # if we don't have a target just come back to center
+                if self.angle != self.tank.getAngle():
+                    if self.angle < self.tank.getAngle():
+                        self.angle += 1
+                    else:
+                        self.angle -= 1
+
         else:
             keys = pygame.key.get_pressed()
             #Checks what keys are pressed, and changes speed accordingly
@@ -219,6 +218,439 @@ class Gun(pygame.sprite.Sprite):
         self.canShoot = False
         self.shootCooldown = self.cooldownDuration
         self.playSFX()
+
+    def AI_exitCondition(self, default = None):
+        if default is None:
+            default = g.difficultyType # if we didn't assign, we want to do what the game is currently set to
+
+        if default == DifficultyType.NotInGame:
+            return True
+        if default == DifficultyType.OnePlayerYard:
+            return self.dead[self.targetIndex]
+        if default == DifficultyType.OnePlayerScrapYard:
+            return self.dead[self.targetIndex]
+        if default == DifficultyType.TwoPlayerYard:
+            return self.dead[self.targetIndex]
+        if default == DifficultyType.TwoPlayerScrapYard:
+            return self.dead[self.targetIndex]
+        if default == DifficultyType.OnePlayerBrawl:
+            return self.dead[self.targetIndex]
+        if default == DifficultyType.OnePlayerDeathMatch:
+            return self.dead[self.targetIndex]
+        if default == DifficultyType.TwoPlayerBrawl:
+            return self.dead[self.targetIndex]
+        if default == DifficultyType.TwoPlayerDeathMatch:
+            return self.dead[self.targetIndex]
+        if default == DifficultyType.OnePlayerTDM:
+            return self.dead[self.targetIndex]
+        if default == DifficultyType.TeamDeathMatch:
+            return self.dead[self.targetIndex]
+        if default == DifficultyType.OnePlayerCaptureTheFlag:
+            if self.currentState == "enemyFlagAtHome": # enemy flag is at home
+                # go and get it
+                if not g.flag[(self.tank.getTeam())].isHome(): # if my flag is taken
+                # if not g.flag[(self.tank.getTeam() + 1) % 2].isHome(): # This is our flag, but can't just flick constantly, we need a way to make a decision
+                    self.currentState = None
+                    print("Enemy flag was taken, need a new target")
+                    return True # we need a new target
+                return False # we don't need a new target
+            elif self.currentState == "enemyFlagNotAtHome": # enemy flag is not at home
+                # if g.flag[(self.tank.getTeam())].isDropped() or not g.flag[(self.tank.getTeam() + 1) % 2].isHome(): # picked up or returned
+                if g.flag[(self.tank.getTeam())].isHome() or g.flag[(self.tank.getTeam())].isDropped(): # the flag has been returned
+                    self.currentState = None
+                    print("Enemy flag was picked up or returned, need a new target")
+                    return True
+                return False # we don't need a new target
+            elif self.currentState == "enemyFlagDropped": # enemy flag is dropped
+                # we should go and get it
+                if not g.flag[(self.tank.getTeam())].isDropped(): # picked up or returned
+                    self.currentState = None
+                    print("Enemy flag was picked up or returned after being dropped, need a new target")
+                    return True
+                return False # we don't need a new target
+            elif self.currentState == "myFlagAtHome":
+                # if either flag is missing, reconsider
+                for f in g.flag:
+                    if not f.isHome():
+                        self.currentState = None
+                        return True # we need a new target
+                return False # we don't need a new target
+            elif self.currentState == "myFlagNotAtHome":
+                # when my flag is at home, we should switch
+                if g.flag[(self.tank.getTeam() + 1) % 2].isHome():
+                    # it's home so we can switch
+                    self.currentState = None
+                    print("My flag was returned, need a new target")
+                    return True # we need a new target
+                return False # we don't need a new target
+            elif self.currentState == "myFlagDropped":
+                # we should go and return our flag
+                # when my flag is at home, we should switch
+                if g.flag[(self.tank.getTeam() + 1) % 2].isHome():
+                    # it's home so we can switch
+                    self.currentState = None
+                    print("My flag was returned after being dropped, need a new target")
+                    return True # we need a new target
+                return False # we don't need a new target
+            else:
+                # we don't have a target to choose
+                self.currentState = None # we need a new target, something went wrong
+                return True
+        if default == DifficultyType.CaptureTheFlag:
+            return self.AI_exitCondition(default=DifficultyType.OnePlayerCaptureTheFlag) # use the same logic as the one player mode
+        return False
+
+    def calculateDecision(self): # This function needs to be checked for impacting performance
+        print("Calculating Decision")
+        selectionDictionary = {
+            "enemyFlagAtHome": 0,
+            "enemyFlagNotAtHome": 0,
+            "enemyFlagDropped": 0,
+            "myFlagAtHome": 0,
+            "myFlagNotAtHome": 0,
+            "myFlagDropped": 0
+        }
+
+        # if the flag is at home, we should go for it
+        if g.flag[self.tank.getTeam()].isHome():
+            enemyFlag = g.flag[(self.tank.getTeam() + 1) % 2] # the enemy flag is always the next flag
+            flagX, flagY = enemyFlag.getxy() # center of the enemy flag
+            x,y = self.tank.getCenter() # center of the tank
+            distance = math.hypot(flagX - x, flagY - y) / const.HYPOTENUSE # distance to the enemy flag
+            selectionDictionary["enemyFlagAtHome"] = 1 + distance*1.25 # +1 to increase the priority of this state
+            # ideally we should go and get it
+        else:
+            print("Enemy flag is not at home")
+            selectionDictionary["enemyFlagNotAtHome"] = 1 # enemy flag is not at home
+            # we don't really care if the enemy flag is not at home
+        # if the flag is dropped, we should go for it
+        if g.flag[self.tank.getTeam()].isDropped():
+            # we should definitely look at getting it
+            enemyFlag = g.flag[(self.tank.getTeam() + 1) % 2] # the enemy flag is always the next flag
+            flagX, flagY = enemyFlag.getxy() # center of the enemy flag
+            x,y = self.tank.getCenter() # center of the tank
+            distance = math.hypot(flagX - x, flagY - y) / const.HYPOTENUSE # distance to the enemy flag
+            selectionDictionary["enemyFlagDropped"] = 1 + distance # +1 to increase the priority of this state
+        # if our flag is at home, we can go and attack the enemy
+        if g.flag[(self.tank.getTeam() + 1) % 2].isHome():
+            # we don't really care if our flag is at home
+            print("My flag is at home")
+            selectionDictionary["myFlagAtHome"] = 0
+        else:
+            # we should go and hunt down the enemy with our flag
+            # if we choose this we should also update the target constantly
+            myFlag = g.flag[(self.tank.getTeam() + 1) % 2]
+            flagX, flagY = myFlag.getxy() # center of the own flag
+            x,y = self.tank.getCenter() # center of the tank
+            distance = math.hypot(flagX - x, flagY - y) // const.HYPOTENUSE # distance to the own flag
+            selectionDictionary["myFlagNotAtHome"] = 2 + distance*2 # +1 to increase the priority of this state, *2 to increase the priority of this state even more
+        # if our flag is dropped, we should go and get it
+        if g.flag[(self.tank.getTeam() + 1) % 2].isDropped():
+            # we should definitely look at getting it
+            myFlag = g.flag[self.tank.getTeam()]
+            flagX, flagY = myFlag.getxy() # center of the own flag
+            x,y = self.tank.getCenter() # center of the tank
+            distance = math.hypot(flagX - x, flagY - y) // const.HYPOTENUSE # distance to the own flag
+            selectionDictionary["myFlagDropped"] = 1 + distance # +1 to increase the priority of this state
+        print("Selection Dictionary: ", selectionDictionary)
+        return selectionDictionary
+
+    def getNewTarget(self, default = None):
+        print("New Target")
+        if default is None:
+            default = g.difficultyType # if we didn't assign, we want to do what the game is currently set to
+
+        if default == DifficultyType.NotInGame:
+            return
+        if default == DifficultyType.OnePlayerYard:
+            # get available targets
+            lst = [i for i in range(0, self.playerCount) if ((not self.dead[i]) and self.enemy[i].getName() != self.tank.name and self.enemy[i].getTeam() != self.tank.getTeam())]
+            # policy for selecting the next target
+            distancelist = {} # This should be in the form of unit : distance
+            for element in lst:
+                # find the distance between the tank and the target
+                x,y = self.tank.getCenter()
+                targetX, targetY = self.enemy[element].getCenter() # center of the target
+                distance = math.hypot(targetX - x, targetY - y)
+                distancelist[element] = distance # add the distance to the list
+
+            # find the closest target
+            if len(distancelist) != 0:
+                closest = min(distancelist, key=distancelist.get) # get the closest target
+                self.setGunTarget(self.enemy[closest])
+                self.setTankTarget(self.enemy[closest].getCurrentTile().getIndex())
+            else: # we don't have a target to choose
+                self.setGunTarget(None)
+                self.setTankTarget(-1) # -1 is a special case for no target
+        if default == DifficultyType.OnePlayerScrapYard:
+            # get available targets
+            lst = [i for i in range(0, self.playerCount) if ((not self.dead[i]) and self.enemy[i].getName() != self.tank.name and self.enemy[i].getTeam() != self.tank.getTeam())]
+            # policy for selecting the next target
+            distancelist = {} # This should be in the form of unit : distance
+            for element in lst:
+                # find the distance between the tank and the target
+                x,y = self.tank.getCenter()
+                targetX, targetY = self.enemy[element].getCenter() # center of the target
+                distance = math.hypot(targetX - x, targetY - y)
+                distancelist[element] = distance # add the distance to the list
+
+            # find the closest target
+            if len(distancelist) != 0:
+                closest = min(distancelist, key=distancelist.get) # get the closest target
+                self.setGunTarget(self.enemy[closest])
+                self.setTankTarget(self.enemy[closest].getCurrentTile().getIndex())
+            else: # we don't have a target to choose
+                self.setGunTarget(None)
+                self.setTankTarget(-1) # -1 is a special case for no target
+        if default == DifficultyType.TwoPlayerYard:
+            # get available targets
+            lst = [i for i in range(0, self.playerCount) if ((not self.dead[i]) and self.enemy[i].getName() != self.tank.name and self.enemy[i].getTeam() != self.tank.getTeam())]
+            # policy for selecting the next target
+            distancelist = {} # This should be in the form of unit : distance
+            for element in lst:
+                # find the distance between the tank and the target
+                x,y = self.tank.getCenter()
+                targetX, targetY = self.enemy[element].getCenter() # center of the target
+                distance = math.hypot(targetX - x, targetY - y)
+                distancelist[element] = distance # add the distance to the list
+
+            # find the closest target
+            if len(distancelist) != 0:
+                closest = min(distancelist, key=distancelist.get) # get the closest target
+                self.setGunTarget(self.enemy[closest])
+                self.setTankTarget(self.enemy[closest].getCurrentTile().getIndex())
+            else: # we don't have a target to choose
+                self.setGunTarget(None)
+                self.setTankTarget(-1) # -1 is a special case for no target
+        if default == DifficultyType.TwoPlayerScrapYard:
+            # get available targets
+            lst = [i for i in range(0, self.playerCount) if ((not self.dead[i]) and self.enemy[i].getName() != self.tank.name and self.enemy[i].getTeam() != self.tank.getTeam())]
+            # policy for selecting the next target
+            distancelist = {} # This should be in the form of unit : distance
+            for element in lst:
+                # find the distance between the tank and the target
+                x,y = self.tank.getCenter()
+                targetX, targetY = self.enemy[element].getCenter() # center of the target
+                distance = math.hypot(targetX - x, targetY - y)
+                distancelist[element] = distance # add the distance to the list
+
+            # find the closest target
+            if len(distancelist) != 0:
+                closest = min(distancelist, key=distancelist.get) # get the closest target
+                self.setGunTarget(self.enemy[closest])
+                self.setTankTarget(self.enemy[closest].getCurrentTile().getIndex())
+            else: # we don't have a target to choose
+                self.setGunTarget(None)
+                self.setTankTarget(-1) # -1 is a special case for no target
+        if default == DifficultyType.OnePlayerBrawl:
+            # get available targets
+            lst = [i for i in range(0, self.playerCount) if ((not self.dead[i]) and self.enemy[i].getName() != self.tank.name and self.enemy[i].getTeam() != self.tank.getTeam())]
+            # policy for selecting the next target
+            distancelist = {} # This should be in the form of unit : distance
+            for element in lst:
+                # find the distance between the tank and the target
+                x,y = self.tank.getCenter()
+                targetX, targetY = self.enemy[element].getCenter() # center of the target
+                distance = math.hypot(targetX - x, targetY - y)
+                distancelist[element] = distance # add the distance to the list
+
+            # find the closest target
+            if len(distancelist) != 0:
+                closest = min(distancelist, key=distancelist.get) # get the closest target
+                self.setGunTarget(self.enemy[closest])
+                self.setTankTarget(self.enemy[closest].getCurrentTile().getIndex())
+            else: # we don't have a target to choose
+                self.setGunTarget(None)
+                self.setTankTarget(-1) # -1 is a special case for no target
+        if default == DifficultyType.OnePlayerDeathMatch:
+            # get available targets
+            lst = [i for i in range(0, self.playerCount) if ((not self.dead[i]) and self.enemy[i].getName() != self.tank.name and self.enemy[i].getTeam() != self.tank.getTeam())]
+            # policy for selecting the next target
+            distancelist = {} # This should be in the form of unit : distance
+            for element in lst:
+                # find the distance between the tank and the target
+                x,y = self.tank.getCenter()
+                targetX, targetY = self.enemy[element].getCenter() # center of the target
+                distance = math.hypot(targetX - x, targetY - y)
+                distancelist[element] = distance # add the distance to the list
+
+            # find the closest target
+            if len(distancelist) != 0:
+                closest = min(distancelist, key=distancelist.get) # get the closest target
+                self.setGunTarget(self.enemy[closest])
+                self.setTankTarget(self.enemy[closest].getCurrentTile().getIndex())
+            else: # we don't have a target to choose
+                self.setGunTarget(None)
+                self.setTankTarget(-1) # -1 is a special case for no target
+        if default == DifficultyType.TwoPlayerBrawl:
+            # get available targets
+            lst = [i for i in range(0, self.playerCount) if ((not self.dead[i]) and self.enemy[i].getName() != self.tank.name and self.enemy[i].getTeam() != self.tank.getTeam())]
+            # policy for selecting the next target
+            distancelist = {} # This should be in the form of unit : distance
+            for element in lst:
+                # find the distance between the tank and the target
+                x,y = self.tank.getCenter()
+                targetX, targetY = self.enemy[element].getCenter() # center of the target
+                distance = math.hypot(targetX - x, targetY - y)
+                distancelist[element] = distance # add the distance to the list
+
+            # find the closest target
+            if len(distancelist) != 0:
+                closest = min(distancelist, key=distancelist.get) # get the closest target
+                self.setGunTarget(self.enemy[closest])
+                self.setTankTarget(self.enemy[closest].getCurrentTile().getIndex())
+            else: # we don't have a target to choose
+                self.setGunTarget(None)
+                self.setTankTarget(-1) # -1 is a special case for no target        if g.difficultyType == DifficultyType.TwoPlayerDeathMatch:
+        if default == DifficultyType.OnePlayerTDM:
+            # get available targets
+            lst = [i for i in range(0, self.playerCount) if ((not self.dead[i]) and self.enemy[i].getName() != self.tank.name and self.enemy[i].getTeam() != self.tank.getTeam())]
+            # policy for selecting the next target
+            distancelist = {} # This should be in the form of unit : distance
+            for element in lst:
+                # find the distance between the tank and the target
+                x,y = self.tank.getCenter()
+                targetX, targetY = self.enemy[element].getCenter() # center of the target
+                distance = math.hypot(targetX - x, targetY - y)
+                distancelist[element] = distance # add the distance to the list
+
+            # find the closest target
+            if len(distancelist) != 0:
+                closest = min(distancelist, key=distancelist.get) # get the closest target
+                self.setGunTarget(self.enemy[closest])
+                self.setTankTarget(self.enemy[closest].getCurrentTile().getIndex())
+            else: # we don't have a target to choose
+                self.setGunTarget(None)
+                self.setTankTarget(-1) # -1 is a special case for no target
+        if default == DifficultyType.TeamDeathMatch:
+            # get available targets
+            lst = [i for i in range(0, self.playerCount) if ((not self.dead[i]) and self.enemy[i].getName() != self.tank.name and self.enemy[i].getTeam() != self.tank.getTeam())]
+            # policy for selecting the next target
+            distancelist = {} # This should be in the form of unit : distance
+            for element in lst:
+                # find the distance between the tank and the target
+                x,y = self.tank.getCenter()
+                targetX, targetY = self.enemy[element].getCenter() # center of the target
+                distance = math.hypot(targetX - x, targetY - y)
+                distancelist[element] = distance # add the distance to the list
+
+            # find the closest target
+            if len(distancelist) != 0:
+                closest = min(distancelist, key=distancelist.get) # get the closest target
+                self.setGunTarget(self.enemy[closest])
+                self.setTankTarget(self.enemy[closest].getCurrentTile().getIndex())
+            else: # we don't have a target to choose
+                self.setGunTarget(None)
+                self.setTankTarget(-1) # -1 is a special case for no target
+        if default == DifficultyType.OnePlayerCaptureTheFlag:
+            # get available targets
+            # working out distances
+            # how far is each tank from the tank
+
+            # for gun only
+            lst = [i for i in range(0, self.playerCount) if ((not self.dead[i]) and self.enemy[i].getName() != self.tank.name and self.enemy[i].getTeam() != self.tank.getTeam())]
+            # policy for selecting the next target
+            distancelist = {} # This should be in the form of unit : distance
+            for element in lst:
+                # find the distance between the tank and the target
+                x,y = self.tank.getCenter()
+                targetX, targetY = self.enemy[element].getCenter() # center of the target
+                distance = math.hypot(targetX - x, targetY - y)
+                distancelist[element] = distance # add the distance to the list
+
+            # find the closest target and set that as the gun target
+            # we just focus on aiming at the nearest person
+            if len(distancelist) != 0:
+                closest = min(distancelist, key=distancelist.get) # get the closest target
+                self.setGunTarget(self.enemy[closest])
+            else: # we don't have a target to choose
+                self.setGunTarget(None)
+
+            # below here is the tank logic
+            # enemy flag state -> at home / not at home / dropped
+            # my flag state -> at home / not at home / dropped
+            # currentState
+            selectionDictionary = self.calculateDecision()
+            self.currentState = max(selectionDictionary, key=selectionDictionary.get) # select the state with the highest priority
+            print("Current State: ", self.currentState)
+
+            # if we have the flag, our decision is much different
+            if self.tank.getFlag() is None: # we don't have the flag
+                # for the current state, do the following action
+                if self.currentState == "enemyFlagAtHome": # enemy flag is at home
+                    # go and get it
+                    self.setTankTarget(g.flag[(self.tank.getTeam())].getTileIndex()) # set the tank target to get the own flag
+
+                elif self.currentState == "enemyFlagNotAtHome": # enemy flag is not at home
+                    # we can't go and get it, just go and find some other tank to kill
+                    # prioritise the tank with the flag, but also consider the closest tank
+                    closest = min(distancelist, key=distancelist.get) # get the closest target
+                    self.setTankTarget(self.enemy[closest].getCurrentTile().getIndex())
+                elif self.currentState == "enemyFlagDropped": # enemy flag is dropped
+                    # we should go and get it
+                    self.setTankTarget(g.flag[(self.tank.getTeam())].getTileIndex()) # set the tank target to get the own flag
+                    # self.setTankTarget(g.flag[(self.tank.getTeam() + 1) % 2].getTileIndex()) # set the tank target to the enemy flag
+                elif self.currentState == "myFlagAtHome":
+                    # we can go and attack the enemy
+                    self.setTankTarget(g.flag[(self.tank.getTeam())].getTileIndex()) # set the tank target to get the own flag
+                    # self.setTankTarget(g.flag[(self.tank.getTeam() + 1) % 2].getTileIndex()) # go get the enemy flag
+                elif self.currentState == "myFlagNotAtHome":
+                    # since we don't have the flag, we should go and get it
+                    self.setTankTarget(g.flag[(self.tank.getTeam() + 1) % 2].getTileIndex()) # set the tank target to the enemy flag
+                    # self.setTankTarget(g.flag[(self.tank.getTeam())].getTileIndex()) # set the tank target to get the own flag
+                elif self.currentState == "myFlagDropped":
+                    # we should go and return our flag
+                    # self.setTankTarget(g.flag[(self.tank.getTeam())].getTileIndex()) # set the tank target to get the own flag
+                    self.setTankTarget(g.flag[(self.tank.getTeam() + 1) % 2].getTileIndex()) # set the tank target to the enemy flag
+                else:
+                    # we don't have a target to choose
+                    self.setTankTarget(-1)
+            else:
+                # we have the flag
+                print("We have the flag")
+                # for the current state, do the following action
+                if self.currentState == "enemyFlagAtHome": # enemy flag is at home
+                    # impossible state, go home
+                    print("Impossible state, enemy flag is at home but we have the flag")
+                    self.setTankTarget(g.flag[(self.tank.getTeam() + 1) % 2].getTileHomeIndex()) # set the tank target to the enemy flag
+                elif self.currentState == "enemyFlagNotAtHome": # enemy flag is not at home
+                    # just get home because we have the flag
+                    self.setTankTarget(g.flag[(self.tank.getTeam() + 1) % 2].getTileHomeIndex()) # set the tank target to the enemy flag
+                elif self.currentState == "enemyFlagDropped": # enemy flag is dropped
+                    # I'm dead
+                    print("Impossible state, I'm dead")
+                    self.setTankTarget(g.flag[(self.tank.getTeam())].getTileHomeIndex()) # set the tank target to the enemy flag
+                elif self.currentState == "myFlagAtHome":
+                    # get home
+                    self.setTankTarget(g.flag[(self.tank.getTeam() + 1) % 2].getTileHomeIndex()) # set the tank target to the enemy flag
+                elif self.currentState == "myFlagNotAtHome":
+                    # prioritise getting home
+                    self.setTankTarget(g.flag[(self.tank.getTeam() + 1) % 2].getTileHomeIndex()) # set the tank target to the enemy flag
+                elif self.currentState == "myFlagDropped":
+                    # we should preserve ourselves
+                    self.setTankTarget(g.flag[(self.tank.getTeam() + 1) % 2].getTileHomeIndex()) # set the tank target to the enemy flag
+                else:
+                    # we don't have a target to choose
+                    self.setTankTarget(-1)
+
+        if default == DifficultyType.CaptureTheFlag:
+            self.getNewTarget(default=DifficultyType.OnePlayerCaptureTheFlag)
+        return
+
+    def setGunTarget(self, target):
+        """
+        This function sets the target of the gun to the given target, this is in the form of a tank object.
+        """
+        self.target = target
+    def setTankTarget(self, target):
+        """
+        This function sets the target of the tank to the given target, this is in the form of a tile index. (exclusively between 0 and 112)
+        """
+        if target < 0 or target > 112:
+            return # don't set a target
+        print("Setting Tank Target to: ", target)
+        self.tank.setAim((target, target%14*const.TILE_SIZE + const.TILE_SIZE//2, ((target)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
+
 
     def setCooldown(self, value = 0):
         #This function sets the cooldown of the gun
@@ -388,6 +820,16 @@ class Gun(pygame.sprite.Sprite):
         return self.player.getTeam()
 
     def updateAim(self):
+        if g.difficultyType == DifficultyType.OnePlayerCaptureTheFlag or g.difficultyType == DifficultyType.CaptureTheFlag: # <!Help>
+            # LEAVE
+            if (self.currentState == "enemyFlagNotAtHome" or self.currentState == "myFlagNotAtHome") and self.tank.getFlag() is None: # we don't have the flag
+                lst = [i for i in range(0, self.playerCount) if ((not g.tankDead[i]) and self.enemy[i].getName() != self.tank.name and self.enemy[i].getTeam() != self.tank.getTeam())]
+                self.targetIndex = random.choice(lst)
+                self.target = self.enemy[self.targetIndex] # I think this works
+                temp = self.target.getCurrentTile().getIndex() # for the most part we can guarantee this
+                self.tank.setAim((temp, temp%14*const.TILE_SIZE + const.TILE_SIZE//2, ((temp)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
+
+            return
         if self.target is not None: # find a new target
             lst = [i for i in range(0, self.playerCount) if ((not g.tankDead[i]) and self.enemy[i].getName() != self.tank.name and self.enemy[i].getTeam() != self.tank.getTeam())]
             self.targetIndex = random.choice(lst)

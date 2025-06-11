@@ -35,7 +35,13 @@ def breathFirstSearchShort(tileList, choices, option):
     currentNode = choices[(option +1) % 2]
     while currentNode is not None:
         path.insert(0, currentNode)  # Insert at the beginning to avoid reversing later
-        currentNode = predecessors[currentNode]
+        # currentNode = predecessors[currentNode]
+        try:
+            currentNode = predecessors[currentNode]
+        except KeyError:
+            currentNode = None  # If the key is not found, we set it to None
+            print(f"KeyError: {currentNode} not found in predecessors")  # Debugging line
+            break # if the key is not found, we break out of the loop
     # remove the first element
     path.pop(0)
     return path
@@ -128,20 +134,19 @@ class Tank(pygame.sprite.Sprite):
             (currentTiley, currentTilex) = ((self.getCenter()[0]-50)//50 + 1, (self.getCenter()[1]-50)//50)
             currentTile = currentTilex * 14 + currentTiley
             currentTarget = self.lastTargetPackage[0]
+            # Debug
             for t in self.tileList:
                 t.setTarget(False)
-
             # visualising the BFS
             for tile in self.pseudoTargetarray:
                 self.tileList[tile-1].setTarget(True)
-
             # set the current target tile
             self.tileList[currentTarget-1].setTarget(True)
             self.tileList[self.aim[0]-1].setTarget(True)
+
             targetTilex, targetTiley = self.lastTargetPackage[1], self.lastTargetPackage[2]
 
             if currentTile != self.aim[0] and self.BFSRefresh:
-
                 self.BFSRefresh = False
                 # we haven't reached the goal
                 self.pseudoTargetarray = breathFirstSearchShort(self.tileList, [currentTile, self.aim[0]], 0)

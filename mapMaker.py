@@ -3,11 +3,54 @@ import tkinter as tk
 from tkinter import filedialog
 import os
 import random
+from tile import Tile  # Assuming Tile is defined in Tile.py
+from ColorDictionary import ColourDictionary as c # colors
 
 pygame.init()
 
 root = tk.Tk()
 root.withdraw()  # Hide the root window
+
+def breathFirstSearchShort(tileList, choices, option):
+    # This function will search the maze in a breath first manner to see if we can reach the second spawn
+    # Inputs: tileList: The current list of tiles
+    # Inputs: Choices: The locations of both spawns
+    # Outputs: True if the second spawn is reachable, False otherwise
+
+    #Setting up the BFS
+    visitedQueue = []
+    tracking = [False for _ in range(14*8+1)] # 14 is row amount and 8 is column amount
+    queue = [choices[option]]
+    predecessors = {}
+    visitedQueue.append(choices[option])
+    tracking[choices[option]] = True
+    predecessors[choices[option]] = None
+    print(f"Starting BFS from {choices[option]} to {choices[(option +1) % 2]}")
+    while len(queue) > 0: # While there are still elements to check
+        current = queue.pop(0)
+        if current == choices[(option +1) % 2]:
+            break
+        for neighbour in tileList[current-1].getNeighbours():
+            if not tracking[neighbour]:
+                queue.append(neighbour)
+                visitedQueue.append(neighbour)
+                tracking[neighbour] = True
+                predecessors[neighbour] = tileList[current-1].getIndex()  # Record the predecessor
+    # Reconstruct the path from endNode to startNode
+    path = []
+    currentNode = choices[(option +1) % 2]
+    while currentNode is not None:
+        path.insert(0, currentNode)  # Insert at the beginning to avoid reversing later
+        # currentNode = predecessors[currentNode]
+        try:
+            currentNode = predecessors[currentNode]
+        except KeyError:
+            currentNode = None  # If the key is not found, we set it to None
+            print(f"KeyError: {currentNode} not found in predecessors")  # Debugging line
+            break # if the key is not found, we break out of the loop
+    # remove the first element
+    # path.pop(0)
+    return path
 
 # tkinter functions
 def saveFile():
@@ -45,19 +88,16 @@ def loadFile():
 
         print("File loaded successfully!")
 
-class makerTile():
+class makerTile(Tile):
     def __init__(self, x, y, index, color = (198, 198, 198), height = 50, width = 50):
-        self.x = x
-        self.y = y
-        self.index = int(index)
-        self.color = color
+        super().__init__(int(index), x, y, color)
         self.height = height
         self.width = width
-        self.borderindex = 0
         self.spawnpoint = 0
-        self.flag = 0
-    def update(self, squares):
+        
+    def update(self, squares): # idk if this needs to be changed
         # update the current borders
+        print("Updating borders for tile", self.index)
         # we only care about the current borders
         neighbours = [self.index - 1, self.index + 14, self.index + 1, self.index - 14] # revered because its weird
         for idx, neighbour in enumerate(neighbours):
@@ -70,9 +110,17 @@ class makerTile():
 
             neighbor.borderindex &= ~opposite_bit
             if self.borderindex & (1 << idx):
+                # print(f"Setting border for tile {self.index} to {neighbor.index} at index {idx}")
                 neighbor.borderindex |= opposite_bit
-
-    def draw(self, screen):
+                neighbor.setBorderIndex((neighbor.borderindex | opposite_bit))
+            else:
+                # print(f"Removing border for tile {self.index} to {neighbor.index} at index {idx}")
+                neighbor.borderindex &= ~opposite_bit
+                neighbor.setBorderIndex((neighbor.borderindex & ~opposite_bit))
+        self.neighbours, self.bordering = self.neighbourCheck()
+        print(f"Tile {self.index} neighbours: {self.neighbours}, bordering: {self.bordering}")
+    
+    def draw(self, screen): # I think we need to override this method
         pygame.draw.rect(screen, self.color, [self.x, self.y, self.height, self.width])
 
         match self.borderindex: # 0 - 15
@@ -132,27 +180,24 @@ class makerTile():
             pygame.draw.rect(screen, self.spawnColor(), [self.x + self.height // 2 - 10, self.y + self.width // 2 - 10, 20, 20])
 
         if self.flag: # automatically filters 0
+            pygame.draw.polygon(screen, self.spawnColor(), [[self.x + 35, self.y + 25], [self.x + 20, self.y + 35], [self.x + 20, self.y + 15]])
+
+        if self.AITarget:
+            pygame.draw.rect(screen, (0, 0, 255), [self.x + self.height//2 - 5, self.y + self.width//2 - 5, 10, 10]) # draw a green square in the center)
+
+    def drawUpdate(self, screen):
+        # if we are a debug tile, draw a small square in the center
+
+        if self.flag: # automatically filters 0
+            # if self.flagPicked:
             pygame.draw.polygon(screen, (self.spawnColor()), [[self.x + 35, self.y + 25], [self.x + 20, self.y + 35], [self.x + 20, self.y + 15]])
 
-    def spawnColor(self):
-        if self.spawnpoint == 1 or self.flag == 1:
-            return (255, 0, 0)
-        if self.spawnpoint == 2 or self.flag == 2:
-            return (0, 0, 255)
-        
-    def setColor(self, color = (255, 255, 255)):
-        self.color = color
-
-    def isWithin(self, mouse):
-        if (self.x<mouse[0]<self.x+self.width) and (self.y<mouse[1]<self.y+self.height):
-            return True
-        return False
-
-    def border(self, move = 1):
-        self.borderindex = (self.borderindex + move) % 16
-
-    def setBorder(self, addBorder):
-        self.borderindex |= addBorder
+    def broder(self, move = 1):
+        print(self.border) # why does this already have something
+        self.setBorderIndex((self.borderindex + move) % 16)
+        # go through the neighbours and update them
+        self.update(squares)  # update the borders for this tile
+        # for each of the neighbours, we need to update the borders
 
     def setSpawnpoint(self):
         self.flag = 0
@@ -167,6 +212,7 @@ class makerTile():
     def reset(self):
         self.color = (198, 198, 198) # for the eraser tool
         self.borderindex = 0
+        self.border = [False, False, False, False]
         self.update(squares)
         self.spawnpoint = 0
         self.flag = 0
@@ -184,6 +230,13 @@ class makerTile():
             self.flag = 1
         if num == 4:
             self.flag = 2
+
+    def spawnColor(self):
+        if self.flag == 1 or self.spawnpoint == 1:
+            return c.geT("RED")
+        if self.flag == 2 or self.spawnpoint == 2:
+            return c.geT("BLUE")
+        return c.geT("BLACK")
 
     def getSpecialCode(self):
 
@@ -213,8 +266,7 @@ def randomGen(tiles):
     for t in tiles:
         t.reset()
     for t in tiles:
-        t.setBorder(rg()*8 + rg() * 4 + rg() * 2 + rg())
-
+        t.setBorderIndex((t.borderindex | (rg()*8 + rg() * 4 + rg() * 2 + rg())))
 
 def generate(tiles):
     # check that everything is good to go
@@ -224,13 +276,13 @@ def generate(tiles):
     returnType = True
     for t in tiles:
         if t.index in range(1,112, 14):
-            t.setBorder(1) # left border
+            t.setBorderIndex((t.borderindex | 1))
         if t.index in range(99, 113):
-            t.setBorder(2) # Bottom border
+            t.setBorderIndex((t.borderindex | 2))
         if t.index in range(14, 113, 14):
-            t.setBorder(4) # Right Border
+            t.setBorderIndex((t.borderindex | 4))
         if t.index in range(1, 15):
-            t.setBorder(8) # Top Border
+            t.setBorderIndex((t.borderindex | 8))
 
         # count the number of tiles with spanpoints
         if t.spawnpoint == 1:
@@ -240,13 +292,37 @@ def generate(tiles):
     # verification
     # we need to make sure that the spawnpoints are far apart from each other
 
-
     # if the amount of spawnpoints is not 8 then we need to flag it
     if len(spawnRed) != 4 and len(spawnBlue) != 4: # if we have 4 slots for each team
         print(f"Error: Spawnpoints are not correct: Red: {spawnRed} {len(spawnRed)} Blue: {spawnBlue} {len(spawnBlue)}")
         returnType = False
 
     return returnType
+
+def findBetween(tiles, start, end):
+    # This function will find the tiles between the two spawnpoints
+    # Inputs: tiles: The current list of tiles
+    # Inputs: start: The first spawnpoint
+    # Inputs: end: The second spawnpoint
+    # Outputs: A list of tiles between the two spawnpoints
+
+    choices = [start, end]
+    print(f"Finding path between {start} and {end}")
+    if start is None or end is None:
+        print("Exit early: None Type")
+        return []
+    path = breathFirstSearchShort(tiles, choices, 0)
+    # we have a path?
+    if path is None or len(path) == 0:
+        print("Exit early: No path found")
+        return []
+    # we have a path, now we need to set the borders
+    for s in squares:
+        s.setTarget(False)  # reset all targets
+    for p in path:
+        squares[p-1].setTarget(True)
+    print(f"Path found: {path}")
+    return path
 
 # draw a 14 x 8 grid of 50 x 50 squares
 squares = []
@@ -256,10 +332,15 @@ for j in range(start_y, 450, 50):
     for i in range(start_x, 750, 50):
         squares.append(makerTile(i,j, getIndex(j,i), (198, 198, 198), 50, 50))
 
+for s in squares:
+    # wipe all borders
+    s.borderindex = 0
+    s.border = [False, False, False, False] # [North, East, South, West]
 
 currentTool = 1 # eraser
 done = False
-
+t1 = None
+t2 = None
 
 while not done:
     for event in pygame.event.get():
@@ -275,14 +356,25 @@ while not done:
                         if currentTool == 1: # eraser
                             s.reset()
                         elif currentTool == 2: # pen tool
-                            s.border(1)
+                            s.broder(1)
                             s.update(squares)
+                            s.drawUpdate(screen)
                         elif currentTool == 3: # spawnpoints
                             s.setSpawnpoint()
                         elif currentTool == 4: # flag
                             s.setFlag()
                         else:
                             s.setColor((255, 0, 0))
+
+            elif event.button == 3: # right click
+
+                # find which tile the mouse is in
+                for s in squares:
+                    if s.isWithin(mouse):
+                        # we are in this tile
+                        t1 = t2
+                        t2 = int(s.index)
+                findBetween(squares, t1, t2)
 
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_1:
@@ -315,7 +407,7 @@ while not done:
                 # info
                 for s in squares:
                     if s.isWithin(pygame.mouse.get_pos()):
-                        s.debug()
+                        s.printDebug()
             elif event.key == pygame.K_g:
                 generate(squares) # make it ready
             elif event.key == pygame.K_s:
@@ -332,10 +424,9 @@ while not done:
     # draw the grid of squres
     for s in squares:
         s.draw(screen)
-
+        s.drawUpdate(screen)
 
     # draw the options at the bottom
-
     pygame.display.flip()
 
 pygame.quit()

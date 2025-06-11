@@ -1,6 +1,7 @@
 import pygame
 import os
 import sys
+import math
 from ColorDictionary import ColourDictionary as c # colors
 
 
@@ -13,9 +14,12 @@ WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
 TILE_SIZE = 50
 
+
+
 MAZE_WIDTH = WINDOW_WIDTH - MAZE_X*2 # We want it to span most of the screen
 MAZE_HEIGHT = WINDOW_HEIGHT - MAZE_Y*4
 
+HYPOTENUSE = math.hypot(MAZE_WIDTH, MAZE_HEIGHT) # the maximum distance between two points in the maze
 ROW_AMOUNT = MAZE_HEIGHT//TILE_SIZE # Assigning the amount of rows
 COLUMN_AMOUNT = MAZE_WIDTH//TILE_SIZE # Assigning the amount of columns
 
