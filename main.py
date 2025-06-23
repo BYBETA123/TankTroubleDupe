@@ -350,7 +350,7 @@ def setUpTank(dType = -1, AI = False, spawn = [0,0], player = None, index = 0):
             # Scrapyard, Player vs AI (AI is plpayer 1 and Player is p2) Simple Tanks
             tank = DefaultTank(0, 0, player.getControls(), player.getTankName())
             tank.setData([spawn[0], spawn[1], player.getControls(), player.getTankName(), player.getTankChannels()])
-            tank.setImage('tank', playerInformation.getplayerHullColor(index) + 1)
+            tank.setImage('tank', playerInformation.getPlayerHullColour(index) + 1)
             tank.setSoundDictionary(const.SOUND_DICTIONARY)
             tank.settileList(g.tileList)
             tank.setAI(AI)
@@ -509,10 +509,15 @@ def getMap(mapPath):
     Outputs: A list of tiles and a list of spawn points read from the file
     """
 
-    with open(mapPath, "r") as f:
+    if getattr(sys, 'frozen', False):  # Running as an .exe
+        currentDir = sys._MEIPASS
+    else:  # Running as a .py script
+        currentDir = os.path.dirname(os.path.abspath(__file__))
+
+    with open(os.path.join(currentDir, mapPath), "r") as f:
         # opening the path
         tList = []
-        choices = [0 for i in range(8)]
+        choices = [0 for _ in range(8)]
         rIndex = 0
         bIndex = 1
         for line in f.readlines(): # for each line, we can extract the information
@@ -534,12 +539,10 @@ def getMap(mapPath):
                 choices[rIndex] = int(l[5])
                 rIndex += 2
     spwn = []
-    print(choices)
 
     for i in range(len(choices)):
         spwn.append([tList[choices[i] - 1].x + const.TILE_SIZE // 2, tList[choices[i] - 1].y + const.TILE_SIZE // 2])
 
-    print(spwn)
     return tList, spwn
 
 def setUpPlayers():
@@ -624,7 +627,7 @@ def constantHomeScreen():
     Returns: None
     """
     for p in playerlist:
-        p.resetPlayer()
+        p.resetPlayer(hard = True) # Reset the players
     homeScreen.draw(screen, pygame.mouse.get_pos())
     print("Switching to lobby music")
     mixer.crossfade('lobby')
@@ -975,7 +978,7 @@ def playGame():
             #Reset the game
             match g.difficultyType:
                 case DifficultyType.OnePlayerYard:
-                    if g.team1Score == 99 or g.team2Score == 99:
+                    if g.team1Score == 21 or g.team2Score == 21:
                         makeTable()
                         gameMode = GameMode.end
                     else:
@@ -983,7 +986,7 @@ def playGame():
                         constantPlayGame()
                         timer.reset() # rest the clock
                 case DifficultyType.OnePlayerScrapYard:
-                    if g.team1Score == 99 or g.team2Score == 99:
+                    if g.team1Score == 21 or g.team2Score == 21:
                         makeTable()
                         gameMode = GameMode.end
                     else:
@@ -991,7 +994,7 @@ def playGame():
                         constantPlayGame()
                         timer.reset() # rest the clock
                 case DifficultyType.TwoPlayerYard:
-                    if g.team1Score == 99 or g.team2Score == 99:
+                    if g.team1Score == 21 or g.team2Score == 21:
                         makeTable()
                         gameMode = GameMode.end
                     else:
@@ -999,7 +1002,7 @@ def playGame():
                         constantPlayGame()
                         timer.reset() # rest the clock
                 case DifficultyType.TwoPlayerScrapYard:
-                    if g.team1Score == 99 or g.team2Score == 99:
+                    if g.team1Score == 21 or g.team2Score == 21:
                         makeTable()
                         gameMode = GameMode.end
                     else:
@@ -1427,12 +1430,6 @@ def main():
 
                 if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
                     done = True
-
-                if event.key == pygame.K_4:
-                    if gameMode == GameMode.play:
-                        for i in range(g.difficultyType.playerCount):
-                            if not g.tankDead[i]:
-                                g.tankList[i].applySpeedBoost()
 
                 if event.key == pygame.K_i:
                     print("The current mouse position is: ", mouse)

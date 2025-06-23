@@ -7,15 +7,11 @@ Python must be installed on your local computer
 
 Pygame must also be installed by running `pip install pygame` in the command terminal
 
-The minimum screen dimensions to play this game is 800 x 600 pixels
+The minimum screen dimensions to play this game is 800 x 600 pixels, a full screen version may be available later
 
 ## Introduction
 
-Welcome to Flanki, a game inspired by both Tanki Online and Tank Trouble. Get the top-down feel of tank trouble with the variety and mobility from the prime feel of Tanki Online
-
-## Features
-
-A fully immplemented single and local two player setup with easy and hard difficulties
+Welcome to Flanki, a game inspired by both Tanki Online and Tank Trouble. Get the top-down feel of tank trouble with the variety and mobility from the feel of prime Tanki Online
 
 ### Controls
 
@@ -29,7 +25,7 @@ Player 1:
 Player 2:
 > Arrow Keys : Movement
 
-> ,.         : Turret left / right (disabled in easy mode)
+> ,.         : Turret left / right (disabled in easy modes)
 
 > /          : Shoot
 
@@ -38,6 +34,7 @@ Player 2:
 This game has a current release featured on Github which can be downloaded and run without needing any pre-installed requirements
 
 This game can be played locally on the command terminal by navigating to the directory where the main.py file is located and running the command
+
 `python main.py`
 
 ## How to Play
@@ -69,8 +66,15 @@ Whenever selecting a one-player option, you will always play as player two using
 
 - 2P Brawl: Player vs Player both using simple tanks
 
-- 2P DeathMatch: Palyer vs Player both using the advanced tanks
+- 2P DeathMatch: Player vs Player both using the advanced tanks
 
+# CTF (Capture The Flag)
+
+> Capture the Flag is a 10 minute gamemode which teams of 2 players will compete for the most captures of the enemy flag
+
+- 1P CTF: Player + AI vs AI + AI both using the advanced tanks and a pre-determined map. This gamemode include flags which the score will be based off
+
+- 2P CTF: Player + AI vs Player + AI both using the advanced tanks and a pre-determined map. This gamemode includes flags which the score will be based off
 
 # Team Modes (in concept)
 ## Future Plans:
@@ -88,8 +92,10 @@ There is an issue with the music if the switch between varying scenes (e.g. home
 Ideas (Not currently in development):
 1. Add `Firestorm` turret, concept: A powerful flame thrower that will slowly deal damage over time as the enemy stays within its range for longer
 1. Improve the AI to avoid bullets
+1. Add # Missing Name #, concept: A turret similar to the hunstman which will deal a short stun upon a hit, impacting tank movement for a brief period. The affected turret will still be operational
 1. Add `Inferno` turret, concept: A laser that will deal more damage over time as it stays on its target, also takes self damage after too long
 1. Add `Bucket` turret, concept: A "Bucket" that can't shoot, however can pick up and reflect any bullet shot at it
+1. Add Ghost hull, concept: A hull which becomes less visible the more damage it takes
 1. Add kill streak sounds
 1. Add introduction cards for each tank
 
@@ -103,7 +109,7 @@ Thank you to the following people
 
 Thanks to you for playing the game
 
-All rights belong to their respective owners, if your work was featured in here and you would like it removed, please contact me
+All rights belong to their respective owners, if your work was featured and you would like it removed, please contact me
 
 
 # Statistics
@@ -120,7 +126,7 @@ All rights belong to their respective owners, if your work was featured in here 
 |-----|--------|--------|--------------|-------|
 | Chamber | 750 | 1500 | 10 |3 radii of 250 each, splash damage |
 | Huntsman | 600 | 1000 | 15 | 40% chance for double damage |
-| Judge | 1600 | 2400 | 8 |3 rounds each with 800 reload and 2400 long, bounces once, 20 bullets each 80 damage |
+| Judge | 800 | 2400 | 8 |3 rounds each with 800 reload and 2400 long, bounces once, 20 bullets each 80 damage |
 | Sidewinder | 300 | 500 | 12 | 5 bounces per bullet |
 | Silencer | 1300 | 2400 | 50 | Wind-up time before shooting |
 | Tempest | 150 | 200 | 10 | No Notes |

@@ -5,7 +5,7 @@ class Music:
     # This class will be used to handle all the music in the game
     # This class is built specifically for this project and generally will not work outside of the project
 
-    lobbyMusicMax = 0.2
+    lobbyMusicMax = 0.05
 
     selectionMusicMax = 1
 

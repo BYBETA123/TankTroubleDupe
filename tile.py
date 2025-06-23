@@ -199,9 +199,8 @@ class Tile(pygame.sprite.Sprite):
     
     def drawUpdate(self, screen):
         # if we are a debug tile, draw a small square in the center
-        if self.AITarget: # we are a target
-            pygame.draw.rect(screen, (0, 0, 255), [self.x + const.TILE_SIZE//2 - 5, self.y + const.TILE_SIZE//2 - 5, 10, 10]) # draw a green square in the center
-            # pygame.draw.rect(screen, (0, 255, 0), [self.x, self.y, 50, 50]) # draw a green square in the center
+        # if self.AITarget: # we are a target #[DEBUG]
+        #     pygame.draw.rect(screen, (0, 0, 255), [self.x + const.TILE_SIZE//2 - 5, self.y + const.TILE_SIZE//2 - 5, 10, 10]) # draw a green square in the center
 
         if self.flag: # automatically filters 0
             if g.flag[self.flag - 1].isHome():

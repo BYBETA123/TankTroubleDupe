@@ -301,7 +301,6 @@ class Gun(pygame.sprite.Sprite):
         return False
 
     def calculateDecision(self): # This function needs to be checked for impacting performance
-        print("Calculating Decision")
         selectionDictionary = {
             "enemyFlagAtHome": 0,
             "enemyFlagNotAtHome": 0,
@@ -334,7 +333,6 @@ class Gun(pygame.sprite.Sprite):
         # if our flag is at home, we can go and attack the enemy
         if g.flag[(self.tank.getTeam() + 1) % 2].isHome():
             # we don't really care if our flag is at home
-            print("My flag is at home")
             selectionDictionary["myFlagAtHome"] = 0
         else:
             # we should go and hunt down the enemy with our flag
@@ -352,11 +350,9 @@ class Gun(pygame.sprite.Sprite):
             x,y = self.tank.getCenter() # center of the tank
             distance = math.hypot(flagX - x, flagY - y) // const.HYPOTENUSE # distance to the own flag
             selectionDictionary["myFlagDropped"] = 1 + distance # +1 to increase the priority of this state
-        print("Selection Dictionary: ", selectionDictionary)
         return selectionDictionary
 
     def getNewTarget(self, default = None):
-        print("New Target")
         if default is None:
             default = g.difficultyType # if we didn't assign, we want to do what the game is currently set to
 
@@ -572,7 +568,6 @@ class Gun(pygame.sprite.Sprite):
             # currentState
             selectionDictionary = self.calculateDecision()
             self.currentState = max(selectionDictionary, key=selectionDictionary.get) # select the state with the highest priority
-            print("Current State: ", self.currentState)
 
             # if we have the flag, our decision is much different
             if self.tank.getFlag() is None: # we don't have the flag
@@ -607,7 +602,6 @@ class Gun(pygame.sprite.Sprite):
                     self.setTankTarget(-1)
             else:
                 # we have the flag
-                print("We have the flag")
                 # for the current state, do the following action
                 if self.currentState == "enemyFlagAtHome": # enemy flag is at home
                     # impossible state, go home
@@ -648,7 +642,6 @@ class Gun(pygame.sprite.Sprite):
         """
         if target < 0 or target > 112:
             return # don't set a target
-        print("Setting Tank Target to: ", target)
         self.tank.setAim((target, target%14*const.TILE_SIZE + const.TILE_SIZE//2, ((target)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
 
 
@@ -946,7 +939,7 @@ class Judge(Gun):
     def __init__(self, tank, controls, name):
         super().__init__(tank, controls, name)
         self.setCooldown(800)  # 800 ms
-        self.setDamage(80)
+        self.setDamage(40)
         self.setDamageStatistic(2)
         self.setReloadStatistic(2)
         self.setGunBackDuration(300)
