@@ -4,3 +4,4 @@ playground.py
 *.spec
 build/*
 dist/*
+myenv/*
