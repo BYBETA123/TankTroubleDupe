@@ -1,7 +1,7 @@
 import shutil
 import os
 import glob
-import PIL
+# import PIL
 
 NAME_OF_FILE = "Flanki"
 EXECUTEABLE_LOGO = "assets/exe_logo.png"

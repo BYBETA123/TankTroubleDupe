@@ -939,11 +939,11 @@ def playGame():
                     else:
                         g.team2Score += playerlist[i].kills
             case DifficultyType.OnePlayerCaptureTheFlag:
-                g.team1Score = g.flag[0].getScore()
-                g.team2Score = g.flag[1].getScore()
+                g.team1Score = g.flag[1].getScore()
+                g.team2Score = g.flag[0].getScore()
             case DifficultyType.CaptureTheFlag:
-                g.team1Score = g.flag[0].getScore()
-                g.team2Score = g.flag[1].getScore()
+                g.team1Score = g.flag[1].getScore()
+                g.team2Score = g.flag[0].getScore()
 
     def makeTable():
         """

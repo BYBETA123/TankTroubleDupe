@@ -251,21 +251,21 @@ class Gun(pygame.sprite.Sprite):
                 if not g.flag[(self.tank.getTeam())].isHome(): # if my flag is taken
                 # if not g.flag[(self.tank.getTeam() + 1) % 2].isHome(): # This is our flag, but can't just flick constantly, we need a way to make a decision
                     self.currentState = None
-                    print("Enemy flag was taken, need a new target")
+                    # print("Enemy flag was taken, need a new target")
                     return True # we need a new target
                 return False # we don't need a new target
             elif self.currentState == "enemyFlagNotAtHome": # enemy flag is not at home
                 # if g.flag[(self.tank.getTeam())].isDropped() or not g.flag[(self.tank.getTeam() + 1) % 2].isHome(): # picked up or returned
                 if g.flag[(self.tank.getTeam())].isHome() or g.flag[(self.tank.getTeam())].isDropped(): # the flag has been returned
                     self.currentState = None
-                    print("Enemy flag was picked up or returned, need a new target")
+                    # print("Enemy flag was picked up or returned, need a new target")
                     return True
                 return False # we don't need a new target
             elif self.currentState == "enemyFlagDropped": # enemy flag is dropped
                 # we should go and get it
                 if not g.flag[(self.tank.getTeam())].isDropped(): # picked up or returned
                     self.currentState = None
-                    print("Enemy flag was picked up or returned after being dropped, need a new target")
+                    # print("Enemy flag was picked up or returned after being dropped, need a new target")
                     return True
                 return False # we don't need a new target
             elif self.currentState == "myFlagAtHome":
@@ -280,7 +280,7 @@ class Gun(pygame.sprite.Sprite):
                 if g.flag[(self.tank.getTeam() + 1) % 2].isHome():
                     # it's home so we can switch
                     self.currentState = None
-                    print("My flag was returned, need a new target")
+                    # print("My flag was returned, need a new target")
                     return True # we need a new target
                 return False # we don't need a new target
             elif self.currentState == "myFlagDropped":
@@ -289,7 +289,7 @@ class Gun(pygame.sprite.Sprite):
                 if g.flag[(self.tank.getTeam() + 1) % 2].isHome():
                     # it's home so we can switch
                     self.currentState = None
-                    print("My flag was returned after being dropped, need a new target")
+                    # print("My flag was returned after being dropped, need a new target")
                     return True # we need a new target
                 return False # we don't need a new target
             else:
