@@ -50,7 +50,9 @@ class Gun(pygame.sprite.Sprite):
         self.damage = 700
         self.damageStatistic = 1
         self.reloadStatistic = 1
-        self.turretSpeed = 0.23 # This number * 30 for deg / tick
+        # self.turretSpeed = 0.23 # This number * 30 for deg / tick
+        self.maxTurretSpeed = 7/30 # This number * 30 for deg / tick # we should have an upper limit for turret speed so that we can push the turreting power
+        self.turretSpeed = self.maxTurretSpeed/7 # we limit it so that it takes 30 ticks to reach its maximum
         self.drawable = False
         self.topTurretSpeed = self.turretSpeed
         self.gunH = 7
@@ -159,13 +161,31 @@ class Gun(pygame.sprite.Sprite):
             #Checks what keys are pressed, and changes speed accordingly
             #If tank hull moves left or right, the gun will also move simultaneously
             #with the tank hull at the same speed and direction.
-            self.rotationSpeed = 0
+            # self.rotationSpeed = 0
             if not self.default:
                 if keys[self.controls['rotate_left']]:
-                    self.rotationSpeed += self._getTurretSpeed() * self.deltaTime
+                    # self.rotationSpeed += self._getTurretSpeed()
+                    # force pos
+                    if self.rotationSpeed < 0:
+                        self.rotationSpeed = -self.rotationSpeed + self._getTurretSpeed()
+                    else:
+                        self.rotationSpeed += self._getTurretSpeed()
                 elif keys[self.controls['rotate_right']]:
-                    self.rotationSpeed += -self._getTurretSpeed() * self.deltaTime  
-                
+                    # self.rotationSpeed += -self._getTurretSpeed()
+                    # force neg
+                    if self.rotationSpeed>0:
+                        self.rotationSpeed = - self.rotationSpeed + self._getTurretSpeed() 
+                    else:
+                        self.rotationSpeed += -self._getTurretSpeed()
+                if not keys[self.controls['rotate_left']] and not keys[self.controls['rotate_right']]: # if neither key is pressed
+                    self.rotationSpeed = 0
+
+
+                if self.rotationSpeed > 0:
+                    self.rotationSpeed = min(self.rotationSpeed, self.maxTurretSpeed)
+                elif self.rotationSpeed < 0:
+                    self.rotationSpeed = max(self.rotationSpeed, -self.maxTurretSpeed)
+
                 #This if statement checks to see if speed or rotation of speed is 0,
                 #if so it will stop playing moving sound, otherwise, sound will play
                 #indefinitely
@@ -178,17 +198,18 @@ class Gun(pygame.sprite.Sprite):
                         self.channelDict["rotate"]["channel"].stop()  # Stop playing the sound
 
             if  keys[self.controls['left']]:
-                self.rotationSpeed += self.tank.getRotationalSpeed() * self.deltaTime
+                self.angle += self.tank.getRotationalSpeed() * self.deltaTime
             elif keys[self.controls['right']]:
-                self.rotationSpeed += -self.tank.getRotationalSpeed() * self.deltaTime
+                self.angle += -self.tank.getRotationalSpeed() * self.deltaTime
 
-            self.angle += self.rotationSpeed
+            self.angle += self.rotationSpeed * self.deltaTime
             self.angle %= 360
             #Reload cooldown of bullet and determines the angle to fire the bullet,
             #which is relative to the posistion of the tank gun.
             if keys[self.controls['fire']] and self.canShoot:
                 self.fire()
 
+        # end of decision logic
         angleRad = math.radians(self.angle)
         gunEndX, gunEndY = self.tank.getGunCenter()
 
@@ -1069,17 +1090,34 @@ class Silencer(Gun):
         #Checks what keys are pressed, and changes speed accordingly
         #If tank hull moves left or right, the gun will also move simultaneously
         #with the tank hull at the same speed and direction.
-        self.rotationSpeed = 0
-        
         if keys[self.controls['rotate_left']]:
-            self.rotationSpeed += self._getTurretSpeed() * self.deltaTime
+            # self.rotationSpeed += self._getTurretSpeed()
+            # force pos
+            if self.rotationSpeed < 0:
+                self.rotationSpeed = -self.rotationSpeed + self._getTurretSpeed()
+            else:
+                self.rotationSpeed += self._getTurretSpeed()
         elif keys[self.controls['rotate_right']]:
-            self.rotationSpeed += -self._getTurretSpeed() * self.deltaTime
-      
+            # self.rotationSpeed += -self._getTurretSpeed()
+            # force neg
+            if self.rotationSpeed>0:
+                self.rotationSpeed = - self.rotationSpeed + self._getTurretSpeed() 
+            else:
+                self.rotationSpeed += -self._getTurretSpeed()
+        if not keys[self.controls['rotate_left']] and not keys[self.controls['rotate_right']]: # if neither key is pressed
+            self.rotationSpeed = 0
+
+
+        if self.rotationSpeed > 0:
+            self.rotationSpeed = min(self.rotationSpeed, self.maxTurretSpeed)
+        elif self.rotationSpeed < 0:
+            self.rotationSpeed = max(self.rotationSpeed, -self.maxTurretSpeed)
+
         #This if statement checks to see if speed or rotation of speed is 0,
         #if so it will stop playing moving sound, otherwise, sound will play
         #indefinitely
-        if self.rotationSpeed != 0:
+
+        if self.rotationSpeed != 0: # This should be made so that it doesn't rotate if the hull is turning
             if not self.channelDict["rotate"]["channel"].get_busy(): # if the sound isn't playing
                 self.channelDict["rotate"]["channel"].play(const.SOUND_DICTIONARY["turretRotate"], loops = -1)  # Play sound indefinitely
         else:
@@ -1087,12 +1125,11 @@ class Silencer(Gun):
                 self.channelDict["rotate"]["channel"].stop()  # Stop playing the sound
 
         if  keys[self.controls['left']]:
-            self.rotationSpeed += self.tank.getRotationalSpeed() * self.deltaTime
+            self.angle += self.tank.getRotationalSpeed() * self.deltaTime
         elif keys[self.controls['right']]:
-            self.rotationSpeed += -self.tank.getRotationalSpeed() * self.deltaTime
+            self.angle += -self.tank.getRotationalSpeed() * self.deltaTime
 
-        self.angle += self.rotationSpeed
-        self.angle = round(self.angle)
+        self.angle += self.rotationSpeed * self.deltaTime
         self.angle %= 360
 
         #Reload cooldown of bullet and determines the angle to fire the bullet,
@@ -1232,29 +1269,47 @@ class Watcher(Gun):
         #Checks what keys are pressed, and changes speed accordingly
         #If tank hull moves left or right, the gun will also move simultaneously
         #with the tank hull at the same speed and direction.
-        self.rotationSpeed = 0
-
         if keys[self.controls['rotate_left']]:
-            self.rotationSpeed += self._getTurretSpeed() * self.deltaTime
+            # self.rotationSpeed += self._getTurretSpeed()
+            # force pos
+            if self.rotationSpeed < 0:
+                self.rotationSpeed = -self.rotationSpeed + self._getTurretSpeed()
+            else:
+                self.rotationSpeed += self._getTurretSpeed()
         elif keys[self.controls['rotate_right']]:
-            self.rotationSpeed += -self._getTurretSpeed() * self.deltaTime
-        
+            # self.rotationSpeed += -self._getTurretSpeed()
+            # force neg
+            if self.rotationSpeed>0:
+                self.rotationSpeed = - self.rotationSpeed + self._getTurretSpeed() 
+            else:
+                self.rotationSpeed += -self._getTurretSpeed()
+        if not keys[self.controls['rotate_left']] and not keys[self.controls['rotate_right']]: # if neither key is pressed
+            self.rotationSpeed = 0
+
+
+        if self.rotationSpeed > 0:
+            self.rotationSpeed = min(self.rotationSpeed, self.maxTurretSpeed)
+        elif self.rotationSpeed < 0:
+            self.rotationSpeed = max(self.rotationSpeed, -self.maxTurretSpeed)
+
         #This if statement checks to see if speed or rotation of speed is 0,
         #if so it will stop playing moving sound, otherwise, sound will play
         #indefinitely
-        if self.rotationSpeed != 0:
+
+        if self.rotationSpeed != 0: # This should be made so that it doesn't rotate if the hull is turning
             if not self.channelDict["rotate"]["channel"].get_busy(): # if the sound isn't playing
                 self.channelDict["rotate"]["channel"].play(const.SOUND_DICTIONARY["turretRotate"], loops = -1)  # Play sound indefinitely
         else:
             if self.channelDict["rotate"]["channel"].get_busy(): # if the sound is playing
                 self.channelDict["rotate"]["channel"].stop()  # Stop playing the sound
-        
+
         if  keys[self.controls['left']]:
-            self.rotationSpeed += self.tank.getRotationalSpeed() * self.deltaTime
+            self.angle += self.tank.getRotationalSpeed() * self.deltaTime
         elif keys[self.controls['right']]:
-            self.rotationSpeed += -self.tank.getRotationalSpeed() * self.deltaTime
-    
-        self.angle += self.rotationSpeed
+            self.angle += -self.tank.getRotationalSpeed() * self.deltaTime
+
+        self.angle += self.rotationSpeed * self.deltaTime
+        self.angle %= 360
         #Reload cooldown of bullet and determines the angle to fire the bullet,
         #which is relative to the posistion of the tank gun.
         if keys[self.controls['fire']] and self.canShoot:

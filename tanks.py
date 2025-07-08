@@ -187,20 +187,19 @@ class Tank(pygame.sprite.Sprite):
                 #The function should return 1 if the tank should rotate clockwise, -1 if the tank should rotate counter clockwise and 0 if the tank should not rotate
 
                 def getRotation(vAngle, angle):
-                    deltaNum = 15
                     if vAngle == angle:
                         return 0
                     if vAngle > angle:
                         if vAngle - angle > 180:
                             #return the smaller angle between vAngle, angle and deltaNum
-                            return max(-deltaNum, angle - vAngle)//1
+                            return max(-15, angle - vAngle)//1
                         else:
-                            return min(deltaNum, vAngle - angle)//1
+                            return min(15, vAngle - angle)//1
                     else:
                         if angle - vAngle > 180:
-                            return min(deltaNum, angle - vAngle)//1
+                            return min(15, angle - vAngle)//1
                         else:
-                            return max(-deltaNum, vAngle - self.angle)//1
+                            return max(-15, vAngle - self.angle)//1
 
                 self.rotationSpeed = getRotation(vAngle, self.angle)
                 # if we are facing the target, go forward
@@ -210,6 +209,10 @@ class Tank(pygame.sprite.Sprite):
                     self.speed = 0
                 # self.speed = self.maxSpeed # I don't like this
 
+            # To keep track of
+            # rotationSpeed (between -15 and 15)
+            # speed (-self.maxSpeed < speed < self.maxSpeed)
+
         else:
             keys = pygame.key.get_pressed()
             #Movement keys
@@ -217,7 +220,6 @@ class Tank(pygame.sprite.Sprite):
                 self.speed = self.maxSpeed # I don't like this
             elif keys[self.controls['down']]:
                 self.speed = -self.maxSpeed # I don't like this
-                
             else:
                 self.speed = 0
 
