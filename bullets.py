@@ -42,6 +42,8 @@ class Bullet(pygame.sprite.Sprite):
         bulletPath = os.path.join(currentDir, './Assets/bullet.png')
         self.originalBulletImage = pygame.image.load(bulletPath).convert_alpha()
         self.bulletImage = self.originalBulletImage
+        w, h = self.originalBulletImage.get_size()
+        self.bulletImage = pygame.transform.scale(self.originalBulletImage, (w*const.SPRITE_SCALER, h*const.SPRITE_SCALER))
         self.image = self.bulletImage
         self.angle = angle
         self.speed = 12
@@ -110,8 +112,8 @@ class Bullet(pygame.sprite.Sprite):
                 return
             
             # Recalculate row and column based on the smaller steps
-            row = math.ceil((self.getCenter()[1] - const.MAZE_Y) / const.TILE_SIZE)
-            col = math.ceil((self.getCenter()[0] - const.MAZE_X) / const.TILE_SIZE)
+            row = math.ceil((self.getCenter()[1] - const.MAZE_Y) / const.TILE_SIZE_Y)
+            col = math.ceil((self.getCenter()[0] - const.MAZE_X) / const.TILE_SIZE_X)
             index = (row - 1) * const.COLUMN_AMOUNT + col
 
             # Check for collisions with tanks
@@ -134,10 +136,10 @@ class Bullet(pygame.sprite.Sprite):
             if tile.border[0] and tempY - self.image.get_size()[1] <= tile.y: # Top border
                 wallCollision = True
                 self.angle = 180 - self.angle
-            if tile.border[1] and tempX + self.image.get_size()[1] >= tile.x + const.TILE_SIZE: # Right border
+            if tile.border[1] and tempX + self.image.get_size()[1] >= tile.x + const.TILE_SIZE_X: # Right border
                 wallCollision = True
                 self.angle = 360 - self.angle
-            if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + const.TILE_SIZE: # Bottom border
+            if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + const.TILE_SIZE_Y: # Bottom border
                 wallCollision = True
                 self.angle = 180 - self.angle
             if tile.border[3] and tempX - self.image.get_size()[1] <= tile.x: # Left border
@@ -267,8 +269,8 @@ class SilencerBullet(Bullet):
                 return
 
             # Determine current tile based on precise position
-            row = math.ceil((tempY - const.MAZE_Y) / const.TILE_SIZE)
-            col = math.ceil((tempX - const.MAZE_X) / const.TILE_SIZE)
+            row = math.ceil((tempY - const.MAZE_Y) / const.TILE_SIZE_Y)
+            col = math.ceil((tempX - const.MAZE_X) / const.TILE_SIZE_X)
             index = (row - 1) * const.COLUMN_AMOUNT + col
 
             # Checking for self-damage
@@ -296,10 +298,10 @@ class SilencerBullet(Bullet):
             if tile.border[0] and tempY - self.image.get_size()[1] <= tile.y:  # Top border
                 wallCollision = True
                 self.angle = 180 - self.angle
-            if tile.border[1] and tempX + self.image.get_size()[1] >= tile.x + const.TILE_SIZE:  # Right border
+            if tile.border[1] and tempX + self.image.get_size()[1] >= tile.x + const.TILE_SIZE_X:  # Right border
                 wallCollision = True
                 self.angle = 360 - self.angle
-            if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + const.TILE_SIZE:  # Bottom border
+            if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + const.TILE_SIZE_Y:  # Bottom border
                 wallCollision = True
                 self.angle = 180 - self.angle
             if tile.border[3] and tempX - self.image.get_size()[1] <= tile.x:  # Left border
@@ -358,8 +360,8 @@ class WatcherBullet(Bullet):
                 return
 
             # Determine the current tile based on bullet position
-            row = math.ceil((temp_y - const.MAZE_Y) / const.TILE_SIZE)
-            col = math.ceil((temp_x - const.MAZE_X) / const.TILE_SIZE)
+            row = math.ceil((temp_y - const.MAZE_Y) / const.TILE_SIZE_Y)
+            col = math.ceil((temp_x - const.MAZE_X) / const.TILE_SIZE_X)
             index = (row - 1) * const.COLUMN_AMOUNT + col
 
             # Check for collisions with tanks
@@ -388,10 +390,10 @@ class WatcherBullet(Bullet):
             if tile.border[0] and temp_y - bullet_size <= tile.y:  # Top wall
                 wall_collision = True
                 self.angle = 180 - self.angle
-            if tile.border[1] and temp_x + bullet_size >= tile.x + const.TILE_SIZE:  # Right wall
+            if tile.border[1] and temp_x + bullet_size >= tile.x + const.TILE_SIZE_X:  # Right wall
                 wall_collision = True
                 self.angle = 360 - self.angle
-            if tile.border[2] and temp_y + bullet_size >= tile.y + const.TILE_SIZE:  # Bottom wall
+            if tile.border[2] and temp_y + bullet_size >= tile.y + const.TILE_SIZE_Y:  # Bottom wall
                 wall_collision = True
                 self.angle = 180 - self.angle
             if tile.border[3] and temp_x - bullet_size <= tile.x:  # Left wall
@@ -477,8 +479,8 @@ class ChamberBullet(Bullet):
                 return
             
             # Recalculate row and column based on the smaller steps
-            row = math.ceil((self.getCenter()[1] - const.MAZE_Y) / const.TILE_SIZE)
-            col = math.ceil((self.getCenter()[0] - const.MAZE_X) / const.TILE_SIZE)
+            row = math.ceil((self.getCenter()[1] - const.MAZE_Y) / const.TILE_SIZE_Y)
+            col = math.ceil((self.getCenter()[0] - const.MAZE_X) / const.TILE_SIZE_X)
             index = (row - 1) * const.COLUMN_AMOUNT + col
 
             # use the old collision
@@ -509,10 +511,10 @@ class ChamberBullet(Bullet):
             if tile.border[0] and tempY - self.image.get_size()[1] <= tile.y: # Top border
                 wallCollision = True
                 self.angle = 180 - self.angle
-            if tile.border[1] and tempX + self.image.get_size()[1] >= tile.x + const.TILE_SIZE: # Right border
+            if tile.border[1] and tempX + self.image.get_size()[1] >= tile.x + const.TILE_SIZE_X: # Right border
                 wallCollision = True
                 self.angle = 360 - self.angle
-            if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + const.TILE_SIZE: # Bottom border
+            if tile.border[2] and tempY + self.image.get_size()[1] >= tile.y + const.TILE_SIZE_Y: # Bottom border
                 wallCollision = True
                 self.angle = 180 - self.angle
             if tile.border[3] and tempX - self.image.get_size()[1] <= tile.x: # Left border

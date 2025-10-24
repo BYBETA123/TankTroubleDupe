@@ -68,6 +68,9 @@ class Button:
     def setText(self, text):
         self.text = text
 
+    def centerOnX(self, centerX):
+        self.x = centerX - self.width // 2
+
 class ButtonSlider:
     carrierX = 20
     carrierY = 10

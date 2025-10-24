@@ -14,7 +14,7 @@ class DifficultyType(Enum):
     TwoPlayerDeathMatch = (8, True, False, 2, 2, 2, False)
     OnePlayerTDM = (9, True, True, 4, 1, 2, False)
     TeamDeathMatch = (10, True, True, 4, 2, 2, False)
-    OnePlayerCaptureTheFlag = (11, True, True, 4, 1, 2, True)
+    OnePlayerCaptureTheFlag = (11, True, True, 2, 2, 2, True)
     CaptureTheFlag = (12, True, True, 4, 2, 2, True) # one player
 
     def __init__(self, number, respawn, ai, playerCount, human, teamCount, hasMap):

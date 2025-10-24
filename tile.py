@@ -38,7 +38,7 @@ class Tile(pygame.sprite.Sprite):
         # Construct the tile path dynamically
         self.tilePath = os.path.join(base_path, "Assets", "Tile")
         cardinal = ["N", "E", "S", "W"]
-        self.rect = pygame.Rect(self.x, self.y, const.TILE_SIZE, const.TILE_SIZE)
+        self.rect = pygame.Rect(self.x, self.y, const.TILE_SIZE_X, const.TILE_SIZE_Y)
 
         for idx, el in enumerate(self.bordering):
             if el != -1:
@@ -139,7 +139,7 @@ class Tile(pygame.sprite.Sprite):
     def drawText(self, screen):
         # access the "tileFont" key from the dictionary
         text = const.FONT_DICTIONARY["tileFont"].render(str(self.index), True, c.geT("BLACK"))
-        screen.blit(text, [self.x + const.TILE_SIZE/2 - text.get_width()/2, self.y + const.TILE_SIZE/2 - text.get_height()/2])
+        screen.blit(text, [self.x + const.TILE_SIZE_X/2 - text.get_width()/2, self.y + const.TILE_SIZE_Y/2 - text.get_height()/2])
 
     def draw(self, screen):
         # Draw the tile w/ borders
@@ -149,58 +149,58 @@ class Tile(pygame.sprite.Sprite):
                 pass
             case 1:
                 # West (0001)
-                pygame.draw.line(screen, (0,0,0), [self.x, self.y], [self.x, self.y+const.TILE_SIZE - 1], 1) # West
+                pygame.draw.line(screen, (0,0,0), [self.x, self.y], [self.x, self.y+const.TILE_SIZE_Y - 1], 1) # West
             case 2:
                 # South (0010)
-                pygame.draw.line(screen, (0,0,0), [self.x, self.y + const.TILE_SIZE - 1], [self.x+const.TILE_SIZE - 1, self.y+const.TILE_SIZE - 1], 1) # South
+                pygame.draw.line(screen, (0,0,0), [self.x, self.y + const.TILE_SIZE_Y - 1], [self.x+const.TILE_SIZE_X - 1, self.y+const.TILE_SIZE_Y - 1], 1) # South
             case 3:
                 # South West (0011)
-                pygame.draw.lines(screen, (0,0,0), False, [[self.x, self.y], [self.x, self.y + const.TILE_SIZE - 1], [self.x + const.TILE_SIZE - 1, self.y + const.TILE_SIZE - 1]], 1) # South West
+                pygame.draw.lines(screen, (0,0,0), False, [[self.x, self.y], [self.x, self.y + const.TILE_SIZE_Y - 1], [self.x + const.TILE_SIZE_X - 1, self.y + const.TILE_SIZE_Y - 1]], 1) # South West
             case 4:
                 # East (0100)
-                pygame.draw.line(screen, (0,0,0), [self.x + const.TILE_SIZE - 1, self.y], [self.x+const.TILE_SIZE - 1, self.y+const.TILE_SIZE - 1], 1) # East
+                pygame.draw.line(screen, (0,0,0), [self.x + const.TILE_SIZE_X - 1, self.y], [self.x+const.TILE_SIZE_X - 1, self.y+const.TILE_SIZE_Y - 1], 1) # East
             case 5:
                 # East West (0101)
-                pygame.draw.line(screen, (0,0,0), [self.x + const.TILE_SIZE - 1, self.y], [self.x+const.TILE_SIZE - 1, self.y+const.TILE_SIZE - 1], 1) # East
-                pygame.draw.line(screen, (0,0,0), [self.x, self.y], [self.x, self.y+const.TILE_SIZE - 1], 1) # West
+                pygame.draw.line(screen, (0,0,0), [self.x + const.TILE_SIZE_X - 1, self.y], [self.x+const.TILE_SIZE_X - 1, self.y+const.TILE_SIZE_Y - 1], 1) # East
+                pygame.draw.line(screen, (0,0,0), [self.x, self.y], [self.x, self.y+const.TILE_SIZE_Y - 1], 1) # West
             case 6:
                 # South East (0110)
-                pygame.draw.lines(screen, (0,0,0), False, [[self.x, self.y + const.TILE_SIZE - 1], [self.x+const.TILE_SIZE - 1, self.y+const.TILE_SIZE - 1], [self.x + const.TILE_SIZE - 1, self.y]], 1) # South East
+                pygame.draw.lines(screen, (0,0,0), False, [[self.x, self.y + const.TILE_SIZE_Y - 1], [self.x+const.TILE_SIZE_X - 1, self.y+const.TILE_SIZE_Y - 1], [self.x + const.TILE_SIZE_X - 1, self.y]], 1) # South East
             case 7:
                 # South East West (0111)
-                pygame.draw.lines(screen, (0,0,0), False, [[self.x, self.y], [self.x, self.y + const.TILE_SIZE-1], [self.x + const.TILE_SIZE - 1, self.y + const.TILE_SIZE-1], [self.x + const.TILE_SIZE - 1, self.y]], 1)
+                pygame.draw.lines(screen, (0,0,0), False, [[self.x, self.y], [self.x, self.y + const.TILE_SIZE_Y-1], [self.x + const.TILE_SIZE_X - 1, self.y + const.TILE_SIZE_Y-1], [self.x + const.TILE_SIZE_X - 1, self.y]], 1)
             case 8:
                 # North (1000)
-                pygame.draw.line(screen, (0,0,0), [self.x, self.y], [self.x+const.TILE_SIZE - 1, self.y], 1) # North
+                pygame.draw.line(screen, (0,0,0), [self.x, self.y], [self.x+const.TILE_SIZE_X - 1, self.y], 1) # North
             case 9:
                 # North West (1001)
-                pygame.draw.lines(screen, (0,0,0), False, [[self.x + const.TILE_SIZE - 1, self.y], [self.x, self.y], [self.x, self.y+const.TILE_SIZE - 1]], 1) # North West
+                pygame.draw.lines(screen, (0,0,0), False, [[self.x + const.TILE_SIZE_X - 1, self.y], [self.x, self.y], [self.x, self.y+const.TILE_SIZE_Y - 1]], 1) # North West
             case 10:
                 # North South (1010)
-                pygame.draw.line(screen, (0,0,0), [self.x, self.y], [self.x+const.TILE_SIZE - 1, self.y], 1) # North
-                pygame.draw.line(screen, (0,0,0), [self.x, self.y + const.TILE_SIZE - 1], [self.x+const.TILE_SIZE - 1, self.y+const.TILE_SIZE - 1], 1) # South
+                pygame.draw.line(screen, (0,0,0), [self.x, self.y], [self.x+const.TILE_SIZE_X - 1, self.y], 1) # North
+                pygame.draw.line(screen, (0,0,0), [self.x, self.y + const.TILE_SIZE_Y - 1], [self.x+const.TILE_SIZE_X - 1, self.y+const.TILE_SIZE_Y - 1], 1) # South
             case 11:
                 # North South West (1011)
-                pygame.draw.lines(screen, (0,0,0), False, [[self.x + const.TILE_SIZE - 1, self.y], [self.x, self.y], [self.x, self.y+const.TILE_SIZE-1], [self.x + const.TILE_SIZE - 1, self.y + const.TILE_SIZE-1]], 1) # North South West
+                pygame.draw.lines(screen, (0,0,0), False, [[self.x + const.TILE_SIZE_X - 1, self.y], [self.x, self.y], [self.x, self.y+const.TILE_SIZE_Y-1], [self.x + const.TILE_SIZE_X - 1, self.y + const.TILE_SIZE_Y-1]], 1) # North South West
             case 12:
                 # North East (1100)
-                pygame.draw.lines(screen, (0,0,0), False, [[self.x, self.y], [self.x+const.TILE_SIZE - 1, self.y], [self.x + const.TILE_SIZE - 1, self.y + const.TILE_SIZE - 1]], 1)
+                pygame.draw.lines(screen, (0,0,0), False, [[self.x, self.y], [self.x+const.TILE_SIZE_X - 1, self.y], [self.x + const.TILE_SIZE_X - 1, self.y + const.TILE_SIZE_Y - 1]], 1)
             case 13:
                 # North East West (1101)
-                pygame.draw.lines(screen, (0,0,0), False, [[self.x, self.y+const.TILE_SIZE], [self.x, self.y], [self.x + const.TILE_SIZE - 1, self.y], [self.x + const.TILE_SIZE - 1, self.y + const.TILE_SIZE]], 1) # North East West
+                pygame.draw.lines(screen, (0,0,0), False, [[self.x, self.y+const.TILE_SIZE_Y], [self.x, self.y], [self.x + const.TILE_SIZE_X - 1, self.y], [self.x + const.TILE_SIZE_X - 1, self.y + const.TILE_SIZE_Y]], 1) # North East West
             case 14:
                 # North South East (1110)
-                pygame.draw.lines(screen, (0,0,0), False, [[self.x, self.y], [self.x+const.TILE_SIZE -1, self.y], [self.x + const.TILE_SIZE -1, self.y + const.TILE_SIZE -1], [self.x, self.y + const.TILE_SIZE -1]], 1) # North South East
+                pygame.draw.lines(screen, (0,0,0), False, [[self.x, self.y], [self.x+const.TILE_SIZE_X -1, self.y], [self.x + const.TILE_SIZE_X -1, self.y + const.TILE_SIZE_Y -1], [self.x, self.y + const.TILE_SIZE_Y -1]], 1) # North South East
             case 15:
                 # North South East West (1111)
-                pygame.draw.rect(screen, (0,0,0), [self.x, self.y, const.TILE_SIZE, const.TILE_SIZE], 1) # all
+                pygame.draw.rect(screen, (0,0,0), [self.x, self.y, const.TILE_SIZE_X, const.TILE_SIZE_Y], 1) # all
 
         # self.drawUpdate(screen)
     
     def drawUpdate(self, screen):
         # if we are a debug tile, draw a small square in the center
         # if self.AITarget: # we are a target #[DEBUG]
-        #     pygame.draw.rect(screen, (0, 0, 255), [self.x + const.TILE_SIZE//2 - 5, self.y + const.TILE_SIZE//2 - 5, 10, 10]) # draw a green square in the center
+        #     pygame.draw.rect(screen, (0, 0, 255), [self.x + const.TILE_SIZE_X//2 - 5, self.y + const.TILE_SIZE_Y//2 - 5, 10, 10]) # draw a green square in the center
 
         if self.flag: # automatically filters 0
             if g.flag[self.flag - 1].isHome():
@@ -213,9 +213,9 @@ class Tile(pygame.sprite.Sprite):
         if self.supply is not None:
             # draw the supply icon
             if self.picked:
-                screen.blit(self.supply[0], (self.x + const.TILE_SIZE//2 - self.supply[0].get_width()//2, self.y + const.TILE_SIZE//2 - self.supply[0].get_height()//2))
+                screen.blit(self.supply[0], (self.x + const.TILE_SIZE_X//2 - self.supply[0].get_width()//2, self.y + const.TILE_SIZE_Y//2 - self.supply[0].get_height()//2))
             else:
-                screen.blit(self.supply[1], (self.x + const.TILE_SIZE//2 - self.supply[1].get_width()//2, self.y + const.TILE_SIZE//2 - self.supply[1].get_height()//2))
+                screen.blit(self.supply[1], (self.x + const.TILE_SIZE_X//2 - self.supply[1].get_width()//2, self.y + const.TILE_SIZE_Y//2 - self.supply[1].get_height()//2))
         # self.drawText(screen)
 
     def spawnColor(self):
@@ -238,7 +238,7 @@ class Tile(pygame.sprite.Sprite):
         self.color = c.geT("WHITE")
 
     def getCorners(self):
-        return [(self.x, self.y), (self.x + const.TILE_SIZE, self.y), (self.x + const.TILE_SIZE, self.y + const.TILE_SIZE), (self.x, self.y + const.TILE_SIZE)]
+        return [(self.x, self.y), (self.x + const.TILE_SIZE_X, self.y), (self.x + const.TILE_SIZE_X, self.y + const.TILE_SIZE_Y), (self.x, self.y + const.TILE_SIZE_Y)]
 
     def isWithin(self, crds = None):
         # This function will check if the mouse is within the tile
@@ -249,7 +249,7 @@ class Tile(pygame.sprite.Sprite):
         else:
             mouseX, mouseY = crds[0], crds[1]
 
-        if mouseX >= self.x and mouseX <= self.x + const.TILE_SIZE and mouseY >= self.y and mouseY <= self.y + const.TILE_SIZE:
+        if mouseX >= self.x and mouseX <= self.x + const.TILE_SIZE_X and mouseY >= self.y and mouseY <= self.y + const.TILE_SIZE_Y:
             if crds == None:
                 self.printDebug()
             return True
@@ -267,7 +267,7 @@ class Tile(pygame.sprite.Sprite):
         # Construct the tile path dynamically
         self.tilePath = os.path.join(base_path, "Assets", "Tile")
         cardinal = ["N", "E", "S", "W"]
-        self.rect = pygame.Rect(self.x, self.y, const.TILE_SIZE, const.TILE_SIZE)
+        self.rect = pygame.Rect(self.x, self.y, const.TILE_SIZE_X, const.TILE_SIZE_Y)
 
         for idx, el in enumerate(self.bordering):
             if el != -1:
@@ -289,13 +289,13 @@ class Tile(pygame.sprite.Sprite):
         if supplyPath is not None:
             self.supply = [None, None]
             self.supply[0] = pygame.image.load(supplyPath[0]).convert_alpha()
-            self.supply[0] = pygame.transform.scale(self.supply[0], (const.TILE_SIZE//2, const.TILE_SIZE//2))
+            self.supply[0] = pygame.transform.scale(self.supply[0], (const.TILE_SIZE_X//2, const.TILE_SIZE_Y//2))
             self.supply[1] = pygame.image.load(supplyPath[1]).convert_alpha()
-            self.supply[1] = pygame.transform.scale(self.supply[1], (const.TILE_SIZE//2, const.TILE_SIZE//2))
+            self.supply[1] = pygame.transform.scale(self.supply[1], (const.TILE_SIZE_X//2, const.TILE_SIZE_Y//2))
             self.supplyIndex = index
 
     def getCenter(self):
-        return (self.x + const.TILE_SIZE//2, self.y + const.TILE_SIZE//2) 
+        return (self.x + const.TILE_SIZE_X//2, self.y + const.TILE_SIZE_Y//2) 
 
     def setTarget(self, value):
         self.AITarget = value
@@ -315,6 +315,7 @@ class Tile(pygame.sprite.Sprite):
         print("Bordering: ", self.bordering, end = " ")
         print("Border: ", self.border)
         print("Border Index: ", self.borderindex)
+        print("Coordinates: ", self.x, self.y)
 
     def setSpawn(self, spawn):
         self.spawn = spawn

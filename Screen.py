@@ -14,11 +14,20 @@ import constants as const
 
 class SharedVolumeScreen:
     _instance = None
+    SQUARE_SMALL = 50 * const.UNIVERSAL_SCALER_HEIGHT # 600/12 = 50
+    sliderSquareWidth = SQUARE_SMALL
+    sliderSquareHeight = SQUARE_SMALL
+    sliderLength = sliderSquareWidth * 8 # 8 units long
+    sliderUnitXMute = const.WINDOW_WIDTH // 2 - sliderLength // 2 - sliderSquareWidth
+    sliderUnitYMute = 3/8 * const.WINDOW_HEIGHT
+    sliderUnitXSFX = const.WINDOW_WIDTH // 2 - sliderLength // 2 - sliderSquareWidth
+    sliderUnitYSFX = 5/8 * const.WINDOW_HEIGHT
+    pointHeight = const.WINDOW_HEIGHT / 6 # one-sixth of the height
     # This class is to exclusively hold the mute and sfx buttons
-    mute = ButtonSlider(c.geT("BLACK"), c.geT("BLUE"), const.MAZE_X * 2.5, const.WINDOW_HEIGHT/8*3, const.TILE_SIZE, const.TILE_SIZE, const.TILE_SIZE*8,
-                        const.TILE_SIZE*2, 'mute', c.geT("WHITE"), c.geT("BLACK"), c.geT("RED"))
-    sfx = ButtonSlider(c.geT("BLACK"), c.geT("BLUE"), const.MAZE_X * 2.5, const.WINDOW_HEIGHT/8*5 - const.TILE_SIZE, const.TILE_SIZE, const.TILE_SIZE,
-                    const.TILE_SIZE*8, const.TILE_SIZE*2, 'SFX', c.geT("WHITE"), c.geT("BLACK"), c.geT("RED"))
+    mute = ButtonSlider(c.geT("BLACK"), c.geT("BLUE"), sliderUnitXMute, sliderUnitYMute, sliderSquareWidth, sliderSquareHeight, sliderLength,
+                        pointHeight, 'mute', c.geT("WHITE"), c.geT("BLACK"), c.geT("RED"))
+    sfx = ButtonSlider(c.geT("BLACK"), c.geT("BLUE"), sliderUnitXSFX, sliderUnitYSFX, sliderSquareHeight, sliderSquareWidth,
+                    sliderLength, pointHeight, 'SFX', c.geT("WHITE"), c.geT("BLACK"), c.geT("RED"))
     
     def __new__(cls):
         if cls._instance is None:
@@ -36,16 +45,41 @@ class SharedVolumeScreen:
 
 class SettingsScreen:
 
-    creditButton = Button(c.geT("GREEN"), c.geT("WHITE"), const.WINDOW_WIDTH/2 - 200, 0.8 * const.WINDOW_HEIGHT, 400, const.TILE_SIZE, 'Credits')
-    homeButton = Button(c.geT("GREEN"), c.geT("WHITE"),const.MAZE_X * 1.5 , const.MAZE_Y * 1.8, const.TILE_SIZE, const.TILE_SIZE, 'Home')
-    quitButton = Button(c.geT("GREEN"), c.geT("WHITE"), const.WINDOW_WIDTH - const.MAZE_X * 2.5, const.MAZE_Y * 1.8, const.TILE_SIZE, const.TILE_SIZE, 'Quit')
+    SQUARE_SMALL = 50 * const.UNIVERSAL_SCALER_HEIGHT
+    BORDER_WIDTH = int(5 * const.UNIVERSAL_SCALER_HEIGHT)
+    creditButtonLeft = const.WINDOW_WIDTH / 4
+    creditButtonTop = const.WINDOW_HEIGHT * 0.8
+    creditButtonWidth = const.WINDOW_WIDTH / 2
+    creditButtonHeight = SQUARE_SMALL
+
+    homeButtonLeft = SQUARE_SMALL * 1.5
+    homeButtonTop = SQUARE_SMALL * 1.8
+    homeButtonWidth = SQUARE_SMALL
+    homeButtonHeight = SQUARE_SMALL
+    
+    quitButtonLeft = const.WINDOW_WIDTH - SQUARE_SMALL * 2.5
+    quitButtonTop = SQUARE_SMALL * 1.8
+    quitButtonWidth = SQUARE_SMALL
+    quitButtonHeight =  SQUARE_SMALL
+
+    backgroundLeft = SQUARE_SMALL
+    backgroundTop = SQUARE_SMALL
+    backgroundWidth = const.WINDOW_WIDTH - backgroundLeft * 2
+    backgroundHeight = const.WINDOW_HEIGHT - backgroundTop * 2
+
+    bglist = [backgroundLeft, backgroundTop, backgroundWidth, backgroundHeight]
+
+    creditButton = Button(c.geT("GREEN"), c.geT("WHITE"), creditButtonLeft, creditButtonTop, creditButtonWidth, creditButtonHeight, 'Credits')
+    homeButton = Button(c.geT("GREEN"), c.geT("WHITE"), homeButtonLeft , homeButtonTop, homeButtonWidth, homeButtonHeight, 'Home')
+    quitButton = Button(c.geT("GREEN"), c.geT("WHITE"), quitButtonLeft, quitButtonTop, quitButtonWidth, quitButtonHeight, 'Quit')
 
     def __init__(self):
         self.volume = SharedVolumeScreen() # Accessing the singleton version of the volume
 
     def draw(self, screen):
-        pygame.draw.rect(screen, c.geT("OFF_WHITE"), [const.MAZE_X, const.MAZE_Y, const.WINDOW_WIDTH - const.MAZE_X * 2, const.WINDOW_HEIGHT - const.MAZE_Y * 2])
-        pygame.draw.rect(screen, c.geT("BLACK"), [const.MAZE_X, const.MAZE_Y, const.WINDOW_WIDTH - const.MAZE_X * 2, const.WINDOW_HEIGHT - const.MAZE_Y * 2], 5)
+        # bg
+        pygame.draw.rect(screen, c.geT("OFF_WHITE"), self.bglist)
+        pygame.draw.rect(screen, c.geT("BLACK"), self.bglist, self.BORDER_WIDTH)
 
         #Buttons
         self.creditButton.draw(screen, outline = True)
@@ -84,10 +118,34 @@ class SettingsScreen:
 
 class PauseScreen:
 
+    SQUARE_SMALL = 50
+
+    backgroundLeft = SQUARE_SMALL
+    backgroundTop = SQUARE_SMALL
+    backgroundWidth = const.WINDOW_WIDTH - backgroundLeft * 2
+    backgroundHeight = const.WINDOW_HEIGHT - backgroundTop * 2
+
+    bglist = [backgroundLeft, backgroundTop, backgroundWidth, backgroundHeight]
+
+    homeButtonLeft = SQUARE_SMALL * 1.5
+    homeButtonTop = SQUARE_SMALL * 1.8
+    homeButtonWidth = SQUARE_SMALL
+    homeButtonHeight = SQUARE_SMALL
+
+    quitButtonLeft = const.WINDOW_WIDTH - SQUARE_SMALL * 2.5
+    quitButtonTop = SQUARE_SMALL * 1.8
+    quitButtonWidth = SQUARE_SMALL
+    quitButtonHeight = SQUARE_SMALL
+
+    unPauseButtonLeft = const.WINDOW_WIDTH / 4
+    unPauseButtonTop = const.WINDOW_HEIGHT * 0.8
+    unPauseButtonWidth = const.WINDOW_WIDTH / 2
+    unPauseButtonHeight = SQUARE_SMALL
+
     #Buttons
-    homeButton = Button(c.geT("GREEN"), c.geT("WHITE"),const.MAZE_X * 1.5 , const.MAZE_Y * 1.8, const.TILE_SIZE, const.TILE_SIZE, 'Home')
-    quitButton = Button(c.geT("GREEN"), c.geT("WHITE"), const.WINDOW_WIDTH - const.MAZE_X * 2.5, const.MAZE_Y * 1.8, const.TILE_SIZE, const.TILE_SIZE, 'Quit')
-    unPauseButton = Button(c.geT("GREEN"), c.geT("WHITE"), const.WINDOW_WIDTH/2 - 200, 0.8 * const.WINDOW_HEIGHT, 400, const.TILE_SIZE, 'Return to Game')
+    homeButton = Button(c.geT("GREEN"), c.geT("WHITE"), homeButtonLeft, homeButtonTop, homeButtonWidth, homeButtonHeight, 'Home')
+    quitButton = Button(c.geT("GREEN"), c.geT("WHITE"), quitButtonLeft, quitButtonTop, quitButtonWidth, quitButtonHeight, 'Quit')
+    unPauseButton = Button(c.geT("GREEN"), c.geT("WHITE"), unPauseButtonLeft, unPauseButtonTop, unPauseButtonWidth, unPauseButtonHeight, 'Return to Game')
 
     def __init__(self):
         self.volume = SharedVolumeScreen() # Accessing the singleton version of the volume
@@ -96,8 +154,8 @@ class PauseScreen:
         # This function will draw the pause screen
         # Inputs: None
         # Outputs: None
-        pygame.draw.rect(screen, c.geT("OFF_WHITE"), [const.MAZE_X, const.MAZE_Y, const.WINDOW_WIDTH - const.MAZE_X * 2, const.WINDOW_HEIGHT - const.MAZE_Y * 2])
-        pygame.draw.rect(screen, c.geT("BLACK"), [const.MAZE_X, const.MAZE_Y, const.WINDOW_WIDTH - const.MAZE_X * 2, const.WINDOW_HEIGHT - const.MAZE_Y * 2], 5)
+        pygame.draw.rect(screen, c.geT("OFF_WHITE"), self.bglist)
+        pygame.draw.rect(screen, c.geT("BLACK"), self.bglist, 5)
 
         self.homeButton.draw(screen, outline = True)
         self.quitButton.draw(screen, outline = True)
@@ -134,12 +192,33 @@ class PauseScreen:
 
 class CreditScreen:
 
-    creditsBackButton = Button(c.geT("GREEN"), c.geT("WHITE"), const.WINDOW_WIDTH - 175, 75, 100, const.TILE_SIZE, 'Back', c.geT("BLACK"), 20, (100, 100, 255))
-    creditsTitle = TextBox(const.WINDOW_WIDTH//2 - 175, 100, font=const.SELECTION_FONT,fontSize=104, text="Credits", textColor=c.geT("BLACK"))
+    SQUARE_SMALL = 50 * const.UNIVERSAL_SCALER_HEIGHT
+    BORDER_WIDTH = int(5 * const.UNIVERSAL_SCALER_HEIGHT)
+    backgroundLeft = SQUARE_SMALL
+    backgroundTop = SQUARE_SMALL
+    backgroundWidth = const.WINDOW_WIDTH - backgroundLeft * 2
+    backgroundHeight = const.WINDOW_HEIGHT - backgroundTop * 2
+
+    bglist = [backgroundLeft, backgroundTop, backgroundWidth, backgroundHeight]    
+
+    creditsBackButtonLeft = const.WINDOW_WIDTH - (175 * const.UNIVERSAL_SCALER_WIDTH)
+    creditsBackButtonTop = (75 * const.UNIVERSAL_SCALER_HEIGHT)
+    creditsBackButtonWidth = (0.125 * const.WINDOW_WIDTH)
+    creditsBackButtonHeight = SQUARE_SMALL
+
+    creditsTitleLeft = const.WINDOW_WIDTH / 2 - (175 * const.UNIVERSAL_SCALER_WIDTH)
+    creditsTitleTop = (100 * const.UNIVERSAL_SCALER_HEIGHT)
+
+    disclaimerLeft = const.WINDOW_WIDTH / 2 - (343 * const.UNIVERSAL_SCALER_WIDTH)
+    # 343
+    disclaimerTop = const.WINDOW_HEIGHT - (110 * const.UNIVERSAL_SCALER_HEIGHT)
+
+    creditsBackButton = Button(c.geT("GREEN"), c.geT("WHITE"), creditsBackButtonLeft, creditsBackButtonTop, creditsBackButtonWidth, creditsBackButtonHeight, 'Back', c.geT("BLACK"), 20, c.geT("CORNFLOWER_BLUE"))
+    creditsTitle = TextBox(creditsTitleLeft, creditsTitleTop, font=const.SELECTION_FONT,fontSize=104, text="Credits", textColor=c.geT("BLACK"))
     creditsTitle.selectable(False)
     creditsTitle.setBoxColor(c.geT("OFF_WHITE"))
 
-    disclaimer = TextBox(57, const.WINDOW_HEIGHT - 110, font=const.SELECTION_FONT,fontSize=35, text="ALL RIGHTS BELONG TO THEIR RESPECTIVE OWNERS", textColor=c.geT("BLACK"))
+    disclaimer = TextBox(disclaimerLeft, disclaimerTop, font=const.SELECTION_FONT,fontSize=35, text="ALL RIGHTS BELONG TO THEIR RESPECTIVE OWNERS", textColor=c.geT("BLACK"))
     disclaimer.selectable(False)
     disclaimer.setBoxColor(c.geT("OFF_WHITE"))
 
@@ -154,39 +233,66 @@ class CreditScreen:
     creditsurfaces = [const.FONT_DICTIONARY["cFont"].render(line, True, c.geT("BLACk")) for line in creditbox]
 
     def draw(self, screen):
-        pygame.draw.rect(screen, (240, 240, 240), [const.MAZE_X, const.MAZE_Y, const.WINDOW_WIDTH - const.MAZE_X * 2, const.WINDOW_HEIGHT - const.MAZE_Y * 2])
-        pygame.draw.rect(screen, (0,0,0), [const.MAZE_X, const.MAZE_Y, const.WINDOW_WIDTH - const.MAZE_X * 2, const.WINDOW_HEIGHT - const.MAZE_Y * 2], 5) # outline
+        pygame.draw.rect(screen, c.geT("OFF_WHITE"), self.bglist)
+        pygame.draw.rect(screen, c.geT("BLACK"), self.bglist, self.BORDER_WIDTH) # outline
         self.creditsBackButton.draw(screen = screen, outline = True)
         self.creditsTitle.draw(screen = screen, outline= True)
         self.disclaimer.draw(screen = screen, outline = True)
 
-        for idx, c in enumerate(self.creditsurfaces):
-            screen.blit(c, (const.MAZE_X + 50, 200 + idx * 50))
+        for idx, credit in enumerate(self.creditsurfaces):
+            # TODO:
+            screen.blit(credit, (self.creditsTitleTop, self.creditsTitleTop*2 + idx * self.SQUARE_SMALL))
 
     def isWithinBackButton(self, mousePos):
         return self.creditsBackButton.is_hovered(mousePos)
     
 class InfoScreen:
 
+    SQUARE_SMALL = 50 * const.UNIVERSAL_SCALER_HEIGHT
+    SQUARE_MEDIUM = 100 * const.UNIVERSAL_SCALER_HEIGHT
+    BORDER_WIDTH = int(5 * const.UNIVERSAL_SCALER_HEIGHT)
+    backgroundLeft = SQUARE_SMALL
+    backgroundTop = SQUARE_SMALL
+    backgroundWidth = const.WINDOW_WIDTH - SQUARE_MEDIUM
+    backgroundHeight = const.WINDOW_HEIGHT - SQUARE_MEDIUM
+
+    infoLArrowLeft = SQUARE_MEDIUM
+    infoLArrowTop = SQUARE_MEDIUM*2
+
+    infotextLeft = const.WINDOW_WIDTH // 2 - (125)
+    infoTextTop = 75 * const.UNIVERSAL_SCALER_HEIGHT
+
+    infoRArrowLeft = const.WINDOW_WIDTH - SQUARE_MEDIUM*2
+    infoRArrowTop = SQUARE_MEDIUM*2
+
+    iBoxLeft = 200 * const.UNIVERSAL_SCALER_WIDTH
+    iBoxTop = 200 * const.UNIVERSAL_SCALER_HEIGHT
+
+    iBackLeft = const.WINDOW_WIDTH - 175 * const.UNIVERSAL_SCALER_WIDTH
+    iBackTop = 75
+    LINE_HEIGHT = 25
+    infoStart = 325 * const.UNIVERSAL_SCALER_HEIGHT
+    bglist = [backgroundLeft, backgroundTop, backgroundWidth, backgroundHeight]
+
     INFOLIST = ["Controls", "Tempest", "Silencer", "Watcher", "Chamber", "Huntsman", "Judge", "Sidewinder", "Panther", "Cicada", "Gater", "Bonsai", "Fossil"] # This list contains all the changing elements
     infoButtons = []
     iIndex = 0
-    infoLArrow = Button(c.geT("BLACK"), c.geT("BLACK"), 100, 200, 100, 100, '<', c.geT("WHITE"), 100, c.geT("BLACK"))
+    infoLArrow = Button(c.geT("BLACK"), c.geT("BLACK"), infoLArrowLeft, infoLArrowTop, SQUARE_MEDIUM, SQUARE_MEDIUM, '<', c.geT("WHITE"), 100, c.geT("BLACK"))
     infoButtons.append(infoLArrow)
-    infoText = TextBox(const.WINDOW_WIDTH//2 - 125, 75, font="Courier New",fontSize=30, text="Information", textColor=c.geT("BLACK"))
+    infoText = TextBox(infotextLeft, infoTextTop, font="Courier New",fontSize=30, text="Information", textColor=c.geT("BLACK"))
     infoText.selectable(False)
     infoText.setBoxColor(c.geT("OFF_WHITE"))
     infoButtons.append(infoText)
-    iBox = TextBox(200, 201, font="Courier New",fontSize=46, text=INFOLIST[iIndex], textColor=c.geT("BLACK"))
+    iBox = TextBox(iBoxLeft, iBoxTop, font="Courier New",fontSize=46, text=INFOLIST[iIndex], textColor=c.geT("BLACK"))
     iBox.selectable(False)
     iBox.setCharacterPad(14)
     iBox.setPaddingHeight(23)
     iBox.setText(INFOLIST[iIndex])
     iBox.setBoxColor(c.geT("OFF_WHITE"))
     infoButtons.append(iBox)
-    infoRArrow = Button(c.geT("BLACK"), c.geT("BLACK"), const.WINDOW_WIDTH - 200, 200, 100, 100, '>', c.geT("WHITE"), 100, c.geT("BLACK"))
+    infoRArrow = Button(c.geT("BLACK"), c.geT("BLACK"), infoRArrowLeft, infoRArrowTop, SQUARE_MEDIUM, SQUARE_MEDIUM, '>', c.geT("WHITE"), 100, c.geT("BLACK"))
     infoButtons.append(infoRArrow)
-    infoBackButton = Button(c.geT("GREEN"), c.geT("WHITE"), const.WINDOW_WIDTH - 175, 75, 100, const.TILE_SIZE, 'Back', c.geT("BLACK"), 20, (100, 100, 255))
+    infoBackButton = Button(c.geT("GREEN"), c.geT("WHITE"), iBackLeft, iBackTop, SQUARE_MEDIUM, SQUARE_SMALL, 'Back', c.geT("BLACK"), 20, c.geT("CORNFLOWER_BLUE"))
     infoButtons.append(infoBackButton)
 
     # info screen
@@ -295,16 +401,14 @@ class InfoScreen:
         self.INFORENDER = [[const.FONT_DICTIONARY["iFont"].render(line, True, c.geT("BLACk")) for line in self.INFODESCRIPTION[i]] for i in range(len(self.INFODESCRIPTION))]
 
     def draw(self, screen):
-        pygame.draw.rect(screen, (240, 240, 240), [const.MAZE_X, const.MAZE_Y, const.WINDOW_WIDTH - const.MAZE_X * 2, const.WINDOW_HEIGHT - const.MAZE_Y * 2])
-        pygame.draw.rect(screen, (0,0,0), [const.MAZE_X, const.MAZE_Y, const.WINDOW_WIDTH - const.MAZE_X * 2, const.WINDOW_HEIGHT - const.MAZE_Y * 2], 5)
+        pygame.draw.rect(screen, c.geT("OFF_WHITE"), self.bglist)
+        pygame.draw.rect(screen, c.geT("BLACK"), self.bglist, self.BORDER_WIDTH)
 
         for i in self.infoButtons:
             i.draw(screen = screen, outline = True)
         
-        startY = 325
-        gap = 25
         for i in range(len(self.INFORENDER[self.iIndex])):
-            screen.blit(self.INFORENDER[self.iIndex][i], (const.MAZE_X + 50, startY + i*gap))
+            screen.blit(self.INFORENDER[self.iIndex][i], (self.SQUARE_SMALL*2, self.infoStart + i*self.LINE_HEIGHT))
 
     def isWithinBackButton(self, mousePos):
         return self.infoBackButton.is_hovered(mousePos)
@@ -320,37 +424,77 @@ class InfoScreen:
         self.iBox.setText(self.INFOLIST[self.iIndex])
 
 class HomeScreen:
-    
+
+    def getBottomButtonHeight(self):
+        return const.WINDOW_HEIGHT / 8
+
+    def getBottomButtonHeightOffset(self):
+        return const.WINDOW_HEIGHT/6*5
+
+    def getBottomButtonWidth(self, arrow = True):
+        # If the button is an arrow, we want to 
+        return const.WINDOW_WIDTH / 20 if arrow else const.WINDOW_WIDTH / 20 * 3
+        
+    def getTopButtonHeightOffset(self):
+        return 30 / 600 * const.WINDOW_HEIGHT # using 600 as a reference
+
+    def getBottomButtonWidthOffset(self, num):
+        sideIndent = 30 * const.UNIVERSAL_SCALER_WIDTH # using 800 as a reference
+        buttonGap = 36 * const.UNIVERSAL_SCALER_WIDTH # using 800 as a reference
+        buttonWidth = self.getBottomButtonWidth(arrow=False)
+        buttonWidthArrow = self.getBottomButtonWidth(arrow=True)
+
+        if num == 1:
+            return sideIndent
+        elif num == 2:
+            return sideIndent + buttonWidthArrow + buttonGap
+        elif num == 3:
+            return sideIndent + buttonWidthArrow + buttonGap + buttonWidth + buttonGap
+        elif num == 4:
+            return sideIndent + buttonWidthArrow + buttonGap + buttonWidth + buttonGap + buttonWidth + buttonGap
+        elif num == 5:
+            return sideIndent + buttonWidthArrow + buttonGap + buttonWidth + buttonGap + buttonWidth + buttonGap + buttonWidth + buttonGap
+        elif num == 6:
+            return sideIndent + buttonWidthArrow + buttonGap + buttonWidth + buttonGap + buttonWidth + buttonGap + buttonWidth + buttonGap + buttonWidth + buttonGap
+        print("Sizing error")
+        return 0 # error
+
     homeButtonNameArray = ["1P Yard", "1P Scrapyard", "2P Yard", "2P Scrapyard", "1p Brawl", "1P DeathMatch", "2P Brawl", "2P DeathMatch", "1P TDM", "2P TDM", "1P CTF", "2P CTF"] #<!>
     homeButtonList = []
-
-    # Create buttons with specified positions and text
-    homeLeftButton = Button(c.geT("BLACK"), c.geT("BLACK"), 30, 490, 40, 80, '←', (255, 255, 255), 25, hoverColor=(100, 100, 255))
-    HomeButton1 = Button(c.geT("BLACK"),c.geT("BLACK"), 106, 490, 120, 80, homeButtonNameArray[0], (255, 255, 255), 15, hoverColor=(100, 100, 255))
-    HomeButton2 = Button(c.geT("BLACK"),c.geT("BLACK"), 262, 490, 120, 80, homeButtonNameArray[1], (255, 255, 255), 15, hoverColor=(100, 100, 255))
-    HomeButton3 = Button(c.geT("BLACK"),c.geT("BLACK"), 418, 490, 120, 80, homeButtonNameArray[2], (255, 255, 255), 15, hoverColor=(100, 100, 255))
-    HomeButton4 = Button(c.geT("BLACK"),c.geT("BLACK"), 574, 490, 120, 80, homeButtonNameArray[3], (255, 255, 255), 15, hoverColor=(100, 100, 255))
-    homeRightButton = Button(c.geT("BLACK"), c.geT("BLACK"), 730, 490, 40, 80, '→', (255, 255, 255), 25, hoverColor=(100, 100, 255))
-
-    quitButtonHome = Button(c.geT("BLACK"), c.geT("BLACK"), 30, 30, 140, 80, 'Quit', (255, 255, 255), 25, hoverColor=(100, 100, 255))
-    settingsButton = Button(c.geT("BLACK"), c.geT("BLACK"), 570, 30, 210, 80, 'Settings', (255, 255, 255), 25, hoverColor=(100, 100, 255))
-
-    homeButtonList.append(homeLeftButton)
-    homeButtonList.append(HomeButton1)
-    homeButtonList.append(HomeButton3)
-    homeButtonList.append(HomeButton2)
-    homeButtonList.append(HomeButton4)
-    homeButtonList.append(homeRightButton)
-    homeButtonList.append(settingsButton)
-    homeButtonList.append(quitButtonHome)
 
     LOGO_PNG = pygame.image.load(os.path.join(const.BASE_PATH, "Assets", "logo.png")).convert_alpha()
     LOGO_PNG = pygame.transform.scale(LOGO_PNG, (LOGO_PNG.get_size()[0]//15, LOGO_PNG.get_size()[1]//15))
 
     ORIGINAL_TANK_IMAGE = pygame.image.load(os.path.join(const.BASE_PATH, './Assets/tank_menu_logo.png')).convert_alpha()
-    ORIGINAL_TANK_IMAGE = pygame.transform.scale(ORIGINAL_TANK_IMAGE, (ORIGINAL_TANK_IMAGE.get_size()[0]/2.25, ORIGINAL_TANK_IMAGE.get_size()[1]//2.25))
+    ORIGINAL_TANK_IMAGE = pygame.transform.scale(ORIGINAL_TANK_IMAGE, (const.WINDOW_HEIGHT* 0.9 * 1.5, const.WINDOW_HEIGHT * 0.9)) # Scaled to fit the screen better (maintain 3:2 aspect ratio)
 
     TITLE_TEXT = const.FONT_DICTIONARY["titleFont"].render('FLANKI', True, (0, 0, 0))  # Render the title text
+
+    settingsButtonLeft = 570 * const.UNIVERSAL_SCALER_WIDTH
+    settingsButtonWidth = 210 * const.UNIVERSAL_SCALER_WIDTH
+    quitButtonHomeWidth = 140 * const.UNIVERSAL_SCALER_WIDTH
+
+    def __init__(self):
+
+        # Create buttons with specified positions and text
+        self.homeLeftButton = Button(c.geT("BLACK"), c.geT("BLACK"), self.getBottomButtonWidthOffset(1), self.getBottomButtonHeightOffset(), self.getBottomButtonWidth(arrow=True), self.getBottomButtonHeight(), '←', c.geT("WHITE"), 25, hoverColor=c.geT("CORNFLOWER_BLUE"))
+        self.HomeButton1 = Button(c.geT("BLACK"),c.geT("BLACK"), self.getBottomButtonWidthOffset(2), self.getBottomButtonHeightOffset(), self.getBottomButtonWidth(arrow=False), self.getBottomButtonHeight(), self.homeButtonNameArray[0], c.geT("WHITE"), 15, hoverColor=c.geT("CORNFLOWER_BLUE"))
+        self.HomeButton2 = Button(c.geT("BLACK"),c.geT("BLACK"), self.getBottomButtonWidthOffset(3), self.getBottomButtonHeightOffset(), self.getBottomButtonWidth(arrow=False), self.getBottomButtonHeight(), self.homeButtonNameArray[1], c.geT("WHITE"), 15, hoverColor=c.geT("CORNFLOWER_BLUE"))
+        self.HomeButton3 = Button(c.geT("BLACK"),c.geT("BLACK"), self.getBottomButtonWidthOffset(4), self.getBottomButtonHeightOffset(), self.getBottomButtonWidth(arrow=False), self.getBottomButtonHeight(), self.homeButtonNameArray[2], c.geT("WHITE"), 15, hoverColor=c.geT("CORNFLOWER_BLUE"))
+        self.HomeButton4 = Button(c.geT("BLACK"),c.geT("BLACK"), self.getBottomButtonWidthOffset(5), self.getBottomButtonHeightOffset(), self.getBottomButtonWidth(arrow=False), self.getBottomButtonHeight(), self.homeButtonNameArray[3], c.geT("WHITE"), 15, hoverColor=c.geT("CORNFLOWER_BLUE"))
+        self.homeRightButton = Button(c.geT("BLACK"), c.geT("BLACK"), self.getBottomButtonWidthOffset(6), self.getBottomButtonHeightOffset(), self.getBottomButtonWidth(arrow=True), self.getBottomButtonHeight(), '→', c.geT("WHITE"), 25, hoverColor=c.geT("CORNFLOWER_BLUE"))
+
+        self.quitButtonHome = Button(c.geT("BLACK"), c.geT("BLACK"), self.getBottomButtonWidthOffset(1), self.getTopButtonHeightOffset(), self.quitButtonHomeWidth, self.getBottomButtonHeight(), 'Quit', c.geT("WHITE"), 25, hoverColor=c.geT("CORNFLOWER_BLUE"))
+        self.settingsButton = Button(c.geT("BLACK"), c.geT("BLACK"), self.settingsButtonLeft, self.getTopButtonHeightOffset(), self.settingsButtonWidth, self.getBottomButtonHeight(), 'Settings', c.geT("WHITE"), 25, hoverColor=c.geT("CORNFLOWER_BLUE"))
+
+        self.homeButtonList.append(self.homeLeftButton)
+        self.homeButtonList.append(self.HomeButton1)
+        self.homeButtonList.append(self.HomeButton3)
+        self.homeButtonList.append(self.HomeButton2)
+        self.homeButtonList.append(self.HomeButton4)
+        self.homeButtonList.append(self.homeRightButton)
+        self.homeButtonList.append(self.settingsButton)
+        self.homeButtonList.append(self.quitButtonHome)
 
     def draw(self, screen, mouse):
 
@@ -408,135 +552,203 @@ class HomeScreen:
 
 class SelectionScreen:
 
+    BORDER_WIDTH = int(5 * const.UNIVERSAL_SCALER_HEIGHT)
+    BAR_WIDTH = int(25 * const.UNIVERSAL_SCALER_WIDTH)
+    THIN_BAR_WIDTH = int(3 * const.UNIVERSAL_SCALER_WIDTH)
+
+    # generic buttons
+    homeButtonLeft = 25 * const.UNIVERSAL_SCALER_WIDTH
+    navButtonTop = 25 * const.UNIVERSAL_SCALER_HEIGHT
+    howToPlayIndent = 162 * const.UNIVERSAL_SCALER_WIDTH
+    howToPlayButtonLeft = const.WINDOW_WIDTH - howToPlayIndent
+    playButtonLeft = const.WINDOW_WIDTH//2 - 84 * const.UNIVERSAL_SCALER_WIDTH
+    playButtonTop = 95 * const.UNIVERSAL_SCALER_HEIGHT
+    # arrow buttons
+    arrow_width = 30 * const.UNIVERSAL_SCALER_WIDTH
+    arrow_height = 30 * const.UNIVERSAL_SCALER_HEIGHT
+
+    # left side buttons (Player 1)
+    lTurretTop = 420 * const.UNIVERSAL_SCALER_HEIGHT
+    lHullTop = 460 * const.UNIVERSAL_SCALER_HEIGHT
+    lColourTop = 500 * const.UNIVERSAL_SCALER_HEIGHT
+    lColour2Top = 540 * const.UNIVERSAL_SCALER_HEIGHT
+
+
+    player1LeftArrowLeftEdge = 70 * const.UNIVERSAL_SCALER_WIDTH
+    player1TextLeftEdge = 100 * const.UNIVERSAL_SCALER_WIDTH
+    player1RightArrowLeftEdge = 280 * const.UNIVERSAL_SCALER_WIDTH
+
+    player2LeftArrowLeftEdge = 493 * const.UNIVERSAL_SCALER_WIDTH
+    player2TextLeftEdge = 523 * const.UNIVERSAL_SCALER_WIDTH
+    player2RightArrowLeftEdge = 703 * const.UNIVERSAL_SCALER_WIDTH
+
+    player1TextLeft = 100 * const.UNIVERSAL_SCALER_WIDTH
+    playerTextTop = 100 * const.UNIVERSAL_SCALER_HEIGHT
+    player2TextLeft = const.WINDOW_WIDTH - 250 * const.UNIVERSAL_SCALER_WIDTH
+
+    damageBarLeft = 31 * const.UNIVERSAL_SCALER_WIDTH
+    reloadBarLeft = 37 * const.UNIVERSAL_SCALER_WIDTH
+    healthTextLeft = 42 * const.UNIVERSAL_SCALER_WIDTH
+    speedTextLeft = 50 * const.UNIVERSAL_SCALER_WIDTH
+
+    damageBarTop = 250 * const.UNIVERSAL_SCALER_HEIGHT    
+    reloadBarTop = 285 * const.UNIVERSAL_SCALER_HEIGHT
+    healthTextTop = 355 * const.UNIVERSAL_SCALER_HEIGHT
+    speedTextTop = 320 * const.UNIVERSAL_SCALER_HEIGHT
+    
+    damageBar2Top = 250 * const.UNIVERSAL_SCALER_HEIGHT
+    reloadBar2Top = 285 * const.UNIVERSAL_SCALER_HEIGHT
+    healthText2Top = 355 * const.UNIVERSAL_SCALER_HEIGHT
+    speedText2Top = 320 * const.UNIVERSAL_SCALER_HEIGHT
+
+    damageBar2Left = const.WINDOW_WIDTH - 150 * const.UNIVERSAL_SCALER_WIDTH
+    reloadBar2Left = const.WINDOW_WIDTH - 150 * const.UNIVERSAL_SCALER_WIDTH
+    healthText2Left = const.WINDOW_WIDTH - 150 * const.UNIVERSAL_SCALER_WIDTH
+    speedText2Left = const.WINDOW_WIDTH - 150 * const.UNIVERSAL_SCALER_WIDTH
+
+
+    homeButtonFont = 26
+    howToPlayButtonFont = 26
+    playButtonFont = 52
+    ArrowFont = 30
+    descriptionFont = 26
+    playerTextFont = 38
+    attributeFont = 36
     #Selection Screen
     buttonList = []
 
-    homeButton = TextBox(const.TILE_SIZE//4, const.TILE_SIZE//4, font=const.SELECTION_FONT,fontSize=26, text="BACK", textColor=c.geT("BLACK"))
+    homeButton = TextBox(homeButtonLeft, navButtonTop, font=const.SELECTION_FONT,fontSize=homeButtonFont, text="BACK", textColor=c.geT("BLACK"))
     homeButton.setBoxColor(const.SELECTION_BACKGROUND)
-    homeButton.setOutline(True, 5)
+    homeButton.setOutline(True, BORDER_WIDTH)
     homeButton.selectable(True)
     buttonList.append(homeButton)
 
     #How to play button
-    howToPlayButton = TextBox(const.WINDOW_WIDTH - 150, const.TILE_SIZE//4, font=const.SELECTION_FONT,fontSize=26, text="HOW TO PLAY", textColor=c.geT("BLACK"))
+    howToPlayButton = TextBox(howToPlayButtonLeft, navButtonTop, font=const.SELECTION_FONT,fontSize=howToPlayButtonFont, text="HOW TO PLAY", textColor=c.geT("BLACK"))
     howToPlayButton.setBoxColor(const.SELECTION_BACKGROUND)
-    howToPlayButton.setOutline(True, 5)
+    howToPlayButton.setOutline(True, BORDER_WIDTH)
     howToPlayButton.selectable(True)
     buttonList.append(howToPlayButton)
 
-    playButton = TextBox(const.WINDOW_WIDTH//2-84, 95, font=const.SELECTION_FONT,fontSize=52, text="PLAY", textColor=c.geT("BLACK"))
+    playButton = TextBox(playButtonLeft, playButtonTop, font=const.SELECTION_FONT,fontSize=playButtonFont, text="PLAY", textColor=c.geT("BLACK"))
     playButton.setBoxColor(const.SELECTION_BACKGROUND)
-    playButton.setOutline(True, 5)
+    playButton.setOutline(True, BORDER_WIDTH)
     playButton.selectable(True)
     buttonList.append(playButton)
 
-    lArrowP1Turret = Button(c.geT("BLACK"), c.geT("BLACK"), 70, 420, 30, 30, '<', c.geT("WHITE"), 30)
+
+
+    lArrowP1Turret = Button(c.geT("BLACK"), c.geT("BLACK"), player1LeftArrowLeftEdge, lTurretTop, arrow_width, arrow_height, '<', c.geT("WHITE"), ArrowFont)
     lArrowP1Turret.selectable(False)
     buttonList.append(lArrowP1Turret)
-    textP1Turret = TextBox(100, 420, font=const.MONO_FONT,fontSize=26, text="", textColor=c.geT("WHITE"))
+    textP1Turret = TextBox(player1TextLeftEdge, lTurretTop, font=const.MONO_FONT,fontSize=descriptionFont, text="", textColor=c.geT("WHITE"))
     textP1Turret.setBoxColor(c.geT("GREY"))
     textP1Turret.selectable(False)
     textP1Turret.setPaddingHeight(0)
     buttonList.append(textP1Turret)
-    rArrowP1Turret = Button(c.geT("BLACK"), c.geT("BLACK"), 280, 420, 30, 30, '>', c.geT("WHITE"), 30)
+    rArrowP1Turret = Button(c.geT("BLACK"), c.geT("BLACK"), player1RightArrowLeftEdge, lTurretTop, arrow_width, arrow_height, '>', c.geT("WHITE"), ArrowFont)
     rArrowP1Turret.selectable(False)
     buttonList.append(rArrowP1Turret)
 
-    lArrowP1Hull = Button(c.geT("BLACK"), c.geT("BLACK"), 70, 460, 30, 30, '<', c.geT("WHITE"), 30)
+
+    lArrowP1Hull = Button(c.geT("BLACK"), c.geT("BLACK"), player1LeftArrowLeftEdge, lHullTop, arrow_width, arrow_height, '<', c.geT("WHITE"), ArrowFont)
     lArrowP1Hull.selectable(False)
     buttonList.append(lArrowP1Hull)
-    textP1Hull = TextBox(100, 460, font=const.MONO_FONT,fontSize=26, text="", textColor=c.geT("WHITE"))
+    textP1Hull = TextBox(player1TextLeftEdge, lHullTop, font=const.MONO_FONT,fontSize=descriptionFont, text="", textColor=c.geT("WHITE"))
     textP1Hull.setBoxColor(c.geT("GREY"))
     textP1Hull.selectable(False)
     textP1Hull.setPaddingHeight(0)
     buttonList.append(textP1Hull)
-    rArrowP1Hull = Button(c.geT("BLACK"), c.geT("BLACK"), 280, 460, 30, 30, '>', c.geT("WHITE"), 30)
+    rArrowP1Hull = Button(c.geT("BLACK"), c.geT("BLACK"), player1RightArrowLeftEdge, lHullTop, arrow_width, arrow_height, '>', c.geT("WHITE"), ArrowFont)
     rArrowP1Hull.selectable(False)
     buttonList.append(rArrowP1Hull)
 
-    lArrowP1Colour = Button(c.geT("BLACK"), c.geT("BLACK"), 70, 500, 30, 30, '<', c.geT("WHITE"), 30)
+    lArrowP1Colour = Button(c.geT("BLACK"), c.geT("BLACK"), player1LeftArrowLeftEdge, lColourTop, arrow_width, arrow_height, '<', c.geT("WHITE"), ArrowFont)
     lArrowP1Colour.selectable(False)
     buttonList.append(lArrowP1Colour)
-    textP1Colour = TextBox(100, 500, font=const.MONO_FONT,fontSize=26, text="", textColor=c.geT("WHITE"))
+    textP1Colour = TextBox(player1TextLeftEdge, lColourTop, font=const.MONO_FONT,fontSize=descriptionFont, text="", textColor=c.geT("WHITE"))
     textP1Colour.setBoxColor(c.geT("BLACK"))
     textP1Colour.selectable(False)
     textP1Colour.setPaddingHeight(0)
     buttonList.append(textP1Colour)
-    rArrowP1Colour = Button(c.geT("BLACK"), c.geT("BLACK"), 280, 500, 30, 30, '>', c.geT("WHITE"), 30)
+    rArrowP1Colour = Button(c.geT("BLACK"), c.geT("BLACK"), player1RightArrowLeftEdge, lColourTop, arrow_width, arrow_height, '>', c.geT("WHITE"), ArrowFont)
     rArrowP1Colour.selectable(False)
     buttonList.append(rArrowP1Colour)
 
-    lArrowP1Colour2 = Button(c.geT("BLACK"), c.geT("BLACK"), 70, 540, 30, 30, '<', c.geT("WHITE"), 30)
+    lArrowP1Colour2 = Button(c.geT("BLACK"), c.geT("BLACK"), player1LeftArrowLeftEdge, lColour2Top, arrow_width, arrow_height, '<', c.geT("WHITE"), ArrowFont)
     lArrowP1Colour2.selectable(False)
     buttonList.append(lArrowP1Colour2)
-    textP1Colour2 = TextBox(100, 540, font=const.MONO_FONT,fontSize=26, text="", textColor=c.geT("WHITE"))
+    textP1Colour2 = TextBox(player1TextLeftEdge, lColour2Top, font=const.MONO_FONT,fontSize=descriptionFont, text="", textColor=c.geT("WHITE"))
     textP1Colour2.setBoxColor(c.geT("BLACK"))
     textP1Colour2.selectable(False)
     textP1Colour2.setPaddingHeight(0)
     buttonList.append(textP1Colour2)
-    rArrowP1Colour2 = Button(c.geT("BLACK"), c.geT("BLACK"), 280, 540, 30, 30, '>', c.geT("WHITE"), 30)
+    rArrowP1Colour2 = Button(c.geT("BLACK"), c.geT("BLACK"), player1RightArrowLeftEdge, lColour2Top, arrow_width, arrow_height, '>', c.geT("WHITE"), ArrowFont)
     rArrowP1Colour2.selectable(False)
     buttonList.append(rArrowP1Colour2)
 
-    lArrowP2Turret = Button(c.geT("BLACK"), c.geT("BLACK"), 493, 420, 30, 30, '<', c.geT("WHITE"), 30)
+    lArrowP2Turret = Button(c.geT("BLACK"), c.geT("BLACK"), player2LeftArrowLeftEdge, lTurretTop, arrow_width, arrow_height, '<', c.geT("WHITE"), ArrowFont)
     lArrowP2Turret.selectable(False)
     buttonList.append(lArrowP2Turret)
-    textP2Turret = TextBox(523, 420, font=const.MONO_FONT,fontSize=26, text="", textColor=c.geT("WHITE"))
+    textP2Turret = TextBox(player2TextLeftEdge, lTurretTop, font=const.MONO_FONT,fontSize=descriptionFont, text="", textColor=c.geT("WHITE"))
     textP2Turret.setBoxColor(c.geT("GREY"))
     textP2Turret.selectable(False)
     textP2Turret.setPaddingHeight(0)
     buttonList.append(textP2Turret)
-    rArrowP2Turret = Button(c.geT("BLACK"), c.geT("BLACK"),703, 420, 30, 30, '>', c.geT("WHITE"), 30)
+    rArrowP2Turret = Button(c.geT("BLACK"), c.geT("BLACK"), player2RightArrowLeftEdge, lTurretTop, arrow_width, arrow_height, '>', c.geT("WHITE"), ArrowFont)
     rArrowP2Turret.selectable(False)
     buttonList.append(rArrowP2Turret)
 
-    lArrowP2Hull = Button(c.geT("BLACK"), c.geT("BLACK"), 493, 460, 30, 30, '<', c.geT("WHITE"), 30)
+
+    lArrowP2Hull = Button(c.geT("BLACK"), c.geT("BLACK"), player2LeftArrowLeftEdge, lHullTop, arrow_width, arrow_height, '<', c.geT("WHITE"), ArrowFont)
     lArrowP2Hull.selectable(False)
     buttonList.append(lArrowP2Hull)
-    textP2Hull = TextBox(523, 460, font=const.MONO_FONT,fontSize=26, text="", textColor=c.geT("WHITE"))
+    textP2Hull = TextBox(player2TextLeftEdge, lHullTop, font=const.MONO_FONT,fontSize=descriptionFont, text="", textColor=c.geT("WHITE"))
     textP2Hull.setBoxColor(c.geT("GREY"))
     textP2Hull.selectable(False)
     textP2Hull.setPaddingHeight(0)
     buttonList.append(textP2Hull)
-    rArrowP2Hull = Button(c.geT("BLACK"), c.geT("BLACK"),  703, 460, 30, 30, '>', c.geT("WHITE"), 30)
+    rArrowP2Hull = Button(c.geT("BLACK"), c.geT("BLACK"), player2RightArrowLeftEdge, lHullTop, arrow_width, arrow_height, '>', c.geT("WHITE"), ArrowFont)
     rArrowP2Hull.selectable(False)
     buttonList.append(rArrowP2Hull)
 
-    lArrowP2Colour = Button(c.geT("BLACK"), c.geT("BLACK"), 493, 500, 30, 30, '<', c.geT("WHITE"), 30)
+
+    lArrowP2Colour = Button(c.geT("BLACK"), c.geT("BLACK"), player2LeftArrowLeftEdge, lColourTop, arrow_width, arrow_height, '<', c.geT("WHITE"), ArrowFont)
     lArrowP2Colour.selectable(False)
     buttonList.append(lArrowP2Colour)
-    textP2Colour = TextBox(523, 500, font=const.MONO_FONT,fontSize=26, text="", textColor=c.geT("WHITE"))
+    textP2Colour = TextBox(player2TextLeftEdge, lColourTop, font=const.MONO_FONT,fontSize=descriptionFont, text="", textColor=c.geT("WHITE"))
     textP2Colour.setBoxColor(c.geT("BLACK"))
     textP2Colour.selectable(False)
     textP2Colour.setPaddingHeight(0)
     buttonList.append(textP2Colour)
-    rArrowP2Colour = Button(c.geT("BLACK"), c.geT("BLACK"),  703, 500, 30, 30, '>', c.geT("WHITE"), 30)
+    rArrowP2Colour = Button(c.geT("BLACK"), c.geT("BLACK"), player2RightArrowLeftEdge, lColourTop, arrow_width, arrow_height, '>', c.geT("WHITE"), ArrowFont)
     rArrowP2Colour.selectable(False)
     buttonList.append(rArrowP2Colour)
 
-    lArrowP2Colour2 = Button(c.geT("BLACK"), c.geT("BLACK"), 493, 540, 30, 30, '<', c.geT("WHITE"), 30)
+    lArrowP2Colour2 = Button(c.geT("BLACK"), c.geT("BLACK"), player2LeftArrowLeftEdge, lColour2Top, arrow_width, arrow_height, '<', c.geT("WHITE"), ArrowFont)
     lArrowP2Colour2.selectable(False)
     buttonList.append(lArrowP2Colour2)
-    textP2Colour2 = TextBox(523, 540, font=const.MONO_FONT,fontSize=26, text="", textColor=c.geT("WHITE"))
+    textP2Colour2 = TextBox(player2TextLeftEdge, lColour2Top, font=const.MONO_FONT,fontSize=descriptionFont, text="", textColor=c.geT("WHITE"))
     textP2Colour2.setBoxColor(c.geT("BLACK"))
     textP2Colour2.selectable(False)
     textP2Colour2.setPaddingHeight(0)
     buttonList.append(textP2Colour2)
-    rArrowP2Colour2 = Button(c.geT("BLACK"), c.geT("BLACK"),  703, 540, 30, 30, '>', c.geT("WHITE"), 30)
+    rArrowP2Colour2 = Button(c.geT("BLACK"), c.geT("BLACK"), player2RightArrowLeftEdge, lColour2Top, arrow_width, arrow_height, '>', c.geT("WHITE"), ArrowFont)
     rArrowP2Colour2.selectable(False)
     buttonList.append(rArrowP2Colour2)
 
-    textP1 = TextBox(100, 100, font=const.SELECTION_FONT,fontSize=38, text="PLAYER 1", textColor=c.geT("BLACK"))
+
+    textP1 = TextBox(player1TextLeft, playerTextTop, font=const.SELECTION_FONT,fontSize=playerTextFont, text="PLAYER 1", textColor=c.geT("BLACK"))
     textP1.setBoxColor(const.SELECTION_BACKGROUND)
-    textP1.setOutline(True, outlineWidth = 5)
+    textP1.setOutline(True, outlineWidth = BORDER_WIDTH)
     buttonList.append(textP1)
 
-    textP2 = TextBox(const.WINDOW_WIDTH - 250, 100, font=const.SELECTION_FONT,fontSize=38, text="PLAYER 2", textColor=c.geT("BLACK"))
+    textP2 = TextBox(player2TextLeft, playerTextTop, font=const.SELECTION_FONT,fontSize=playerTextFont, text="PLAYER 2", textColor=c.geT("BLACK"))
     textP2.setBoxColor(const.SELECTION_BACKGROUND)
-    textP2.setOutline(True, outlineWidth = 5)
+    textP2.setOutline(True, outlineWidth = BORDER_WIDTH)
     buttonList.append(textP2)
-
-    speedText = TextBox(50, 320, font=const.SELECTION_FONT,fontSize=36, text="SPEED", textColor=c.geT("BLACK"))
+    
+    speedText = TextBox(speedTextLeft, speedTextTop, font=const.SELECTION_FONT,fontSize=attributeFont, text="SPEED", textColor=c.geT("BLACK"))
     speedText.setPaddingHeight(0)
     speedText.setPaddingWidth(0)
     speedText.setCharacterPad(7)
@@ -544,7 +756,7 @@ class SelectionScreen:
     speedText.setText("SPEED", 'right')
     buttonList.append(speedText)
 
-    healthText = TextBox(42, 355, font=const.SELECTION_FONT,fontSize=36, text="Health", textColor=c.geT("BLACK"))
+    healthText = TextBox(healthTextLeft, healthTextTop, font=const.SELECTION_FONT,fontSize=attributeFont, text="Health", textColor=c.geT("BLACK"))
     healthText.setPaddingHeight(0)
     healthText.setPaddingWidth(0)
     healthText.setCharacterPad(7)
@@ -552,7 +764,8 @@ class SelectionScreen:
     healthText.setText("HEALTH", "right")
     buttonList.append(healthText)
 
-    damageBar = TextBox(31, 250, font=const.SELECTION_FONT,fontSize=36, text="Damage", textColor=c.geT("BLACK"))
+
+    damageBar = TextBox(damageBarLeft, damageBarTop, font=const.SELECTION_FONT,fontSize=attributeFont, text="Damage", textColor=c.geT("BLACK"))
     damageBar.setPaddingHeight(0)
     damageBar.setPaddingWidth(0)
     damageBar.setCharacterPad(7)
@@ -560,7 +773,8 @@ class SelectionScreen:
     damageBar.setText("DAMAGE", "right")
     buttonList.append(damageBar)
 
-    reloadBar = TextBox(37, 285, font=const.SELECTION_FONT,fontSize=36, text="Reload", textColor=c.geT("BLACK"))
+
+    reloadBar = TextBox(reloadBarLeft, reloadBarTop, font=const.SELECTION_FONT,fontSize=attributeFont, text="Reload", textColor=c.geT("BLACK"))
     reloadBar.setPaddingHeight(0)
     reloadBar.setPaddingWidth(0)
     reloadBar.setCharacterPad(7)
@@ -568,7 +782,8 @@ class SelectionScreen:
     reloadBar.setText("RELOAD", "right")
     buttonList.append(reloadBar)
 
-    speedText2 = TextBox(650, 320, font=const.SELECTION_FONT,fontSize=36, text="Speed", textColor=c.geT("BLACK"))
+
+    speedText2 = TextBox(speedText2Left, speedText2Top, font=const.SELECTION_FONT,fontSize=attributeFont, text="Speed", textColor=c.geT("BLACK"))
     speedText2.setPaddingHeight(0)
     speedText2.setPaddingWidth(0)
     speedText2.setCharacterPad(7)
@@ -576,7 +791,9 @@ class SelectionScreen:
     speedText2.setText("SPEED", "left")
     buttonList.append(speedText2)
 
-    healthText2 = TextBox(650, 355, font=const.SELECTION_FONT,fontSize=36, text="Health", textColor=c.geT("BLACK"))
+
+
+    healthText2 = TextBox(healthText2Left, healthText2Top, font=const.SELECTION_FONT,fontSize=attributeFont, text="Health", textColor=c.geT("BLACK"))
     healthText2.setPaddingHeight(0)
     healthText2.setPaddingWidth(0)
     healthText2.setCharacterPad(7)
@@ -584,7 +801,8 @@ class SelectionScreen:
     healthText2.setText("HEALTH", "left")
     buttonList.append(healthText2)
 
-    damageBar2 = TextBox(650, 250, font=const.SELECTION_FONT,fontSize=36, text="Damage", textColor=c.geT("BLACK"))
+
+    damageBar2 = TextBox(damageBar2Left, damageBar2Top, font=const.SELECTION_FONT,fontSize=attributeFont, text="Damage", textColor=c.geT("BLACK"))
     damageBar2.setPaddingHeight(0)
     damageBar2.setPaddingWidth(0)
     damageBar2.setCharacterPad(7)
@@ -592,7 +810,8 @@ class SelectionScreen:
     damageBar2.setText("DAMAGE", "left")
     buttonList.append(damageBar2)
 
-    reloadBar2 = TextBox(650, 285, font=const.SELECTION_FONT,fontSize=36, text="Reload", textColor=c.geT("BLACK"))
+
+    reloadBar2 = TextBox(reloadBar2Left, reloadBar2Top, font=const.SELECTION_FONT,fontSize=attributeFont, text="Reload", textColor=c.geT("BLACK"))
     reloadBar2.setPaddingHeight(0)
     reloadBar2.setPaddingWidth(0)
     reloadBar2.setCharacterPad(7)
@@ -637,74 +856,91 @@ class SelectionScreen:
             button.draw(screen, outline = False)
 
         # Draw the green bars
-        pygame.draw.rect(screen, c.geT("GREEN"), (157, 320, 50 * self.playerInformation.getPlayer1Hull().getSpeedStatistic(), 25)) # Green bar
-        pygame.draw.rect(screen, c.geT("GREEN"), (157, 355, 50 * self.playerInformation.getPlayer1Hull().getHealthStatistic(), 25)) # Green bar
-        pygame.draw.rect(screen, c.geT("GREEN"), (157, 250, 50 * self.playerInformation.getPlayer1Turret().getDamageStatistic(), 25)) # Green bar
-        pygame.draw.rect(screen, c.geT("GREEN"), (157, 285, 50 * self.playerInformation.getPlayer1Turret().getReloadStatistic(), 25)) # Green bar
-        pygame.draw.rect(screen, c.geT("GREEN"), (493, 320, 50 * self.playerInformation.getPlayer2Hull().getSpeedStatistic(), 25)) # Green bar
-        pygame.draw.rect(screen, c.geT("GREEN"), (493, 355, 50 * self.playerInformation.getPlayer2Hull().getHealthStatistic(), 25)) # Green bar
-        pygame.draw.rect(screen, c.geT("GREEN"), (493, 250,50 * self.playerInformation.getPlayer2Turret().getDamageStatistic(), 25)) # Green bar
-        pygame.draw.rect(screen, c.geT("GREEN"), (493, 285, 50 * self.playerInformation.getPlayer2Turret().getReloadStatistic(), 25)) # Green bar
-
+        player1InfoLeft = 157 * const.UNIVERSAL_SCALER_WIDTH
+        player2InfoLeft = const.WINDOW_WIDTH - 307 * const.UNIVERSAL_SCALER_WIDTH
+        playerHullSpeedInfoTop = 320 * const.UNIVERSAL_SCALER_HEIGHT
+        playerHullHealthInfoTop = 355 * const.UNIVERSAL_SCALER_HEIGHT
+        playerTurretDamageInfoTop = 250 * const.UNIVERSAL_SCALER_HEIGHT
+        playerTurretReloadInfoTop = 285 * const.UNIVERSAL_SCALER_HEIGHT
+        bar_division = int(50 * const.UNIVERSAL_SCALER_WIDTH)
         # Player 1 Speed
+        Player1StatLeft = 207 * const.UNIVERSAL_SCALER_WIDTH
+        Player2StatLeft = 543 * const.UNIVERSAL_SCALER_WIDTH
+
+        pygame.draw.rect(screen, c.geT("GREEN"), (player1InfoLeft, playerHullSpeedInfoTop, bar_division * self.playerInformation.getPlayer1Hull().getSpeedStatistic(), self.BAR_WIDTH)) # Green bar
+        pygame.draw.rect(screen, c.geT("GREEN"), (player1InfoLeft, playerHullHealthInfoTop, bar_division * self.playerInformation.getPlayer1Hull().getHealthStatistic(), self.BAR_WIDTH)) # Green bar
+        pygame.draw.rect(screen, c.geT("GREEN"), (player1InfoLeft, playerTurretDamageInfoTop, bar_division * self.playerInformation.getPlayer1Turret().getDamageStatistic(), self.BAR_WIDTH)) # Green bar
+        pygame.draw.rect(screen, c.geT("GREEN"), (player1InfoLeft, playerTurretReloadInfoTop, bar_division * self.playerInformation.getPlayer1Turret().getReloadStatistic(), self.BAR_WIDTH)) # Green bar
+
+        pygame.draw.rect(screen, c.geT("GREEN"), (player2InfoLeft, playerHullSpeedInfoTop, bar_division * self.playerInformation.getPlayer2Hull().getSpeedStatistic(), self.BAR_WIDTH)) # Green bar
+        pygame.draw.rect(screen, c.geT("GREEN"), (player2InfoLeft, playerHullHealthInfoTop, bar_division * self.playerInformation.getPlayer2Hull().getHealthStatistic(), self.BAR_WIDTH)) # Green bar
+        pygame.draw.rect(screen, c.geT("GREEN"), (player2InfoLeft, playerTurretDamageInfoTop, bar_division * self.playerInformation.getPlayer2Turret().getDamageStatistic(), self.BAR_WIDTH)) # Green bar
+        pygame.draw.rect(screen, c.geT("GREEN"), (player2InfoLeft, playerTurretReloadInfoTop, bar_division * self.playerInformation.getPlayer2Turret().getReloadStatistic(), self.BAR_WIDTH)) # Green bar
+
         #Outlines
-        pygame.draw.rect(screen, c.geT("BLACK"), (157, 250, 150, 25), 3) # Green bar outline
-        pygame.draw.rect(screen, c.geT("BLACK"), (207, 250, 50, 25), 3) # Thirding
+        pygame.draw.rect(screen, c.geT("BLACK"), (player1InfoLeft, playerTurretDamageInfoTop, bar_division*3, self.BAR_WIDTH), self.THIN_BAR_WIDTH) # Green bar outline
+        pygame.draw.rect(screen, c.geT("BLACK"), (Player1StatLeft, playerTurretDamageInfoTop, bar_division, self.BAR_WIDTH), self.THIN_BAR_WIDTH) # Thirding
 
         #Player 1 Health
         #Outlines
-        pygame.draw.rect(screen, c.geT("BLACK"), (157, 285, 150, 25), 3) # Green bar outline
-        pygame.draw.rect(screen, c.geT("BLACK"), (207, 285, 50,25), 3) # Thirding
+        pygame.draw.rect(screen, c.geT("BLACK"), (player1InfoLeft, playerTurretReloadInfoTop, bar_division*3, self.BAR_WIDTH), self.THIN_BAR_WIDTH) # Green bar outline
+        pygame.draw.rect(screen, c.geT("BLACK"), (Player1StatLeft, playerTurretReloadInfoTop, bar_division, self.BAR_WIDTH), self.THIN_BAR_WIDTH) # Thirding
 
         # Player 1 damage
         #Outlines
-        pygame.draw.rect(screen, c.geT("BLACK"), (157, 320, 150, 25), 3) # Green bar outline
-        pygame.draw.rect(screen, c.geT("BLACK"), (207, 320, 50,25), 3) # Thirding
+        pygame.draw.rect(screen, c.geT("BLACK"), (player1InfoLeft, playerHullSpeedInfoTop, bar_division*3, self.BAR_WIDTH), self.THIN_BAR_WIDTH) # Green bar outline
+        pygame.draw.rect(screen, c.geT("BLACK"), (Player1StatLeft, playerHullSpeedInfoTop, bar_division, self.BAR_WIDTH), self.THIN_BAR_WIDTH) # Thirding
 
         # Player 1 reload
         #Outlines
-        pygame.draw.rect(screen, c.geT("BLACK"), (157, 355, 150, 25), 3) # Green bar outline
-        pygame.draw.rect(screen, c.geT("BLACK"), (207, 355, 50,25), 3) # Thirding
+        pygame.draw.rect(screen, c.geT("BLACK"), (player1InfoLeft, playerHullHealthInfoTop, bar_division*3, self.BAR_WIDTH), self.THIN_BAR_WIDTH) # Green bar outline
+        pygame.draw.rect(screen, c.geT("BLACK"), (Player1StatLeft, playerHullHealthInfoTop, bar_division, self.BAR_WIDTH), self.THIN_BAR_WIDTH) # Thirding
 
         #Player 2 Speed
         #Outlines
-        pygame.draw.rect(screen, c.geT("BLACK"), (493, 250, 50 * 3, 25), 3) # Green bar outline
-        pygame.draw.rect(screen, c.geT("BLACK"), (543, 250, 50,25), 3) # Thirding
+        pygame.draw.rect(screen, c.geT("BLACK"), (player2InfoLeft, playerTurretDamageInfoTop, bar_division*3, self.BAR_WIDTH), self.THIN_BAR_WIDTH) # Green bar outline
+        pygame.draw.rect(screen, c.geT("BLACK"), (Player2StatLeft, playerTurretDamageInfoTop, bar_division, self.BAR_WIDTH), self.THIN_BAR_WIDTH) # Thirding
 
         # Player 2 Health
         #Outlines
-        pygame.draw.rect(screen, c.geT("BLACK"), (493, 285, 150, 25), 3) # Green bar outline
-        pygame.draw.rect(screen, c.geT("BLACK"), (543, 285, 50,25), 3) # Thirding
+        pygame.draw.rect(screen, c.geT("BLACK"), (player2InfoLeft, playerTurretReloadInfoTop, bar_division*3, self.BAR_WIDTH), self.THIN_BAR_WIDTH) # Green bar outline
+        pygame.draw.rect(screen, c.geT("BLACK"), (Player2StatLeft, playerTurretReloadInfoTop, bar_division, self.BAR_WIDTH), self.THIN_BAR_WIDTH) # Thirding
 
         # Player 2 Damage
         #Outlines
-        pygame.draw.rect(screen, c.geT("BLACK"), (493, 320, 150, 25), 3) # Green bar outline
-        pygame.draw.rect(screen, c.geT("BLACK"), (543, 320, 50, 25), 3) # Thirding
+        pygame.draw.rect(screen, c.geT("BLACK"), (player2InfoLeft, playerHullSpeedInfoTop, bar_division*3, self.BAR_WIDTH), self.THIN_BAR_WIDTH) # Green bar outline
+        pygame.draw.rect(screen, c.geT("BLACK"), (Player2StatLeft, playerHullSpeedInfoTop, bar_division, self.BAR_WIDTH), self.THIN_BAR_WIDTH) # Thirding
 
         # Player 2 Reload
         #Outlines
-        pygame.draw.rect(screen, c.geT("BLACK"), (493, 355, 150, 25), 3) # Green bar outline
-        pygame.draw.rect(screen, c.geT("BLACK"), (543, 355, 50,25), 3) # Thirding
+        pygame.draw.rect(screen, c.geT("BLACK"), (player2InfoLeft, playerHullHealthInfoTop, bar_division*3, self.BAR_WIDTH), self.THIN_BAR_WIDTH) # Green bar outline
+        pygame.draw.rect(screen, c.geT("BLACK"), (Player2StatLeft, playerHullHealthInfoTop, bar_division, self.BAR_WIDTH), self.THIN_BAR_WIDTH) # Thirding
 
 
         #Draw the tank image
         tankPath = os.path.join(const.BASE_PATH, 'Sprites', self.playerInformation.getPlayer1Hull().getTankName() + str(self.playerInformation.Player1HullColourIndex() + 1) + '.png')
         originalTankImage = pygame.image.load(tankPath).convert_alpha()
         tankImage = pygame.transform.scale(originalTankImage, (20*4, 13*4))
-        screen.blit(tankImage, (130, 174))
+        tankImageX = 130
+        tankImageY = 174
+        screen.blit(tankImage, (tankImageX, tankImageY))
 
         gunPath = os.path.join(const.BASE_PATH, 'Sprites', self.playerInformation.getPlayer1Turret().getGunName() + str(self.playerInformation.Player1TurretColourIndex()+1) + '.png')
         originalGunImage = pygame.image.load(gunPath).convert_alpha()
         centerX, centerY = self.playerInformation.getPlayer1Hull().getGunCenter()
         gX, _ = self.playerInformation.getPlayer1Turret().getGunCenter()
         gunImage = pygame.transform.scale(originalGunImage, (15*5, 15*5))
-        screen.blit(gunImage, (170 + (centerX - gX) * 5, 194 - (centerY + 6) * 5))
-        
+        gunImageLeft = 170 + (centerX - gX) * 5
+        gunImageTop = 194 - (centerY + 6) * 5
+        screen.blit(gunImage, (gunImageLeft, gunImageTop))
+
         tankPath2 = os.path.join(const.BASE_PATH, 'Sprites', self.playerInformation.getPlayer2Hull().getTankName() + str(self.playerInformation.Player2HullColourIndex() + 1) + '.png')
         originalTankImage2 = pygame.image.load(tankPath2).convert_alpha()
         tankImage2 = pygame.transform.scale(originalTankImage2, (20*4, 13*4))
         tankImage2 = pygame.transform.flip(tankImage2, True, False) # Flipped    
-        screen.blit(tankImage2, (const.WINDOW_WIDTH - 130 - 4 * 20, 174))
+        tankImage2X = const.WINDOW_WIDTH - 130 - 4 * 20
+        tankImage2Y = 174
+        screen.blit(tankImage2, (tankImage2X, tankImage2Y))
 
         gunPath2 = os.path.join(const.BASE_PATH, 'Sprites', self.playerInformation.getPlayer2Turret().getGunName() + str(self.playerInformation.Player2TurretColourIndex()+1) + '.png')
         originalGunImage2 = pygame.image.load(gunPath2).convert_alpha()
@@ -713,7 +949,9 @@ class SelectionScreen:
 
         gunImage2 = pygame.transform.scale(originalGunImage2, (15*5, 15*5))
         gunImage2 = pygame.transform.flip(gunImage2, True, False) # Flipped
-        screen.blit(gunImage2, (const.WINDOW_WIDTH - 170 - 5 * 15 - (centerX - gX)*5, 194 + centerY*5 - 6*5))
+        gunImage2X = const.WINDOW_WIDTH - 170 - 5 * 15 - (centerX - gX) * 5
+        gunImage2Y = 194 + centerY * 5 - 6 * 5
+        screen.blit(gunImage2, (gunImage2X, gunImage2Y))
 
     def isWithinPlayButton(self, mousePos):
         return self.playButton.buttonClick(mousePos)
@@ -821,17 +1059,27 @@ class SelectionScreen:
     
 class EndScreen:
 
+    BORDER_WIDTH = 5
+
     class TableRow:
+        BORDER_WIDTH = 5
+
+        top = 138
+        left1 = 124
+        left2 = 262
+        left3 = 400
+        left4 = 538
+
         # 4 text boxes
         def __init__(self, height = 370, boxHeight = 60):
-            self.text1 = Button(c.geT("GREY"), c.geT("GREY"), 124, height, 138, boxHeight, 'Player', c.geT("WHITE"), 26, c.geT("GREY"))
-            self.text2 = Button(c.geT("GREY"), c.geT("GREY"), 262, height, 138, boxHeight, 'Kills', c.geT("WHITE"), 26, c.geT("GREY"))
-            self.text3 = Button(c.geT("GREY"), c.geT("GREY"), 400, height, 138, boxHeight, 'Deaths', c.geT("WHITE"), 26, c.geT("GREY"))
-            self.text4 = Button(c.geT("GREY"), c.geT("GREY"), 538, height, 138, boxHeight, 'Ratio', c.geT("WHITE"), 26, c.geT("GREY"))
-            self.text1.setOutline(True, 5)
-            self.text2.setOutline(True, 5)
-            self.text3.setOutline(True, 5)
-            self.text4.setOutline(True, 5)
+            self.text1 = Button(c.geT("GREY"), c.geT("GREY"), self.left1, height, self.top, boxHeight, 'Player', c.geT("WHITE"), 26, c.geT("GREY"))
+            self.text2 = Button(c.geT("GREY"), c.geT("GREY"), self.left2, height, self.top, boxHeight, 'Kills', c.geT("WHITE"), 26, c.geT("GREY"))
+            self.text3 = Button(c.geT("GREY"), c.geT("GREY"), self.left3, height, self.top, boxHeight, 'Deaths', c.geT("WHITE"), 26, c.geT("GREY"))
+            self.text4 = Button(c.geT("GREY"), c.geT("GREY"), self.left4, height, self.top, boxHeight, 'Ratio', c.geT("WHITE"), 26, c.geT("GREY"))
+            self.text1.setOutline(True, self.BORDER_WIDTH)
+            self.text2.setOutline(True, self.BORDER_WIDTH)
+            self.text3.setOutline(True, self.BORDER_WIDTH)
+            self.text4.setOutline(True, self.BORDER_WIDTH)
             self.text1.selectable(False)
             self.text2.selectable(False)
             self.text3.selectable(False)
@@ -866,9 +1114,12 @@ class EndScreen:
     font_size = 30
     width = 255
     height = 70
-    playAgainButton = Button(c.geT("BLACK"), c.geT("BLACK"), 115, 455, width, height, "Play Again", c.geT("WHITE"), font_size, c.geT("BLACK"))
+    bottomButtonHeight = 455
+    playAgainLeft =  115
+    backToHomeLeft = 430
+    playAgainButton = Button(c.geT("BLACK"), c.geT("BLACK"), playAgainLeft, bottomButtonHeight, width, height, "Play Again", c.geT("WHITE"), font_size, c.geT("BLACK"))
     blist.append(playAgainButton)
-    backToHomeButton = Button(c.geT("BLACK"), c.geT("BLACK"), 430, 455, width, height, "Back to Home", c.geT("WHITE"), font_size, c.geT("BLACK"))
+    backToHomeButton = Button(c.geT("BLACK"), c.geT("BLACK"), backToHomeLeft, bottomButtonHeight, width, height, "Back to Home", c.geT("WHITE"), font_size, c.geT("BLACK"))
     blist.append(backToHomeButton)
 
 
@@ -900,8 +1151,8 @@ class EndScreen:
         # self.makeTable(["Player 1", "0", "0", "0"],["Player 2", "0", "0", "0"],["Player 3", "0", "0", "0"])
 
     def draw(self, screen):
-        pygame.draw.rect(screen, (240, 240, 240), [const.MAZE_X, const.MAZE_Y, const.WINDOW_WIDTH - const.MAZE_X * 2, const.WINDOW_HEIGHT - const.MAZE_Y * 2])
-        pygame.draw.rect(screen, (0,0,0), [const.MAZE_X, const.MAZE_Y, const.WINDOW_WIDTH - const.MAZE_X * 2, const.WINDOW_HEIGHT - const.MAZE_Y * 2], 5)
+        pygame.draw.rect(screen, c.geT("OFF_WHITE"), [const.MAZE_X, const.MAZE_Y, const.WINDOW_WIDTH - const.MAZE_X * 2, const.WINDOW_HEIGHT - const.MAZE_Y * 2])
+        pygame.draw.rect(screen, c.geT("BLACK"), [const.MAZE_X, const.MAZE_Y, const.WINDOW_WIDTH - const.MAZE_X * 2, const.WINDOW_HEIGHT - const.MAZE_Y * 2], self.BORDER_WIDTH)
 
         for button in self.blist:
             button.draw(screen, outline = True)
@@ -918,10 +1169,8 @@ class EndScreen:
 
     def makeTable(self, *rows):
         # set all table rows to not draw
-        # make all 0 except for the first one
-        rows = list(zip(*rows))
-        rows = list(zip(*rows))
-        rows.sort(key=lambda x: x[4], reverse=True)
+        rows = list(rows)
+        rows = sorted(rows, key=lambda x: x[4], reverse=True)  # Sort by K/D in descending order
         for row in self.TableInfo:
             row.setDraw(False)
         # set the first row to draw
@@ -935,15 +1184,32 @@ class EndScreen:
 
 class NotImplmented:
 
-    backButton = Button(c.geT("BLACK"), c.geT("BLACK"), 630, 175, 100, 50, "Back", c.geT("WHITE"), 30, c.geT("BLACK"))
+    BORDER_WIDTH = int(5 * const.UNIVERSAL_SCALER_HEIGHT)
 
-    txtBox = TextBox(100, 180, font=const.SELECTION_FONT,fontSize=30, text="This feature has not been implemented yet", textColor=c.geT("BLACK"))
+    backleft = 630 * const.UNIVERSAL_SCALER_WIDTH
+    backtop = 175 * const.UNIVERSAL_SCALER_HEIGHT
+    backWidth = 100 * const.UNIVERSAL_SCALER_WIDTH
+    backHeight = 50 * const.UNIVERSAL_SCALER_HEIGHT
+    txtBoxLeft = 100 * const.UNIVERSAL_SCALER_WIDTH
+    txtBoxTop = 180 * const.UNIVERSAL_SCALER_HEIGHT
+    backButton = Button(c.geT("BLACK"), c.geT("BLACK"), backleft, backtop, backWidth, backHeight, "Back", c.geT("WHITE"), 30, c.geT("BLACK"))
+
+    txtBox = TextBox(txtBoxLeft, txtBoxTop, font=const.SELECTION_FONT,fontSize=30, text="This feature has not been implemented yet", textColor=c.geT("BLACK"))
     txtBox.setBoxColor(const.SELECTION_BACKGROUND)
+
+
+    left = 40 * const.UNIVERSAL_SCALER_WIDTH
+    top = 160 * const.UNIVERSAL_SCALER_HEIGHT
+    width = 740 * const.UNIVERSAL_SCALER_WIDTH
+    height = 80 * const.UNIVERSAL_SCALER_HEIGHT
+
+    bglist = [left, top, width, height]
+
 
     def draw(self, screen):
 
-        pygame.draw.rect(screen, const.SELECTION_BACKGROUND, [40, 160, 740, 80])
-        pygame.draw.rect(screen, c.geT("BLACK"), [40, 160, 740, 80], width = 5)
+        pygame.draw.rect(screen, const.SELECTION_BACKGROUND, self.bglist)
+        pygame.draw.rect(screen, c.geT("BLACK"), self.bglist, width = self.BORDER_WIDTH)
         self.backButton.draw(screen, outline = True)
         self.txtBox.draw(screen, outline = True)
 

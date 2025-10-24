@@ -23,6 +23,7 @@ class ColourDictionary:
         "SOFT_WHITE" : '#D9D9D9',
         "BEIGE" : '#F5F5DC',
         "SAND_BEIGE" : '#F4A460',
+        "CORNFLOWER_BLUE" : '#6464FF',
     }
 
     def __init__(self):

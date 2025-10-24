@@ -117,7 +117,7 @@ class Flag():
 
     def isWithin(self, coords):
         cX, cY = coords[0], coords[1]
-        if cX >= self.xy[0] and cX <= self.xy[0] + const.TILE_SIZE and cY >= self.xy[1] and cY <= self.xy[1] + const.TILE_SIZE:
+        if cX >= self.xy[0] and cX <= self.xy[0] + const.TILE_SIZE_X and cY >= self.xy[1] and cY <= self.xy[1] + const.TILE_SIZE_Y:
             return True
         return False
 
@@ -128,7 +128,7 @@ class Flag():
         if self.isHome():
             # if we are at home, don't draw the flag
             return
-        size = const.TILE_SIZE // 8
+        size = const.TILE_SIZE_Y // 8 # <! Update with new code>
         triangle = [
             [self.xy[0], self.xy[1] - size],
             [self.xy[0] - size, self.xy[1] + size],
@@ -173,10 +173,10 @@ class Flag():
         # This function will return the tile index of the flag
         # Inputs: None
         # Outputs: The tile index of the flag
-        return ((self.xy[0]-const.MAZE_X) // const.TILE_SIZE) + ((self.xy[1]-const.MAZE_Y) // const.TILE_SIZE) * const.COLUMN_AMOUNT + 1
+        return ((self.xy[0]-const.MAZE_X) // const.TILE_SIZE_X) + ((self.xy[1]-const.MAZE_Y) // const.TILE_SIZE_Y) * const.COLUMN_AMOUNT + 1
     
     def getTileHomeIndex(self):
         # This function will return the tile index of the flag home
         # Inputs: None
         # Outputs: The tile index of the flag home
-        return ((self.homexy[0]-const.MAZE_X) // const.TILE_SIZE) + ((self.homexy[1]-const.MAZE_Y) // const.TILE_SIZE) * const.COLUMN_AMOUNT + 1
+        return ((self.homexy[0]-const.MAZE_X) // const.TILE_SIZE_X) + ((self.homexy[1]-const.MAZE_Y) // const.TILE_SIZE_Y) * const.COLUMN_AMOUNT + 1

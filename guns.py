@@ -56,7 +56,6 @@ class Gun(pygame.sprite.Sprite):
         self.drawable = False
         self.topTurretSpeed = self.turretSpeed
         self.gunH = 7
-        self.imgScaler = 1.5
         self.channelListBusy = [False, False, False, False] # The channels that the sound effects will be played on
         self.channelDict = {} # The dictionary that will store the sound effects
         angleRad = math.radians(self.angle)
@@ -131,16 +130,16 @@ class Gun(pygame.sprite.Sprite):
                             x = tank1x + (dx/distance) * i
                             y = tank1y + (dy/distance) * i
                             #check the tile it is in
-                            row = math.ceil((y - const.MAZE_Y)/const.TILE_SIZE)
-                            col = math.ceil((x - const.MAZE_X)/const.TILE_SIZE)
+                            row = math.ceil((y - const.MAZE_Y)/const.TILE_SIZE_Y)
+                            col = math.ceil((x - const.MAZE_X)/const.TILE_SIZE_X)
                             index = (row-1)*const.COLUMN_AMOUNT + col
                             tile = g.tileList[index-1]
 
                             if tile.border[0] and y - 1 <= tile.y:
                                 break
-                            if tile.border[1] and x + 1 >= tile.x + const.TILE_SIZE:
+                            if tile.border[1] and x + 1 >= tile.x + const.TILE_SIZE_X:
                                 break
-                            if tile.border[2] and y + 1 >= tile.y + const.TILE_SIZE:
+                            if tile.border[2] and y + 1 >= tile.y + const.TILE_SIZE_Y:
                                 break
                             if tile.border[3] and x - 1 <= tile.x:
                                 break
@@ -663,7 +662,7 @@ class Gun(pygame.sprite.Sprite):
         """
         if target < 0 or target > 112:
             return # don't set a target
-        self.tank.setAim((target, target%14*const.TILE_SIZE + const.TILE_SIZE//2, ((target)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
+        self.tank.setAim((target, target%14*const.TILE_SIZE_X + const.TILE_SIZE_X//2, ((target)//14 + 1)*const.TILE_SIZE_Y + const.TILE_SIZE_Y//2)) # <! This line might be wrong>
 
 
     def setCooldown(self, value = 0):
@@ -757,7 +756,7 @@ class Gun(pygame.sprite.Sprite):
         gunPath = os.path.join(currentDir,'Sprites', str(name) + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
         width, height = self.originalGunImage.get_size()
-        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*self.imgScaler), int(height*self.imgScaler)))
+        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*const.SPRITE_SCALER*const.GUN_SCALER_EXTRA), int(height*const.SPRITE_SCALER*const.GUN_SCALER_EXTRA)))
         self.gunImage = self.originalGunImage
         self.image = self.gunImage
         spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')
@@ -825,7 +824,7 @@ class Gun(pygame.sprite.Sprite):
         self.targetIndex = random.choice(lst)
         self.target = self.enemy[self.targetIndex] # I think this works
         temp = self.target.getCurrentTile().getIndex() # for the most part we can guarantee this
-        self.tank.setAim((temp, temp%14*const.TILE_SIZE + const.TILE_SIZE//2, ((temp)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
+        self.tank.setAim((temp, temp%14*const.TILE_SIZE_X + const.TILE_SIZE_X//2, ((temp)//14 + 1)*const.TILE_SIZE_Y + const.TILE_SIZE_Y//2))
 
     def copy(self):
         return Gun(self.tank, self.controls, self.name)
@@ -841,7 +840,7 @@ class Gun(pygame.sprite.Sprite):
                 self.targetIndex = random.choice(lst)
                 self.target = self.enemy[self.targetIndex] # I think this works
                 temp = self.target.getCurrentTile().getIndex() # for the most part we can guarantee this
-                self.tank.setAim((temp, temp%14*const.TILE_SIZE + const.TILE_SIZE//2, ((temp)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
+                self.tank.setAim((temp, temp%14*const.TILE_SIZE_X + const.TILE_SIZE_X//2, ((temp)//14 + 1)*const.TILE_SIZE_Y + const.TILE_SIZE_Y//2))
 
             return
         if self.target is not None: # find a new target
@@ -849,7 +848,7 @@ class Gun(pygame.sprite.Sprite):
             self.targetIndex = random.choice(lst)
             self.target = self.enemy[self.targetIndex] # I think this works
             temp = self.target.getCurrentTile().getIndex() # for the most part we can guarantee this
-            self.tank.setAim((temp, temp%14*const.TILE_SIZE + const.TILE_SIZE//2, ((temp)//14 + 1)*const.TILE_SIZE + const.TILE_SIZE//2))
+            self.tank.setAim((temp, temp%14*const.TILE_SIZE_X + const.TILE_SIZE_X//2, ((temp)//14 + 1)*const.TILE_SIZE_Y + const.TILE_SIZE_Y//2))
 
 class Chamber(Gun):
 
@@ -1405,8 +1404,8 @@ class Watcher(Gun):
                     found = True
                     break
                 # Recalculate row and column based on the smaller steps
-                row = math.ceil((tempY - const.MAZE_Y) / const.TILE_SIZE)
-                col = math.ceil((tempX - const.MAZE_X) / const.TILE_SIZE)
+                row = math.ceil((tempY - const.MAZE_Y) / const.TILE_SIZE_Y)
+                col = math.ceil((tempX - const.MAZE_X) / const.TILE_SIZE_X)
                 index = (row - 1) * const.COLUMN_AMOUNT + col
 
                 # Handle wall collision
@@ -1417,9 +1416,9 @@ class Watcher(Gun):
                 wallCollision = False
                 if tile.border[0] and tempY - 1 <= tile.y: # Top border
                     wallCollision = True
-                if tile.border[1] and tempX + 1 >= tile.x + const.TILE_SIZE: # Right border
+                if tile.border[1] and tempX + 1 >= tile.x + const.TILE_SIZE_X: # Right border
                     wallCollision = True
-                if tile.border[2] and tempY + 1 >= tile.y + const.TILE_SIZE: # Bottom border
+                if tile.border[2] and tempY + 1 >= tile.y + const.TILE_SIZE_Y: # Bottom border
                     wallCollision = True
                 if tile.border[3] and tempX - 1 <= tile.x: # Left border
                     wallCollision = True

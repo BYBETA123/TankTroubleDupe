@@ -102,8 +102,8 @@ def tileGen(numSpawns = 2): # Default is 2 spawns
         # Outputs: A list of tiles that make up the maze
         tempTiles = []
         index = 1
-        for j in range(const.MAZE_Y, const.MAZE_HEIGHT + 1, const.TILE_SIZE): # Assign the tiles and spawns once everything is found
-            for i in range(const.MAZE_X, const.MAZE_WIDTH + 1, const.TILE_SIZE):
+        for j in range(const.MAZE_Y, const.MAZE_HEIGHT + 1, const.TILE_SIZE_Y): # Assign the tiles and spawns once everything is found
+            for i in range(const.MAZE_X, const.MAZE_WIDTH + 1, const.TILE_SIZE_X):
                 tempTiles.append(Tile(index, i, j, c.geT("LIGHT_GREY"), False))
                 index += 1
 
@@ -169,7 +169,7 @@ def tileGen(numSpawns = 2): # Default is 2 spawns
     # turn the spawnpoints into something usable
     choices_remaster = []
     for i in range(len(choices)):
-        choices_remaster.append([g.tileList[choices[i] - 1].x + const.TILE_SIZE // 2, g.tileList[choices[i] - 1].y + const.TILE_SIZE // 2])
+        choices_remaster.append([g.tileList[choices[i] - 1].x + const.TILE_SIZE_X // 2, g.tileList[choices[i] - 1].y + const.TILE_SIZE_Y // 2])
 
     # supplies
     global spawnpoint
@@ -253,7 +253,8 @@ def nextType():
             constantSelectionScreen()
         case DifficultyType.CaptureTheFlag:
             reset()
-            gameMode = GameMode.selection
+            gameMode = GameMode.unimplemented
+            # gameMode = GameMode.selection
             constantSelectionScreen()
         case _:
             print("Invalid difficulty type")
@@ -524,8 +525,9 @@ def getMap(mapPath):
             l = line.strip().split("||")
             # cast the string to a tuple
             t = l[2][1:-1].split(",")
-            temp = Tile(int(l[5]), int(l[0]), int(l[1]), (int(t[0]), int(t[1]), int(t[2])), False)
-            # temp.borderindex = int(l[6])
+            # let's auto assign tiles
+
+            temp = Tile(int(l[5]), int(int(l[0])/50*const.TILE_SIZE_X), int(int(l[1])/50*const.TILE_SIZE_Y), (int(t[0]), int(t[1]), int(t[2])), False)
             temp.setBorderIndex(int(l[6]))
             temp.updateBorder()
             temp.setSpecial(int(l[7]))
@@ -541,7 +543,7 @@ def getMap(mapPath):
     spwn = []
 
     for i in range(len(choices)):
-        spwn.append([tList[choices[i] - 1].x + const.TILE_SIZE // 2, tList[choices[i] - 1].y + const.TILE_SIZE // 2])
+        spwn.append([tList[choices[i] - 1].x + const.TILE_SIZE_X // 2, tList[choices[i] - 1].y + const.TILE_SIZE_Y // 2])
 
     return tList, spwn
 
@@ -608,7 +610,7 @@ def setUpPlayers():
             timer.setDuration(600) # 10 min
         case DifficultyType.CaptureTheFlag:
             timer.setDirection(False)
-            timer.setDuration(600) # 10 min
+            timer.setDuration(1) # 10 min #<!FIXME (61)>
         case _:
             print("Unknown state")
             return
@@ -649,14 +651,17 @@ def constantPlayGame():
     Outputs: None
     """
     g.playScreen.fill(const.BACKGROUND_COLOR)
-    g.playScreen.blit(g.gunList[0].getSprite(True), (const.TILE_SIZE, 0.78*const.WINDOW_HEIGHT))
-    g.playScreen.blit(g.tankList[0].getSprite(True), (const.TILE_SIZE, 0.78*const.WINDOW_HEIGHT))
-    g.playScreen.blit(g.gunList[1].getSprite(), (const.WINDOW_WIDTH - const.TILE_SIZE*3, 0.78*const.WINDOW_HEIGHT)) # Gun 2
-    g.playScreen.blit(g.tankList[1].getSprite(), (const.WINDOW_WIDTH - const.TILE_SIZE*3, 0.78*const.WINDOW_HEIGHT)) # Tank 2
+    g.playScreen.blit(g.gunList[0].getSprite(True), (const.TILE_SIZE_X, 0.78*const.WINDOW_HEIGHT))
+    g.playScreen.blit(g.tankList[0].getSprite(True), (const.TILE_SIZE_X, 0.78*const.WINDOW_HEIGHT))
+    g.playScreen.blit(g.gunList[1].getSprite(), (const.WINDOW_WIDTH - const.TILE_SIZE_X*3, 0.78*const.WINDOW_HEIGHT)) # Gun 2
+    g.playScreen.blit(g.tankList[1].getSprite(), (const.WINDOW_WIDTH - const.TILE_SIZE_X*3, 0.78*const.WINDOW_HEIGHT)) # Tank 2
     for tile in g.tileList:
         tile.draw(g.playScreen)
     pygame.draw.rect(g.playScreen, c.geT("BLACK"), [const.MAZE_X, const.MAZE_Y, const.MAZE_WIDTH, const.MAZE_HEIGHT], 2)
     
+    if timer.isPaused():
+        timer.resume()
+
     print("Switching to game music")
     mixer.crossfade('game')
 
@@ -668,25 +673,29 @@ def constantPlayGame():
     g.playScreen.blit(textp2Name,[const.WINDOW_WIDTH//2 - textp2Name.get_width()//2, 0.78*const.WINDOW_HEIGHT]) # This is the name on the right
     g.playScreen.blit(controls,[const.WINDOW_WIDTH//2 - controls.get_width()//2, const.WINDOW_HEIGHT*5/6]) # This is the name on the right
 
-    HealthBox = TextBox(const.TILE_SIZE*7/8-1, 0.88*const.WINDOW_HEIGHT, "Londrina", "HEALTH", 20, c.geT("BLACK"))
+    LplayerstatLeft = const.TILE_SIZE_X*7/8-1
+    playerstatTop = 0.88*const.WINDOW_HEIGHT
+    RplayerstatLeft = const.WINDOW_WIDTH - const.TILE_SIZE_X*2.2-1
+    
+    HealthBox = TextBox(LplayerstatLeft, playerstatTop, "Londrina", "HEALTH", 20, c.geT("BLACK"))
     HealthBox.setPaddingHeight(0)
     HealthBox.setPaddingWidth(0)
     HealthBox.setBoxColor(const.BACKGROUND_COLOR)
     HealthBox.draw(g.playScreen)
 
-    ReloadBox = TextBox(const.TILE_SIZE*7/8-1, 0.88*const.WINDOW_HEIGHT + const.MAZE_Y//2, "Londrina", "RELOAD", 20, c.geT("BLACK"))
+    ReloadBox = TextBox(LplayerstatLeft, playerstatTop + const.MAZE_Y//2, "Londrina", "RELOAD", 20, c.geT("BLACK"))
     ReloadBox.setPaddingHeight(0)
     ReloadBox.setPaddingWidth(0)
     ReloadBox.setBoxColor(const.BACKGROUND_COLOR)
     ReloadBox.draw(g.playScreen)
 
-    HealthBox2 = TextBox(const.WINDOW_WIDTH-const.TILE_SIZE*2.2-1, 0.88*const.WINDOW_HEIGHT, "Londrina", "HEALTH", 20, c.geT("BLACK"))
+    HealthBox2 = TextBox(RplayerstatLeft, playerstatTop, "Londrina", "HEALTH", 20, c.geT("BLACK"))
     HealthBox2.setPaddingHeight(0)
     HealthBox2.setPaddingWidth(0)
     HealthBox2.setBoxColor(const.BACKGROUND_COLOR)
     HealthBox2.draw(g.playScreen)
 
-    ReloadBox2 = TextBox(const.WINDOW_WIDTH-const.TILE_SIZE*2.2-1, 0.88*const.WINDOW_HEIGHT + const.MAZE_Y//2, "Londrina", "RELOAD", 20, c.geT("BLACK"))
+    ReloadBox2 = TextBox(RplayerstatLeft, playerstatTop + const.MAZE_Y//2, "Londrina", "RELOAD", 20, c.geT("BLACK"))
     ReloadBox2.setPaddingHeight(0)
     ReloadBox2.setPaddingWidth(0)
     ReloadBox2.setBoxColor(const.BACKGROUND_COLOR)
@@ -706,14 +715,14 @@ def fixMovement():
             tempX = t.x + t.changeX
             tempY = t.y - t.changeY
 
-            if tempX <= const.MAZE_X + t.originalTankImage.get_size()[0]/2:
-                tempX = const.MAZE_X + t.originalTankImage.get_size()[0]/2
-            if tempY <= const.MAZE_Y + t.originalTankImage.get_size()[0]/2:
-                tempY = const.MAZE_Y + t.originalTankImage.get_size()[0]/2
-            if tempX > const.MAZE_WIDTH + const.MAZE_X - t.originalTankImage.get_size()[0]/2:
-                tempX = const.MAZE_WIDTH + const.MAZE_X - t.originalTankImage.get_size()[0]/2
-            if tempY > const.MAZE_HEIGHT + const.MAZE_Y - t.originalTankImage.get_size()[0]/2:
-                tempY = const.MAZE_HEIGHT + const.MAZE_Y - t.originalTankImage.get_size()[0]/2
+            if tempX <= const.MAZE_X + t.tankImage.get_size()[0]/2:
+                tempX = const.MAZE_X + t.tankImage.get_size()[0]/2
+            if tempY <= const.MAZE_Y + t.tankImage.get_size()[0]/2:
+                tempY = const.MAZE_Y + t.tankImage.get_size()[0]/2
+            if tempX > const.MAZE_WIDTH + const.MAZE_X - t.tankImage.get_size()[0]/2:
+                tempX = const.MAZE_WIDTH + const.MAZE_X - t.tankImage.get_size()[0]/2
+            if tempY > const.MAZE_HEIGHT + const.MAZE_Y - t.tankImage.get_size()[0]/2:
+                tempY = const.MAZE_HEIGHT + const.MAZE_Y - t.tankImage.get_size()[0]/2
 
             for j in range(i+1, g.difficultyType.playerCount):
                 t1 = t
@@ -755,14 +764,14 @@ def fixMovement():
                             t2.setCoords(t2.x + directionX * pushAmountT2, t2.y + directionY * pushAmountT2)
             
             # Check for collision with walls
-            row = math.ceil((t.getCenter()[1] - const.MAZE_Y) / const.TILE_SIZE)
-            col = math.ceil((t.getCenter()[0] - const.MAZE_X) / const.TILE_SIZE)
+            row = math.ceil((t.getCenter()[1] - const.MAZE_Y) / const.TILE_SIZE_Y)
+            col = math.ceil((t.getCenter()[0] - const.MAZE_X) / const.TILE_SIZE_X)
             index = (row - 1) * const.COLUMN_AMOUNT + col
 
             if index in range(1, const.ROW_AMOUNT * const.COLUMN_AMOUNT + 1):
                 tile = g.tileList[index - 1]
-                tank_width = t.originalTankImage.get_size()[0]
-                tank_height = t.originalTankImage.get_size()[1]
+                tank_width = t.tankImage.get_size()[0]
+                tank_height = t.tankImage.get_size()[1]
 
                 # Calculate tank's future position (without correction)
                 futureX = tempX
@@ -771,10 +780,10 @@ def fixMovement():
                 # Check top, bottom, left, and right borders
                 if tile.border[0] and tempY - tank_height <= tile.y:  # Top border
                     futureY = tile.y + tank_height
-                if tile.border[1] and tempX + tank_width / 2 >= tile.x + const.TILE_SIZE:  # Right border
-                    futureX = tile.x + const.TILE_SIZE - tank_width / 2
-                if tile.border[2] and tempY + tank_height > tile.y + const.TILE_SIZE:  # Bottom border
-                    futureY = tile.y + const.TILE_SIZE - tank_height
+                if tile.border[1] and tempX + tank_width / 2 >= tile.x + const.TILE_SIZE_X:  # Right border
+                    futureX = tile.x + const.TILE_SIZE_X - tank_width / 2
+                if tile.border[2] and tempY + tank_height > tile.y + const.TILE_SIZE_Y:  # Bottom border
+                    futureY = tile.y + const.TILE_SIZE_Y - tank_height
                 if tile.border[3] and tempX - tank_width / 2 < tile.x:  # Left border
                     futureX = tile.x + tank_width / 2
 
@@ -784,17 +793,17 @@ def fixMovement():
                         futureX = tile.x + tank_width / 2
                         futureY = tile.y + tank_height
                 elif tile.border[0] and tile.border[1]:  # Top-right corner
-                    if tempX + tank_width / 2 >= tile.x + const.TILE_SIZE and tempY - tank_height <= tile.y:
-                        futureX = tile.x + const.TILE_SIZE - tank_width / 2
+                    if tempX + tank_width / 2 >= tile.x + const.TILE_SIZE_X and tempY - tank_height <= tile.y:
+                        futureX = tile.x + const.TILE_SIZE_X - tank_width / 2
                         futureY = tile.y + tank_height
                 elif tile.border[2] and tile.border[3]:  # Bottom-left corner
-                    if tempX - tank_width / 2 < tile.x and tempY + tank_height > tile.y + const.TILE_SIZE:
+                    if tempX - tank_width / 2 < tile.x and tempY + tank_height > tile.y + const.TILE_SIZE_Y:
                         futureX = tile.x + tank_width / 2
-                        futureY = tile.y + const.TILE_SIZE - tank_height
+                        futureY = tile.y + const.TILE_SIZE_Y - tank_height
                 elif tile.border[2] and tile.border[1]:  # Bottom-right corner
-                    if tempX + tank_width / 2 >= tile.x + const.TILE_SIZE and tempY + tank_height > tile.y + const.TILE_SIZE:
-                        futureX = tile.x + const.TILE_SIZE - tank_width / 2
-                        futureY = tile.y + const.TILE_SIZE - tank_height
+                    if tempX + tank_width / 2 >= tile.x + const.TILE_SIZE_X and tempY + tank_height > tile.y + const.TILE_SIZE_Y:
+                        futureX = tile.x + const.TILE_SIZE_X - tank_width / 2
+                        futureY = tile.y + const.TILE_SIZE_Y - tank_height
 
                 # Apply the corrected positions
                 tempX, tempY = futureX, futureY
@@ -1043,49 +1052,61 @@ def playGame():
     pauseButton.draw(screen, outline = True)
 
     # Load the custom font
-    pygame.draw.rect(screen, const.BACKGROUND_COLOR, [const.TILE_SIZE*2.1, 0.87*const.WINDOW_HEIGHT, const.WINDOW_WIDTH-const.TILE_SIZE*1.2-150, const.WINDOW_HEIGHT*0.15]) # The bottom bar
+    pygame.draw.rect(screen, const.BACKGROUND_COLOR, [const.TILE_SIZE_X*2.1, 0.87*const.WINDOW_HEIGHT, const.WINDOW_WIDTH-const.TILE_SIZE_X*1.2-150*const.UNIVERSAL_SCALER_WIDTH, const.WINDOW_HEIGHT*0.15]) # The bottom bar
 
     text3 = const.FONT_DICTIONARY["playerScore"].render(str(g.team1Score) + ":" + str(g.team2Score), True, c.geT("BLACK"))
     screen.blit(text3, [const.WINDOW_WIDTH/2 - text3.get_width()/2, 0.85*const.WINDOW_HEIGHT])
 
     #Box around the bottom of the screen for the health and reload bars
 
-    pygame.draw.rect(screen, c.geT("RED"), [const.TILE_SIZE*2.2, 0.88*const.WINDOW_HEIGHT, 150*(g.tankList[0].getHealthPercentage() if not g.tankDead[0] else 0),
+    LplayerStatupdateLeft = const.TILE_SIZE_X*2.2
+    playerStatupdateTop = 0.88*const.WINDOW_HEIGHT
+    RplayerStatupdateLeft = const.WINDOW_WIDTH - const.TILE_SIZE_X*2.2 - 150 * const.UNIVERSAL_SCALER_WIDTH
+
+    pygame.draw.rect(screen, c.geT("RED"), [LplayerStatupdateLeft, playerStatupdateTop, const.UNIVERSAL_SCALER_WIDTH*150*(g.tankList[0].getHealthPercentage() if not g.tankDead[0] else 0),
                                             20]) # Bar
-    pygame.draw.rect(screen, c.geT("BLACK"), [const.TILE_SIZE*2.2, 0.88*const.WINDOW_HEIGHT, 150, 20], 2) # Outline
+    pygame.draw.rect(screen, c.geT("BLACK"), [LplayerStatupdateLeft, playerStatupdateTop, 150 * const.UNIVERSAL_SCALER_WIDTH, 20], 2) # Outline
     # #Reload bars
-    pygame.draw.rect(screen, c.geT("BLUE"), [const.TILE_SIZE*2.2, 0.88*const.WINDOW_HEIGHT + const.MAZE_Y//2, 150*(min(1,1-g.gunList[0].getReloadPercentage() if not g.tankDead[0] else 0)),
+    pygame.draw.rect(screen, c.geT("BLUE"), [LplayerStatupdateLeft, playerStatupdateTop + const.MAZE_Y//2, const.UNIVERSAL_SCALER_WIDTH* 150*(min(1,1-g.gunList[0].getReloadPercentage() if not g.tankDead[0] else 0)),
                                              20]) # The 25 is to space from the health bar
 
-    pygame.draw.rect(screen, c.geT("BLACK"), [const.TILE_SIZE*2.2, 0.88*const.WINDOW_HEIGHT + const.MAZE_Y//2, 150, 20], 2) # Outline
+    pygame.draw.rect(screen, c.geT("BLACK"), [LplayerStatupdateLeft, playerStatupdateTop + const.MAZE_Y//2, 150 * const.UNIVERSAL_SCALER_WIDTH, 20], 2) # Outline
 
 
-    #Health bars
-    pygame.draw.rect(screen, c.geT("RED"), [const.WINDOW_WIDTH - const.TILE_SIZE*2.2 - 150, 0.88*const.WINDOW_HEIGHT, 150*(g.tankList[1].getHealthPercentage() if not g.tankDead[1] else 0),
+    # Health bars
+    pygame.draw.rect(screen, c.geT("RED"), [RplayerStatupdateLeft, playerStatupdateTop, 150*const.UNIVERSAL_SCALER_WIDTH*(g.tankList[1].getHealthPercentage() if not g.tankDead[1] else 0),
                                             20])
-    pygame.draw.rect(screen, c.geT("BLACK"), [const.WINDOW_WIDTH - const.TILE_SIZE*2.2 - 150, 0.88*const.WINDOW_HEIGHT, 150, 20], 2)
+    pygame.draw.rect(screen, c.geT("BLACK"), [RplayerStatupdateLeft, playerStatupdateTop, 150*const.UNIVERSAL_SCALER_WIDTH, 20], 2)
     #Reload bars
-    pygame.draw.rect(screen, c.geT("BLUE"), [const.WINDOW_WIDTH - const.TILE_SIZE*2.2 - 150, 0.88*const.WINDOW_HEIGHT + const.MAZE_Y//2,
-                                             150*(min(1,1-g.gunList[1].getReloadPercentage()) if not g.tankDead[1] else 0),
+    pygame.draw.rect(screen, c.geT("BLUE"), [RplayerStatupdateLeft, playerStatupdateTop + const.MAZE_Y//2,
+                                             150*const.UNIVERSAL_SCALER_WIDTH*(min(1,1-g.gunList[1].getReloadPercentage()) if not g.tankDead[1] else 0),
                                              20]) # The 25 is to space from the health bar
-    pygame.draw.rect(screen, c.geT("BLACK"), [const.WINDOW_WIDTH - const.TILE_SIZE*2.2 - 150, 0.88*const.WINDOW_HEIGHT + const.MAZE_Y//2, 150, 20], 2) # Outline
+    pygame.draw.rect(screen, c.geT("BLACK"), [RplayerStatupdateLeft, playerStatupdateTop + const.MAZE_Y//2, 150*const.UNIVERSAL_SCALER_WIDTH, 20], 2) # Outline
 
-    # #draw the supplies # Draw more on top of them
-
-    # # only displaying 2 so it's ok
-
+    #draw the supplies # Draw more on top of them
     ef, mx = g.tankList[0].getEffect() if not g.tankDead[0] else ([0,0,0], [19000, 19000, 19000//3])
 
     # # Dynamic updating of the current supply status
-    screen.blit(const.SUPPLY_ASSETS[0][min(int(((ef[0]/mx[0])*10)//1) + 1, 10) if ef[0] != 0 else 0], [270, 550])
-    screen.blit(const.SUPPLY_ASSETS[1][min(int(((ef[1]/mx[1])*10)//1) + 1, 10) if ef[1] != 0 else 0], [300, 550])
-    screen.blit(const.SUPPLY_ASSETS[2][min(int(((ef[2]/mx[2])*10)//1) + 1, 10) if ef[2] != 0 else 0], [270, 520])
+
+    # ef0 is damage
+    # ef1 is armor
+    # ef2 is speed
+    row1Height = 550*const.UNIVERSAL_SCALER_HEIGHT
+    row2Height = 520*const.UNIVERSAL_SCALER_HEIGHT
+    col1Left = 270*const.UNIVERSAL_SCALER_WIDTH
+    col1Right = 300*const.UNIVERSAL_SCALER_WIDTH
+    col2Left = 510*const.UNIVERSAL_SCALER_WIDTH
+    col2Right = 480*const.UNIVERSAL_SCALER_WIDTH
+
+    screen.blit(const.SUPPLY_ASSETS[0][min(int(((ef[0]/mx[0])*10)//1) + 1, 10) if ef[0] != 0 else 0], [col1Left, row1Height])
+    screen.blit(const.SUPPLY_ASSETS[1][min(int(((ef[1]/mx[1])*10)//1) + 1, 10) if ef[1] != 0 else 0], [col1Right, row1Height])
+    screen.blit(const.SUPPLY_ASSETS[2][min(int(((ef[2]/mx[2])*10)//1) + 1, 10) if ef[2] != 0 else 0], [col1Left, row2Height])
 
     ef2, mx2 = g.tankList[1].getEffect() if not g.tankDead[1] else ([0,0,0], [19000, 19000, 19000//3])
 
-    screen.blit(const.SUPPLY_ASSETS[0][min(int(((ef2[0]/mx2[0])*10)//1) + 1, 10) if ef2[0] != 0 else 0], [510, 550])
-    screen.blit(const.SUPPLY_ASSETS[1][min(int(((ef2[1]/mx2[1])*10)//1) + 1, 10) if ef2[1] != 0 else 0], [480, 550])
-    screen.blit(const.SUPPLY_ASSETS[2][min(int(((ef2[2]/mx2[2])*10)//1) + 1, 10) if ef2[2] != 0 else 0], [510, 520])
+    screen.blit(const.SUPPLY_ASSETS[0][min(int(((ef2[0]/mx2[0])*10)//1) + 1, 10) if ef2[0] != 0 else 0], [col2Left, row1Height])
+    screen.blit(const.SUPPLY_ASSETS[1][min(int(((ef2[1]/mx2[1])*10)//1) + 1, 10) if ef2[1] != 0 else 0], [col2Right, row1Height])
+    screen.blit(const.SUPPLY_ASSETS[2][min(int(((ef2[2]/mx2[2])*10)//1) + 1, 10) if ef2[2] != 0 else 0], [col2Left, row2Height])
 
     # Draw the border
     for tile in g.tileList:
@@ -1229,7 +1250,12 @@ currentTime = 0
 deltaTime = 0
 lastUpdateTime = 0
 
-screen = pygame.display.set_mode((const.WINDOW_WIDTH,const.WINDOW_HEIGHT))  # Windowed (safer/ superior)
+screen = pygame.display.set_mode((const.WINDOW_WIDTH,const.WINDOW_HEIGHT), pygame.RESIZABLE)  # Windowed (safer/ superior)
+# full screen
+# screen = pygame.display.set_mode((0,0), pygame.FULLSCREEN)  # Full screen
+
+
+
 
 gameMode = GameMode.home
 
@@ -1255,7 +1281,7 @@ broken = NotImplmented()
 global pageNum
 pageNum = 0
 
-pauseButton = Button(const.BACKGROUND_COLOR ,const.BACKGROUND_COLOR, const.WINDOW_WIDTH-const.TILE_SIZE*3, const.TILE_SIZE//5,const.TILE_SIZE*2,const.TILE_SIZE//2, "PAUSE", c.geT("BLACK"), 20, c.geT("OFF_WHITE"))
+pauseButton = Button(const.BACKGROUND_COLOR ,const.BACKGROUND_COLOR, const.WINDOW_WIDTH-const.TILE_SIZE_X*3, const.TILE_SIZE_Y//5,const.TILE_SIZE_X*2,const.TILE_SIZE_Y//2, "PAUSE", c.geT("BLACK"), 20, c.geT("OFF_WHITE"))
 pauseButton.setOutline(True, 2)
 
 pygame.mixer.set_num_channels(64) #MORE
@@ -1429,10 +1455,21 @@ def main():
             elif event.type == pygame.KEYDOWN: # Any key pressed
 
                 if event.key == pygame.K_ESCAPE: # Escape hotkey to quit the window
-                    done = True
+
+                    if gameMode == GameMode.play:
+                        for i in range(3, pygame.mixer.get_num_channels()): # Stop all sounds
+                            pygame.mixer.Channel(i).stop()
+                        gameMode = GameMode.pause # Pause the game
+                        timer.pause()
+                    elif gameMode == GameMode.pause:
+                        # Do nothing
+                        pass
+                    else:
+                        done = True
 
                 if event.key == pygame.K_i:
                     print("The current mouse position is: ", mouse)
+                    print(const.MAZE_X, const.MAZE_Y, const.MAZE_WIDTH, const.MAZE_HEIGHT)
 
                 if event.key == pygame.K_p:
                     #Pause

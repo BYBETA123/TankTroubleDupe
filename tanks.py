@@ -2,6 +2,7 @@ import pygame
 import math
 import os, sys
 from ColorDictionary import ColourDictionary as c # colors
+import constants as const
 
 # Main variables
 TIMER_MAX = 19000 # The maximum time for the timer I think this is 10s?
@@ -18,6 +19,7 @@ def breathFirstSearchShort(tileList, choices, option):
     queue = [choices[option]]
     predecessors = {}
     visitedQueue.append(choices[option])
+    # print(f"Starting BFS from tile {choices[option]} to reach tile {choices[(option +1) % 2]}")
     tracking[choices[option]] = True
     predecessors[choices[option]] = None
     while len(queue) > 0: # While there are still elements to check
@@ -35,7 +37,6 @@ def breathFirstSearchShort(tileList, choices, option):
     currentNode = choices[(option +1) % 2]
     while currentNode is not None:
         path.insert(0, currentNode)  # Insert at the beginning to avoid reversing later
-        # currentNode = predecessors[currentNode]
         try:
             currentNode = predecessors[currentNode]
         except KeyError:
@@ -62,7 +63,7 @@ class Tank(pygame.sprite.Sprite):
             self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
 
             # Scale the tank image to a smaller size
-            self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
+            self.tankImage = pygame.transform.scale(self.originalTankImage, (20, 20))
         except pygame.error as e: # In case there is an issue opening the file
             print(f"Failed to load image: {e}")
             pygame.quit()
@@ -80,7 +81,7 @@ class Tank(pygame.sprite.Sprite):
         self.speed = 0
         self.image = self.tankImage
         self.rect = self.tankImage.get_rect(center=(x, y))
-        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
+        self.width, self.height = self.tankImage.get_size() # Setting dimensions
         self.x = float(self.rect.centerx)
         self.y = float(self.rect.centery)
         self.updateCorners() #Set the corners
@@ -117,7 +118,7 @@ class Tank(pygame.sprite.Sprite):
 
         # Load the image with the corrected path
         self.tread_surface = pygame.image.load(image_path).convert_alpha()
-        self.tread_surface = pygame.transform.scale(self.tread_surface, (8, self.originalTankImage.get_size()[1]))
+        self.tread_surface = pygame.transform.scale(self.tread_surface, (8, self.tankImage.get_size()[1]))
         self.player = None
         self.team = 0
         self.flag = None # if we have a flag
@@ -243,7 +244,7 @@ class Tank(pygame.sprite.Sprite):
         self.angle += self.rotationSpeed
         # self.angle should always be between -360 and 360
         self.angle %= 360
-        self.image = pygame.transform.rotate(self.originalTankImage, self.angle)
+        self.image = pygame.transform.rotate(self.tankImage, self.angle)
         self.rect = self.image.get_rect(center=(self.x, self.y))
 
         angleRad = math.radians(self.angle)
@@ -269,6 +270,7 @@ class Tank(pygame.sprite.Sprite):
             self.image.set_alpha(255)
         # Draw the tank image
         screen.blit(self.image, self.rect)
+        # print(self.image.get_size(), self.rect.size)
 
     def setFlag(self, flag):
         self.flag = flag
@@ -312,7 +314,7 @@ class Tank(pygame.sprite.Sprite):
         self.x, self.y = newx, newy
 
     def getCoords(self):
-        return [self.rect.x, self.rect.y, self.rect.x + self.originalTankImage.get_size()[0], self.rect.y + self.originalTankImage.get_size()[1]]
+        return [self.rect.x, self.rect.y, self.rect.x + self.tankImage.get_size()[0], self.rect.y + self.tankImage.get_size()[1]]
     
     def setCentre(self, x, y):
         self.rect.center = (x, y)
@@ -420,10 +422,10 @@ class Tank(pygame.sprite.Sprite):
         self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
 
         # Scale the tank image to a smaller size
-        self.tankImage = pygame.transform.scale(self.originalTankImage, (200, 100))
+        self.tankImage = pygame.transform.scale(self.originalTankImage, (self.originalTankImage.get_width()*const.SPRITE_SCALER, self.originalTankImage.get_height()*const.SPRITE_SCALER))
         self.image = self.tankImage
         self.rect = self.tankImage.get_rect(center=(self.x, self.y))
-        self.width, self.height = self.originalTankImage.get_size() # Setting dimensions
+        self.width, self.height = self.tankImage.get_size() # Setting dimensions
         self.x = float(self.rect.centerx)
         self.y = float(self.rect.centery)
 
@@ -474,16 +476,16 @@ class Tank(pygame.sprite.Sprite):
         rotated_rect = rotated_surface.get_rect(center = (self.x, self.y))
 
         treads.append((rotated_surface, rotated_rect.topleft))
-        if (len(treads) > 30):
+        if (len(treads) > const.TREADS_MAX):
             treads.pop(0)
 
     def getCurrentTile(self):
         # This function will return the tile that the tank is currently on
         # Inputs: None
         # Outputs: The tile that the tank is currently on
-        row = math.ceil((self.getCenter()[1] - 50)/50)
-        col = math.ceil((self.getCenter()[0] - 50)/50)
-        index = (row - 1)*14 + col
+        row = math.ceil((self.getCenter()[1] - const.TILE_SIZE_X)/const.TILE_SIZE_X)
+        col = math.ceil((self.getCenter()[0] - const.TILE_SIZE_Y)/const.TILE_SIZE_Y)
+        index = (row - 1)*const.COLUMN_AMOUNT + col
         return self.tileList[index-1]
 
     def getAngle(self):

@@ -63,3 +63,6 @@ class UpDownTimer():
 
     def getTime(self):
         return int(self.getElapsed()//1e9)
+    
+    def isPaused(self):
+        return self.paused

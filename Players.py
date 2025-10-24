@@ -199,6 +199,7 @@ class Player(): # This is a class that is being reported to
         self.tankChannels = TANK_CHANNELS
         self.gunName = GUN_NAME
         self.spawn = SPAWN
+        
     def getTableEntry(self):
         return [self.name, self.team, self.kills, self.deaths, self.kills / max(self.deaths, 1)]
     

@@ -4,25 +4,33 @@ import sys
 import math
 from ColorDictionary import ColourDictionary as c # colors
 
-
 pygame.init() # all init
 pygame.mixer.set_num_channels(64) # set it here to
-### Game Constants
-MAZE_X = 50
-MAZE_Y = 50
+
+# Window constants
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
-TILE_SIZE = 50
+WINDOW_WIDTH = 1280
+WINDOW_HEIGHT = 720
+UNIVERSAL_SCALER_WIDTH = WINDOW_WIDTH / 800
+UNIVERSAL_SCALER_HEIGHT = WINDOW_HEIGHT / 600
 
 
 
-MAZE_WIDTH = WINDOW_WIDTH - MAZE_X*2 # We want it to span most of the screen
-MAZE_HEIGHT = WINDOW_HEIGHT - MAZE_Y*4
+### Game Constants
+MAZE_X = int(50 * UNIVERSAL_SCALER_WIDTH)
+MAZE_Y = int(50 * UNIVERSAL_SCALER_HEIGHT)
+
+# UI elements
+TILE_SIZE_X = int(50 * UNIVERSAL_SCALER_WIDTH)
+TILE_SIZE_Y = int(50 * UNIVERSAL_SCALER_HEIGHT)
+
+MAZE_WIDTH = MAZE_X*14 # We want it to span most of the screen
+MAZE_HEIGHT = MAZE_Y*8
 
 HYPOTENUSE = math.hypot(MAZE_WIDTH, MAZE_HEIGHT) # the maximum distance between two points in the maze
-ROW_AMOUNT = MAZE_HEIGHT//TILE_SIZE # Assigning the amount of rows
-COLUMN_AMOUNT = MAZE_WIDTH//TILE_SIZE # Assigning the amount of columns
-
+ROW_AMOUNT = MAZE_HEIGHT//TILE_SIZE_Y # Assigning the amount of rows
+COLUMN_AMOUNT = MAZE_WIDTH//TILE_SIZE_X # Assigning the amount of columns
 TPS = 30 # ticks per second
 SCREEN = pygame.display.set_mode((WINDOW_WIDTH,WINDOW_HEIGHT))  # Windowed (safer/ superior)
 
@@ -51,6 +59,10 @@ BACKGROUND_COLOR = c.geT('SOFT_WHITE')
 SELECTION_BACKGROUND = c.geT('SOFT_WHITE')
 
 MONO_FONT = 'Courier New'
+
+SPRITE_SCALER = 1.5
+GUN_SCALER_EXTRA = 1.6
+TREADS_MAX = 30 # The maximum amount of treads that can be on the screen at once
 
 SUPPLY_ASSETS = [[None]*11 for _ in range(3)] # 3 for the supply, 3 for the picked up supply
 
