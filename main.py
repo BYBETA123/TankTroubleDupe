@@ -650,7 +650,9 @@ def constantPlayGame():
     Inputs: None
     Outputs: None
     """
-    g.playScreen.fill(const.BACKGROUND_COLOR)
+    # g.playScreen.fill(const.BACKGROUND_COLOR)
+    ### Attempting to do background blitting
+    g.playScreen.blit(g.backgroundImage, (0, -20))
     g.playScreen.blit(g.gunList[0].getSprite(True), (const.TILE_SIZE_X, 0.78*const.WINDOW_HEIGHT))
     g.playScreen.blit(g.tankList[0].getSprite(True), (const.TILE_SIZE_X, 0.78*const.WINDOW_HEIGHT))
     g.playScreen.blit(g.gunList[1].getSprite(), (const.WINDOW_WIDTH - const.TILE_SIZE_X*3, 0.78*const.WINDOW_HEIGHT)) # Gun 2

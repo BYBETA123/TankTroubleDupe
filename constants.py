@@ -10,11 +10,13 @@ pygame.mixer.set_num_channels(64) # set it here to
 # Window constants
 WINDOW_WIDTH = 800
 WINDOW_HEIGHT = 600
-WINDOW_WIDTH = 1280
-WINDOW_HEIGHT = 720
+# force a 4:3 aspect ratio
+WINDOW_WIDTH = int(967*4/3)
+WINDOW_HEIGHT = 967
 UNIVERSAL_SCALER_WIDTH = WINDOW_WIDTH / 800
 UNIVERSAL_SCALER_HEIGHT = WINDOW_HEIGHT / 600
 
+print(f"Width scaler: {UNIVERSAL_SCALER_WIDTH}, Height scaler: {UNIVERSAL_SCALER_HEIGHT}")
 
 
 ### Game Constants
@@ -24,7 +26,7 @@ MAZE_Y = int(50 * UNIVERSAL_SCALER_HEIGHT)
 # UI elements
 TILE_SIZE_X = int(50 * UNIVERSAL_SCALER_WIDTH)
 TILE_SIZE_Y = int(50 * UNIVERSAL_SCALER_HEIGHT)
-
+print(f"TILE SIZE X: {TILE_SIZE_X}, TILE SIZE Y: {TILE_SIZE_Y}")
 MAZE_WIDTH = MAZE_X*14 # We want it to span most of the screen
 MAZE_HEIGHT = MAZE_Y*8
 

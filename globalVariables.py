@@ -17,6 +17,9 @@ team1Score = 0
 team2Score = 0
 playScreen = pygame.Surface((const.WINDOW_WIDTH, const.WINDOW_HEIGHT))
 
+backgroundImage = pygame.image.load("Assets/image.png").convert() # Background image for the play screen
+backgroundImage = pygame.transform.scale(backgroundImage, (const.WINDOW_WIDTH, const.WINDOW_HEIGHT))
+
 flag = [Flag(0, (0,0)), Flag(1, (0,0))]
 
 def spareChannels(sound):

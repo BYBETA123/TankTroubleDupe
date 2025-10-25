@@ -756,7 +756,7 @@ class Gun(pygame.sprite.Sprite):
         gunPath = os.path.join(currentDir,'Sprites', str(name) + str(imageNum) + '.png')
         self.originalGunImage = pygame.image.load(gunPath).convert_alpha()
         width, height = self.originalGunImage.get_size()
-        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*const.SPRITE_SCALER*const.GUN_SCALER_EXTRA), int(height*const.SPRITE_SCALER*const.GUN_SCALER_EXTRA)))
+        self.originalGunImage = pygame.transform.scale(self.originalGunImage, (int(width*const.SPRITE_SCALER*const.GUN_SCALER_EXTRA * const.UNIVERSAL_SCALER_WIDTH), int(height*const.SPRITE_SCALER*const.GUN_SCALER_EXTRA * const.UNIVERSAL_SCALER_HEIGHT)))
         self.gunImage = self.originalGunImage
         self.image = self.gunImage
         spritePath = os.path.join(currentDir, 'Sprites', 'Turret' + str(imageNum) + '.png')

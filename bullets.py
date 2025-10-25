@@ -43,7 +43,7 @@ class Bullet(pygame.sprite.Sprite):
         self.originalBulletImage = pygame.image.load(bulletPath).convert_alpha()
         self.bulletImage = self.originalBulletImage
         w, h = self.originalBulletImage.get_size()
-        self.bulletImage = pygame.transform.scale(self.originalBulletImage, (w*const.SPRITE_SCALER, h*const.SPRITE_SCALER))
+        self.bulletImage = pygame.transform.scale(self.originalBulletImage, (w*const.SPRITE_SCALER * const.UNIVERSAL_SCALER_HEIGHT, h*const.SPRITE_SCALER * const.UNIVERSAL_SCALER_HEIGHT))
         self.image = self.bulletImage
         self.angle = angle
         self.speed = 12

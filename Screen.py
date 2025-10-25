@@ -227,7 +227,7 @@ class CreditScreen:
         "UI Design: Bin-Coder14, Beta",
         "Sounds: Beta",
         "Music: Beta, Goodnews888",
-        "Art: Beta, Goodnews888, Ekiel",
+        "Art: Beta, Goodnews888, Ekiel, O",
     ]
 
     creditsurfaces = [const.FONT_DICTIONARY["cFont"].render(line, True, c.geT("BLACk")) for line in creditbox]

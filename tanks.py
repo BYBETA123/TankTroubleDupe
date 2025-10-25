@@ -63,7 +63,7 @@ class Tank(pygame.sprite.Sprite):
             self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
 
             # Scale the tank image to a smaller size
-            self.tankImage = pygame.transform.scale(self.originalTankImage, (20, 20))
+            self.tankImage = pygame.transform.scale(self.originalTankImage, (20*self.originalTankImage.get_width()*const.UNIVERSAL_SCALER_WIDTH, 20*self.originalTankImage.get_height()*const.UNIVERSAL_SCALER_HEIGHT))
         except pygame.error as e: # In case there is an issue opening the file
             print(f"Failed to load image: {e}")
             pygame.quit()
@@ -118,7 +118,7 @@ class Tank(pygame.sprite.Sprite):
 
         # Load the image with the corrected path
         self.tread_surface = pygame.image.load(image_path).convert_alpha()
-        self.tread_surface = pygame.transform.scale(self.tread_surface, (8, self.tankImage.get_size()[1]))
+        self.tread_surface = pygame.transform.scale(self.tread_surface, (self.tankImage.get_size()[0], self.tankImage.get_size()[1]))
         self.player = None
         self.team = 0
         self.flag = None # if we have a flag
@@ -422,7 +422,7 @@ class Tank(pygame.sprite.Sprite):
         self.originalTankImage = pygame.image.load(tankPath).convert_alpha()
 
         # Scale the tank image to a smaller size
-        self.tankImage = pygame.transform.scale(self.originalTankImage, (self.originalTankImage.get_width()*const.SPRITE_SCALER, self.originalTankImage.get_height()*const.SPRITE_SCALER))
+        self.tankImage = pygame.transform.scale(self.originalTankImage, (self.originalTankImage.get_width()*const.SPRITE_SCALER * const.UNIVERSAL_SCALER_WIDTH, self.originalTankImage.get_height()*const.SPRITE_SCALER * const.UNIVERSAL_SCALER_HEIGHT))
         self.image = self.tankImage
         self.rect = self.tankImage.get_rect(center=(self.x, self.y))
         self.width, self.height = self.tankImage.get_size() # Setting dimensions
@@ -431,6 +431,20 @@ class Tank(pygame.sprite.Sprite):
 
         spritePath = os.path.join(currentDir, 'Sprites', 'Hull' + str(imageNum) + '.png')
         self.spriteImage = pygame.image.load(spritePath).convert_alpha()
+
+        # update the treads
+                # Treads
+        if getattr(sys, 'frozen', False):  # Running as an .exe
+            base_path = sys._MEIPASS
+        else:  # Running as a .py script
+            base_path = os.path.dirname(os.path.abspath(__file__))
+
+        # Construct the correct path for the image file
+        image_path = os.path.join(base_path, 'Assets', 'Treads.png')
+
+        # Load the image with the corrected path
+        self.tread_surface = pygame.image.load(image_path).convert_alpha()
+        self.tread_surface = pygame.transform.scale(self.tread_surface, (self.tankImage.get_size()[0], self.tankImage.get_size()[1]))
 
     def getHealthPercentage(self):
         return min((self.health/self.maxHealth),1)
